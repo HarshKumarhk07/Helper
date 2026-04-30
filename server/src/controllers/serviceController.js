@@ -1,0 +1,54 @@
+import Service from '../models/Service.js';
+import ServiceCategory from '../models/ServiceCategory.js';
+import { ApiError, asyncHandler } from '../utils/asyncHandler.js';
+
+const slugify = (s) =>
+  s.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+export const listServices = asyncHandler(async (req, res) => {
+  const { category, q, active } = req.query;
+  const filter = {};
+  if (active === 'true') filter.isActive = true;
+  if (q) filter.name = { $regex: q, $options: 'i' };
+  if (category) {
+    const cat = category.match(/^[a-f0-9]{24}$/)
+      ? await ServiceCategory.findById(category)
+      : await ServiceCategory.findOne({ slug: category });
+    if (cat) filter.category = cat._id;
+    else return res.json({ services: [] });
+  }
+
+  const services = await Service.find(filter)
+    .populate('category', 'name slug icon color')
+    .sort({ createdAt: -1 })
+    .limit(200);
+  res.json({ services });
+});
+
+export const getService = asyncHandler(async (req, res) => {
+  const svc = await Service.findById(req.params.id).populate('category', 'name slug icon color');
+  if (!svc) throw new ApiError(404, 'Service not found');
+  res.json({ service: svc });
+});
+
+export const createService = asyncHandler(async (req, res) => {
+  const body = { ...req.body };
+  if (!body.slug) body.slug = slugify(body.name);
+  const svc = await Service.create(body);
+  res.status(201).json({ service: svc });
+});
+
+export const updateService = asyncHandler(async (req, res) => {
+  const svc = await Service.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true,
+  });
+  if (!svc) throw new ApiError(404, 'Service not found');
+  res.json({ service: svc });
+});
+
+export const deleteService = asyncHandler(async (req, res) => {
+  const svc = await Service.findByIdAndDelete(req.params.id);
+  if (!svc) throw new ApiError(404, 'Service not found');
+  res.json({ ok: true });
+});

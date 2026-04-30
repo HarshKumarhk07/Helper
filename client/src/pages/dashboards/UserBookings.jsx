@@ -1,0 +1,148 @@
+import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
+import { listMyBookings, transitionStatus } from '../../api/bookings.js';
+import { downloadInvoice } from '../../api/invoices.js';
+import BookingCard from '../../components/booking/BookingCard.jsx';
+import LiveTrackerModal from '../../components/booking/LiveTrackerModal.jsx';
+import ReviewModal from '../../components/booking/ReviewModal.jsx';
+import PillButton from '../../components/ui/PillButton.jsx';
+import FadeUp from '../../components/ui/FadeUp.jsx';
+import { BOOKING_STATUS } from '../../lib/booking.js';
+import { useAuth } from '../../context/AuthContext.jsx';
+
+const FILTERS = [
+  { key: 'all', label: 'All' },
+  { key: BOOKING_STATUS.PLACED, label: 'Placed' },
+  { key: BOOKING_STATUS.ASSIGNED, label: 'Assigned' },
+  { key: BOOKING_STATUS.IN_PROGRESS, label: 'In progress' },
+  { key: BOOKING_STATUS.COMPLETED, label: 'Completed' },
+  { key: BOOKING_STATUS.CANCELLED, label: 'Cancelled' },
+];
+
+export default function UserBookings() {
+  const { user } = useAuth();
+  const [bookings, setBookings] = useState([]);
+  const [filter, setFilter] = useState('all');
+  const [loading, setLoading] = useState(true);
+  const [trackingBooking, setTrackingBooking] = useState(null);
+  const [reviewBooking, setReviewBooking] = useState(null);
+
+  const load = () => {
+    setLoading(true);
+    listMyBookings(filter === 'all' ? {} : { status: filter })
+      .then(setBookings)
+      .catch(() => toast.error('Failed to load bookings'))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(load, [filter]);
+
+  const cancel = async (booking) => {
+    try {
+      await transitionStatus(booking._id, 'cancelled', 'Cancelled by customer');
+      toast.success(`Cancelled ${booking.code}`);
+      load();
+    } catch (err) {
+      toast.error(err?.response?.data?.error || 'Could not cancel');
+    }
+  };
+
+  return (
+    <section className="container-velora py-12 md:py-16">
+      <div className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+        (My bookings)
+      </div>
+      <h1 className="heading-display mt-3 text-4xl md:text-6xl">YOUR VELORA.</h1>
+      <p className="mt-3 text-sm text-ink/70 dark:text-paper/60">
+        Signed in as <span className="text-ink dark:text-paper">{user?.name}</span>
+      </p>
+
+      <div className="mt-8 flex flex-wrap gap-2">
+        {FILTERS.map((f) => (
+          <button
+            key={f.key}
+            onClick={() => setFilter(f.key)}
+            className={`rounded-pill border px-4 py-2 text-xs uppercase tracking-widest transition ${
+              filter === f.key
+                ? 'border-ink bg-ink text-paper'
+                : 'border-ink/30 hover:bg-ink hover:text-paper dark:border-paper/30 dark:text-paper'
+            }`}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-8 grid gap-4 lg:grid-cols-2">
+        {loading ? (
+          Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="skeleton h-32 w-full" />
+          ))
+        ) : bookings.length === 0 ? (
+          <div className="col-span-full rounded-card border border-ink/10 bg-sand/40 p-10 text-center text-sm dark:border-paper/10">
+            <div className="text-ink/70 dark:text-paper/60">
+              No bookings here yet — start with the catalog.
+            </div>
+            <PillButton to="/services" className="mt-4">
+              Browse services
+            </PillButton>
+          </div>
+        ) : (
+          bookings.map((b, i) => (
+            <FadeUp key={b._id} delay={Math.min(i * 0.04, 0.3)}>
+              <BookingCard
+                booking={b}
+                footer={
+                  ['placed', 'assigned', 'in_progress'].includes(b.status) ? (
+                    <div className="flex items-center justify-between">
+                      {(b.status === 'assigned' || b.status === 'in_progress') && (
+                        <button
+                          onClick={() => setTrackingBooking(b)}
+                          className="rounded border border-ink/30 px-3 py-1 text-xs uppercase tracking-widest text-ink transition hover:bg-ink hover:text-paper dark:border-paper/30 dark:text-paper dark:hover:bg-paper dark:hover:text-ink"
+                        >
+                          Track Live & View PINs
+                        </button>
+                      )}
+                      
+                      {['placed', 'assigned'].includes(b.status) && (
+                        <button
+                          onClick={() => cancel(b)}
+                          className="ml-auto text-xs uppercase tracking-widest text-red-700 hover:underline"
+                        >
+                          Cancel booking
+                        </button>
+                      )}
+                    </div>
+                  ) : b.status === 'completed' ? (
+                    <div className="flex justify-end gap-4 items-center">
+                      <button
+                        onClick={() => downloadInvoice('booking', b._id, `Invoice_BOOKING_${b.code}.pdf`)}
+                        className="text-xs uppercase tracking-widest text-ink/70 hover:text-ink transition dark:text-paper/70 dark:hover:text-paper"
+                      >
+                        Download PDF
+                      </button>
+                      <button
+                        onClick={() => setReviewBooking(b)}
+                        className="rounded border border-ink/30 px-3 py-1 text-xs uppercase tracking-widest text-ink transition hover:bg-ink hover:text-paper dark:border-paper/30 dark:text-paper dark:hover:bg-paper dark:hover:text-ink"
+                      >
+                        Leave a Review
+                      </button>
+                    </div>
+                  ) : null
+                }
+              />
+            </FadeUp>
+          ))
+        )}
+      </div>
+
+      {trackingBooking && (
+        <LiveTrackerModal booking={trackingBooking} onClose={() => setTrackingBooking(null)} />
+      )}
+
+      {reviewBooking && (
+        <ReviewModal booking={reviewBooking} onClose={() => setReviewBooking(null)} />
+      )}
+    </section>
+  );
+}

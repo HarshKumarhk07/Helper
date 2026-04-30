@@ -1,0 +1,77 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+  html, body, #root {
+    height: 100%;
+  }
+  body {
+    @apply font-sans bg-paper text-ink antialiased;
+  }
+  ::selection {
+    @apply bg-ink text-paper;
+  }
+  .dark body {
+    @apply bg-[#0E0E10] text-paper;
+  }
+}
+
+@layer components {
+  .container-velora {
+    @apply mx-auto w-full max-w-[1400px] px-6 md:px-10;
+  }
+
+  .pill-btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-pill border border-ink/80 bg-transparent px-5 py-2.5 text-sm font-medium tracking-tightish text-ink transition hover:bg-ink hover:text-paper dark:border-paper/40 dark:text-paper dark:hover:bg-paper dark:hover:text-ink;
+  }
+
+  .pill-btn-solid {
+    @apply inline-flex items-center justify-center gap-2 rounded-pill bg-ink px-5 py-2.5 text-sm font-medium tracking-tightish text-paper transition hover:bg-ink/90 dark:bg-paper dark:text-ink dark:hover:bg-paper/90;
+  }
+
+  .nav-link {
+    @apply text-sm tracking-tightish text-ink/80 transition hover:text-ink dark:text-paper/70 dark:hover:text-paper;
+  }
+
+  .heading-display {
+    @apply font-display font-medium tracking-tightest text-ink dark:text-paper;
+  }
+
+  .card-rounded {
+    @apply rounded-card overflow-hidden bg-paper shadow-card dark:bg-[#18181A] dark:border dark:border-paper/10;
+  }
+
+  .overlay-info {
+    @apply absolute left-6 top-6 max-w-sm rounded-2xl bg-ink/95 p-5 text-paper backdrop-blur;
+  }
+
+  .skeleton {
+    @apply animate-pulse rounded-xl bg-ash/40;
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+@keyframes marqueeX {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee-x {
+  animation: marqueeX 30s linear infinite;
+}

@@ -1,0 +1,30 @@
+/* Base Styles */
+:root {
+  color-scheme: light;
+}
+html, body, #root {
+  height: 100%;
+}
+body {
+  font-family: 'Chivo Mono', ui-monospace, monospace;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+::selection {
+  background: #18181A;
+  color: #FDFDFD;
+}
+.dark body {
+  background-color: #0E0E10;
+  color: #FDFDFD;
+}
+
+@keyframes fadeUp {
+  0% { opacity: 0; transform: translateY(24px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes marqueeX {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}

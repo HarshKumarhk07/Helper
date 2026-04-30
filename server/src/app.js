@@ -1,0 +1,65 @@
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
+import rateLimit from 'express-rate-limit';
+
+import authRoutes from './routes/auth.routes.js';
+import userRoutes from './routes/user.routes.js';
+import categoryRoutes from './routes/category.routes.js';
+import serviceRoutes from './routes/service.routes.js';
+import addressRoutes from './routes/address.routes.js';
+import bookingRoutes from './routes/booking.routes.js';
+import productRoutes from './routes/product.routes.js';
+import orderRoutes from './routes/order.routes.js';
+import paymentRoutes from './routes/payment.routes.js';
+import adminRoutes from './routes/admin.routes.js';
+import reviewRoutes from './routes/review.routes.js';
+import invoiceRoutes from './routes/invoice.routes.js';
+import couponRoutes from './routes/coupon.routes.js';
+import uploadRoutes from './routes/upload.routes.js';
+import { notFound, errorHandler } from './middleware/error.js';
+
+const app = express();
+
+app.use(helmet());
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    credentials: true,
+  })
+);
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true }));
+if (process.env.NODE_ENV !== 'test') app.use(morgan('dev'));
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 50,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.get('/api/health', (_req, res) =>
+  res.json({ status: 'ok', service: 'velora-house', time: new Date().toISOString() })
+);
+
+app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/services', serviceRoutes);
+app.use('/api/addresses', addressRoutes);
+app.use('/api/bookings', bookingRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/payments', paymentRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/reviews', reviewRoutes);
+app.use('/api/invoices', invoiceRoutes);
+app.use('/api/coupons', couponRoutes);
+app.use('/api/upload', uploadRoutes);
+
+app.use(notFound);
+app.use(errorHandler);
+
+export default app;
