@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useCart } from '../context/CartContext.jsx';
 import { useNavigate } from 'react-router-dom';
 import { createOrder } from '../api/orders.js';
@@ -16,6 +16,36 @@ export default function CheckoutPage() {
   const [paymentMode, setPaymentMode] = useState('online');
   const [couponCode, setCouponCode] = useState('');
   const [discount, setDiscount] = useState(0);
+  const [razorpayReady, setRazorpayReady] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+
+  useEffect(() => {
+    const scriptId = 'razorpay-checkout-js';
+    const existing = document.getElementById(scriptId);
+
+    const markReady = () => setRazorpayReady(true);
+
+    if (existing) {
+      if (window.Razorpay) {
+        setRazorpayReady(true);
+      } else {
+        existing.addEventListener('load', markReady, { once: true });
+      }
+      return () => existing.removeEventListener('load', markReady);
+    }
+
+    const script = document.createElement('script');
+    script.id = scriptId;
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    script.onload = markReady;
+    script.onerror = () => toast.error('Unable to load Razorpay checkout');
+    document.body.appendChild(script);
+
+    return () => {
+      script.onload = null;
+    };
+  }, []);
 
   const cartTotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const total = cartTotal - discount;
@@ -29,15 +59,26 @@ export default function CheckoutPage() {
     e.preventDefault();
     setLoading(true);
     try {
+      if (paymentMode === 'online' && !razorpayReady) {
+        throw new Error('Payment gateway is still loading. Please try again in a moment.');
+      }
+
       const items = cart.map(c => ({ product: c.product, quantity: c.quantity }));
-      const order = await createOrder({ items, address, paymentMode });
+      const activeCouponCode = (appliedCoupon?.code || couponCode).trim().toUpperCase();
+      const order = await createOrder({
+        items,
+        address,
+        paymentMode,
+        couponCode: activeCouponCode || undefined,
+      });
+      const payableAmount = order.totalAmount ?? total;
 
       if (paymentMode === 'cod') {
         toast.success('Order placed successfully!');
         clearCart();
         navigate('/me/orders');
       } else {
-        const rpOrder = await createRazorpayOrder({ amount: total, type: 'ecommerce' });
+        const rpOrder = await createRazorpayOrder({ amount: payableAmount, receipt: order.orderId, type: 'ecommerce' });
         
         const options = {
           key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_xxxx', 
@@ -85,10 +126,12 @@ export default function CheckoutPage() {
     try {
       const res = await validateCoupon({ code: couponCode, orderValue: cartTotal });
       setDiscount(res.discount);
+      setAppliedCoupon({ code: couponCode.trim().toUpperCase(), discount: res.discount });
       toast.success('Coupon applied!');
     } catch (err) {
       toast.error(err?.response?.data?.error || 'Invalid coupon');
       setDiscount(0);
+      setAppliedCoupon(null);
     }
   };
 
@@ -138,6 +181,11 @@ export default function CheckoutPage() {
         <div className="flex flex-col items-end text-lg font-bold px-4">
           {discount > 0 && (
             <div className="text-sm text-ink/60 line-through">Subtotal: ₹{cartTotal}</div>
+          )}
+          {appliedCoupon && (
+            <div className="mb-1 text-xs uppercase tracking-widest text-green-700 dark:text-green-400">
+              Coupon {appliedCoupon.code} saved • ₹{appliedCoupon.discount} off
+            </div>
           )}
           <div className="mb-4">Total Payable: ₹{total}</div>
           <button disabled={loading} type="submit" className="pill-btn-solid">

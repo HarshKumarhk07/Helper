@@ -1,9 +1,9 @@
 import Order from '../models/Order.js';
 import Product from '../models/Product.js';
 import Address from '../models/Address.js';
+import Coupon from '../models/Coupon.js';
 import { ApiError, asyncHandler } from '../utils/asyncHandler.js';
-import Razorpay from 'razorpay';
-import crypto from 'crypto';
+import { applyOrderStatusTimestamps, recordOrderHistory, resolveCouponForOrder } from '../utils/ecommerce.js';
 
 const resolveAddress = async (req) => {
   if (req.body.addressId) {
@@ -15,10 +15,10 @@ const resolveAddress = async (req) => {
 };
 
 export const createOrder = asyncHandler(async (req, res) => {
-  const { items, paymentMode, addressId, address } = req.body;
+  const { items, paymentMode, addressId, address, couponCode } = req.body;
   if (!items || !items.length) throw new ApiError(400, 'Order must have items');
 
-  let totalAmount = 0;
+  let subtotalAmount = 0;
   const processedItems = [];
 
   for (const item of items) {
@@ -32,17 +32,36 @@ export const createOrder = asyncHandler(async (req, res) => {
       price: product.price,
       quantity: item.quantity,
     });
-    totalAmount += product.price * item.quantity;
+    subtotalAmount += product.price * item.quantity;
   }
 
+  const { coupon, discountAmount } = await resolveCouponForOrder({
+    Coupon,
+    couponCode,
+    subtotal: subtotalAmount,
+  });
+  const totalAmount = Math.max(0, subtotalAmount - discountAmount);
   const resolvedAddress = await resolveAddress(req);
 
   const order = await Order.create({
     user: req.user._id,
     items: processedItems,
+    subtotalAmount,
+    discountAmount,
+    couponCode: coupon ? coupon.code : null,
     totalAmount,
     address: resolvedAddress,
     paymentMode: paymentMode || 'cod',
+    status: 'placed',
+    placedAt: new Date(),
+    history: [
+      {
+        from: 'placed',
+        to: 'placed',
+        by: req.user._id,
+        note: coupon ? `Coupon ${coupon.code} applied` : 'Order created',
+      },
+    ],
   });
 
   // Decrease stock
@@ -50,7 +69,22 @@ export const createOrder = asyncHandler(async (req, res) => {
     await Product.findByIdAndUpdate(item.product, { $inc: { stock: -item.quantity } });
   }
 
+  if (coupon && order.paymentMode === 'cod') {
+    await Coupon.findByIdAndUpdate(coupon._id, { $inc: { usedCount: 1 } });
+  }
+
   res.status(201).json({ order });
+});
+
+export const getMyOrder = asyncHandler(async (req, res) => {
+  const order = await Order.findById(req.params.id).populate('items.product', 'name slug image category');
+  if (!order) throw new ApiError(404, 'Order not found');
+
+  const isOwner = String(order.user) === String(req.user._id);
+  const isPrivileged = req.user.role === 'admin' || req.user.role === 'manager';
+  if (!isOwner && !isPrivileged) throw new ApiError(403, 'Forbidden');
+
+  res.json({ order });
 });
 
 export const listMyOrders = asyncHandler(async (req, res) => {
@@ -65,7 +99,14 @@ export const listAllOrders = asyncHandler(async (req, res) => {
 
 export const updateOrderStatus = asyncHandler(async (req, res) => {
   const { status } = req.body;
-  const order = await Order.findByIdAndUpdate(req.params.id, { status }, { new: true });
+  const order = await Order.findById(req.params.id);
   if (!order) throw new ApiError(404, 'Order not found');
+
+  const from = order.status;
+  order.status = status;
+  applyOrderStatusTimestamps(order, status);
+  recordOrderHistory(order, from, status, req.user, `Status changed to ${status}`);
+  await order.save();
+
   res.json({ order });
 });

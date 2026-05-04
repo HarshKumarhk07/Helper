@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react';
 import { listProducts } from '../api/products.js';
 import { useCart } from '../context/CartContext.jsx';
+import { useFavorites } from '../context/FavoritesContext.jsx';
 import FadeUp from '../components/ui/FadeUp.jsx';
 import PillButton from '../components/ui/PillButton.jsx';
 import toast from 'react-hot-toast';
+import { Heart } from 'lucide-react';
 
 export default function Products() {
   const [products, setProducts] = useState([]);
   const { addToCart } = useCart();
+  const { toggleFavorite, isFavorite } = useFavorites();
 
   useEffect(() => {
     listProducts()
@@ -35,7 +38,7 @@ export default function Products() {
           {products.map((p, i) => (
             <FadeUp key={p._id} delay={i * 0.06}>
               <div className="card-rounded group transition hover:-translate-y-1 hover:shadow-soft flex flex-col h-full">
-                <div className="overflow-hidden flex-1">
+                <div className="relative overflow-hidden flex-1">
                   {p.image ? (
                     <img
                       src={p.image}
@@ -48,6 +51,14 @@ export default function Products() {
                       No Image
                     </div>
                   )}
+                  <button
+                    type="button"
+                    onClick={() => toggleFavorite(p)}
+                    aria-label={isFavorite(p._id) ? 'Remove from favorites' : 'Add to favorites'}
+                    className="absolute right-3 top-3 inline-flex h-10 w-10 items-center justify-center rounded-full border border-paper/70 bg-paper/90 text-ink shadow-soft transition hover:scale-105 dark:border-ink/20 dark:bg-ink/90 dark:text-paper"
+                  >
+                    <Heart size={16} fill={isFavorite(p._id) ? 'currentColor' : 'none'} />
+                  </button>
                 </div>
                 <div className="space-y-3 p-4 flex flex-col justify-between">
                   <div>

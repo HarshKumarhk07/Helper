@@ -10,7 +10,7 @@ import SkeletonCard from '../components/ui/SkeletonCard.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 
 const FALLBACK_IMG =
-  'https://images.unsplash.com/photo-1581578017093-cd30fce4eeb7?auto=format&fit=crop&w=1200&q=80';
+  'https://picsum.photos/seed/service-detail-fallback/1200/1600';
 
 export default function ServiceDetail() {
   const { id } = useParams();

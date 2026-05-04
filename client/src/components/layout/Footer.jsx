@@ -1,17 +1,17 @@
 export default function Footer() {
   const year = new Date().getFullYear();
   return (
-    <footer className="border-t border-ink/10 bg-sand py-10 dark:border-paper/10 dark:bg-[#0E0E10]">
+    <footer className="border-t border-ink/10 bg-sand py-10 text-ink dark:border-paper/10 dark:bg-[#0E0E10] dark:text-paper/85">
       <div className="container-velora grid gap-8 md:grid-cols-4">
         <div>
-          <div className="text-base font-semibold tracking-[0.2em]">VELORA HOUSE</div>
+          <div className="text-base font-semibold tracking-[0.2em] dark:text-paper">VELORA HOUSE</div>
           <p className="mt-3 max-w-xs text-xs leading-relaxed text-ink/70 dark:text-paper/60">
             Urban service & heritage commerce. Designed in the city, made for everywhere.
           </p>
         </div>
         <div>
-          <div className="mb-3 text-xs uppercase tracking-widest text-ink/60">Shop</div>
-          <ul className="space-y-2 text-sm">
+          <div className="mb-3 text-xs uppercase tracking-widest text-ink/60 dark:text-paper/60">Shop</div>
+          <ul className="space-y-2 text-sm text-ink/90 dark:text-paper/80">
             <li>Men</li>
             <li>Women</li>
             <li>Lookbook</li>
@@ -19,8 +19,8 @@ export default function Footer() {
           </ul>
         </div>
         <div>
-          <div className="mb-3 text-xs uppercase tracking-widest text-ink/60">Services</div>
-          <ul className="space-y-2 text-sm">
+          <div className="mb-3 text-xs uppercase tracking-widest text-ink/60 dark:text-paper/60">Services</div>
+          <ul className="space-y-2 text-sm text-ink/90 dark:text-paper/80">
             <li>Cleaning</li>
             <li>Plumbing</li>
             <li>Electrical</li>
@@ -28,8 +28,8 @@ export default function Footer() {
           </ul>
         </div>
         <div>
-          <div className="mb-3 text-xs uppercase tracking-widest text-ink/60">Studio</div>
-          <ul className="space-y-2 text-sm">
+          <div className="mb-3 text-xs uppercase tracking-widest text-ink/60 dark:text-paper/60">Studio</div>
+          <ul className="space-y-2 text-sm text-ink/90 dark:text-paper/80">
             <li>Philosophy</li>
             <li>Careers</li>
             <li>Press</li>

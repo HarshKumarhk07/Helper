@@ -3,35 +3,30 @@ import { ArrowUpRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const CATEGORIES = [
-  { label: 'NEW IN', count: 67, slug: 'new' },
-  { label: 'MEN', count: 96, slug: 'men' },
-  { label: 'WOMEN', count: 174, slug: 'women' },
-  { label: 'LOOKBOOK', count: 21, slug: 'lookbook' },
-  { label: 'ACCESSORIES', count: 56, slug: 'accessories' },
-  { label: 'FOOTWEAR', count: 72, slug: 'footwear' },
+  { label: 'HOME SERVICES', count: 5, slug: 'home-services' },
+  { label: 'CLEANING SERVICES', count: 5, slug: 'cleaning-services' },
+  { label: 'BEAUTY & WELLNESS', count: 5, slug: 'beauty-wellness' },
+  { label: 'APPLIANCE SERVICES', count: 5, slug: 'appliance-services' },
 ];
 
 const PRODUCT_PREVIEW = [
   {
-    title: 'Oversize green t-Shirt',
-    size: 'One size',
-    price: '$12.50',
-    image:
-      'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=800&q=80',
+    title: 'Floor Cleaner',
+    size: 'Cleaning Products',
+    price: '₹249',
+    image: '/assets/cleaning-products.svg',
   },
   {
-    title: 'Orange t-shirt',
-    size: 'S / M / L / XL',
-    price: '$35.90',
-    image:
-      'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=800&q=80',
+    title: 'Skincare Kit',
+    size: 'Beauty Products',
+    price: '₹899',
+    image: '/assets/beauty-products.svg',
   },
   {
-    title: 'Bone neutral tee',
-    size: 'S / M / L',
-    price: '$48.00',
-    image:
-      'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&w=800&q=80',
+    title: 'Air Purifier',
+    size: 'Home Appliances',
+    price: '₹7,499',
+    image: '/assets/home-appliances.svg',
   },
 ];
 
@@ -41,13 +36,13 @@ export default function Categories() {
       <div className="container-velora">
         <div className="flex items-start justify-between">
           <span className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
-            (Categories)
+            (Service categories)
           </span>
           <Link
             to="/services"
             className="inline-flex items-center gap-2 text-sm tracking-tightish hover:underline"
           >
-            View all products
+            View all services
             <ArrowUpRight size={14} />
           </Link>
         </div>

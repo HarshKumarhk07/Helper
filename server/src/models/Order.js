@@ -24,6 +24,9 @@ const orderSchema = new mongoose.Schema(
       index: true,
     },
     items: [orderItemSchema],
+    subtotalAmount: { type: Number, required: true },
+    discountAmount: { type: Number, default: 0 },
+    couponCode: { type: String, default: null },
     totalAmount: { type: Number, required: true },
     address: {
       type: Object, // Stores snapshot of the address at the time of order
@@ -42,6 +45,23 @@ const orderSchema = new mongoose.Schema(
       enum: ['placed', 'processing', 'shipped', 'delivered', 'cancelled'],
       default: 'placed',
       index: true,
+    },
+    placedAt: { type: Date, default: Date.now },
+    processingAt: { type: Date, default: null },
+    shippedAt: { type: Date, default: null },
+    deliveredAt: { type: Date, default: null },
+    cancelledAt: { type: Date, default: null },
+    history: {
+      type: [
+        {
+          from: { type: String, enum: ['placed', 'processing', 'shipped', 'delivered', 'cancelled'] },
+          to: { type: String, enum: ['placed', 'processing', 'shipped', 'delivered', 'cancelled'] },
+          by: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+          note: { type: String, default: '' },
+          at: { type: Date, default: Date.now },
+        },
+      ],
+      default: [],
     },
   },
   { timestamps: true }

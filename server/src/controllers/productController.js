@@ -3,10 +3,13 @@ import { ApiError, asyncHandler } from '../utils/asyncHandler.js';
 import { ROLES } from '../config/roles.js';
 
 export const listProducts = asyncHandler(async (req, res) => {
-  const { category, search } = req.query;
-  const filter = { isActive: true };
+  const { category, search, lowStock, stockThreshold = 5, includeInactive } = req.query;
+  const filter = includeInactive === 'true' ? {} : { isActive: true };
   if (category) filter.category = category;
   if (search) filter.name = { $regex: search, $options: 'i' };
+  if (lowStock === 'true') {
+    filter.stock = { $lte: Number(stockThreshold) };
+  }
 
   const products = await Product.find(filter).sort({ createdAt: -1 });
   res.json({ products });

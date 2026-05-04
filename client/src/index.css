@@ -42,7 +42,7 @@
   }
 
   .card-rounded {
-    @apply rounded-card overflow-hidden bg-paper shadow-card dark:bg-[#18181A] dark:border dark:border-paper/10;
+    @apply rounded-card overflow-hidden bg-paper shadow-card dark:bg-[#14151A] dark:border dark:border-paper/20 dark:shadow-[0_20px_60px_rgba(0,0,0,0.45)];
   }
 
   .overlay-info {

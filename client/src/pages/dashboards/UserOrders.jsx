@@ -8,6 +8,7 @@ import { formatDateTime, formatPrice } from '../../lib/booking.js';
 export default function UserOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [expandedOrderId, setExpandedOrderId] = useState(null);
 
   useEffect(() => {
     listMyOrders()
@@ -40,7 +41,18 @@ export default function UserOrders() {
                   </div>
                   <div className="font-bold text-lg">Total: {formatPrice(order.totalAmount)}</div>
                   <div className="text-xs text-ink/70 dark:text-paper/60 mt-1">Status: {order.status.toUpperCase()}</div>
+                  <div className="text-xs text-ink/70 dark:text-paper/60 mt-1">Payment: {order.paymentMode?.toUpperCase()} · {order.paymentStatus?.toUpperCase()}</div>
+                  {order.couponCode && (
+                    <div className="text-xs text-green-700 dark:text-green-400 mt-1">Coupon: {order.couponCode} • Saved ₹{order.discountAmount || 0}</div>
+                  )}
                   <div className="text-xs text-ink/70 dark:text-paper/60 mt-1">Placed: {formatDateTime(order.createdAt)}</div>
+                  <button
+                    type="button"
+                    onClick={() => setExpandedOrderId(expandedOrderId === order._id ? null : order._id)}
+                    className="mt-4 text-xs uppercase tracking-widest text-ink/70 hover:text-ink transition dark:text-paper/70 dark:hover:text-paper"
+                  >
+                    {expandedOrderId === order._id ? 'Hide details' : 'View details'}
+                  </button>
                 </div>
                 <div className="space-y-2">
                   {order.items.map(item => (
@@ -57,6 +69,24 @@ export default function UserOrders() {
                       Download PDF Invoice
                     </button>
                   </div>
+                  {expandedOrderId === order._id && order.history?.length > 0 && (
+                    <div className="mt-4 rounded-card border border-ink/10 p-4 text-xs dark:border-paper/10">
+                      <div className="mb-3 text-[10px] uppercase tracking-widest text-ink/50 dark:text-paper/50">
+                        Status timeline
+                      </div>
+                      <div className="space-y-2">
+                        {order.history.map((step, idx) => (
+                          <div key={`${step.to}-${idx}`} className="flex items-start justify-between gap-4">
+                            <div>
+                              <div className="font-semibold uppercase tracking-widest text-[10px]">{step.to}</div>
+                              <div className="text-ink/60 dark:text-paper/60">{step.note || 'Status update'}</div>
+                            </div>
+                            <div className="text-ink/50 dark:text-paper/50">{formatDateTime(step.at)}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </FadeUp>

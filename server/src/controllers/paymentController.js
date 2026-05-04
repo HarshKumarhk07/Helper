@@ -3,6 +3,8 @@ import crypto from 'crypto';
 import { ApiError, asyncHandler } from '../utils/asyncHandler.js';
 import Order from '../models/Order.js';
 import Booking from '../models/Booking.js';
+import Coupon from '../models/Coupon.js';
+import { recordOrderHistory } from '../utils/ecommerce.js';
 
 let razorpay;
 try {
@@ -46,11 +48,26 @@ export const verifyRazorpayPayment = asyncHandler(async (req, res) => {
 
   if (isAuthentic) {
     if (type === 'ecommerce') {
-      await Order.findByIdAndUpdate(referenceId, {
-        paymentStatus: 'paid',
-        razorpayOrderId: razorpay_order_id,
-        razorpayPaymentId: razorpay_payment_id,
-      });
+      const order = await Order.findById(referenceId);
+      if (!order) throw new ApiError(404, 'Order not found');
+
+      if (order.paymentStatus === 'paid') {
+        return res.json({ message: 'Payment already verified' });
+      }
+
+      order.paymentStatus = 'paid';
+      order.razorpayOrderId = razorpay_order_id;
+      order.razorpayPaymentId = razorpay_payment_id;
+      recordOrderHistory(order, order.status, order.status, req.user?._id || null, 'Payment verified');
+      await order.save();
+
+      if (order.couponCode) {
+        await Coupon.findOneAndUpdate(
+          { code: order.couponCode },
+          { $inc: { usedCount: 1 } }
+        );
+      }
+
     } else if (type === 'booking') {
       await Booking.findByIdAndUpdate(referenceId, {
         paymentStatus: 'paid',

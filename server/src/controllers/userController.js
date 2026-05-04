@@ -31,6 +31,12 @@ export const updateMe = asyncHandler(async (req, res) => {
 export const setUserActive = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { isActive } = req.body;
+
+  // Prevent administrators from suspending their own account.
+  if (String(req.user._id) === String(id) && isActive === false) {
+    throw new ApiError(400, 'Admin cannot suspend their own account');
+  }
+
   const user = await User.findByIdAndUpdate(
     id,
     { isActive: !!isActive },

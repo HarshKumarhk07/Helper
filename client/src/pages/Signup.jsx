@@ -44,8 +44,8 @@ export default function Signup() {
           </p>
         </div>
 
-        <form onSubmit={onSubmit} className="card-rounded mx-auto w-full max-w-md p-8">
-          <div className="text-xs uppercase tracking-widest text-ink/60">(Create account)</div>
+        <form onSubmit={onSubmit} className="card-rounded mx-auto w-full max-w-md border border-ink/10 p-8 dark:border-paper/20">
+          <div className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/55">(Create account)</div>
           <h2 className="heading-display mt-2 text-3xl">New here</h2>
 
           <div className="mt-6 space-y-4">
@@ -84,7 +84,7 @@ export default function Signup() {
             {submitting ? 'Creating…' : 'Create account'}
           </PillButton>
 
-          <div className="mt-6 text-center text-xs text-ink/60 dark:text-paper/50">
+          <div className="mt-6 text-center text-xs text-ink/60 dark:text-paper/60">
             Already have an account?{' '}
             <Link to="/login" className="underline">
               Sign in
@@ -99,14 +99,14 @@ export default function Signup() {
 function Field({ label, type = 'text', value, onChange, ...rest }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-[10px] uppercase tracking-widest text-ink/60">
+      <span className="mb-1 block text-[10px] uppercase tracking-widest text-ink/60 dark:text-paper/55">
         {label}
       </span>
       <input
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-pill border border-ink/20 bg-paper px-4 py-2.5 text-sm outline-none transition focus:border-ink dark:bg-transparent dark:text-paper"
+        className="w-full rounded-pill border border-ink/20 bg-paper px-4 py-2.5 text-sm outline-none transition focus:border-ink dark:border-paper/30 dark:bg-paper/5 dark:text-paper dark:placeholder:text-paper/35 dark:focus:border-paper/70"
         {...rest}
       />
     </label>

@@ -9,16 +9,20 @@ import {
   CategoryScale,
   LinearScale,
   BarElement,
+  LineElement,
+  PointElement,
   Title,
   Tooltip,
   Legend,
 } from 'chart.js';
-import { Bar } from 'react-chartjs-2';
+import { Bar, Line } from 'react-chartjs-2';
 
 ChartJS.register(
   CategoryScale,
   LinearScale,
   BarElement,
+  LineElement,
+  PointElement,
   Title,
   Tooltip,
   Legend
@@ -51,6 +55,22 @@ export default function AdminDashboard() {
     }
   };
 
+  const revenueChartOptions = {
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      title: {
+        display: true,
+        text: 'Revenue Streams (Orders vs Bookings)',
+        color: '#888',
+        font: { family: '"Chivo Mono", monospace', size: 14 }
+      },
+    },
+    scales: {
+      y: { beginAtZero: true },
+    }
+  };
+
   const workerData = {
     labels: data?.workerPerformance?.map(w => w.name) || [],
     datasets: [
@@ -58,6 +78,20 @@ export default function AdminDashboard() {
         label: 'Jobs Completed',
         data: data?.workerPerformance?.map(w => w.jobsCompleted) || [],
         backgroundColor: '#18181A',
+      },
+    ],
+  };
+
+  const revenueData = {
+    labels: ['Orders', 'Bookings'],
+    datasets: [
+      {
+        label: 'Revenue',
+        data: [
+          data?.stats?.ordersRevenue || 0,
+          data?.stats?.bookingsRevenue || 0,
+        ],
+        backgroundColor: ['#18181A', '#8B7355'],
       },
     ],
   };
@@ -80,6 +114,12 @@ export default function AdminDashboard() {
         </PillButton>
         <PillButton variant="solid" to="/admin/services">
           Manage services →
+        </PillButton>
+        <PillButton variant="solid" to="/admin/coupons">
+          Manage coupons →
+        </PillButton>
+        <PillButton variant="solid" to="/admin/audit-logs">
+          View audit logs →
         </PillButton>
         <PillButton to="/services">Browse catalog</PillButton>
       </div>
@@ -107,8 +147,51 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          <div className="card-rounded p-6 bg-white">
-            <Bar options={chartOptions} data={workerData} />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="card-rounded p-6 bg-white">
+              <Bar options={chartOptions} data={workerData} />
+            </div>
+            <div className="card-rounded p-6 bg-white">
+              <Bar options={revenueChartOptions} data={revenueData} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="card-rounded p-6">
+              <h3 className="text-lg font-bold mb-4">Recent Bookings</h3>
+              <div className="space-y-3">
+                {data.recentBookings?.slice(0, 5).map((booking) => (
+                  <div key={booking._id} className="flex justify-between items-center p-3 bg-sand/20 rounded-lg">
+                    <div>
+                      <div className="font-semibold">{booking.user?.name}</div>
+                      <div className="text-sm text-ink/60">{booking.service?.name}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-bold">{formatPrice(booking.amount)}</div>
+                      <div className="text-xs text-ink/60 uppercase">{booking.status}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="card-rounded p-6">
+              <h3 className="text-lg font-bold mb-4">Recent Orders</h3>
+              <div className="space-y-3">
+                {data.recentOrders?.slice(0, 5).map((order) => (
+                  <div key={order._id} className="flex justify-between items-center p-3 bg-sand/20 rounded-lg">
+                    <div>
+                      <div className="font-semibold">{order.user?.name}</div>
+                      <div className="text-sm text-ink/60">{order.items?.length} items</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-bold">{formatPrice(order.totalAmount)}</div>
+                      <div className="text-xs text-ink/60 uppercase">{order.status}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       ) : null}

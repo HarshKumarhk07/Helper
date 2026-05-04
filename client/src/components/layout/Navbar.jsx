@@ -1,29 +1,49 @@
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { Search, Heart, ShoppingBag, User as UserIcon, Sun, Moon, Menu, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useTheme } from '../../context/ThemeContext.jsx';
 import { useCart } from '../../context/CartContext.jsx';
+import { useFavorites } from '../../context/FavoritesContext.jsx';
 
 const NAV = [
-  { to: '/', label: '{Home}' },
-  { to: '/services?cat=men', label: 'Men' },
-  { to: '/services?cat=women', label: 'Women' },
-  { to: '/services?cat=sale', label: 'Sale' },
-  { to: '/services?cat=lookbook', label: 'Lookbook' },
+  { to: '/', label: 'Home' },
+  { to: '/services?cat=home-services', label: 'Services' },
+  { to: '/services?cat=cleaning-services', label: 'Cleaning' },
+  { to: '/services?cat=beauty-wellness', label: 'Beauty' },
+  { to: '/services?cat=appliance-services', label: 'Appliances' },
 ];
 
 export default function Navbar() {
   const { user, isAuthenticated, logout } = useAuth();
   const { theme, toggle } = useTheme();
   const { cart } = useCart();
+  const { favorites } = useFavorites();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchValue, setSearchValue] = useState('');
+  const searchInputRef = useRef(null);
+
+  useEffect(() => {
+    if (searchOpen) {
+      searchInputRef.current?.focus();
+    }
+  }, [searchOpen]);
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    const query = searchValue.trim();
+    if (!query) return;
+    navigate(`/services?q=${encodeURIComponent(query)}`);
+    setSearchOpen(false);
+    setSearchValue('');
+  };
 
   return (
     <header className="sticky top-0 z-40 border-b border-ink/10 bg-paper/90 backdrop-blur dark:border-paper/10 dark:bg-[#0E0E10]/90">
-      <div className="container-velora flex h-16 items-center justify-between gap-6">
-        <nav className="hidden items-center gap-6 md:flex">
+      <div className="container-velora grid h-16 grid-cols-[1fr_auto_1fr] items-center gap-4">
+        <nav className="hidden min-w-0 items-center gap-5 md:flex">
           {NAV.map((n) => (
             <NavLink
               key={n.to}
@@ -40,7 +60,7 @@ export default function Navbar() {
 
         <button
           type="button"
-          className="md:hidden"
+          className="justify-self-start md:hidden"
           aria-label="menu"
           onClick={() => setOpen((o) => !o)}
         >
@@ -49,17 +69,55 @@ export default function Navbar() {
 
         <Link
           to="/"
-          className="absolute left-1/2 -translate-x-1/2 text-base font-semibold tracking-[0.18em] text-ink dark:text-paper"
+          className="justify-self-center text-base font-semibold tracking-[0.18em] text-ink dark:text-paper"
         >
           VELORA HOUSE
         </Link>
 
-        <div className="flex items-center gap-3">
-          <button className="hidden md:inline-flex" aria-label="search">
-            <Search size={18} />
-          </button>
-          <button className="hidden md:inline-flex" aria-label="favorites">
+        <div className="flex items-center justify-self-end gap-3">
+          <div className="hidden md:flex items-center">
+            {searchOpen ? (
+              <form
+                onSubmit={handleSearchSubmit}
+                className="flex items-center gap-2 rounded-full border border-ink/15 bg-paper px-3 py-1.5 dark:border-paper/15 dark:bg-[#0E0E10]"
+              >
+                <Search size={16} className="text-ink/60 dark:text-paper/60" />
+                <input
+                  ref={searchInputRef}
+                  value={searchValue}
+                  onChange={(e) => setSearchValue(e.target.value)}
+                  placeholder="Search products or services"
+                  className="w-56 bg-transparent text-sm outline-none placeholder:text-ink/40 dark:text-paper dark:placeholder:text-paper/40"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchOpen(false);
+                    setSearchValue('');
+                  }}
+                  className="text-xs uppercase tracking-widest text-ink/50 transition hover:text-ink dark:text-paper/50 dark:hover:text-paper"
+                >
+                  Close
+                </button>
+              </form>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setSearchOpen(true)}
+                className="hidden md:inline-flex"
+                aria-label="search"
+              >
+                <Search size={18} />
+              </button>
+            )}
+          </div>
+          <button type="button" onClick={() => navigate('/favorites')} className="relative hidden md:inline-flex" aria-label="favorites">
             <Heart size={18} />
+            {favorites.length > 0 && (
+              <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-ink px-1 text-[9px] text-paper dark:bg-paper dark:text-ink">
+                {favorites.length}
+              </span>
+            )}
           </button>
           <Link to="/cart" className="relative hidden md:inline-flex" aria-label="bag">
             <ShoppingBag size={18} />

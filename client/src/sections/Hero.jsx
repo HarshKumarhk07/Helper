@@ -3,7 +3,7 @@ import FadeUp from '../components/ui/FadeUp.jsx';
 import PillButton from '../components/ui/PillButton.jsx';
 
 const HERO_IMAGE =
-  'https://images.unsplash.com/photo-1520975954732-35dd22299614?auto=format&fit=crop&w=1600&q=80';
+  'https://picsum.photos/seed/urban-service-hero/1600/1000';
 
 export default function Hero() {
   return (
@@ -18,8 +18,8 @@ export default function Hero() {
         </FadeUp>
 
         <FadeUp delay={0.1} className="mt-8 flex flex-wrap justify-center gap-3">
-          <PillButton to="/services">Modern Icons</PillButton>
-          <PillButton to="/services?cat=new">New Silhouettes</PillButton>
+          <PillButton to="/services">Book Services</PillButton>
+          <PillButton to="/services?cat=home-services">Browse Categories</PillButton>
         </FadeUp>
       </div>
 
@@ -34,10 +34,9 @@ export default function Hero() {
             />
             <div className="overlay-info">
               <p className="text-sm leading-relaxed">
-                At Velora House, we design with intention — blending classic European
-                tailoring with bold architectural lines. Each piece tells a story of
-                refinement, versatility, and individuality, crafted for those who move
-                effortlessly between tradition and innovation.
+                Urban service delivery for modern homes — from deep cleaning and beauty
+                visits to appliance repair and everyday essentials, with visible imagery
+                and fast booking built in.
               </p>
               <a
                 href="#categories"

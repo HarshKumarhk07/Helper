@@ -8,10 +8,10 @@ import {
   BOOKING_STATUS,
   BOOKING_TYPE,
   PAYMENT_MODE,
-  canTransition,
 } from '../config/booking.js';
 import { generatePin } from '../utils/pin.js';
 import { pickWorkerForCategory } from '../utils/assignment.js';
+import { assertBookingTransition } from '../utils/bookingTransitionGuard.js';
 
 const recordHistory = (booking, from, to, by, note) => {
   booking.history.push({ from, to, by: by?._id || by, note: note || '' });
@@ -200,43 +200,13 @@ export const transitionStatus = asyncHandler(async (req, res) => {
   const booking = await Booking.findById(req.params.id).select('+startPin +endPin');
   if (!booking) throw new ApiError(404, 'Booking not found');
 
-  const isOwner = String(booking.user) === String(req.user._id);
-  const isWorker = booking.worker && String(booking.worker) === String(req.user._id);
-  const isAdmin = req.user.role === ROLES.ADMIN;
-  const isManager = req.user.role === ROLES.MANAGER;
-
-  const role = req.user.role;
-  const allowedActors = {
-    [BOOKING_STATUS.ASSIGNED]: ['admin', 'manager'],
-    [BOOKING_STATUS.IN_PROGRESS]: ['worker', 'admin'],
-    [BOOKING_STATUS.COMPLETED]: ['worker', 'admin'],
-    [BOOKING_STATUS.CANCELLED]: ['user', 'admin', 'manager'],
-  };
-  const actorAllowed = (allowedActors[to] || []).includes(role);
-  const userCanCancel = to === BOOKING_STATUS.CANCELLED && isOwner;
-  if (!actorAllowed && !userCanCancel) {
-    throw new ApiError(403, 'You may not perform that transition');
-  }
-  if (to !== BOOKING_STATUS.CANCELLED && !isAdmin && !isManager && !isWorker && !isOwner) {
-    throw new ApiError(403, 'Forbidden');
-  }
-
-  if (!canTransition(booking.status, to)) {
-    throw new ApiError(409, `Cannot transition from ${booking.status} to ${to}`);
-  }
-
-  // Enforce PIN validation for workers
-  if (isWorker && to === BOOKING_STATUS.IN_PROGRESS) {
-    if (booking.startPin !== pin) {
-      throw new ApiError(400, 'Invalid start PIN');
-    }
-  }
-
-  if (isWorker && to === BOOKING_STATUS.COMPLETED) {
-    if (booking.endPin !== pin) {
-      throw new ApiError(400, 'Invalid end PIN');
-    }
-  }
+  assertBookingTransition({
+    booking,
+    to,
+    pin,
+    role: req.user.role,
+    userId: req.user._id,
+  });
 
   const from = booking.status;
   booking.status = to;

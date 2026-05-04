@@ -8,9 +8,11 @@ import { Trash2 } from 'lucide-react';
 
 export default function AdminProducts() {
   const [products, setProducts] = useState([]);
+  const [lowStockProducts, setLowStockProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const lowStockThreshold = 5;
   
   const [newProduct, setNewProduct] = useState({
     name: '', slug: '', description: '', price: '', stock: '', category: 'all', image: ''
@@ -18,8 +20,14 @@ export default function AdminProducts() {
 
   const load = () => {
     setLoading(true);
-    listProducts()
-      .then(setProducts)
+    Promise.all([
+      listProducts(),
+      listProducts({ lowStock: 'true', stockThreshold: lowStockThreshold }),
+    ])
+      .then(([allProducts, lowStock]) => {
+        setProducts(allProducts);
+        setLowStockProducts(lowStock);
+      })
       .catch(() => toast.error('Failed to load products'))
       .finally(() => setLoading(false));
   };
@@ -80,6 +88,15 @@ export default function AdminProducts() {
         </button>
       </div>
 
+      {lowStockProducts.length > 0 && (
+        <div className="mb-6 rounded-card border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-200">
+          <div className="font-bold uppercase tracking-widest text-xs mb-1">
+            Low Stock Alert
+          </div>
+          {lowStockProducts.length} product{lowStockProducts.length > 1 ? 's are' : ' is'} at or below {lowStockThreshold} units.
+        </div>
+      )}
+
       {showForm && (
         <FadeUp>
           <form onSubmit={handleCreate} className="card-rounded p-6 mb-8 bg-sand/30">
@@ -132,7 +149,11 @@ export default function AdminProducts() {
                   </td>
                   <td className="p-4 font-medium">{p.name}</td>
                   <td className="p-4">₹{p.price}</td>
-                  <td className="p-4">{p.stock}</td>
+                  <td className="p-4">
+                    <span className={p.stock <= lowStockThreshold ? 'rounded-pill bg-amber-100 px-3 py-1 text-xs font-bold text-amber-900' : ''}>
+                      {p.stock}
+                    </span>
+                  </td>
                   <td className="p-4">
                     <button onClick={() => handleDelete(p._id)} className="text-red-500"><Trash2 size={16} /></button>
                   </td>

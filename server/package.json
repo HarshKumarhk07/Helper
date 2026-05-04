@@ -7,7 +7,11 @@
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
-    "seed": "node src/seed/seed.js"
+    "seed": "node src/seed/seed.js",
+    "test:slice-c": "node scripts/sliceC-socket.integration.mjs",
+    "test:slice-c:pin": "node scripts/sliceC-pin.validation.mjs",
+    "test:slice-d": "node scripts/sliceD-ecommerce.validation.mjs",
+    "test:slice-e": "node scripts/sliceE-validation.mjs"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -28,6 +32,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "nodemon": "^3.1.4"
+    "nodemon": "^3.1.4",
+    "socket.io-client": "^4.8.3"
   }
 }

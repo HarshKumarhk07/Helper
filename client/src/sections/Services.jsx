@@ -1,13 +1,11 @@
 import FadeUp from '../components/ui/FadeUp.jsx';
-import { Sparkles, Wrench, Zap, Scissors, Brush, Truck } from 'lucide-react';
+import { Home, Sparkles, Scissors, PlugZap } from 'lucide-react';
 
 const SERVICES = [
-  { icon: Sparkles, title: 'Cleaning', blurb: 'Deep, kitchen, bath, sofa.' },
-  { icon: Wrench, title: 'Plumbing', blurb: 'Leaks, fittings, fixtures.' },
-  { icon: Zap, title: 'Electrical', blurb: 'Wiring, switches, fans.' },
-  { icon: Scissors, title: 'Salon', blurb: 'Hair, nails, grooming at home.' },
-  { icon: Brush, title: 'Painting', blurb: 'Touch-ups & full repaints.' },
-  { icon: Truck, title: 'Moving', blurb: 'Packers, movers, on demand.' },
+  { icon: Home, title: 'Home Services', blurb: 'Plumbing, electrical, carpentry, painting, pest control.' },
+  { icon: Sparkles, title: 'Cleaning Services', blurb: 'Full home, kitchen, bathroom, sofa & carpet cleaning.' },
+  { icon: Scissors, title: 'Beauty & Wellness', blurb: 'Salon at home, hair spa, makeup, massage.' },
+  { icon: PlugZap, title: 'Appliance Services', blurb: 'AC, fridge, washing machine, RO, TV setup.' },
 ];
 
 export default function Services() {
@@ -20,7 +18,7 @@ export default function Services() {
           </FadeUp>
           <FadeUp delay={0.1}>
             <span className="hidden text-xs uppercase tracking-widest text-ink/60 sm:inline dark:text-paper/50">
-              ({SERVICES.length} categories)
+              ({SERVICES.length} service groups)
             </span>
           </FadeUp>
         </div>

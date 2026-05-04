@@ -18,6 +18,7 @@ import reviewRoutes from './routes/review.routes.js';
 import invoiceRoutes from './routes/invoice.routes.js';
 import couponRoutes from './routes/coupon.routes.js';
 import uploadRoutes from './routes/upload.routes.js';
+import auditRoutes from './routes/audit.routes.js';
 import { notFound, errorHandler } from './middleware/error.js';
 
 const app = express();
@@ -58,6 +59,7 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/invoices', invoiceRoutes);
 app.use('/api/coupons', couponRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/audit', auditRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

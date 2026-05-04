@@ -3,7 +3,7 @@ import { Star, Clock } from 'lucide-react';
 import { formatPrice } from '../../lib/booking.js';
 
 const FALLBACK_IMG =
-  'https://images.unsplash.com/photo-1581578017093-cd30fce4eeb7?auto=format&fit=crop&w=600&q=80';
+  'https://picsum.photos/seed/service-card-fallback/600/800';
 
 export default function ServiceCard({ service }) {
   return (

@@ -4,8 +4,10 @@ import { listUsers, adminCreateUser, setUserActive } from '../../api/users.js';
 import FadeUp from '../../components/ui/FadeUp.jsx';
 import DashboardShell from './DashboardShell.jsx';
 import { ShieldAlert, ShieldCheck } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext.jsx';
 
 export default function AdminUsers() {
+  const { user: currentUser } = useAuth();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [roleFilter, setRoleFilter] = useState('all');
@@ -36,12 +38,18 @@ export default function AdminUsers() {
   };
 
   const handleToggleActive = async (id, currentStatus) => {
+    const isSelf = currentUser?._id === id;
+    if (isSelf && currentStatus) {
+      toast.error("You can't suspend your own account");
+      return;
+    }
+
     try {
       await setUserActive(id, !currentStatus);
       toast.success(`User ${!currentStatus ? 'activated' : 'suspended'}`);
       load();
     } catch (err) {
-      toast.error('Failed to update user status');
+      toast.error(err?.response?.data?.error || 'Failed to update user status');
     }
   };
 
@@ -69,11 +77,11 @@ export default function AdminUsers() {
           <form onSubmit={handleCreate} className="card-rounded p-6 mb-8 bg-sand/30">
             <h3 className="text-xl font-bold mb-4">CREATE NEW PERSONNEL</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              <input required placeholder="Full Name" className="p-3 border rounded-xl" value={newUser.name} onChange={(e) => setNewUser({...newUser, name: e.target.value})} />
-              <input required type="email" placeholder="Email Address" className="p-3 border rounded-xl" value={newUser.email} onChange={(e) => setNewUser({...newUser, email: e.target.value})} />
-              <input required placeholder="Phone Number" className="p-3 border rounded-xl" value={newUser.phone} onChange={(e) => setNewUser({...newUser, phone: e.target.value})} />
-              <input required type="password" placeholder="Password" className="p-3 border rounded-xl" value={newUser.password} onChange={(e) => setNewUser({...newUser, password: e.target.value})} />
-              <select className="p-3 border rounded-xl" value={newUser.role} onChange={(e) => setNewUser({...newUser, role: e.target.value})}>
+              <input required placeholder="Full Name" className="p-3 border rounded-xl bg-white text-ink placeholder-ink/40 border-ink/20 dark:bg-paper/10 dark:text-paper dark:placeholder-paper/50 dark:border-paper/30 focus:outline-none focus:border-ink dark:focus:border-paper/60" value={newUser.name} onChange={(e) => setNewUser({...newUser, name: e.target.value})} />
+              <input required type="email" placeholder="Email Address" className="p-3 border rounded-xl bg-white text-ink placeholder-ink/40 border-ink/20 dark:bg-paper/10 dark:text-paper dark:placeholder-paper/50 dark:border-paper/30 focus:outline-none focus:border-ink dark:focus:border-paper/60" value={newUser.email} onChange={(e) => setNewUser({...newUser, email: e.target.value})} />
+              <input required placeholder="Phone Number" className="p-3 border rounded-xl bg-white text-ink placeholder-ink/40 border-ink/20 dark:bg-paper/10 dark:text-paper dark:placeholder-paper/50 dark:border-paper/30 focus:outline-none focus:border-ink dark:focus:border-paper/60" value={newUser.phone} onChange={(e) => setNewUser({...newUser, phone: e.target.value})} />
+              <input required type="password" placeholder="Password" className="p-3 border rounded-xl bg-white text-ink placeholder-ink/40 border-ink/20 dark:bg-paper/10 dark:text-paper dark:placeholder-paper/50 dark:border-paper/30 focus:outline-none focus:border-ink dark:focus:border-paper/60" value={newUser.password} onChange={(e) => setNewUser({...newUser, password: e.target.value})} />
+              <select className="p-3 border rounded-xl bg-white text-ink border-ink/20 dark:bg-paper/10 dark:text-paper dark:border-paper/30 focus:outline-none focus:border-ink dark:focus:border-paper/60" value={newUser.role} onChange={(e) => setNewUser({...newUser, role: e.target.value})}>
                 <option value="worker">Worker</option>
                 <option value="manager">Manager</option>
                 <option value="admin">Admin</option>
@@ -118,12 +126,20 @@ export default function AdminUsers() {
                     )}
                   </td>
                   <td className="p-4">
+                    {(() => {
+                      const isSelf = currentUser?._id === u._id;
+                      const shouldDisable = isSelf && u.isActive;
+                      return (
                     <button 
                       onClick={() => handleToggleActive(u._id, u.isActive)}
-                      className="text-xs tracking-widest uppercase hover:underline"
+                      disabled={shouldDisable}
+                      title={shouldDisable ? "You can't suspend your own account" : undefined}
+                      className="text-xs tracking-widest uppercase hover:underline disabled:cursor-not-allowed disabled:opacity-40 disabled:no-underline"
                     >
                       {u.isActive ? 'Suspend' : 'Activate'}
                     </button>
+                      );
+                    })()}
                   </td>
                 </tr>
               ))

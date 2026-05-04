@@ -23,6 +23,7 @@ import UserOrders from './pages/dashboards/UserOrders.jsx';
 import UserAddresses from './pages/dashboards/UserAddresses.jsx';
 import CartPage from './pages/CartPage.jsx';
 import CheckoutPage from './pages/CheckoutPage.jsx';
+import Favorites from './pages/Favorites.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import RoleRedirect from './components/RoleRedirect.jsx';
 
@@ -48,6 +49,7 @@ export default function App() {
           />
 
           <Route path="/cart" element={<CartPage />} />
+          <Route path="/favorites" element={<Favorites />} />
           <Route path="/checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
 
           <Route
