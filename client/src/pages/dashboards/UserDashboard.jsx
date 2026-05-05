@@ -26,6 +26,9 @@ export default function UserDashboard() {
           Saved addresses →
         </PillButton>
         <PillButton to="/services">Browse services</PillButton>
+        <PillButton variant="solid" to="/me/profile-edit">
+          Edit my profile →
+        </PillButton>
       </div>
     </DashboardShell>
   );

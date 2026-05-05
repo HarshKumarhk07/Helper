@@ -14,6 +14,20 @@ const NAV = [
   { to: '/services?cat=appliance-services', label: 'Appliances' },
 ];
 
+const PANEL_BY_ROLE = {
+  admin: '/admin',
+  manager: '/manager',
+  worker: '/worker',
+  user: '/me',
+};
+
+const PANEL_LABEL_BY_ROLE = {
+  admin: 'Admin panel',
+  manager: 'Manager panel',
+  worker: 'Worker panel',
+  user: 'My panel',
+};
+
 export default function Navbar() {
   const { user, isAuthenticated, logout } = useAuth();
   const { theme, toggle } = useTheme();
@@ -24,6 +38,8 @@ export default function Navbar() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchValue, setSearchValue] = useState('');
   const searchInputRef = useRef(null);
+  const panelPath = PANEL_BY_ROLE[user?.role] || '/dashboard';
+  const panelLabel = PANEL_LABEL_BY_ROLE[user?.role] || 'Dashboard';
 
   useEffect(() => {
     if (searchOpen) {
@@ -132,6 +148,12 @@ export default function Navbar() {
           </button>
           {isAuthenticated ? (
             <div className="flex items-center gap-3">
+              <Link
+                to={panelPath}
+                className="hidden rounded-pill border border-ink/20 px-3 py-1.5 text-xs tracking-tightish transition hover:bg-ink hover:text-paper md:inline-flex dark:border-paper/25 dark:hover:bg-paper dark:hover:text-ink"
+              >
+                {panelLabel}
+              </Link>
               <button
                 onClick={() => navigate('/dashboard')}
                 className="hidden text-sm tracking-tightish md:inline-flex"
@@ -170,6 +192,11 @@ export default function Navbar() {
                 {n.label}
               </NavLink>
             ))}
+            {isAuthenticated && (
+              <Link to={panelPath} onClick={() => setOpen(false)} className="nav-link">
+                {panelLabel}
+              </Link>
+            )}
             {!isAuthenticated && (
               <Link to="/login" onClick={() => setOpen(false)} className="nav-link">
                 Account

@@ -33,7 +33,13 @@ export const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
   const user = await User.findOne({ email }).select('+password');
-  if (!user || !user.isActive) throw new ApiError(401, 'Invalid credentials');
+  if (!user) throw new ApiError(401, 'Invalid credentials');
+  if (!user.isActive) {
+    throw new ApiError(
+      403,
+      'Your account is suspended. For further queries connect with adminvelorahouse@gmail.com'
+    );
+  }
 
   const ok = await user.comparePassword(password);
   if (!ok) throw new ApiError(401, 'Invalid credentials');

@@ -13,6 +13,10 @@ import AdminBookings from './pages/dashboards/AdminBookings.jsx';
 import AdminUsers from './pages/dashboards/AdminUsers.jsx';
 import AdminProducts from './pages/dashboards/AdminProducts.jsx';
 import AdminServices from './pages/dashboards/AdminServices.jsx';
+import AdminCoupons from './pages/dashboards/AdminCoupons.jsx';
+import AdminAuditLogs from './pages/dashboards/AdminAuditLogs.jsx';
+import AdminOrders from './pages/dashboards/AdminOrders.jsx';
+import AdminFinance from './pages/dashboards/AdminFinance.jsx';
 import ManagerDashboard from './pages/dashboards/ManagerDashboard.jsx';
 import WorkerDashboard from './pages/dashboards/WorkerDashboard.jsx';
 import WorkerJobs from './pages/dashboards/WorkerJobs.jsx';
@@ -21,6 +25,7 @@ import UserDashboard from './pages/dashboards/UserDashboard.jsx';
 import UserBookings from './pages/dashboards/UserBookings.jsx';
 import UserOrders from './pages/dashboards/UserOrders.jsx';
 import UserAddresses from './pages/dashboards/UserAddresses.jsx';
+import ProfileEdit from './pages/ProfileEdit.jsx';
 import CartPage from './pages/CartPage.jsx';
 import CheckoutPage from './pages/CheckoutPage.jsx';
 import Favorites from './pages/Favorites.jsx';
@@ -61,7 +66,7 @@ export default function App() {
             }
           />
 
-          <Route element={<ProtectedRoute roles={['admin']} />}>
+          <Route element={<ProtectedRoute roles={['admin', 'manager']} />}>
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/users" element={<AdminUsers />} />
           </Route>
@@ -69,8 +74,12 @@ export default function App() {
           <Route element={<ProtectedRoute roles={['admin', 'manager']} />}>
             <Route path="/manager" element={<ManagerDashboard />} />
             <Route path="/admin/bookings" element={<AdminBookings />} />
+            <Route path="/admin/orders" element={<AdminOrders />} />
             <Route path="/admin/products" element={<AdminProducts />} />
             <Route path="/admin/services" element={<AdminServices />} />
+            <Route path="/admin/coupons" element={<AdminCoupons />} />
+            <Route path="/admin/finance" element={<AdminFinance />} />
+            <Route path="/admin/audit-logs" element={<AdminAuditLogs />} />
           </Route>
 
           <Route element={<ProtectedRoute roles={['worker', 'admin']} />}>
@@ -84,6 +93,7 @@ export default function App() {
             <Route path="/me/bookings" element={<UserBookings />} />
             <Route path="/me/orders" element={<UserOrders />} />
             <Route path="/me/addresses" element={<UserAddresses />} />
+            <Route path="/me/profile-edit" element={<ProfileEdit />} />
           </Route>
 
           <Route path="/404" element={<NotFound />} />

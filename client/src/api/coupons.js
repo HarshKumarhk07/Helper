@@ -8,3 +8,9 @@ export const createCoupon = (payload) =>
 
 export const listCoupons = () =>
   api.get('/coupons').then((r) => r.data);
+
+export const updateCoupon = (id, payload) =>
+  api.patch(`/coupons/${id}`, payload).then((r) => r.data);
+
+export const deleteCoupon = (id) =>
+  api.delete(`/coupons/${id}`).then((r) => r.data);

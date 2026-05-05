@@ -16,11 +16,17 @@ export default function WorkerDashboard() {
       slices={SLICES}
     >
       <div className="flex flex-wrap gap-3">
+        <PillButton variant="solid" to="/worker">
+          Worker panel →
+        </PillButton>
         <PillButton variant="solid" to="/worker/jobs">
           Open job queue →
         </PillButton>
         <PillButton variant="solid" to="/worker/earnings">
           View earnings →
+        </PillButton>
+        <PillButton variant="solid" to="/me/profile-edit">
+          Edit KYC & Profile →
         </PillButton>
       </div>
     </DashboardShell>

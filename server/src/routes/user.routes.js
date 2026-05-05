@@ -1,11 +1,12 @@
 import { Router } from 'express';
 import { requireAuth, requireRole } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
-import { adminCreateUserSchema, updateMeSchema } from '../validators/auth.schema.js';
+import { adminCreateUserSchema, adminUpdateUserSchema, updateMeSchema } from '../validators/auth.schema.js';
 import { ROLES } from '../config/roles.js';
 import {
   listUsers,
   adminCreateUser,
+  adminUpdateUser,
   updateMe,
   setUserActive,
 } from '../controllers/userController.js';
@@ -22,6 +23,12 @@ router.post(
   requireRole(ROLES.ADMIN),
   validate(adminCreateUserSchema),
   adminCreateUser
+);
+router.patch(
+  '/:id',
+  requireRole(ROLES.ADMIN, ROLES.MANAGER),
+  validate(adminUpdateUserSchema),
+  adminUpdateUser
 );
 router.patch('/:id/active', requireRole(ROLES.ADMIN), setUserActive);
 

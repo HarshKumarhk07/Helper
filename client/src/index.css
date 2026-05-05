@@ -9,8 +9,15 @@
   html, body, #root {
     height: 100%;
   }
+  html {
+    font-family: 'Chivo Mono', monospace;
+  }
   body {
-    @apply font-sans bg-paper text-ink antialiased;
+    @apply bg-paper text-ink antialiased;
+    font-family: 'Chivo Mono', monospace;
+  }
+  button, input, textarea, select {
+    font: inherit;
   }
   ::selection {
     @apply bg-ink text-paper;

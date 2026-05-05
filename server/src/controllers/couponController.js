@@ -49,8 +49,56 @@ export const validateCoupon = asyncHandler(async (req, res) => {
 });
 
 export const createCoupon = asyncHandler(async (req, res) => {
-  const coupon = await Coupon.create(req.body);
+  const { code, discountType, discountValue, minOrderValue, maxDiscount, expiryDate, usageLimit, isActive } = req.body;
+
+  // Check if coupon already exists
+  const existing = await Coupon.findOne({ code: code.toUpperCase() });
+  if (existing) {
+    throw new ApiError(400, 'Coupon code already exists');
+  }
+
+  // Ensure usageLimit is properly stored
+  const couponData = {
+    code: code.toUpperCase(),
+    discountType,
+    discountValue: Number(discountValue),
+    minOrderValue: Number(minOrderValue) || 0,
+    maxDiscount: maxDiscount ? Number(maxDiscount) : null,
+    expiryDate: new Date(expiryDate),
+    usageLimit: usageLimit ? Number(usageLimit) : null,  // null = unlimited
+    isActive: isActive !== false,
+  };
+
+  const coupon = await Coupon.create(couponData);
   res.status(201).json({ coupon });
+});
+
+export const updateCoupon = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { discountValue, minOrderValue, maxDiscount, expiryDate, usageLimit, isActive } = req.body;
+
+  const coupon = await Coupon.findByIdAndUpdate(
+    id,
+    {
+      ...(discountValue !== undefined && { discountValue: Number(discountValue) }),
+      ...(minOrderValue !== undefined && { minOrderValue: Number(minOrderValue) }),
+      ...(maxDiscount !== undefined && { maxDiscount: maxDiscount ? Number(maxDiscount) : null }),
+      ...(expiryDate && { expiryDate: new Date(expiryDate) }),
+      ...(usageLimit !== undefined && { usageLimit: usageLimit ? Number(usageLimit) : null }),
+      ...(isActive !== undefined && { isActive }),
+    },
+    { new: true }
+  );
+
+  if (!coupon) throw new ApiError(404, 'Coupon not found');
+  res.json({ coupon });
+});
+
+export const deleteCoupon = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const coupon = await Coupon.findByIdAndDelete(id);
+  if (!coupon) throw new ApiError(404, 'Coupon not found');
+  res.json({ message: 'Coupon deleted successfully' });
 });
 
 export const listCoupons = asyncHandler(async (req, res) => {

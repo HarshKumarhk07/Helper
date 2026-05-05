@@ -10,24 +10,32 @@ export default function Login() {
   const location = useLocation();
   const [form, setForm] = useState({ email: '', password: '' });
   const [submitting, setSubmitting] = useState(false);
+  const [suspensionNotice, setSuspensionNotice] = useState('');
 
   const onSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
+    setSuspensionNotice('');
     try {
       await login(form.email.trim(), form.password);
       toast.success('Welcome back');
       navigate(location.state?.from || '/dashboard', { replace: true });
     } catch (err) {
-      toast.error(err?.response?.data?.error || 'Login failed');
+      const message = err?.response?.data?.error || 'Login failed';
+      if (err?.response?.status === 403 && /suspend/i.test(message)) {
+        setSuspensionNotice(message);
+      } else {
+        toast.error(message);
+      }
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <section className="container-velora flex min-h-[80vh] items-center py-16">
-      <div className="grid w-full gap-12 lg:grid-cols-2">
+    <>
+      <section className="container-velora flex min-h-[80vh] items-center py-16">
+        <div className="grid w-full gap-12 lg:grid-cols-2">
         <div className="hidden lg:block">
           <h1 className="heading-display text-5xl leading-[0.98]">SIGN IN<br />TO VELORA.</h1>
           <p className="mt-6 max-w-md text-sm leading-relaxed text-ink/70 dark:text-paper/60">
@@ -70,8 +78,31 @@ export default function Login() {
             </Link>
           </div>
         </form>
-      </div>
-    </section>
+        </div>
+      </section>
+
+      {suspensionNotice && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/70 px-4 backdrop-blur-sm">
+          <div className="card-rounded w-full max-w-lg border border-paper/10 bg-paper p-6 text-ink shadow-[0_30px_90px_rgba(0,0,0,0.35)] dark:border-paper/20 dark:bg-[#14151A] dark:text-paper">
+            <div className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+              Account notice
+            </div>
+            <h2 className="heading-display mt-3 text-3xl">Account suspended</h2>
+            <p className="mt-4 text-sm leading-relaxed text-ink/75 dark:text-paper/70">
+              {suspensionNotice}
+            </p>
+            <p className="mt-3 text-sm leading-relaxed text-ink/75 dark:text-paper/70">
+              For any further query, connect with adminvelorahouse@gmail.com.
+            </p>
+            <div className="mt-6 flex justify-end">
+              <PillButton variant="solid" onClick={() => setSuspensionNotice('')}>
+                Close
+              </PillButton>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 

@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { listProducts, createProduct, deleteProduct } from '../../api/products.js';
+import { listProducts, createProduct, deleteProduct, updateProduct } from '../../api/products.js';
 import api from '../../api/axios.js';
 import FadeUp from '../../components/ui/FadeUp.jsx';
 import DashboardShell from './DashboardShell.jsx';
-import { Trash2 } from 'lucide-react';
+import { Trash2, AlertTriangle, Edit2 } from 'lucide-react';
 
 export default function AdminProducts() {
   const [products, setProducts] = useState([]);
@@ -12,9 +12,15 @@ export default function AdminProducts() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [deleteModal, setDeleteModal] = useState({ show: false, productId: null, productName: '' });
+  const [editingProduct, setEditingProduct] = useState(null);
   const lowStockThreshold = 5;
   
   const [newProduct, setNewProduct] = useState({
+    name: '', slug: '', description: '', price: '', stock: '', category: 'all', image: ''
+  });
+
+  const [editForm, setEditForm] = useState({
     name: '', slug: '', description: '', price: '', stock: '', category: 'all', image: ''
   });
 
@@ -68,14 +74,53 @@ export default function AdminProducts() {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Delete this product?')) return;
+  const handleDelete = async (id, productName) => {
+    setDeleteModal({ show: true, productId: id, productName });
+  };
+
+  const confirmDelete = async () => {
     try {
-      await deleteProduct(id);
+      await deleteProduct(deleteModal.productId);
       toast.success('Product deleted');
+      setDeleteModal({ show: false, productId: null, productName: '' });
       load();
     } catch (err) {
       toast.error('Failed to delete product');
+    }
+  };
+
+  const openEditor = (product) => {
+    setEditingProduct(product);
+    setEditForm({
+      name: product.name || '',
+      slug: product.slug || '',
+      description: product.description || '',
+      price: product.price || '',
+      stock: product.stock || '',
+      category: product.category || 'all',
+      image: product.image || '',
+    });
+  };
+
+  const closeEditor = () => {
+    setEditingProduct(null);
+    setEditForm({ name: '', slug: '', description: '', price: '', stock: '', category: 'all', image: '' });
+  };
+
+  const handleUpdateProduct = async (e) => {
+    e.preventDefault();
+    try {
+      const payload = {
+        ...editForm,
+        price: Number(editForm.price),
+        stock: Number(editForm.stock),
+      };
+      const updated = await updateProduct(editingProduct._id, payload);
+      setProducts((current) => current.map((p) => (p._id === updated._id ? updated : p)));
+      toast.success('Product updated successfully');
+      closeEditor();
+    } catch (err) {
+      toast.error(err?.response?.data?.error || 'Failed to update product');
     }
   };
 
@@ -102,19 +147,37 @@ export default function AdminProducts() {
           <form onSubmit={handleCreate} className="card-rounded p-6 mb-8 bg-sand/30">
             <h3 className="text-xl font-bold mb-4">NEW PRODUCT</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <input required placeholder="Product Name" className="p-3 border rounded-xl" value={newProduct.name} onChange={(e) => setNewProduct({...newProduct, name: e.target.value, slug: e.target.value.toLowerCase().replace(/ /g, '-')})} />
-              <input required placeholder="Slug" className="p-3 border rounded-xl" value={newProduct.slug} onChange={(e) => setNewProduct({...newProduct, slug: e.target.value})} />
-              <input required type="number" placeholder="Price (₹)" className="p-3 border rounded-xl" value={newProduct.price} onChange={(e) => setNewProduct({...newProduct, price: e.target.value})} />
-              <input required type="number" placeholder="Stock" className="p-3 border rounded-xl" value={newProduct.stock} onChange={(e) => setNewProduct({...newProduct, stock: e.target.value})} />
-              <input required placeholder="Category" className="p-3 border rounded-xl" value={newProduct.category} onChange={(e) => setNewProduct({...newProduct, category: e.target.value})} />
+              <div>
+                <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Product Name</label>
+                <input required placeholder="e.g., Tool Kit" className="w-full p-3 border rounded-xl bg-white dark:bg-paper/10" value={newProduct.name} onChange={(e) => setNewProduct({...newProduct, name: e.target.value, slug: e.target.value.toLowerCase().replace(/ /g, '-')})} />
+              </div>
+              <div>
+                <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Slug (URL-friendly)</label>
+                <input required placeholder="e.g., tool-kit" className="w-full p-3 border rounded-xl bg-white dark:bg-paper/10" value={newProduct.slug} onChange={(e) => setNewProduct({...newProduct, slug: e.target.value})} />
+              </div>
+              <div>
+                <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Price (₹)</label>
+                <input required type="number" placeholder="1499" className="w-full p-3 border rounded-xl bg-white dark:bg-paper/10" value={newProduct.price} onChange={(e) => setNewProduct({...newProduct, price: e.target.value})} />
+              </div>
+              <div>
+                <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Stock Quantity</label>
+                <input required type="number" placeholder="100" className="w-full p-3 border rounded-xl bg-white dark:bg-paper/10" value={newProduct.stock} onChange={(e) => setNewProduct({...newProduct, stock: e.target.value})} />
+              </div>
+              <div>
+                <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Category</label>
+                <input required placeholder="e.g., Electronics" className="w-full p-3 border rounded-xl bg-white dark:bg-paper/10" value={newProduct.category} onChange={(e) => setNewProduct({...newProduct, category: e.target.value})} />
+              </div>
             </div>
             
-            <textarea required placeholder="Description" className="w-full p-3 border rounded-xl mb-4 h-24" value={newProduct.description} onChange={(e) => setNewProduct({...newProduct, description: e.target.value})} />
+            <div className="mb-4">
+              <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Description</label>
+              <textarea required placeholder="Describe the product features and benefits..." className="w-full p-3 border rounded-xl bg-white dark:bg-paper/10 h-24" value={newProduct.description} onChange={(e) => setNewProduct({...newProduct, description: e.target.value})} />
+            </div>
             
             <div className="mb-6">
-              <label className="block text-sm mb-2 font-medium">Product Image (Cloudinary)</label>
+              <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Product Image (Cloudinary)</label>
               <div className="flex items-center gap-4">
-                <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading} className="p-2 border rounded-xl flex-1 bg-white" />
+                <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading} className="p-2 border rounded-xl flex-1 bg-white dark:bg-paper/10" />
                 {uploading && <span className="text-sm">Uploading...</span>}
                 {newProduct.image && <img src={newProduct.image} alt="Preview" className="h-16 w-16 object-cover rounded-xl" />}
               </div>
@@ -155,7 +218,14 @@ export default function AdminProducts() {
                     </span>
                   </td>
                   <td className="p-4">
-                    <button onClick={() => handleDelete(p._id)} className="text-red-500"><Trash2 size={16} /></button>
+                    <div className="flex gap-2">
+                      <button onClick={() => openEditor(p)} className="text-blue-500 hover:text-blue-700 transition" title="Edit">
+                        <Edit2 size={16} />
+                      </button>
+                      <button onClick={() => handleDelete(p._id, p.name)} className="text-red-500 hover:text-red-700 transition" title="Delete">
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))
@@ -163,6 +233,110 @@ export default function AdminProducts() {
           </tbody>
         </table>
       </div>
+
+      {/* Edit Product Modal */}
+      {editingProduct && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/70 px-4 backdrop-blur-sm overflow-y-auto">
+          <div className="card-rounded w-full max-w-2xl border border-paper/10 bg-paper p-6 text-ink shadow-[0_30px_90px_rgba(0,0,0,0.35)] dark:border-paper/20 dark:bg-[#14151A] dark:text-paper my-8">
+            <div className="flex items-start justify-between gap-4 mb-6">
+              <div>
+                <div className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">Edit Product</div>
+                <h3 className="heading-display mt-2 text-2xl">{editingProduct.name}</h3>
+              </div>
+              <button onClick={closeEditor} className="pill-btn text-xs">Close</button>
+            </div>
+
+            <form onSubmit={handleUpdateProduct} className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div>
+                <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60 dark:text-paper/50">Product Name</label>
+                <input required placeholder="Product name" className="w-full p-3 border rounded-xl bg-white dark:bg-paper/10 text-ink dark:text-paper border-ink/20 dark:border-paper/20" value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} />
+              </div>
+              <div>
+                <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60 dark:text-paper/50">Slug</label>
+                <input required placeholder="URL-friendly slug" className="w-full p-3 border rounded-xl bg-white dark:bg-paper/10 text-ink dark:text-paper border-ink/20 dark:border-paper/20" value={editForm.slug} onChange={(e) => setEditForm({ ...editForm, slug: e.target.value })} />
+              </div>
+              <div>
+                <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60 dark:text-paper/50">Price (₹)</label>
+                <input required type="number" placeholder="1499" className="w-full p-3 border rounded-xl bg-white dark:bg-paper/10 text-ink dark:text-paper border-ink/20 dark:border-paper/20" value={editForm.price} onChange={(e) => setEditForm({ ...editForm, price: e.target.value })} />
+              </div>
+              <div>
+                <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60 dark:text-paper/50">Stock Quantity</label>
+                <input required type="number" placeholder="100" className="w-full p-3 border rounded-xl bg-white dark:bg-paper/10 text-ink dark:text-paper border-ink/20 dark:border-paper/20" value={editForm.stock} onChange={(e) => setEditForm({ ...editForm, stock: e.target.value })} />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60 dark:text-paper/50">Category</label>
+                <input required placeholder="e.g., Electronics" className="w-full p-3 border rounded-xl bg-white dark:bg-paper/10 text-ink dark:text-paper border-ink/20 dark:border-paper/20" value={editForm.category} onChange={(e) => setEditForm({ ...editForm, category: e.target.value })} />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60 dark:text-paper/50">Description</label>
+                <textarea required placeholder="Product description..." className="w-full p-3 border rounded-xl bg-white dark:bg-paper/10 text-ink dark:text-paper border-ink/20 dark:border-paper/20 h-24" value={editForm.description} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })} />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60 dark:text-paper/50">Image URL or Upload</label>
+                <input placeholder="Image URL" className="w-full p-3 border rounded-xl bg-white dark:bg-paper/10 text-ink dark:text-paper border-ink/20 dark:border-paper/20 mb-2" value={editForm.image} onChange={(e) => setEditForm({ ...editForm, image: e.target.value })} />
+                <div className="border-t border-ink/10 dark:border-paper/10 pt-3">
+                  <div className="text-xs text-ink/60 dark:text-paper/50 mb-2">Or upload new image:</div>
+                  <input type="file" accept="image/*" className="w-full text-sm" onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    try {
+                      const formData = new FormData();
+                      formData.append('image', file);
+                      const res = await api.post('/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+                      setEditForm({ ...editForm, image: res.data.url });
+                      toast.success('Image uploaded');
+                    } catch {
+                      toast.error('Upload failed');
+                    }
+                  }} />
+                </div>
+                {editForm.image && <img src={editForm.image} alt="Preview" className="h-16 w-16 object-cover rounded-xl mt-3" />}
+              </div>
+
+              <div className="md:col-span-2 flex gap-3 pt-4">
+                <button type="button" onClick={closeEditor} className="flex-1 px-4 py-3 rounded-xl border border-ink/20 dark:border-paper/20 hover:bg-ink/5 dark:hover:bg-paper/5 transition font-medium uppercase tracking-widest text-sm">Cancel</button>
+                <button type="submit" className="flex-1 px-4 py-3 bg-ink text-paper dark:bg-paper dark:text-ink rounded-xl font-medium uppercase tracking-widest text-sm hover:opacity-90 transition">Save Changes</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      
+      {deleteModal.show && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/70 px-4 backdrop-blur-sm">
+          <div className="card-rounded w-full max-w-sm border border-paper/10 bg-paper p-8 text-ink shadow-[0_30px_90px_rgba(0,0,0,0.35)] dark:border-paper/20 dark:bg-[#14151A] dark:text-paper">
+            {/* Icon */}
+            <div className="flex justify-center mb-6">
+              <div className="p-4 rounded-full bg-red-100 dark:bg-red-400/10">
+                <AlertTriangle className="text-red-600 dark:text-red-400" size={28} />
+              </div>
+            </div>
+
+            {/* Content */}
+            <h3 className="text-xl font-bold text-center mb-2">Delete Product</h3>
+            <p className="text-center text-ink/70 dark:text-paper/70 mb-6">
+              Are you sure you want to delete <strong className="text-red-600 dark:text-red-400">{deleteModal.productName}</strong>? This action cannot be undone.
+            </p>
+
+            {/* Buttons */}
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteModal({ show: false, productId: null, productName: '' })}
+                className="flex-1 px-4 py-3 rounded-xl border border-ink/20 dark:border-paper/20 hover:bg-ink/5 dark:hover:bg-paper/5 transition font-medium uppercase tracking-widest text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl transition font-medium uppercase tracking-widest text-sm"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </DashboardShell>
   );
 }

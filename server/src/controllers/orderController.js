@@ -110,3 +110,15 @@ export const updateOrderStatus = asyncHandler(async (req, res) => {
 
   res.json({ order });
 });
+
+export const updateOrderNote = asyncHandler(async (req, res) => {
+  const { note } = req.body;
+  const order = await Order.findById(req.params.id);
+  if (!order) throw new ApiError(404, 'Order not found');
+
+  order.adminNote = String(note || '').trim();
+  recordOrderHistory(order, order.status, order.status, req.user, 'Admin note updated');
+  await order.save();
+
+  res.json({ order });
+});

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import DashboardShell from './DashboardShell.jsx';
+import api from '../../api/axios.js';
 
 export default function AdminAuditLogs() {
   const [logs, setLogs] = useState([]);
@@ -13,20 +14,15 @@ export default function AdminAuditLogs() {
   const load = async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({
-        limit: 100,
-        skip: 0,
-        ...(filters.resource && { resource: filters.resource }),
-        ...(filters.action && { action: filters.action }),
-      });
-      const response = await fetch(`/api/audit?${params}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+      const response = await api.get('/audit', {
+        params: {
+          limit: 100,
+          skip: 0,
+          ...(filters.resource && { resource: filters.resource }),
+          ...(filters.action && { action: filters.action }),
         },
       });
-      if (!response.ok) throw new Error('Failed to load audit logs');
-      const data = await response.json();
-      setLogs(data.logs || []);
+      setLogs(response.data.logs || []);
     } catch (err) {
       toast.error('Failed to load audit logs');
     } finally {

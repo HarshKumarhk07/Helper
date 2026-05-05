@@ -28,6 +28,7 @@ const orderSchema = new mongoose.Schema(
     discountAmount: { type: Number, default: 0 },
     couponCode: { type: String, default: null },
     totalAmount: { type: Number, required: true },
+    adminNote: { type: String, default: '' },
     address: {
       type: Object, // Stores snapshot of the address at the time of order
       required: true,

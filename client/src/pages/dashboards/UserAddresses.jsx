@@ -3,12 +3,13 @@ import toast from 'react-hot-toast';
 import { listMyAddresses, createAddress, deleteAddress } from '../../api/addresses.js';
 import FadeUp from '../../components/ui/FadeUp.jsx';
 import PillButton from '../../components/ui/PillButton.jsx';
-import { Trash2 } from 'lucide-react';
+import { Trash2, AlertTriangle } from 'lucide-react';
 
 export default function UserAddresses() {
   const [addresses, setAddresses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [deleteModal, setDeleteModal] = useState({ show: false, addressId: null, addressLabel: '' });
   const [newAddress, setNewAddress] = useState({
     label: 'home',
     line1: '',
@@ -44,11 +45,15 @@ export default function UserAddresses() {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Delete this address?')) return;
+  const handleDelete = async (id, label) => {
+    setDeleteModal({ show: true, addressId: id, addressLabel: label });
+  };
+
+  const confirmDelete = async () => {
     try {
-      await deleteAddress(id);
+      await deleteAddress(deleteModal.addressId);
       toast.success('Address deleted');
+      setDeleteModal({ show: false, addressId: null, addressLabel: '' });
       load();
     } catch (err) {
       toast.error('Failed to delete address');
@@ -125,7 +130,7 @@ export default function UserAddresses() {
                 <div className="text-sm text-ink/80 dark:text-paper/80">{addr.city}, {addr.state} {addr.pincode}</div>
                 
                 <div className="mt-6 pt-4 border-t border-ink/10 dark:border-paper/10 flex justify-end">
-                  <button onClick={() => handleDelete(addr._id)} className="text-red-500 hover:text-red-700 transition">
+                  <button onClick={() => handleDelete(addr._id, addr.label)} className="text-red-500 hover:text-red-700 transition">
                     <Trash2 size={16} />
                   </button>
                 </div>
@@ -134,6 +139,42 @@ export default function UserAddresses() {
           ))
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteModal.show && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/70 px-4 backdrop-blur-sm">
+          <div className="card-rounded w-full max-w-sm border border-paper/10 bg-paper p-8 text-ink shadow-[0_30px_90px_rgba(0,0,0,0.35)] dark:border-paper/20 dark:bg-[#14151A] dark:text-paper">
+            {/* Icon */}
+            <div className="flex justify-center mb-6">
+              <div className="p-4 rounded-full bg-red-100 dark:bg-red-400/10">
+                <AlertTriangle className="text-red-600 dark:text-red-400" size={28} />
+              </div>
+            </div>
+
+            {/* Content */}
+            <h3 className="text-xl font-bold text-center mb-2">Delete Address</h3>
+            <p className="text-center text-ink/70 dark:text-paper/70 mb-6">
+              Are you sure you want to delete your <strong className="text-red-600 dark:text-red-400 capitalize">{deleteModal.addressLabel}</strong> address? This action cannot be undone.
+            </p>
+
+            {/* Buttons */}
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteModal({ show: false, addressId: null, addressLabel: '' })}
+                className="flex-1 px-4 py-3 rounded-xl border border-ink/20 dark:border-paper/20 hover:bg-ink/5 dark:hover:bg-paper/5 transition font-medium uppercase tracking-widest text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl transition font-medium uppercase tracking-widest text-sm"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

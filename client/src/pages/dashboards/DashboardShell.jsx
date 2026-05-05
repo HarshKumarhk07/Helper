@@ -13,7 +13,7 @@ export default function DashboardShell({ eyebrow, title, children, slices }) {
         <span className="uppercase tracking-widest">{user?.role}</span>
       </p>
 
-      <div className="mt-10 grid gap-4 md:grid-cols-3">
+      <div className="mt-10 grid grid-cols-2 gap-4 md:grid-cols-3">
         {(slices || []).map((s) => (
           <div
             key={s.title}

@@ -100,23 +100,50 @@ export default function AdminDashboard() {
     <DashboardShell
       eyebrow="(Admin console)"
       title="EVERYTHING, IN ONE PANE."
-      slices={[]}
+      slices={[
+        {
+          tag: 'Analytics',
+          title: 'Access analytics dashboard',
+          body: 'Revenue, bookings, orders, and worker performance are available from this console.',
+        },
+        {
+          tag: 'KYC',
+          title: 'Approve worker accounts',
+          body: 'Use the personnel screen to review worker activation, Aadhaar, and PAN details.',
+        },
+        {
+          tag: 'Operations',
+          title: 'Assign workers and managers',
+          body: 'Manage roles, activation, and operational ownership from the user directory.',
+        },
+        {
+          tag: 'Governance',
+          title: 'View and edit all data',
+          body: 'Use the portal buttons to reach bookings, orders, inventory, coupons, finance, and audit logs.',
+        },
+      ]}
     >
-      <div className="flex flex-wrap gap-3 mb-10">
+      <div className="grid grid-cols-2 gap-3 mb-10 md:flex md:flex-wrap">
         <PillButton variant="solid" to="/admin/bookings">
           Open bookings →
         </PillButton>
         <PillButton variant="solid" to="/admin/users">
-          Manage users →
+          KYC approval →
+        </PillButton>
+        <PillButton variant="solid" to="/admin/orders">
+          Add admin notes on orders →
         </PillButton>
         <PillButton variant="solid" to="/admin/products">
-          Manage products →
+          Inventory control →
         </PillButton>
         <PillButton variant="solid" to="/admin/services">
-          Manage services →
+          Categories & pricing →
         </PillButton>
         <PillButton variant="solid" to="/admin/coupons">
           Manage coupons →
+        </PillButton>
+        <PillButton variant="solid" to="/admin/finance">
+          Commission & payouts →
         </PillButton>
         <PillButton variant="solid" to="/admin/audit-logs">
           View audit logs →

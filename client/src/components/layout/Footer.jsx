@@ -6,7 +6,8 @@ export default function Footer() {
         <div>
           <div className="text-base font-semibold tracking-[0.2em] dark:text-paper">VELORA HOUSE</div>
           <p className="mt-3 max-w-xs text-xs leading-relaxed text-ink/70 dark:text-paper/60">
-            Urban service & heritage commerce. Designed in the city, made for everywhere.
+            Urban service, commerce, and workforce operations for modern homes.
+            Designed in the city, made to scale everywhere.
           </p>
         </div>
         <div>
@@ -38,8 +39,8 @@ export default function Footer() {
         </div>
       </div>
       <div className="container-velora mt-10 flex flex-col items-center justify-between gap-2 border-t border-ink/10 pt-6 text-xs text-ink/60 md:flex-row dark:border-paper/10 dark:text-paper/50">
-        <span>© {year} Velora House — All rights reserved</span>
-        <span>Crafted with care · v0.1</span>
+        <span>© {year} Velora House — Services, retail, and operations unified</span>
+        <span>Built for bookings, inventory, and support teams</span>
       </div>
     </footer>
   );
