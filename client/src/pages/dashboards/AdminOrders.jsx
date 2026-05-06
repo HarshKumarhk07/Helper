@@ -53,6 +53,15 @@ export default function AdminOrders() {
                   <div className="mt-1 text-sm text-ink/70 dark:text-paper/60">
                     {order.items?.length || 0} items · {order.status}
                   </div>
+                  {order.items?.length > 0 && (
+                    <div className="mt-2 space-y-1 text-xs text-ink/60 dark:text-paper/50">
+                      {order.items.map((item, idx) => (
+                        <div key={idx}>
+                          {item.name} × {item.quantity}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <div className="text-right">
                   <div className="text-lg font-semibold">{formatPrice(order.totalAmount)}</div>

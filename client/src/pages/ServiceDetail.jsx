@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { Star, Clock, ArrowUpRight } from 'lucide-react';
+import { Star, Clock, ArrowUpRight, ShoppingCart } from 'lucide-react';
 import { getService } from '../api/services.js';
 import { formatPrice } from '../lib/booking.js';
 import PillButton from '../components/ui/PillButton.jsx';
 import FadeUp from '../components/ui/FadeUp.jsx';
 import SkeletonCard from '../components/ui/SkeletonCard.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
+import { useCart } from '../context/CartContext.jsx';
 
 const FALLBACK_IMG =
   'https://picsum.photos/seed/service-detail-fallback/1200/1600';
@@ -15,6 +16,7 @@ const FALLBACK_IMG =
 export default function ServiceDetail() {
   const { id } = useParams();
   const { isAuthenticated } = useAuth();
+  const { addToCart } = useCart();
   const navigate = useNavigate();
   const [service, setService] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -33,6 +35,16 @@ export default function ServiceDetail() {
       return;
     }
     navigate(`/book/${id}`);
+  };
+
+  const handleAddToCart = () => {
+    addToCart({
+      _id: service._id,
+      kind: 'service',
+      name: service.name,
+      price: service.price,
+      image: service.image,
+    });
   };
 
   if (loading) {
@@ -109,6 +121,9 @@ export default function ServiceDetail() {
               <div className="mt-8 flex flex-wrap gap-3">
                 <PillButton variant="solid" onClick={startBooking}>
                   Book now <ArrowUpRight size={14} />
+                </PillButton>
+                <PillButton variant="solid" onClick={handleAddToCart}>
+                  Add to cart <ShoppingCart size={14} />
                 </PillButton>
                 <PillButton to="/services">Continue browsing</PillButton>
               </div>

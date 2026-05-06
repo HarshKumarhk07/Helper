@@ -14,8 +14,9 @@ import {
   Title,
   Tooltip,
   Legend,
+  ArcElement,
 } from 'chart.js';
-import { Bar, Line } from 'react-chartjs-2';
+import { Bar, Line, Doughnut } from 'react-chartjs-2';
 
 ChartJS.register(
   CategoryScale,
@@ -23,6 +24,7 @@ ChartJS.register(
   BarElement,
   LineElement,
   PointElement,
+  ArcElement,
   Title,
   Tooltip,
   Legend
@@ -31,6 +33,13 @@ ChartJS.register(
 export default function AdminDashboard() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     getAdminStats()
@@ -41,34 +50,133 @@ export default function AdminDashboard() {
 
   const chartOptions = {
     responsive: true,
+    maintainAspectRatio: true,
     plugins: {
       legend: { display: false },
       title: {
         display: true,
         text: 'Top Worker Performance (Jobs Completed)',
         color: '#888',
-        font: { family: '"Chivo Mono", monospace', size: 14 }
+        font: { family: '"Chivo Mono", monospace', size: isMobile ? 12 : 14 }
       },
     },
     scales: {
       y: { beginAtZero: true, ticks: { precision: 0 } },
-    }
+      x: { 
+        ticks: { 
+          maxRotation: isMobile ? 45 : 0, 
+          minRotation: isMobile ? 45 : 0, 
+          font: { size: isMobile ? 9 : 12 },
+          padding: isMobile ? 5 : 0
+        } 
+      }
+    },
+    layout: { padding: { bottom: isMobile ? 20 : 0 } }
   };
 
   const revenueChartOptions = {
     responsive: true,
+    maintainAspectRatio: true,
     plugins: {
       legend: { display: false },
       title: {
         display: true,
         text: 'Revenue Streams (Orders vs Bookings)',
         color: '#888',
-        font: { family: '"Chivo Mono", monospace', size: 14 }
+        font: { family: '"Chivo Mono", monospace', size: isMobile ? 12 : 14 }
+      },
+    },
+    scales: {
+      y: { beginAtZero: true }
+    }
+  };
+
+  const categoryChartOptions = {
+    responsive: true,
+    maintainAspectRatio: true,
+    plugins: {
+      legend: {
+        display: true,
+        position: isMobile ? 'bottom' : 'right',
+        labels: { font: { family: '"Chivo Mono", monospace', size: isMobile ? 10 : 12 } }
+      },
+      title: {
+        display: true,
+        text: 'Category Performance (Revenue)',
+        color: '#888',
+        font: { family: '"Chivo Mono", monospace', size: isMobile ? 12 : 14 }
+      },
+    },
+  };
+
+  const growthTrendOptions = {
+    responsive: true,
+    maintainAspectRatio: true,
+    plugins: {
+      legend: { display: true, labels: { font: { size: isMobile ? 10 : 12 } } },
+      title: {
+        display: true,
+        text: 'Revenue Trends (Last 30 Days)',
+        color: '#888',
+        font: { family: '"Chivo Mono", monospace', size: isMobile ? 12 : 14 }
       },
     },
     scales: {
       y: { beginAtZero: true },
-    }
+      x: { 
+        ticks: { 
+          maxTicksLimit: isMobile ? 4 : 10, 
+          font: { size: isMobile ? 8 : 12 },
+          maxRotation: 0,
+          minRotation: 0,
+          callback: function(value, index) {
+            const label = this.getLabelForValue(value);
+            if (!label) return '';
+            // Format as "MM-DD" to "Mon DD" format
+            const date = new Date(label);
+            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            return `${monthNames[date.getMonth()]} ${date.getDate()}`;
+          }
+        },
+        grid: { display: !isMobile }
+      }
+    },
+    layout: { padding: { bottom: isMobile ? 15 : 0 } }
+  };
+
+  const ordersBookingsTrendOptions = {
+    responsive: true,
+    maintainAspectRatio: true,
+    plugins: {
+      legend: { display: true, labels: { font: { size: isMobile ? 10 : 12 } } },
+      title: {
+        display: true,
+        text: 'Orders & Bookings Trends (Last 30 Days)',
+        color: '#888',
+        font: { family: '"Chivo Mono", monospace', size: isMobile ? 12 : 14 }
+      },
+    },
+    scales: {
+      y: { beginAtZero: true },
+      x: { 
+        ticks: { 
+          maxTicksLimit: isMobile ? 4 : 10, 
+          font: { size: isMobile ? 8 : 12 },
+          maxRotation: 0,
+          minRotation: 0,
+          callback: function(value, index) {
+            const label = this.getLabelForValue(value);
+            if (!label) return '';
+            // Format as "MM-DD" to "Mon DD" format
+            const date = new Date(label);
+            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            return `${monthNames[date.getMonth()]} ${date.getDate()}`;
+          }
+        },
+        grid: { display: !isMobile }
+      }
+    },
+    layout: { padding: { bottom: isMobile ? 15 : 0 } }
   };
 
   const workerData = {
@@ -92,6 +200,74 @@ export default function AdminDashboard() {
           data?.stats?.bookingsRevenue || 0,
         ],
         backgroundColor: ['#18181A', '#8B7355'],
+      },
+    ],
+  };
+
+  const categoryData = {
+    labels: data?.categoryPerformance?.map(c => c.category) || [],
+    datasets: [
+      {
+        label: 'Revenue by Category',
+        data: data?.categoryPerformance?.map(c => c.revenue) || [],
+        backgroundColor: [
+          '#18181A',
+          '#8B7355',
+          '#C9A876',
+          '#D4A574',
+          '#E8C9B8',
+          '#F5D5C8',
+          '#A0826D',
+          '#6B5B4F',
+          '#9B8F85',
+          '#B8A89F',
+        ],
+        borderColor: '#fff',
+        borderWidth: 2,
+      },
+    ],
+  };
+
+  const revenueGrowthData = {
+    labels: data?.growthTrends?.bookingRevenue?.map(d => d._id) || [],
+    datasets: [
+      {
+        label: 'Booking Revenue',
+        data: data?.growthTrends?.bookingRevenue?.map(d => d.revenue) || [],
+        borderColor: '#18181A',
+        backgroundColor: 'rgba(24, 24, 26, 0.1)',
+        tension: 0.4,
+        fill: true,
+      },
+      {
+        label: 'Order Revenue',
+        data: data?.growthTrends?.orderRevenue?.map(d => d.revenue) || [],
+        borderColor: '#8B7355',
+        backgroundColor: 'rgba(139, 115, 85, 0.1)',
+        tension: 0.4,
+        fill: true,
+      },
+    ],
+  };
+
+  const countsTrendData = {
+    labels: data?.growthTrends?.ordersCounts?.map(d => d._id) || [],
+    datasets: [
+      {
+        label: 'Orders',
+        data: data?.growthTrends?.ordersCounts?.map(d => d.count) || [],
+        borderColor: '#18181A',
+        backgroundColor: 'rgba(24, 24, 26, 0.1)',
+        tension: 0.4,
+        fill: true,
+      },
+      {
+        label: 'Bookings',
+        data: data?.growthTrends?.bookingsCounts?.map(d => d.count) || [],
+        borderColor: '#8B7355',
+        backgroundColor: 'rgba(139, 115, 85, 0.1)',
+        tension: 0.4,
+        fill: true,
       },
     ],
   };
@@ -123,7 +299,7 @@ export default function AdminDashboard() {
         },
       ]}
     >
-      <div className="grid grid-cols-2 gap-3 mb-10 md:flex md:flex-wrap">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3 mb-8 sm:mb-10">
         <PillButton variant="solid" to="/admin/bookings">
           Open bookings →
         </PillButton>
@@ -154,72 +330,135 @@ export default function AdminDashboard() {
       {loading ? (
         <div className="skeleton h-64 w-full" />
       ) : data ? (
-        <div className="space-y-10">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="card-rounded p-5">
+        <div className="space-y-6 sm:space-y-8 md:space-y-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+            <div className="card-rounded p-3 sm:p-5">
               <div className="text-xs text-ink/60 uppercase tracking-widest mb-2">Total Revenue</div>
-              <div className="text-3xl font-bold">{formatPrice(data.stats.totalRevenue)}</div>
+              <div className="text-2xl sm:text-3xl font-bold">{formatPrice(data.stats.totalRevenue)}</div>
             </div>
-            <div className="card-rounded p-5">
+            <div className="card-rounded p-3 sm:p-5">
               <div className="text-xs text-ink/60 uppercase tracking-widest mb-2">Bookings</div>
-              <div className="text-3xl font-bold">{data.stats.totalBookings}</div>
+              <div className="text-2xl sm:text-3xl font-bold">{data.stats.totalBookings}</div>
             </div>
-            <div className="card-rounded p-5">
+            <div className="card-rounded p-3 sm:p-5">
               <div className="text-xs text-ink/60 uppercase tracking-widest mb-2">Orders</div>
-              <div className="text-3xl font-bold">{data.stats.totalOrders}</div>
+              <div className="text-2xl sm:text-3xl font-bold">{data.stats.totalOrders}</div>
             </div>
-            <div className="card-rounded p-5">
+            <div className="card-rounded p-3 sm:p-5">
               <div className="text-xs text-ink/60 uppercase tracking-widest mb-2">Users</div>
-              <div className="text-3xl font-bold">{data.stats.totalUsers}</div>
+              <div className="text-2xl sm:text-3xl font-bold">{data.stats.totalUsers}</div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="card-rounded p-6 bg-white">
-              <Bar options={chartOptions} data={workerData} />
+          {(workerData.labels.length > 0 || revenueData.labels.length > 0) && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+              {workerData.labels.length > 0 && (
+                <div className="card-rounded p-3 sm:p-6 bg-white min-h-96">
+                  <Bar options={chartOptions} data={workerData} />
+                </div>
+              )}
+              {revenueData.labels.length > 0 && (
+                <div className="card-rounded p-3 sm:p-6 bg-white min-h-96">
+                  <Bar options={revenueChartOptions} data={revenueData} />
+                </div>
+              )}
             </div>
-            <div className="card-rounded p-6 bg-white">
-              <Bar options={revenueChartOptions} data={revenueData} />
-            </div>
-          </div>
+          )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="card-rounded p-6">
-              <h3 className="text-lg font-bold mb-4">Recent Bookings</h3>
-              <div className="space-y-3">
-                {data.recentBookings?.slice(0, 5).map((booking) => (
-                  <div key={booking._id} className="flex justify-between items-center p-3 bg-sand/20 rounded-lg">
-                    <div>
-                      <div className="font-semibold">{booking.user?.name}</div>
-                      <div className="text-sm text-ink/60">{booking.service?.name}</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-bold">{formatPrice(booking.amount)}</div>
-                      <div className="text-xs text-ink/60 uppercase">{booking.status}</div>
-                    </div>
+          {categoryData.labels.length > 0 && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+              <div className="card-rounded p-3 sm:p-6 bg-white min-h-96">
+                <Doughnut options={categoryChartOptions} data={categoryData} />
+              </div>
+              <div className="card-rounded p-3 sm:p-6 bg-white overflow-y-auto max-h-96">
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-sm font-bold mb-3 text-ink/60">Top Categories by Revenue</h3>
+                    {data?.categoryPerformance?.slice(0, 5).map((cat) => (
+                      <div key={cat.category} className="flex justify-between items-center p-2 border-b border-ink/10 text-xs sm:text-sm">
+                        <span>{cat.category}</span>
+                        <div className="text-right">
+                          <div className="font-bold">{formatPrice(cat.revenue)}</div>
+                          <div className="text-xs text-ink/60">{cat.count} bookings</div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                </div>
               </div>
             </div>
+          )}
 
-            <div className="card-rounded p-6">
-              <h3 className="text-lg font-bold mb-4">Recent Orders</h3>
-              <div className="space-y-3">
-                {data.recentOrders?.slice(0, 5).map((order) => (
-                  <div key={order._id} className="flex justify-between items-center p-3 bg-sand/20 rounded-lg">
-                    <div>
-                      <div className="font-semibold">{order.user?.name}</div>
-                      <div className="text-sm text-ink/60">{order.items?.length} items</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-bold">{formatPrice(order.totalAmount)}</div>
-                      <div className="text-xs text-ink/60 uppercase">{order.status}</div>
-                    </div>
-                  </div>
-                ))}
+          {revenueGrowthData.labels.length > 0 && (
+            <div className="grid grid-cols-1 gap-4 sm:gap-6">
+              <div className="card-rounded p-3 sm:p-6 bg-white min-h-80 sm:min-h-96">
+                <Line options={growthTrendOptions} data={revenueGrowthData} />
               </div>
             </div>
-          </div>
+          )}
+
+          {countsTrendData.labels.length > 0 && (
+            <div className="grid grid-cols-1 gap-4 sm:gap-6">
+              <div className="card-rounded p-3 sm:p-6 bg-white min-h-80 sm:min-h-96">
+                <Line options={ordersBookingsTrendOptions} data={countsTrendData} />
+              </div>
+            </div>
+          )}
+
+          {(data?.recentBookings?.length > 0 || data?.recentOrders?.length > 0) && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+              {data?.recentBookings?.length > 0 && (
+                <div className="card-rounded p-3 sm:p-6">
+                  <h3 className="text-lg font-bold mb-3 sm:mb-4">Recent Bookings</h3>
+                  <div className="space-y-2 sm:space-y-3">
+                    {data.recentBookings?.slice(0, 5).map((booking) => (
+                      <div key={booking._id} className="flex justify-between items-center p-2 sm:p-3 bg-sand/20 rounded-lg text-xs sm:text-sm">
+                        <div>
+                          <div className="font-semibold">{booking.user?.name}</div>
+                          <div className="text-xs text-ink/60">{booking.service?.name}</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-bold">{formatPrice(booking.amount)}</div>
+                          <div className="text-xs text-ink/60 uppercase">{booking.status}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {data?.recentOrders?.length > 0 && (
+                <div className="card-rounded p-3 sm:p-6">
+                  <h3 className="text-lg font-bold mb-3 sm:mb-4">Recent Orders</h3>
+                  <div className="space-y-2 sm:space-y-3">
+                    {data.recentOrders?.slice(0, 5).map((order) => {
+                      const firstItem = order.items && order.items.length > 0 ? order.items[0] : null;
+                      const moreCount = order.items ? order.items.length - 1 : 0;
+                      return (
+                        <div key={order._id} className="flex justify-between items-center p-2 sm:p-3 bg-sand/20 rounded-lg text-xs sm:text-sm">
+                          <div>
+                            <div className="font-semibold">{order.user?.name}</div>
+                            {firstItem ? (
+                              <div className="text-xs text-ink/60">
+                                <span className="font-medium">{firstItem.name}</span>
+                                {moreCount > 0 && <span className="ml-2">+{moreCount} more</span>}
+                              </div>
+                            ) : (
+                              <div className="text-xs text-ink/60">{order.items?.length} items</div>
+                            )}
+                          </div>
+                          <div className="text-right">
+                            <div className="font-bold">{formatPrice(order.totalAmount)}</div>
+                            <div className="text-xs text-ink/60 uppercase">{order.status}</div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       ) : null}
     </DashboardShell>

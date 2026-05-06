@@ -4,10 +4,11 @@ import { useNavigate } from 'react-router-dom';
 import { createOrder } from '../api/orders.js';
 import { createRazorpayOrder, verifyRazorpayPayment } from '../api/payments.js';
 import { validateCoupon } from '../api/coupons.js';
+import { getProduct } from '../api/products.js';
 import toast from 'react-hot-toast';
 
 export default function CheckoutPage() {
-  const { cart, clearCart } = useCart();
+  const { cart, removeFromCart } = useCart();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [address, setAddress] = useState({
@@ -47,11 +48,24 @@ export default function CheckoutPage() {
     };
   }, []);
 
-  const cartTotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const productCart = cart.filter((item) => item.kind !== 'service');
+  const serviceCart = cart.filter((item) => item.kind === 'service');
+  const cartTotal = productCart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const total = cartTotal - discount;
 
-  if (cart.length === 0) {
-    navigate('/cart');
+  useEffect(() => {
+    if (cart.length === 0) {
+      navigate('/cart');
+      return;
+    }
+
+    if (productCart.length === 0 && serviceCart.length > 0) {
+      toast.error('Your cart has services only. Book them from the service page.');
+      navigate('/cart');
+    }
+  }, [cart.length, productCart.length, serviceCart.length, navigate]);
+
+  if (cart.length === 0 || (productCart.length === 0 && serviceCart.length > 0)) {
     return null;
   }
 
@@ -63,7 +77,18 @@ export default function CheckoutPage() {
         throw new Error('Payment gateway is still loading. Please try again in a moment.');
       }
 
-      const items = cart.map(c => ({ product: c.product, quantity: c.quantity }));
+      const uniqueProductIds = [...new Set(productCart.map((item) => item.product).filter(Boolean))];
+      const validationResults = await Promise.allSettled(uniqueProductIds.map((productId) => getProduct(productId)));
+      const invalidProductIds = validationResults
+        .map((result, index) => (result.status === 'fulfilled' ? null : uniqueProductIds[index]))
+        .filter(Boolean);
+
+      if (invalidProductIds.length > 0) {
+        invalidProductIds.forEach((productId) => removeFromCart(productId));
+        throw new Error('Your cart contains unavailable items. Please review your cart and try again.');
+      }
+
+      const items = productCart.map((c) => ({ product: c.product, quantity: c.quantity }));
       const activeCouponCode = (appliedCoupon?.code || couponCode).trim().toUpperCase();
       const order = await createOrder({
         items,
@@ -75,7 +100,7 @@ export default function CheckoutPage() {
 
       if (paymentMode === 'cod') {
         toast.success('Order placed successfully!');
-        clearCart();
+        uniqueProductIds.forEach((productId) => removeFromCart(productId));
         navigate('/me/orders');
       } else {
         const rpOrder = await createRazorpayOrder({ amount: payableAmount, receipt: order.orderId, type: 'ecommerce' });
@@ -95,7 +120,7 @@ export default function CheckoutPage() {
                 type: 'ecommerce'
               });
               toast.success('Payment successful & Order placed!');
-              clearCart();
+              uniqueProductIds.forEach((productId) => removeFromCart(productId));
               navigate('/me/orders');
             } catch (err) {
               toast.error('Payment verification failed');
@@ -188,6 +213,11 @@ export default function CheckoutPage() {
             </div>
           )}
           <div className="mb-4">Total Payable: ₹{total}</div>
+          {serviceCart.length > 0 && (
+            <div className="mb-3 text-xs text-ink/60">
+              {serviceCart.length} service item(s) remain in your cart and are not included in checkout.
+            </div>
+          )}
           <button disabled={loading} type="submit" className="pill-btn-solid">
             {loading ? 'Processing...' : `Place Order (₹${total})`}
           </button>

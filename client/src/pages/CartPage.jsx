@@ -8,7 +8,9 @@ export default function CartPage() {
   const { cart, removeFromCart, updateQuantity } = useCart();
   const navigate = useNavigate();
 
-  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const productCart = cart.filter((item) => item.kind !== 'service');
+  const serviceCart = cart.filter((item) => item.kind === 'service');
+  const total = productCart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   if (cart.length === 0) {
     return (
@@ -40,17 +42,34 @@ export default function CartPage() {
                   )}
                 </div>
                 <div className="flex-1">
+                  {item.kind === 'service' && (
+                    <div className="mb-1 text-[10px] uppercase tracking-[0.35em] text-ink/50 dark:text-paper/45">
+                      Service booking
+                    </div>
+                  )}
                   <h3 className="text-sm font-bold">{item.name}</h3>
                   <div className="text-xs text-ink/60 dark:text-paper/60 mt-1">₹{item.price}</div>
-                  <div className="flex items-center gap-3 mt-3">
-                    <button onClick={() => updateQuantity(item.product, item.quantity - 1)} className="p-1 border border-ink/20 rounded hover:bg-ink hover:text-paper dark:border-paper/20">
-                      <Minus size={12} />
-                    </button>
-                    <span className="text-xs w-4 text-center">{item.quantity}</span>
-                    <button onClick={() => updateQuantity(item.product, item.quantity + 1)} className="p-1 border border-ink/20 rounded hover:bg-ink hover:text-paper dark:border-paper/20">
-                      <Plus size={12} />
-                    </button>
-                  </div>
+                  {item.kind === 'service' ? (
+                    <div className="mt-3">
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/book/${item.product}`)}
+                        className="rounded-pill border border-ink/20 px-3 py-2 text-xs font-medium transition hover:bg-ink hover:text-paper dark:border-paper/20"
+                      >
+                        Book service
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-3 mt-3">
+                      <button onClick={() => updateQuantity(item.product, item.quantity - 1)} className="p-1 border border-ink/20 rounded hover:bg-ink hover:text-paper dark:border-paper/20">
+                        <Minus size={12} />
+                      </button>
+                      <span className="text-xs w-4 text-center">{item.quantity}</span>
+                      <button onClick={() => updateQuantity(item.product, item.quantity + 1)} className="p-1 border border-ink/20 rounded hover:bg-ink hover:text-paper dark:border-paper/20">
+                        <Plus size={12} />
+                      </button>
+                    </div>
+                  )}
                 </div>
                 <div className="text-right flex flex-col justify-between h-full items-end gap-6">
                   <button onClick={() => removeFromCart(item.product)} className="text-red-500 hover:text-red-700 transition">
@@ -80,6 +99,11 @@ export default function CartPage() {
               <span>Total</span>
               <span>₹{total}</span>
             </div>
+            {serviceCart.length > 0 && (
+              <div className="mb-4 text-xs text-ink/60 dark:text-paper/50">
+                {serviceCart.length} service item(s) are saved in the cart and can be booked separately.
+              </div>
+            )}
             <button 
               onClick={() => navigate('/checkout')}
               className="w-full rounded-pill bg-ink py-3 text-sm font-medium tracking-tightish text-paper transition hover:bg-ink/90 dark:bg-paper dark:text-ink dark:hover:bg-paper/90"

@@ -42,6 +42,78 @@ export const getDashboardStats = asyncHandler(async (req, res) => {
     { $limit: 10 }
   ]);
 
+  // Category Performance (based on completed bookings)
+  const categoryPerformance = await Booking.aggregate([
+    { $match: { status: 'completed' } },
+    { $lookup: { from: 'services', localField: 'service', foreignField: '_id', as: 'serviceInfo' } },
+    { $unwind: '$serviceInfo' },
+    { $group: { _id: '$serviceInfo.category', revenue: { $sum: '$amount' }, count: { $sum: 1 } } },
+    { $project: { category: '$_id', revenue: 1, count: 1, _id: 0 } },
+    { $sort: { revenue: -1 } },
+    { $limit: 10 }
+  ]);
+
+  // Growth Trends (last 30 days revenue and orders)
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  
+  const growthTrends = await Promise.all([
+    // Daily revenue for last 30 days
+    Booking.aggregate([
+      { $match: { status: 'completed', createdAt: { $gte: thirtyDaysAgo } } },
+      { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt', timezone: '+00:00' } }, revenue: { $sum: '$amount' } } },
+      { $sort: { _id: 1 } }
+    ]),
+    Order.aggregate([
+      { $match: { status: 'delivered', createdAt: { $gte: thirtyDaysAgo } } },
+      { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt', timezone: '+00:00' } }, revenue: { $sum: '$totalAmount' } } },
+      { $sort: { _id: 1 } }
+    ]),
+    // Daily orders count for last 30 days
+    Order.aggregate([
+      { $match: { createdAt: { $gte: thirtyDaysAgo } } },
+      { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt', timezone: '+00:00' } }, count: { $sum: 1 } } },
+      { $sort: { _id: 1 } }
+    ]),
+    // Daily bookings count for last 30 days
+    Booking.aggregate([
+      { $match: { createdAt: { $gte: thirtyDaysAgo } } },
+      { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt', timezone: '+00:00' } }, count: { $sum: 1 } } },
+      { $sort: { _id: 1 } }
+    ])
+  ]);
+
+  // Helper function to fill missing dates with 0
+  const fillMissingDates = (data, days = 30) => {
+    const filledData = [];
+    const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+    const dataMap = {};
+    
+    // Create map of existing data
+    data.forEach(item => {
+      dataMap[item._id] = item;
+    });
+    
+    // Fill all dates
+    for (let i = 0; i < days; i++) {
+      const date = new Date(startDate);
+      date.setDate(date.getDate() + i);
+      const dateStr = date.toISOString().split('T')[0];
+      
+      filledData.push({
+        _id: dateStr,
+        revenue: dataMap[dateStr]?.revenue || 0,
+        count: dataMap[dateStr]?.count || 0
+      });
+    }
+    
+    return filledData;
+  };
+
+  const bookingRevenueWithDates = fillMissingDates(growthTrends[0], 30);
+  const orderRevenueWithDates = fillMissingDates(growthTrends[1], 30);
+  const orderCountsWithDates = fillMissingDates(growthTrends[2], 30);
+  const bookingCountsWithDates = fillMissingDates(growthTrends[3], 30);
+
   res.json({
     stats: {
       totalBookings,
@@ -49,9 +121,18 @@ export const getDashboardStats = asyncHandler(async (req, res) => {
       totalUsers,
       totalWorkers,
       totalRevenue: bookingsRevenue + ordersRevenue,
+      bookingsRevenue,
+      ordersRevenue,
     },
     recentBookings,
     recentOrders,
-    workerPerformance
+    workerPerformance,
+    categoryPerformance,
+    growthTrends: {
+      bookingRevenue: bookingRevenueWithDates,
+      orderRevenue: orderRevenueWithDates,
+      ordersCounts: orderCountsWithDates,
+      bookingsCounts: bookingCountsWithDates
+    }
   });
 });
