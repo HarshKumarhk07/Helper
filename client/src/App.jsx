@@ -7,6 +7,7 @@ import Signup from './pages/Signup.jsx';
 import NotFound from './pages/NotFound.jsx';
 import ServicesIndex from './pages/ServicesIndex.jsx';
 import ServiceDetail from './pages/ServiceDetail.jsx';
+import ProductDetail from './pages/ProductDetail.jsx';
 import BookingFlow from './pages/BookingFlow.jsx';
 import AdminDashboard from './pages/dashboards/AdminDashboard.jsx';
 import AdminBookings from './pages/dashboards/AdminBookings.jsx';
@@ -44,6 +45,7 @@ export default function App() {
 
           <Route path="/services" element={<ServicesIndex />} />
           <Route path="/services/:id" element={<ServiceDetail />} />
+          <Route path="/products/:id" element={<ProductDetail />} />
           <Route
             path="/book/:serviceId"
             element={

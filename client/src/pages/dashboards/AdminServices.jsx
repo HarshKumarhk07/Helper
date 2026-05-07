@@ -17,12 +17,19 @@ export default function AdminServices() {
   const [editingService, setEditingService] = useState(null);
   
   const [newService, setNewService] = useState({
-    name: '', slug: '', description: '', price: '', category: '', image: '', durationMinutes: ''
+    name: '', description: '', price: '', category: '', image: '', durationMinutes: ''
   });
 
   const [editForm, setEditForm] = useState({
-    name: '', slug: '', description: '', price: '', category: '', image: '', durationMinutes: ''
+    name: '', description: '', price: '', category: '', image: '', durationMinutes: ''
   });
+
+  const slugify = (value) =>
+    value
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
 
   const load = () => {
     setLoading(true);
@@ -65,13 +72,14 @@ export default function AdminServices() {
     try {
       await createService({
         ...newService,
+        slug: slugify(newService.name),
         price: Number(newService.price),
         category: newService.category,
         durationMinutes: newService.durationMinutes ? Number(newService.durationMinutes) : 60
       });
       toast.success('Service created');
       setShowForm(false);
-      setNewService({ name: '', slug: '', description: '', price: '', category: '', image: '', durationMinutes: '' });
+      setNewService({ name: '', description: '', price: '', category: '', image: '', durationMinutes: '' });
       load();
     } catch (err) {
       toast.error(err?.response?.data?.error || 'Failed to create service');
@@ -97,7 +105,6 @@ export default function AdminServices() {
     setEditingService(service);
     setEditForm({
       name: service.name || '',
-      slug: service.slug || '',
       description: service.description || '',
       price: service.price || '',
       category: service.category?._id || service.category || '',
@@ -108,7 +115,7 @@ export default function AdminServices() {
 
   const closeEditor = () => {
     setEditingService(null);
-    setEditForm({ name: '', slug: '', description: '', price: '', category: '', image: '', durationMinutes: '' });
+    setEditForm({ name: '', description: '', price: '', category: '', image: '', durationMinutes: '' });
   };
 
   const handleUpdateService = async (e) => {
@@ -116,6 +123,7 @@ export default function AdminServices() {
     try {
       const payload = {
         ...editForm,
+        slug: slugify(editForm.name),
         price: Number(editForm.price),
         category: editForm.category,
         durationMinutes: editForm.durationMinutes ? Number(editForm.durationMinutes) : 60
@@ -130,9 +138,9 @@ export default function AdminServices() {
   };
 
   return (
-    <DashboardShell eyebrow="(Services)" title="SERVICE CATALOG.">
+    <DashboardShell eyebrow="(Categories & pricing)" title="SERVICES, CATEGORIES & PRICING.">
       <div className="flex justify-between items-center mb-8">
-        <h2 className="text-xl font-bold">Services List</h2>
+        <h2 className="text-xl font-bold">Categories & pricing</h2>
         <button onClick={() => setShowForm(!showForm)} className="pill-btn-solid text-sm">
           {showForm ? 'Cancel' : 'Add New Service'}
         </button>
@@ -145,11 +153,7 @@ export default function AdminServices() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
                 <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Service Name</label>
-                <input required placeholder="e.g., TV Installation" className="w-full p-3 border rounded-xl bg-white dark:bg-paper/10" value={newService.name} onChange={(e) => setNewService({...newService, name: e.target.value, slug: e.target.value.toLowerCase().replace(/ /g, '-')})} />
-              </div>
-              <div>
-                <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Slug (URL-friendly)</label>
-                <input required placeholder="e.g., tv-installation" className="w-full p-3 border rounded-xl bg-white dark:bg-paper/10" value={newService.slug} onChange={(e) => setNewService({...newService, slug: e.target.value})} />
+                <input required placeholder="e.g., TV Installation" className="w-full p-3 border rounded-xl bg-white dark:bg-paper/10" value={newService.name} onChange={(e) => setNewService({ ...newService, name: e.target.value })} />
               </div>
               <div>
                 <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Price (₹)</label>
@@ -201,6 +205,7 @@ export default function AdminServices() {
           <thead className="bg-sand/50 text-xs uppercase tracking-widest text-ink/60 dark:bg-[#18181A] dark:text-paper/60">
             <tr>
               <th className="p-4">Image</th>
+              <th className="p-4">Category</th>
               <th className="p-4">Name</th>
               <th className="p-4">Price</th>
               <th className="p-4">Duration</th>
@@ -209,18 +214,21 @@ export default function AdminServices() {
           </thead>
           <tbody className="divide-y divide-ink/10 dark:divide-paper/10">
             {loading ? (
-              <tr><td colSpan="5" className="p-4 text-center">Loading...</td></tr>
+              <tr><td colSpan="6" className="p-4 text-center">Loading...</td></tr>
             ) : services.length === 0 ? (
-              <tr><td colSpan="5" className="p-4 text-center">No services found.</td></tr>
+              <tr><td colSpan="6" className="p-4 text-center">No services found.</td></tr>
             ) : (
               services.map(s => (
                 <tr key={s._id}>
                   <td className="p-4">
                     {s.image ? <img src={s.image} className="w-12 h-12 rounded object-cover" alt="" /> : <div className="w-12 h-12 bg-sand rounded"></div>}
                   </td>
+                  <td className="p-4 text-sm text-ink/70 dark:text-paper/70">
+                    {s.category?.name || s.category?.slug || 'Uncategorized'}
+                  </td>
                   <td className="p-4 font-medium">{s.name}</td>
                   <td className="p-4">₹{s.price}</td>
-                  <td className="p-4">{s.duration}</td>
+                  <td className="p-4">{s.durationMinutes} min</td>
                   <td className="p-4">
                     <div className="flex gap-2">
                       <button onClick={() => openEditor(s)} className="text-blue-500 hover:text-blue-700 transition" title="Edit">
@@ -254,10 +262,6 @@ export default function AdminServices() {
               <div>
                 <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60 dark:text-paper/50">Service Name</label>
                 <input required placeholder="Service name" className="w-full p-2 text-sm border rounded-xl bg-white dark:bg-paper/10 text-ink dark:text-paper border-ink/20 dark:border-paper/20" value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} />
-              </div>
-              <div>
-                <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60 dark:text-paper/50">Slug</label>
-                <input required placeholder="URL-friendly slug" className="w-full p-2 text-sm border rounded-xl bg-white dark:bg-paper/10 text-ink dark:text-paper border-ink/20 dark:border-paper/20" value={editForm.slug} onChange={(e) => setEditForm({ ...editForm, slug: e.target.value })} />
               </div>
               <div>
                 <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60 dark:text-paper/50">Price (₹)</label>

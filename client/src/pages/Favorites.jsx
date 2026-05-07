@@ -27,7 +27,7 @@ export default function Favorites() {
           <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {favorites.map((product) => (
               <div key={product._id} className="card-rounded group flex h-full flex-col overflow-hidden">
-                <Link to="/" className="overflow-hidden">
+                <Link to={`/products/${product._id}`} className="overflow-hidden">
                   <img
                     src={product.image}
                     alt={product.name}

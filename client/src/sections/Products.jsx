@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { listProducts } from '../api/products.js';
 import { useCart } from '../context/CartContext.jsx';
 import { useFavorites } from '../context/FavoritesContext.jsx';
@@ -39,18 +40,20 @@ export default function Products() {
             <FadeUp key={p._id} delay={i * 0.06}>
               <div className="card-rounded group transition hover:-translate-y-1 hover:shadow-soft flex flex-col h-full">
                 <div className="relative overflow-hidden flex-1">
-                  {p.image ? (
-                    <img
-                      src={p.image}
-                      alt={p.name}
-                      loading="lazy"
-                      className="aspect-[4/5] w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                    />
-                  ) : (
-                    <div className="aspect-[4/5] w-full bg-sand flex items-center justify-center text-ink/40">
-                      No Image
-                    </div>
-                  )}
+                  <Link to={`/products/${p._id}`} className="block">
+                    {p.image ? (
+                      <img
+                        src={p.image}
+                        alt={p.name}
+                        loading="lazy"
+                        className="aspect-[4/5] w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="aspect-[4/5] w-full bg-sand flex items-center justify-center text-ink/40">
+                        No Image
+                      </div>
+                    )}
+                  </Link>
                   <button
                     type="button"
                     onClick={() => toggleFavorite(p)}

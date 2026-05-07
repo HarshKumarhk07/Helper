@@ -2,6 +2,14 @@ import { v2 as cloudinary } from 'cloudinary';
 import { CloudinaryStorage } from 'multer-storage-cloudinary';
 import multer from 'multer';
 
+// Validate Cloudinary credentials
+if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+  console.error('Missing Cloudinary credentials:');
+  if (!process.env.CLOUDINARY_CLOUD_NAME) console.error('  - CLOUDINARY_CLOUD_NAME: MISSING');
+  if (!process.env.CLOUDINARY_API_KEY) console.error('  - CLOUDINARY_API_KEY: MISSING');
+  if (!process.env.CLOUDINARY_API_SECRET) console.error('  - CLOUDINARY_API_SECRET: MISSING');
+}
+
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,

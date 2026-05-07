@@ -1,13 +1,21 @@
 import { z } from 'zod';
 
+const objectId = z.string().trim().regex(/^[a-f0-9]{24}$/i, 'Invalid category id');
+
+const imageField = z.union([
+  z.string().trim().url(),
+  z.string().trim().min(1),
+  z.literal(''),
+]).optional();
+
 export const createServiceSchema = z.object({
-  category: z.string().length(24),
-  name: z.string().min(2).max(120),
-  slug: z.string().min(2).max(120).optional(),
-  description: z.string().max(1000).optional(),
-  price: z.number().nonnegative(),
-  durationMinutes: z.number().int().min(5).max(600).optional(),
-  image: z.string().url().optional().or(z.literal('')),
+  category: objectId,
+  name: z.string().trim().min(2).max(120),
+  slug: z.string().trim().min(2).max(120).optional(),
+  description: z.string().trim().max(1000).optional(),
+  price: z.coerce.number().nonnegative(),
+  durationMinutes: z.coerce.number().int().min(5).max(600).optional(),
+  image: imageField,
   tags: z.array(z.string()).optional(),
   isActive: z.boolean().optional(),
 });

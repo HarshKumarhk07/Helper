@@ -19,6 +19,8 @@ export default function CheckoutPage() {
   const [discount, setDiscount] = useState(0);
   const [razorpayReady, setRazorpayReady] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const fieldClass = 'w-full rounded-xl border border-ink/20 bg-white px-4 py-3 text-sm text-ink outline-none transition placeholder:text-ink/35 focus:border-ink dark:border-paper/20 dark:bg-paper/5 dark:text-paper dark:placeholder:text-paper/35 dark:focus:border-paper/70';
+  const sectionTextClass = 'text-ink dark:text-paper';
 
   useEffect(() => {
     const scriptId = 'razorpay-checkout-js';
@@ -161,49 +163,49 @@ export default function CheckoutPage() {
   };
 
   return (
-    <section className="container-velora py-16 max-w-3xl">
+    <section className="container-velora py-16 max-w-3xl text-ink dark:text-paper">
       <h1 className="heading-display text-4xl mb-8">CHECKOUT</h1>
       
       <form onSubmit={handleCheckout} className="space-y-8">
         <div className="card-rounded p-6">
-          <h2 className="text-xl mb-4 font-bold">Shipping Address</h2>
+          <h2 className="text-xl mb-4 font-bold text-ink dark:text-paper">Shipping Address</h2>
           <div className="grid gap-4">
-            <input required placeholder="Line 1" className="p-3 border rounded-xl" value={address.line1} onChange={(e) => setAddress({...address, line1: e.target.value})} />
-            <input required placeholder="City" className="p-3 border rounded-xl" value={address.city} onChange={(e) => setAddress({...address, city: e.target.value})} />
+            <input required placeholder="Line 1" className={fieldClass} value={address.line1} onChange={(e) => setAddress({...address, line1: e.target.value})} />
+            <input required placeholder="City" className={fieldClass} value={address.city} onChange={(e) => setAddress({...address, city: e.target.value})} />
             <div className="grid grid-cols-2 gap-4">
-              <input required placeholder="State" className="p-3 border rounded-xl" value={address.state} onChange={(e) => setAddress({...address, state: e.target.value})} />
-              <input required placeholder="Pincode" className="p-3 border rounded-xl" value={address.pincode} onChange={(e) => setAddress({...address, pincode: e.target.value})} />
+              <input required placeholder="State" className={fieldClass} value={address.state} onChange={(e) => setAddress({...address, state: e.target.value})} />
+              <input required placeholder="Pincode" className={fieldClass} value={address.pincode} onChange={(e) => setAddress({...address, pincode: e.target.value})} />
             </div>
           </div>
         </div>
 
-        <div className="card-rounded p-6 flex gap-4">
+        <div className="card-rounded p-6 flex flex-col gap-4 sm:flex-row">
           <input
             placeholder="Coupon Code"
-            className="flex-1 p-3 border rounded-xl"
+            className={`${fieldClass} flex-1`}
             value={couponCode}
             onChange={(e) => setCouponCode(e.target.value)}
           />
-          <button type="button" onClick={handleApplyCoupon} className="pill-btn-solid whitespace-nowrap">
+          <button type="button" onClick={handleApplyCoupon} className="pill-btn-solid w-full whitespace-nowrap sm:w-auto">
             Apply
           </button>
         </div>
 
         <div className="card-rounded p-6">
-          <h2 className="text-xl mb-4 font-bold">Payment Method</h2>
-          <div className="flex gap-4">
-            <label className="flex items-center gap-2">
+          <h2 className="text-xl mb-4 font-bold text-ink dark:text-paper">Payment Method</h2>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+            <label className="flex items-center gap-2 text-ink dark:text-paper">
               <input type="radio" name="paymentMode" value="online" checked={paymentMode === 'online'} onChange={() => setPaymentMode('online')} />
               Pay Online (Razorpay)
             </label>
-            <label className="flex items-center gap-2">
+            <label className="flex items-center gap-2 text-ink dark:text-paper">
               <input type="radio" name="paymentMode" value="cod" checked={paymentMode === 'cod'} onChange={() => setPaymentMode('cod')} />
               Cash on Delivery
             </label>
           </div>
         </div>
 
-        <div className="flex flex-col items-end text-lg font-bold px-4">
+        <div className={`flex flex-col items-end text-lg font-bold px-4 ${sectionTextClass}`}>
           {discount > 0 && (
             <div className="text-sm text-ink/60 line-through">Subtotal: ₹{cartTotal}</div>
           )}

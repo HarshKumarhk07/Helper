@@ -91,7 +91,7 @@ export default function Navbar() {
         </Link>
 
         <div className="flex items-center justify-self-end gap-3">
-          <div className="hidden md:flex items-center">
+          <div className="flex items-center">
             {searchOpen ? (
               <form
                 onSubmit={handleSearchSubmit}
@@ -120,14 +120,14 @@ export default function Navbar() {
               <button
                 type="button"
                 onClick={() => setSearchOpen(true)}
-                className="hidden md:inline-flex"
+                className="inline-flex"
                 aria-label="search"
               >
                 <Search size={18} />
               </button>
             )}
           </div>
-          <button type="button" onClick={() => navigate('/favorites')} className="relative hidden md:inline-flex" aria-label="favorites">
+          <button type="button" onClick={() => navigate('/favorites')} className="relative inline-flex" aria-label="favorites">
             <Heart size={18} />
             {favorites.length > 0 && (
               <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-ink px-1 text-[9px] text-paper dark:bg-paper dark:text-ink">
@@ -135,7 +135,7 @@ export default function Navbar() {
               </span>
             )}
           </button>
-          <Link to="/cart" className="relative hidden md:inline-flex" aria-label="bag">
+          <Link to="/cart" className="relative inline-flex" aria-label="bag">
             <ShoppingBag size={18} />
             {cart.length > 0 && (
               <span className="absolute -top-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full bg-ink text-[8px] text-paper dark:bg-paper dark:text-ink">
