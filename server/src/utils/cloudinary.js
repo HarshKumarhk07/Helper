@@ -26,3 +26,20 @@ const storage = new CloudinaryStorage({
 });
 
 export const upload = multer({ storage });
+
+const kycStorage = new CloudinaryStorage({
+  cloudinary,
+  params: (req, file) => ({
+    folder: `velora_house/kyc/${req.user?._id || 'unknown'}`,
+    resource_type: file.mimetype === 'application/pdf' ? 'raw' : 'image',
+    allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'pdf'],
+    public_id: `${file.fieldname}_${Date.now()}`,
+  }),
+});
+
+export const uploadKyc = multer({
+  storage: kycStorage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+});
+
+export { cloudinary };

@@ -303,8 +303,11 @@ export default function AdminDashboard() {
         <PillButton variant="solid" to="/admin/bookings">
           Open bookings →
         </PillButton>
-        <PillButton variant="solid" to="/admin/users">
+        <PillButton variant="solid" to="/admin/workers">
           KYC approval →
+        </PillButton>
+        <PillButton variant="solid" to="/admin/users">
+          Users & roles →
         </PillButton>
         <PillButton variant="solid" to="/admin/orders">
           Add admin notes on orders →
@@ -313,13 +316,28 @@ export default function AdminDashboard() {
           Inventory control →
         </PillButton>
         <PillButton variant="solid" to="/admin/services">
-          Categories & pricing →
+          Services & pricing →
+        </PillButton>
+        <PillButton variant="solid" to="/admin/categories">
+          Manage categories →
+        </PillButton>
+        <PillButton variant="solid" to="/admin/settings">
+          Platform settings →
         </PillButton>
         <PillButton variant="solid" to="/admin/coupons">
           Manage coupons →
         </PillButton>
+        <PillButton variant="solid" to="/admin/payouts">
+          Worker payouts →
+        </PillButton>
         <PillButton variant="solid" to="/admin/finance">
-          Commission & payouts →
+          Commission overview →
+        </PillButton>
+        <PillButton variant="solid" to="/admin/support">
+          Support queue →
+        </PillButton>
+        <PillButton variant="solid" to="/admin/wallet">
+          User wallets →
         </PillButton>
         <PillButton variant="solid" to="/admin/audit-logs">
           View audit logs →

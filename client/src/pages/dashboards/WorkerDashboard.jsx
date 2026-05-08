@@ -22,11 +22,17 @@ export default function WorkerDashboard() {
         <PillButton variant="solid" to="/worker/jobs">
           Open job queue →
         </PillButton>
+        <PillButton variant="solid" to="/worker/availability">
+          Schedule & online →
+        </PillButton>
         <PillButton variant="solid" to="/worker/earnings">
           View earnings →
         </PillButton>
+        <PillButton variant="solid" to="/worker/kyc">
+          KYC verification →
+        </PillButton>
         <PillButton variant="solid" to="/me/profile-edit">
-          Edit KYC & Profile →
+          Edit profile →
         </PillButton>
       </div>
     </DashboardShell>

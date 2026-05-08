@@ -20,15 +20,25 @@ export const getCategory = asyncHandler(async (req, res) => {
 });
 
 export const createCategory = asyncHandler(async (req, res) => {
-  const cat = await ServiceCategory.create(req.body);
+  const payload = { ...req.body };
+  if (payload.manager === null) delete payload.manager;
+  const cat = await ServiceCategory.create(payload);
   res.status(201).json({ category: cat });
 });
 
 export const updateCategory = asyncHandler(async (req, res) => {
-  const cat = await ServiceCategory.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true,
-  });
+  const update = { ...req.body };
+  const unset = {};
+  if ('manager' in update && update.manager === null) {
+    delete update.manager;
+    unset.manager = '';
+  }
+
+  const cat = await ServiceCategory.findByIdAndUpdate(
+    req.params.id,
+    Object.keys(unset).length ? { $set: update, $unset: unset } : update,
+    { new: true, runValidators: true }
+  );
   if (!cat) throw new ApiError(404, 'Category not found');
   res.json({ category: cat });
 });

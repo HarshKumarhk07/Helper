@@ -1,0 +1,406 @@
+import nodemailer from 'nodemailer';
+import twilio from 'twilio';
+
+const isBlank = (v) => v === undefined || v === null || String(v).trim() === '';
+
+let mailer = null;
+let mailerLoggedReady = false;
+const getMailer = () => {
+  if (mailer) return mailer;
+  const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS } = process.env;
+  if (isBlank(SMTP_HOST) || isBlank(SMTP_USER) || isBlank(SMTP_PASS)) return null;
+  mailer = nodemailer.createTransport({
+    host: SMTP_HOST,
+    port: Number(SMTP_PORT) || 587,
+    secure: Number(SMTP_PORT) === 465,
+    auth: { user: SMTP_USER, pass: SMTP_PASS },
+  });
+  if (!mailerLoggedReady) {
+    mailerLoggedReady = true;
+    console.log(`[notification] SMTP configured (${SMTP_HOST})`);
+  }
+  return mailer;
+};
+
+let smsClient = null;
+let smsLoggedReady = false;
+const getSmsClient = () => {
+  if (smsClient) return smsClient;
+  const { TWILIO_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE } = process.env;
+  if (isBlank(TWILIO_SID) || isBlank(TWILIO_AUTH_TOKEN) || isBlank(TWILIO_PHONE)) return null;
+  if (!TWILIO_SID.startsWith('AC')) return null;
+  smsClient = twilio(TWILIO_SID, TWILIO_AUTH_TOKEN);
+  if (!smsLoggedReady) {
+    smsLoggedReady = true;
+    console.log(`[notification] Twilio configured (${TWILIO_PHONE})`);
+  }
+  return smsClient;
+};
+
+const e164 = (phone) => {
+  if (isBlank(phone)) return null;
+  const trimmed = String(phone).trim();
+  if (trimmed.startsWith('+')) return trimmed;
+  const digits = trimmed.replace(/\D/g, '');
+  if (digits.length === 10) return `+91${digits}`;
+  if (digits.length === 12 && digits.startsWith('91')) return `+${digits}`;
+  return `+${digits}`;
+};
+
+export const sendEmail = async ({ to, subject, html, text }) => {
+  if (isBlank(to)) return { skipped: true, reason: 'missing_to' };
+  const transport = getMailer();
+  if (!transport) return { skipped: true, reason: 'smtp_not_configured' };
+  try {
+    const info = await transport.sendMail({
+      from: process.env.MAIL_FROM || `Velora House <${process.env.SMTP_USER}>`,
+      to,
+      subject,
+      html,
+      text: text || stripHtml(html),
+    });
+    return { ok: true, id: info.messageId };
+  } catch (err) {
+    console.error('[notification] email failed:', err.message);
+    return { ok: false, error: err.message };
+  }
+};
+
+export const sendSMS = async ({ to, body }) => {
+  const number = e164(to);
+  if (!number) return { skipped: true, reason: 'missing_to' };
+  const client = getSmsClient();
+  if (!client) return { skipped: true, reason: 'twilio_not_configured' };
+  try {
+    const msg = await client.messages.create({
+      from: process.env.TWILIO_PHONE,
+      to: number,
+      body,
+    });
+    return { ok: true, sid: msg.sid };
+  } catch (err) {
+    console.error('[notification] sms failed:', err.message);
+    return { ok: false, error: err.message };
+  }
+};
+
+const stripHtml = (html = '') => html.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+
+const wrapEmail = (title, bodyHtml) => `
+  <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:560px;margin:0 auto;background:#faf6ef;color:#1a1a1a;border-radius:14px;overflow:hidden;border:1px solid #e7e1d6;">
+    <div style="padding:24px 28px;border-bottom:1px solid #e7e1d6;background:#1a1a1a;color:#faf6ef;">
+      <div style="font-size:11px;letter-spacing:0.18em;text-transform:uppercase;opacity:0.7;">Velora House</div>
+      <div style="font-size:22px;font-weight:600;margin-top:6px;">${title}</div>
+    </div>
+    <div style="padding:24px 28px;line-height:1.6;font-size:14px;">
+      ${bodyHtml}
+    </div>
+    <div style="padding:18px 28px;font-size:11px;color:#777;border-top:1px solid #e7e1d6;background:#f3eee5;">
+      You're receiving this because you have an account with Velora House.
+    </div>
+  </div>
+`;
+
+const inr = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
+
+const fmtAddress = (a) => {
+  if (!a) return '';
+  return [a.line1, a.line2, a.city, a.state, a.pincode]
+    .filter(Boolean)
+    .join(', ');
+};
+
+export const notifyBookingPlaced = ({ user, booking }) =>
+  Promise.allSettled([
+    sendEmail({
+      to: user?.email,
+      subject: `Booking confirmed · ${booking.code}`,
+      html: wrapEmail(
+        'Your booking is confirmed',
+        `
+        <p>Hi ${user?.name || 'there'},</p>
+        <p>We've received your booking. Our team will assign a professional shortly.</p>
+        <table style="width:100%;border-collapse:collapse;margin:14px 0;">
+          <tr><td style="padding:6px 0;color:#666;">Booking ID</td><td><strong>${booking.code}</strong></td></tr>
+          <tr><td style="padding:6px 0;color:#666;">Amount</td><td><strong>${inr(booking.amount)}</strong></td></tr>
+          <tr><td style="padding:6px 0;color:#666;">Address</td><td>${fmtAddress(booking.address)}</td></tr>
+        </table>
+        <p style="margin-top:20px;color:#555;">You'll receive a 6-digit Start PIN once a worker is assigned. Share it with the worker only when they arrive.</p>
+        `
+      ),
+    }),
+    sendSMS({
+      to: user?.phone,
+      body: `Velora House: Booking ${booking.code} confirmed for ${inr(booking.amount)}. We'll assign a worker shortly.`,
+    }),
+  ]);
+
+export const notifyWorkerAssigned = ({ user, worker, booking, startPin }) =>
+  Promise.allSettled([
+    sendEmail({
+      to: user?.email,
+      subject: `Worker assigned · ${booking.code}`,
+      html: wrapEmail(
+        'Your professional is on the way',
+        `
+        <p>Hi ${user?.name || 'there'},</p>
+        <p><strong>${worker?.name || 'A professional'}</strong> has been assigned to your booking.</p>
+        <table style="width:100%;border-collapse:collapse;margin:14px 0;">
+          <tr><td style="padding:6px 0;color:#666;">Booking</td><td><strong>${booking.code}</strong></td></tr>
+          ${worker?.phone ? `<tr><td style="padding:6px 0;color:#666;">Worker phone</td><td>${worker.phone}</td></tr>` : ''}
+          ${startPin ? `<tr><td style="padding:6px 0;color:#666;">Start PIN</td><td style="font-size:22px;letter-spacing:6px;"><strong>${startPin}</strong></td></tr>` : ''}
+        </table>
+        <p style="color:#a33;font-weight:500;">Share the Start PIN with the worker only after they arrive at your location.</p>
+        `
+      ),
+    }),
+    sendSMS({
+      to: user?.phone,
+      body: `Velora House: ${worker?.name || 'A worker'} assigned to ${booking.code}. Start PIN: ${startPin}. Share only on arrival.`,
+    }),
+    sendSMS({
+      to: worker?.phone,
+      body: `Velora House: New job ${booking.code}. ${fmtAddress(booking.address)}. Ask user for Start PIN on arrival.`,
+    }),
+  ]);
+
+export const notifyJobStarted = ({ user, booking, endPin }) =>
+  Promise.allSettled([
+    sendEmail({
+      to: user?.email,
+      subject: `Service started · ${booking.code}`,
+      html: wrapEmail(
+        'Service started',
+        `
+        <p>Your service for booking <strong>${booking.code}</strong> has started.</p>
+        ${endPin ? `<p>Your <strong>End PIN</strong> is <span style="font-size:22px;letter-spacing:6px;"><strong>${endPin}</strong></span>. Share with the worker once the service is completed to your satisfaction.</p>` : ''}
+        `
+      ),
+    }),
+    sendSMS({
+      to: user?.phone,
+      body: `Velora House: Service ${booking.code} started. End PIN: ${endPin}. Share only after completion.`,
+    }),
+  ]);
+
+export const notifyJobCompleted = ({ user, booking, invoiceUrl }) =>
+  Promise.allSettled([
+    sendEmail({
+      to: user?.email,
+      subject: `Service completed · ${booking.code}`,
+      html: wrapEmail(
+        'Thank you for choosing Velora House',
+        `
+        <p>Your service has been completed.</p>
+        <table style="width:100%;border-collapse:collapse;margin:14px 0;">
+          <tr><td style="padding:6px 0;color:#666;">Booking</td><td><strong>${booking.code}</strong></td></tr>
+          <tr><td style="padding:6px 0;color:#666;">Amount</td><td><strong>${inr(booking.amount)}</strong></td></tr>
+        </table>
+        ${invoiceUrl ? `<p><a href="${invoiceUrl}" style="display:inline-block;padding:10px 18px;background:#1a1a1a;color:#faf6ef;border-radius:8px;text-decoration:none;">Download invoice</a></p>` : ''}
+        <p>We'd love your feedback — please rate the service in your account.</p>
+        `
+      ),
+    }),
+    sendSMS({
+      to: user?.phone,
+      body: `Velora House: ${booking.code} completed. ${inr(booking.amount)}. Rate your experience in the app.`,
+    }),
+  ]);
+
+export const notifyBookingCancelled = ({ user, worker, booking, reason }) =>
+  Promise.allSettled([
+    sendEmail({
+      to: user?.email,
+      subject: `Booking cancelled · ${booking.code}`,
+      html: wrapEmail(
+        'Booking cancelled',
+        `
+        <p>Booking <strong>${booking.code}</strong> has been cancelled.</p>
+        ${reason ? `<p style="color:#666;">Reason: ${reason}</p>` : ''}
+        ${booking.paymentStatus === 'paid' ? '<p>Any refund eligible will be credited to your original payment method within 5–7 business days.</p>' : ''}
+        `
+      ),
+    }),
+    sendSMS({
+      to: user?.phone,
+      body: `Velora House: Booking ${booking.code} cancelled.${reason ? ' ' + reason : ''}`,
+    }),
+    worker?.phone
+      ? sendSMS({
+          to: worker.phone,
+          body: `Velora House: Booking ${booking.code} cancelled. Job removed from your list.`,
+        })
+      : Promise.resolve({ skipped: true }),
+  ]);
+
+export const notifyKycApproved = ({ worker }) =>
+  Promise.allSettled([
+    sendEmail({
+      to: worker?.email,
+      subject: 'KYC approved · Welcome to Velora House',
+      html: wrapEmail(
+        'You are verified',
+        `
+        <p>Hi ${worker?.name || 'there'},</p>
+        <p>Your KYC has been approved. You can now start receiving job assignments through the Velora House worker app.</p>
+        <p style="color:#666;">Make sure your availability is set so dispatch can reach you.</p>
+        `
+      ),
+    }),
+    sendSMS({
+      to: worker?.phone,
+      body: `Velora House: KYC approved. You can start accepting jobs now.`,
+    }),
+  ]);
+
+export const notifyKycRejected = ({ worker, reason }) =>
+  Promise.allSettled([
+    sendEmail({
+      to: worker?.email,
+      subject: 'KYC needs attention',
+      html: wrapEmail(
+        'KYC requires action',
+        `
+        <p>Hi ${worker?.name || 'there'},</p>
+        <p>We were unable to verify your KYC documents.</p>
+        ${reason ? `<p><strong>Reason:</strong> ${reason}</p>` : ''}
+        <p>Please log in to the worker app, re-upload the requested documents, and we'll review again within 24 hours.</p>
+        `
+      ),
+    }),
+    sendSMS({
+      to: worker?.phone,
+      body: `Velora House: KYC rejected.${reason ? ' Reason: ' + reason : ''} Re-upload documents in the app.`,
+    }),
+  ]);
+
+export const notifyOrderPlaced = ({ user, order }) =>
+  Promise.allSettled([
+    sendEmail({
+      to: user?.email,
+      subject: `Order placed · ${order.code || order._id}`,
+      html: wrapEmail(
+        'Order received',
+        `
+        <p>Hi ${user?.name || 'there'},</p>
+        <p>We've received your order.</p>
+        <table style="width:100%;border-collapse:collapse;margin:14px 0;">
+          <tr><td style="padding:6px 0;color:#666;">Order ID</td><td><strong>${order.code || order._id}</strong></td></tr>
+          <tr><td style="padding:6px 0;color:#666;">Total</td><td><strong>${inr(order.totalAmount || order.total)}</strong></td></tr>
+          <tr><td style="padding:6px 0;color:#666;">Payment</td><td>${order.paymentMode || order.paymentStatus}</td></tr>
+        </table>
+        `
+      ),
+    }),
+    sendSMS({
+      to: user?.phone,
+      body: `Velora House: Order ${order.code || order._id} placed for ${inr(order.totalAmount || order.total)}.`,
+    }),
+  ]);
+
+export const notifyOrderStatus = ({ user, order, status }) =>
+  Promise.allSettled([
+    sendEmail({
+      to: user?.email,
+      subject: `Order ${status} · ${order.code || order._id}`,
+      html: wrapEmail(
+        `Order ${status}`,
+        `<p>Order <strong>${order.code || order._id}</strong> is now <strong>${status}</strong>.</p>`
+      ),
+    }),
+    sendSMS({
+      to: user?.phone,
+      body: `Velora House: Order ${order.code || order._id} is now ${status}.`,
+    }),
+  ]);
+
+export const notifyPasswordReset = ({ user, resetUrl, expiresInMinutes }) =>
+  Promise.allSettled([
+    sendEmail({
+      to: user?.email,
+      subject: 'Reset your Velora House password',
+      html: wrapEmail(
+        'Password reset requested',
+        `
+        <p>Hi ${user?.name || 'there'},</p>
+        <p>We received a request to reset the password on your Velora House account. Click the button below to choose a new password.</p>
+        <p style="margin:20px 0;">
+          <a href="${resetUrl}" style="display:inline-block;padding:12px 22px;background:#1a1a1a;color:#faf6ef;border-radius:8px;text-decoration:none;font-weight:600;">Reset password</a>
+        </p>
+        <p style="color:#666;font-size:12px;">This link expires in ${expiresInMinutes} minutes. If you didn't request a reset, you can ignore this email — your password won't change.</p>
+        <p style="color:#666;font-size:12px;">If the button doesn't work, paste this URL into your browser:<br/><span style="word-break:break-all;">${resetUrl}</span></p>
+        `
+      ),
+    }),
+    sendSMS({
+      to: user?.phone,
+      body: `Velora House: Password reset requested. Open the link in your email — expires in ${expiresInMinutes} min. If this wasn't you, ignore.`,
+    }),
+  ]);
+
+export const sendOtpSms = ({ phone, code, ttlMinutes }) =>
+  sendSMS({
+    to: phone,
+    body: `Velora House login code: ${code}. Valid for ${ttlMinutes} min. Don't share this code with anyone.`,
+  });
+
+export const notifySupportTicketCreated = ({ user, ticket }) =>
+  Promise.allSettled([
+    sendEmail({
+      to: user?.email,
+      subject: `Support ticket received · ${ticket.code}`,
+      html: wrapEmail(
+        'We received your message',
+        `
+        <p>Hi ${user?.name || 'there'},</p>
+        <p>Thanks for reaching out. We've created ticket <strong>${ticket.code}</strong> for you and our team will reply as soon as possible.</p>
+        <table style="width:100%;border-collapse:collapse;margin:14px 0;">
+          <tr><td style="padding:6px 0;color:#666;">Subject</td><td><strong>${escapeHtml(ticket.subject)}</strong></td></tr>
+          <tr><td style="padding:6px 0;color:#666;">Category</td><td>${ticket.category}</td></tr>
+          <tr><td style="padding:6px 0;color:#666;">Priority</td><td>${ticket.priority}</td></tr>
+        </table>
+        <p style="color:#555;">You'll get an email when an agent responds.</p>
+        `
+      ),
+    }),
+  ]);
+
+export const notifySupportTicketReplied = ({ user, ticket, replyText, fromAgent }) =>
+  Promise.allSettled([
+    sendEmail({
+      to: user?.email,
+      subject: fromAgent
+        ? `Reply on your support ticket · ${ticket.code}`
+        : `New message on ticket ${ticket.code}`,
+      html: wrapEmail(
+        fromAgent ? 'We replied to your ticket' : 'Message added',
+        `
+        <p>Hi ${user?.name || 'there'},</p>
+        <p>${fromAgent ? 'A Velora House agent has replied' : 'A new message was added'} to ticket <strong>${ticket.code}</strong>.</p>
+        <blockquote style="margin:14px 0;padding:12px 16px;border-left:3px solid #1a1a1a;background:#f3eee5;color:#333;">
+          ${escapeHtml(replyText).slice(0, 600)}${replyText.length > 600 ? '…' : ''}
+        </blockquote>
+        <p style="color:#555;">Open the app to read the full thread and reply.</p>
+        `
+      ),
+    }),
+    fromAgent
+      ? sendSMS({
+          to: user?.phone,
+          body: `Velora House: New reply on support ticket ${ticket.code}. Open the app to view.`,
+        })
+      : Promise.resolve({ skipped: true }),
+  ]);
+
+const escapeHtml = (s) =>
+  String(s || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+
+export const notificationStatus = () => ({
+  email: !!getMailer(),
+  sms: !!getSmsClient(),
+});

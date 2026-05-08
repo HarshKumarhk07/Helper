@@ -6,6 +6,9 @@ export const createOrder = (payload) =>
 export const listMyOrders = () =>
   api.get('/orders/mine').then((r) => r.data.orders);
 
+export const getOrder = (id) =>
+  api.get(`/orders/${id}`).then((r) => r.data.order);
+
 export const listAllOrders = () =>
   api.get('/orders').then((r) => r.data.orders);
 

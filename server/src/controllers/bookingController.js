@@ -12,6 +12,16 @@ import {
 import { generatePin } from '../utils/pin.js';
 import { pickWorkerForCategory } from '../utils/assignment.js';
 import { assertBookingTransition } from '../utils/bookingTransitionGuard.js';
+import { logAudit } from '../utils/auditLogger.js';
+import { createEarningForBooking } from '../utils/earnings.js';
+import { checkBookingConflict } from '../utils/slots.js';
+import {
+  notifyBookingPlaced,
+  notifyWorkerAssigned,
+  notifyJobStarted,
+  notifyJobCompleted,
+  notifyBookingCancelled,
+} from '../utils/notificationService.js';
 
 const recordHistory = (booking, from, to, by, note) => {
   booking.history.push({ from, to, by: by?._id || by, note: note || '' });
@@ -81,15 +91,49 @@ export const createBooking = asyncHandler(async (req, res) => {
     ],
   });
 
+  let assignedWorker = null;
   if (autoAssign) {
     const worker = await pickWorkerForCategory();
     if (worker) {
-      booking.worker = worker._id;
-      booking.assignedAt = new Date();
-      booking.status = BOOKING_STATUS.ASSIGNED;
-      recordHistory(booking, BOOKING_STATUS.PLACED, BOOKING_STATUS.ASSIGNED, req.user, 'Auto-assigned');
-      await booking.save();
+      // For scheduled bookings, refuse auto-assign if it conflicts with an existing job
+      if (booking.scheduledAt) {
+        const conflict = await checkBookingConflict({
+          workerId: worker._id,
+          scheduledAt: booking.scheduledAt,
+          durationMinutes: service.durationMinutes,
+        });
+        if (!conflict) {
+          assignedWorker = worker;
+        }
+      } else {
+        assignedWorker = worker;
+      }
+      if (assignedWorker) {
+        booking.worker = assignedWorker._id;
+        booking.assignedAt = new Date();
+        booking.status = BOOKING_STATUS.ASSIGNED;
+        recordHistory(booking, BOOKING_STATUS.PLACED, BOOKING_STATUS.ASSIGNED, req.user, 'Auto-assigned');
+        await booking.save();
+      }
     }
+  }
+
+  logAudit({
+    req,
+    action: 'create_booking',
+    resource: 'booking',
+    resourceId: booking._id,
+    changes: { code: { from: null, to: booking.code }, amount: { from: null, to: booking.amount } },
+  });
+
+  notifyBookingPlaced({ user: req.user, booking });
+  if (assignedWorker) {
+    notifyWorkerAssigned({
+      user: req.user,
+      worker: assignedWorker,
+      booking,
+      startPin: booking.startPin,
+    });
   }
 
   res.status(201).json({ booking: await populateBooking(Booking.findById(booking._id)) });
@@ -157,12 +201,28 @@ export const assignWorker = asyncHandler(async (req, res) => {
   const worker = await User.findOne({ _id: workerId, role: ROLES.WORKER, isActive: true });
   if (!worker) throw new ApiError(404, 'Active worker not found');
 
-  const booking = await Booking.findById(req.params.id);
+  const booking = await Booking.findById(req.params.id).select('+startPin +endPin');
   if (!booking) throw new ApiError(404, 'Booking not found');
   if (booking.status !== BOOKING_STATUS.PLACED && booking.status !== BOOKING_STATUS.ASSIGNED) {
     throw new ApiError(409, 'Booking cannot be assigned in its current status');
   }
+  if (worker.kycStatus !== 'verified') {
+    throw new ApiError(400, 'Worker is not KYC-verified');
+  }
 
+  if (booking.scheduledAt) {
+    const populatedService = await Service.findById(booking.service).select('durationMinutes');
+    const conflict = await checkBookingConflict({
+      workerId: worker._id,
+      scheduledAt: booking.scheduledAt,
+      durationMinutes: populatedService?.durationMinutes,
+    });
+    if (conflict && String(conflict._id) !== String(booking._id)) {
+      throw new ApiError(409, `Worker has a conflicting booking ${conflict.code || ''}`.trim());
+    }
+  }
+
+  const previousWorker = booking.worker ? String(booking.worker) : null;
   const wasPlaced = booking.status === BOOKING_STATUS.PLACED;
   booking.worker = worker._id;
   booking.assignedAt = new Date();
@@ -174,11 +234,30 @@ export const assignWorker = asyncHandler(async (req, res) => {
   }
   await booking.save();
 
+  logAudit({
+    req,
+    action: 'assign_worker',
+    resource: 'booking',
+    resourceId: booking._id,
+    changes: {
+      worker: { from: previousWorker, to: String(worker._id) },
+      status: { from: wasPlaced ? BOOKING_STATUS.PLACED : BOOKING_STATUS.ASSIGNED, to: BOOKING_STATUS.ASSIGNED },
+    },
+  });
+
+  const populatedUser = await User.findById(booking.user);
+  notifyWorkerAssigned({
+    user: populatedUser,
+    worker,
+    booking,
+    startPin: booking.startPin,
+  });
+
   res.json({ booking: await populateBooking(Booking.findById(booking._id)) });
 });
 
 export const autoAssign = asyncHandler(async (req, res) => {
-  const booking = await Booking.findById(req.params.id);
+  const booking = await Booking.findById(req.params.id).select('+startPin +endPin');
   if (!booking) throw new ApiError(404, 'Booking not found');
   if (booking.status !== BOOKING_STATUS.PLACED) {
     throw new ApiError(409, 'Auto-assign only allowed when booking is placed');
@@ -191,6 +270,17 @@ export const autoAssign = asyncHandler(async (req, res) => {
   booking.status = BOOKING_STATUS.ASSIGNED;
   recordHistory(booking, BOOKING_STATUS.PLACED, BOOKING_STATUS.ASSIGNED, req.user, 'Auto-assigned');
   await booking.save();
+
+  logAudit({
+    req,
+    action: 'auto_assign_worker',
+    resource: 'booking',
+    resourceId: booking._id,
+    changes: { worker: { from: null, to: String(worker._id) } },
+  });
+
+  const populatedUser = await User.findById(booking.user);
+  notifyWorkerAssigned({ user: populatedUser, worker, booking, startPin: booking.startPin });
 
   res.json({ booking: await populateBooking(Booking.findById(booking._id)) });
 });
@@ -216,38 +306,137 @@ export const transitionStatus = asyncHandler(async (req, res) => {
   recordHistory(booking, from, to, req.user, note);
   await booking.save();
 
+  logAudit({
+    req,
+    action: `booking_${to}`,
+    resource: 'booking',
+    resourceId: booking._id,
+    changes: { status: { from, to } },
+  });
+
+  const populatedUser = await User.findById(booking.user);
+  const populatedWorker = booking.worker ? await User.findById(booking.worker) : null;
+
+  if (to === BOOKING_STATUS.IN_PROGRESS) {
+    notifyJobStarted({ user: populatedUser, booking, endPin: booking.endPin });
+  } else if (to === BOOKING_STATUS.COMPLETED) {
+    createEarningForBooking(booking).catch((err) =>
+      console.error('[earnings] failed to create:', err.message)
+    );
+    notifyJobCompleted({ user: populatedUser, booking });
+  } else if (to === BOOKING_STATUS.CANCELLED) {
+    notifyBookingCancelled({
+      user: populatedUser,
+      worker: populatedWorker,
+      booking,
+      reason: note,
+    });
+  }
+
   res.json({ booking: await populateBooking(Booking.findById(booking._id)) });
 });
 
 export const getWorkerEarnings = asyncHandler(async (req, res) => {
   const workerId = req.user._id;
+  const Earning = (await import('../models/Earning.js')).default;
+  const { getCommissionRate } = await import('../utils/earnings.js');
 
-  const earnings = await Booking.aggregate([
+  // Backfill earnings for any completed bookings missing an Earning row.
+  const completedMissingEarning = await Booking.aggregate([
     { $match: { worker: workerId, status: BOOKING_STATUS.COMPLETED } },
+    {
+      $lookup: {
+        from: 'earnings',
+        localField: '_id',
+        foreignField: 'booking',
+        as: 'earning',
+      },
+    },
+    { $match: { earning: { $size: 0 } } },
+    { $limit: 100 },
+  ]);
+  if (completedMissingEarning.length) {
+    const { createEarningForBooking } = await import('../utils/earnings.js');
+    await Promise.all(
+      completedMissingEarning.map((b) => createEarningForBooking(b).catch(() => null))
+    );
+  }
+
+  const [totals] = await Earning.aggregate([
+    { $match: { worker: workerId } },
+    {
+      $group: {
+        _id: null,
+        gross: { $sum: '$grossAmount' },
+        commission: { $sum: '$commissionAmount' },
+        net: { $sum: '$netAmount' },
+        pending: {
+          $sum: { $cond: [{ $eq: ['$status', 'pending'] }, '$netAmount', 0] },
+        },
+        settled: {
+          $sum: { $cond: [{ $eq: ['$status', 'settled'] }, '$netAmount', 0] },
+        },
+        jobs: { $sum: 1 },
+      },
+    },
+  ]);
+
+  const daily = await Earning.aggregate([
+    { $match: { worker: workerId } },
     {
       $group: {
         _id: {
-          year: { $year: '$createdAt' },
-          month: { $month: '$createdAt' },
-          day: { $dayOfMonth: '$createdAt' }
+          year: { $year: '$completedAt' },
+          month: { $month: '$completedAt' },
+          day: { $dayOfMonth: '$completedAt' },
         },
-        totalEarnings: { $sum: '$amount' },
-        jobsCompleted: { $sum: 1 }
-      }
+        gross: { $sum: '$grossAmount' },
+        commission: { $sum: '$commissionAmount' },
+        net: { $sum: '$netAmount' },
+        jobs: { $sum: 1 },
+      },
     },
-    { $sort: { '_id.year': -1, '_id.month': -1, '_id.day': -1 } }
+    { $sort: { '_id.year': -1, '_id.month': -1, '_id.day': -1 } },
+    { $limit: 60 },
   ]);
 
-  const totalAllTime = earnings.reduce((sum, curr) => sum + curr.totalEarnings, 0);
-  const totalJobs = earnings.reduce((sum, curr) => sum + curr.jobsCompleted, 0);
-
   res.json({
-    totalAllTime,
-    totalJobs,
-    dailyBreakdown: earnings.map(e => ({
-      date: `${e._id.year}-${String(e._id.month).padStart(2, '0')}-${String(e._id.day).padStart(2, '0')}`,
-      earnings: e.totalEarnings,
-      jobs: e.jobsCompleted
-    }))
+    commissionRate: getCommissionRate(),
+    totals: {
+      gross: totals?.gross || 0,
+      commission: totals?.commission || 0,
+      net: totals?.net || 0,
+      pending: totals?.pending || 0,
+      settled: totals?.settled || 0,
+      jobs: totals?.jobs || 0,
+    },
+    // legacy keys to avoid breaking the existing UI
+    totalAllTime: totals?.net || 0,
+    totalJobs: totals?.jobs || 0,
+    dailyBreakdown: daily.map((d) => ({
+      date: `${d._id.year}-${String(d._id.month).padStart(2, '0')}-${String(d._id.day).padStart(2, '0')}`,
+      gross: d.gross,
+      commission: d.commission,
+      net: d.net,
+      earnings: d.net,
+      jobs: d.jobs,
+    })),
   });
+});
+
+export const getWorkerEarningEntries = asyncHandler(async (req, res) => {
+  const workerId = req.user._id;
+  const Earning = (await import('../models/Earning.js')).default;
+  const { status, limit = 100 } = req.query;
+  const filter = { worker: workerId };
+  if (status) filter.status = status;
+  const entries = await Earning.find(filter)
+    .populate({
+      path: 'booking',
+      select: 'code service amount completedAt',
+      populate: { path: 'service', select: 'name' },
+    })
+    .sort({ completedAt: -1 })
+    .limit(Math.min(Number(limit) || 100, 500));
+  res.json({ entries });
 });

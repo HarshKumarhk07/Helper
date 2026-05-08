@@ -3,11 +3,16 @@ import toast from 'react-hot-toast';
 import DashboardShell from './DashboardShell.jsx';
 import { listAllOrders, updateOrderNote } from '../../api/orders.js';
 import { formatPrice } from '../../lib/booking.js';
+import RefundModal from '../../components/admin/RefundModal.jsx';
+import { useAuth } from '../../context/AuthContext.jsx';
 
 export default function AdminOrders() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [notes, setNotes] = useState({});
+  const [refundTarget, setRefundTarget] = useState(null);
 
   const load = () => {
     setLoading(true);
@@ -66,8 +71,32 @@ export default function AdminOrders() {
                 <div className="text-right">
                   <div className="text-lg font-semibold">{formatPrice(order.totalAmount)}</div>
                   <div className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
-                    {order.paymentMode}
+                    {order.paymentMode} ·{' '}
+                    <span
+                      className={
+                        order.paymentStatus === 'paid'
+                          ? 'text-green-600 dark:text-green-300'
+                          : order.paymentStatus === 'refunded'
+                          ? 'text-red-600 dark:text-red-300'
+                          : ''
+                      }
+                    >
+                      {order.paymentStatus}
+                    </span>
                   </div>
+                  {isAdmin && order.paymentStatus === 'paid' && order.razorpayPaymentId && (
+                    <button
+                      onClick={() => setRefundTarget(order)}
+                      className="mt-2 inline-flex items-center gap-1 rounded-full border border-red-300 px-3 py-1 text-xs uppercase tracking-widest text-red-600 hover:bg-red-50 dark:border-red-400/30 dark:text-red-300 dark:hover:bg-red-400/10"
+                    >
+                      Refund
+                    </button>
+                  )}
+                  {order.paymentStatus === 'refunded' && order.refundAmount > 0 && (
+                    <div className="mt-2 text-xs text-red-600 dark:text-red-300">
+                      −{formatPrice(order.refundAmount)} refunded
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -100,6 +129,15 @@ export default function AdminOrders() {
           ))
         )}
       </div>
+
+      {refundTarget && (
+        <RefundModal
+          type="order"
+          reference={refundTarget}
+          onClose={() => setRefundTarget(null)}
+          onRefunded={() => load()}
+        />
+      )}
     </DashboardShell>
   );
 }

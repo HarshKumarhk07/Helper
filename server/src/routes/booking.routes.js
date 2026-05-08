@@ -12,6 +12,7 @@ import {
   autoAssign,
   transitionStatus,
   getWorkerEarnings,
+  getWorkerEarningEntries,
 } from '../controllers/bookingController.js';
 import {
   createBookingSchema,
@@ -24,6 +25,7 @@ const router = Router();
 router.use(requireAuth);
 
 router.get('/worker/earnings', requireRole(ROLES.WORKER), getWorkerEarnings);
+router.get('/worker/earnings/entries', requireRole(ROLES.WORKER), getWorkerEarningEntries);
 router.post('/', validate(createBookingSchema), createBooking);
 router.get('/mine', listMyBookings);
 router.get('/worker/jobs', requireRole(ROLES.WORKER, ROLES.ADMIN), listWorkerJobs);

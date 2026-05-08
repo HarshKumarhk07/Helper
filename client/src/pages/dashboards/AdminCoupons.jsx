@@ -1,34 +1,50 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { listCoupons, createCoupon, updateCoupon, deleteCoupon } from '../../api/coupons.js';
+import { listCategories } from '../../api/categories.js';
 import DashboardShell from './DashboardShell.jsx';
 import PillButton from '../../components/ui/PillButton.jsx';
 import { Trash2, AlertTriangle, Edit2 } from 'lucide-react';
 
+const emptyCreate = () => ({
+  code: '',
+  description: '',
+  discountType: 'percentage',
+  discountValue: 0,
+  minOrderValue: 0,
+  maxDiscount: null,
+  expiryDate: '',
+  usageLimit: null,
+  perUserLimit: null,
+  firstOrderOnly: false,
+  category: '',
+  appliesTo: 'both',
+  isActive: true,
+});
+
+const emptyEdit = () => ({
+  description: '',
+  discountValue: 0,
+  minOrderValue: 0,
+  maxDiscount: null,
+  expiryDate: '',
+  usageLimit: null,
+  perUserLimit: null,
+  firstOrderOnly: false,
+  category: '',
+  appliesTo: 'both',
+  isActive: true,
+});
+
 export default function AdminCoupons() {
   const [coupons, setCoupons] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingCoupon, setEditingCoupon] = useState(null);
   const [deleteModal, setDeleteModal] = useState({ show: false, couponId: null, couponCode: '' });
-  const [form, setForm] = useState({
-    code: '',
-    discountType: 'percentage',
-    discountValue: 0,
-    minOrderValue: 0,
-    maxDiscount: null,
-    expiryDate: '',
-    usageLimit: null,
-    isActive: true,
-  });
-  const [editForm, setEditForm] = useState({
-    discountValue: 0,
-    minOrderValue: 0,
-    maxDiscount: null,
-    expiryDate: '',
-    usageLimit: null,
-    isActive: true,
-  });
+  const [form, setForm] = useState(emptyCreate());
+  const [editForm, setEditForm] = useState(emptyEdit());
 
   const load = () => {
     setLoading(true);
@@ -40,6 +56,9 @@ export default function AdminCoupons() {
 
   useEffect(() => {
     load();
+    listCategories()
+      .then(setCategories)
+      .catch(() => setCategories([]));
   }, []);
 
   const handleCreate = async (e) => {
@@ -52,48 +71,39 @@ export default function AdminCoupons() {
         minOrderValue: Number(form.minOrderValue),
         maxDiscount: form.maxDiscount ? Number(form.maxDiscount) : null,
         usageLimit: form.usageLimit ? Number(form.usageLimit) : null,
+        perUserLimit: form.perUserLimit ? Number(form.perUserLimit) : null,
+        category: form.category || null,
       };
       await createCoupon(payload);
       toast.success('Coupon created!');
       setShowForm(false);
-      setForm({
-        code: '',
-        discountType: 'percentage',
-        discountValue: 0,
-        minOrderValue: 0,
-        maxDiscount: null,
-        expiryDate: '',
-        usageLimit: null,
-        isActive: true,
-      });
+      setForm(emptyCreate());
       load();
     } catch (err) {
-      toast.error(err?.response?.data?.error || 'Failed to create coupon');
+      toast.error(err?.response?.data?.message || err?.response?.data?.error || 'Failed to create coupon');
     }
   };
 
   const openEditor = (coupon) => {
     setEditingCoupon(coupon);
     setEditForm({
+      description: coupon.description || '',
       discountValue: coupon.discountValue || 0,
       minOrderValue: coupon.minOrderValue || 0,
       maxDiscount: coupon.maxDiscount || null,
       expiryDate: coupon.expiryDate ? new Date(coupon.expiryDate).toISOString().slice(0, 16) : '',
       usageLimit: coupon.usageLimit || null,
+      perUserLimit: coupon.perUserLimit || null,
+      firstOrderOnly: !!coupon.firstOrderOnly,
+      category: coupon.category?._id || coupon.category || '',
+      appliesTo: coupon.appliesTo || 'both',
       isActive: coupon.isActive !== false,
     });
   };
 
   const closeEditor = () => {
     setEditingCoupon(null);
-    setEditForm({
-      discountValue: 0,
-      minOrderValue: 0,
-      maxDiscount: null,
-      expiryDate: '',
-      usageLimit: null,
-      isActive: true,
-    });
+    setEditForm(emptyEdit());
   };
 
   const handleUpdateCoupon = async (e) => {
@@ -105,13 +115,16 @@ export default function AdminCoupons() {
         minOrderValue: Number(editForm.minOrderValue),
         maxDiscount: editForm.maxDiscount ? Number(editForm.maxDiscount) : null,
         usageLimit: editForm.usageLimit ? Number(editForm.usageLimit) : null,
+        perUserLimit: editForm.perUserLimit ? Number(editForm.perUserLimit) : null,
+        category: editForm.category || null,
       };
       const updated = await updateCoupon(editingCoupon._id, payload);
       setCoupons((current) => current.map((c) => (c._id === updated.coupon._id ? updated.coupon : c)));
       toast.success('Coupon updated successfully');
       closeEditor();
+      load();
     } catch (err) {
-      toast.error(err?.response?.data?.error || 'Failed to update coupon');
+      toast.error(err?.response?.data?.message || err?.response?.data?.error || 'Failed to update coupon');
     }
   };
 
@@ -264,6 +277,82 @@ export default function AdminCoupons() {
                 />
                 <span className="text-sm font-medium">Active</span>
               </label>
+            </div>
+
+            <div className="col-span-full mt-2 border-t border-ink/10 pt-4 dark:border-paper/10">
+              <div className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/55">Eligibility & limits</div>
+            </div>
+
+            <div>
+              <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Per-user limit</label>
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  min="1"
+                  placeholder="e.g., 1"
+                  disabled={!form.perUserLimit}
+                  className="flex-1 p-3 border border-ink/20 rounded-xl bg-white dark:bg-paper/10 focus:border-ink outline-none disabled:opacity-50"
+                  value={form.perUserLimit || ''}
+                  onChange={(e) => setForm({ ...form, perUserLimit: e.target.value ? Number(e.target.value) : null })}
+                />
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, perUserLimit: form.perUserLimit ? null : 1 })}
+                  className="px-3 py-1 text-xs bg-ink/10 hover:bg-ink/20 rounded-lg transition whitespace-nowrap"
+                >
+                  {form.perUserLimit ? 'Limited' : 'Unlimited'}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Restrict to category</label>
+              <select
+                value={form.category}
+                onChange={(e) => setForm({ ...form, category: e.target.value })}
+                className="w-full p-3 border border-ink/20 rounded-xl bg-white dark:bg-paper/10 focus:border-ink outline-none"
+              >
+                <option value="">— Any category —</option>
+                {categories.map((c) => (
+                  <option key={c._id} value={c._id}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Applies to</label>
+              <select
+                value={form.appliesTo}
+                onChange={(e) => setForm({ ...form, appliesTo: e.target.value })}
+                className="w-full p-3 border border-ink/20 rounded-xl bg-white dark:bg-paper/10 focus:border-ink outline-none"
+              >
+                <option value="both">Services & products</option>
+                <option value="services">Services only</option>
+                <option value="products">Products only</option>
+              </select>
+            </div>
+
+            <div className="flex items-end">
+              <label className="flex items-center gap-2 p-3 bg-white dark:bg-paper/10 rounded-xl border border-ink/20 w-full">
+                <input
+                  type="checkbox"
+                  checked={form.firstOrderOnly}
+                  onChange={(e) => setForm({ ...form, firstOrderOnly: e.target.checked })}
+                  className="w-4 h-4"
+                />
+                <span className="text-sm font-medium">First order only</span>
+              </label>
+            </div>
+
+            <div className="col-span-full">
+              <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Description (shown to customers)</label>
+              <textarea
+                rows={2}
+                placeholder="e.g., Welcome offer — flat 20% off your first booking"
+                className="w-full p-3 border border-ink/20 rounded-xl bg-white dark:bg-paper/10 focus:border-ink outline-none"
+                value={form.description}
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
+              />
             </div>
 
             <button type="submit" className="pill-btn-solid col-span-full">Create Coupon</button>
@@ -432,6 +521,82 @@ export default function AdminCoupons() {
                   />
                   <span className="text-sm font-medium">Active</span>
                 </label>
+              </div>
+
+              <div className="col-span-full mt-2 border-t border-ink/10 pt-4 dark:border-paper/10">
+                <div className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/55">Eligibility & limits</div>
+              </div>
+
+              <div>
+                <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Per-user limit</label>
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    min="1"
+                    placeholder="e.g., 1"
+                    disabled={!editForm.perUserLimit}
+                    className="flex-1 p-3 border border-ink/20 rounded-xl bg-white dark:bg-paper/10 focus:border-ink outline-none disabled:opacity-50"
+                    value={editForm.perUserLimit || ''}
+                    onChange={(e) => setEditForm({ ...editForm, perUserLimit: e.target.value ? Number(e.target.value) : null })}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setEditForm({ ...editForm, perUserLimit: editForm.perUserLimit ? null : 1 })}
+                    className="px-3 py-1 text-xs bg-ink/10 hover:bg-ink/20 rounded-lg transition whitespace-nowrap"
+                  >
+                    {editForm.perUserLimit ? 'Limited' : 'Unlimited'}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Restrict to category</label>
+                <select
+                  value={editForm.category}
+                  onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
+                  className="w-full p-3 border border-ink/20 rounded-xl bg-white dark:bg-paper/10 focus:border-ink outline-none"
+                >
+                  <option value="">— Any category —</option>
+                  {categories.map((c) => (
+                    <option key={c._id} value={c._id}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Applies to</label>
+                <select
+                  value={editForm.appliesTo}
+                  onChange={(e) => setEditForm({ ...editForm, appliesTo: e.target.value })}
+                  className="w-full p-3 border border-ink/20 rounded-xl bg-white dark:bg-paper/10 focus:border-ink outline-none"
+                >
+                  <option value="both">Services & products</option>
+                  <option value="services">Services only</option>
+                  <option value="products">Products only</option>
+                </select>
+              </div>
+
+              <div className="flex items-end">
+                <label className="flex items-center gap-2 p-3 bg-white dark:bg-paper/10 rounded-xl border border-ink/20 w-full">
+                  <input
+                    type="checkbox"
+                    checked={editForm.firstOrderOnly}
+                    onChange={(e) => setEditForm({ ...editForm, firstOrderOnly: e.target.checked })}
+                    className="w-4 h-4"
+                  />
+                  <span className="text-sm font-medium">First order only</span>
+                </label>
+              </div>
+
+              <div className="col-span-full">
+                <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Description (shown to customers)</label>
+                <textarea
+                  rows={2}
+                  placeholder="e.g., Welcome offer — flat 20% off your first booking"
+                  className="w-full p-3 border border-ink/20 rounded-xl bg-white dark:bg-paper/10 focus:border-ink outline-none"
+                  value={editForm.description}
+                  onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                />
               </div>
 
               <div className="col-span-full flex gap-2 justify-end">

@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node --input-type=module -e \"import\\('./src/app.js'\\).then\\(m => { console.log\\('OK'\\); process.exit\\(0\\); }\\).catch\\(e => { console.error\\('LOAD ERROR:', e.message\\); process.exit\\(1\\); }\\);\")"
+    ]
+  }
+}

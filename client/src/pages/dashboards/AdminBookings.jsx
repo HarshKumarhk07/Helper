@@ -4,6 +4,8 @@ import { listAllBookings, assignWorker, autoAssign, transitionStatus } from '../
 import { listUsers } from '../../api/users.js';
 import StatusBadge from '../../components/booking/StatusBadge.jsx';
 import { formatDateTime, formatPrice, BOOKING_STATUS } from '../../lib/booking.js';
+import RefundModal from '../../components/admin/RefundModal.jsx';
+import { useAuth } from '../../context/AuthContext.jsx';
 
 const FILTERS = [
   { key: 'all', label: 'All' },
@@ -15,10 +17,13 @@ const FILTERS = [
 ];
 
 export default function AdminBookings() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
   const [bookings, setBookings] = useState([]);
   const [workers, setWorkers] = useState([]);
   const [filter, setFilter] = useState('all');
   const [loading, setLoading] = useState(true);
+  const [refundTarget, setRefundTarget] = useState(null);
 
   const load = () => {
     setLoading(true);
@@ -150,7 +155,20 @@ export default function AdminBookings() {
                 <td className="py-3 pr-4 text-xs">
                   {b.scheduledAt ? formatDateTime(b.scheduledAt) : 'Instant'}
                 </td>
-                <td className="py-3 pr-4">{formatPrice(b.amount)}</td>
+                <td className="py-3 pr-4">
+                  <div>{formatPrice(b.amount)}</div>
+                  <div
+                    className={`text-[10px] uppercase tracking-widest ${
+                      b.paymentStatus === 'paid'
+                        ? 'text-green-600 dark:text-green-300'
+                        : b.paymentStatus === 'refunded'
+                        ? 'text-red-600 dark:text-red-300'
+                        : 'text-ink/50 dark:text-paper/40'
+                    }`}
+                  >
+                    {b.paymentStatus || 'pending'}
+                  </div>
+                </td>
                 <td className="py-3 pr-4">
                   <div className="flex flex-wrap gap-2">
                     {b.status === 'placed' && !b.worker && (
@@ -177,6 +195,14 @@ export default function AdminBookings() {
                         Mark complete
                       </button>
                     )}
+                    {isAdmin && b.paymentStatus === 'paid' && b.razorpayPaymentId && (
+                      <button
+                        onClick={() => setRefundTarget(b)}
+                        className="rounded-pill border border-red-300 px-3 py-1 text-[10px] uppercase tracking-widest text-red-700 hover:bg-red-50 dark:border-red-400/30 dark:text-red-300 dark:hover:bg-red-400/10"
+                      >
+                        Refund
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>
@@ -184,6 +210,15 @@ export default function AdminBookings() {
           </tbody>
         </table>
       </div>
+
+      {refundTarget && (
+        <RefundModal
+          type="booking"
+          reference={refundTarget}
+          onClose={() => setRefundTarget(null)}
+          onRefunded={() => load()}
+        />
+      )}
     </section>
   );
 }

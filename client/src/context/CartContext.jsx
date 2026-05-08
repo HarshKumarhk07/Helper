@@ -1,82 +1,175 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { getProduct } from '../api/products.js';
+import {
+  getMyCart,
+  mergeCart as mergeServerCart,
+  addCartItem,
+  updateCartItem as updateServerCartItem,
+  removeCartItem as removeServerCartItem,
+  clearCart as clearServerCart,
+} from '../api/cart.js';
+import { useAuth } from './AuthContext.jsx';
 
 const CartContext = createContext();
+const STORAGE_KEY = 'velora_cart';
+
+const loadInitial = () => {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : [];
+  } catch {
+    return [];
+  }
+};
+
+// Merge server cart items (products) with local-only items (services).
+const mergeServerWithLocal = (serverItems, localItems) => {
+  // Server cart only stores products. Keep any service items from the local cart untouched.
+  const localServices = (localItems || []).filter((it) => it.kind === 'service');
+  return [...(serverItems || []), ...localServices];
+};
 
 export function CartProvider({ children }) {
-  const [cart, setCart] = useState(() => {
-    try {
-      const saved = localStorage.getItem('velora_cart');
-      return saved ? JSON.parse(saved) : [];
-    } catch (e) {
-      return [];
-    }
-  });
+  const { isAuthenticated, user } = useAuth();
+  const [cart, setCart] = useState(loadInitial);
+  const syncedForUserRef = useRef(null);
 
+  // Persist locally on every change.
   useEffect(() => {
-    localStorage.setItem('velora_cart', JSON.stringify(cart));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(cart));
   }, [cart]);
 
+  // Validate the saved cart's product items still exist (drop ghosts).
   useEffect(() => {
     let cancelled = false;
-
-    const validateSavedCart = async () => {
+    const validate = async () => {
       const productItems = cart.filter((item) => item.kind !== 'service');
       if (!productItems.length) return;
-
-      const uniqueProductIds = [...new Set(productItems.map((item) => item.product).filter(Boolean))];
-      const results = await Promise.allSettled(uniqueProductIds.map((productId) => getProduct(productId)));
-
+      const ids = [...new Set(productItems.map((it) => it.product).filter(Boolean))];
+      const results = await Promise.allSettled(ids.map((id) => getProduct(id)));
       if (cancelled) return;
-
-      const validProductIds = new Set(
+      const valid = new Set(
         results
-          .map((result, index) => (result.status === 'fulfilled' ? uniqueProductIds[index] : null))
+          .map((r, i) => (r.status === 'fulfilled' ? ids[i] : null))
           .filter(Boolean)
       );
-
-      if (validProductIds.size !== uniqueProductIds.length) {
-        setCart((current) => current.filter((item) => validProductIds.has(item.product)));
+      if (valid.size !== ids.length) {
+        setCart((current) =>
+          current.filter((it) => it.kind === 'service' || valid.has(it.product))
+        );
         toast.error('Removed unavailable items from your cart');
       }
     };
-
-    validateSavedCart();
-
+    validate();
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const addToCart = (product) => {
-    setCart((prev) => {
-      const itemKind = product.kind || 'product';
-      const existing = prev.find((item) => item.product === product._id && item.kind === itemKind);
-      if (existing) {
-        return prev.map((item) =>
-          item.product === product._id && item.kind === itemKind
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
+  // On login, push any local product items to the server, then read the merged cart back.
+  useEffect(() => {
+    if (!isAuthenticated || !user?._id) return;
+    if (syncedForUserRef.current === user._id) return;
+    syncedForUserRef.current = user._id;
+
+    let cancelled = false;
+    const run = async () => {
+      try {
+        const localProducts = cart
+          .filter((it) => it.kind !== 'service' && it.product)
+          .map((it) => ({ productId: it.product, quantity: it.quantity }));
+
+        const merged =
+          localProducts.length > 0
+            ? await mergeServerCart(localProducts)
+            : await getMyCart();
+        if (cancelled) return;
+        setCart((current) => mergeServerWithLocal(merged.items, current));
+      } catch {
+        // Best-effort; if server is unreachable we keep the local cart.
       }
-      return [...prev, { product: product._id, kind: itemKind, name: product.name, price: product.price, image: product.image, quantity: 1 }];
-    });
-    toast.success('Added to cart');
-  };
+    };
+    run();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, user?._id]);
 
-  const removeFromCart = (productId) => {
-    setCart((prev) => prev.filter((item) => item.product !== productId));
-  };
+  // Reset sync sentinel on logout so a fresh login re-syncs.
+  useEffect(() => {
+    if (!isAuthenticated) {
+      syncedForUserRef.current = null;
+    }
+  }, [isAuthenticated]);
 
-  const updateQuantity = (productId, quantity) => {
-    if (quantity < 1) return;
-    setCart((prev) =>
-      prev.map((item) => (item.product === productId ? { ...item, quantity } : item))
-    );
-  };
+  const addToCart = useCallback(
+    (product) => {
+      const itemKind = product.kind || 'product';
+      setCart((prev) => {
+        const existing = prev.find(
+          (it) => it.product === product._id && it.kind === itemKind
+        );
+        if (existing) {
+          return prev.map((it) =>
+            it.product === product._id && it.kind === itemKind
+              ? { ...it, quantity: it.quantity + 1 }
+              : it
+          );
+        }
+        return [
+          ...prev,
+          {
+            product: product._id,
+            kind: itemKind,
+            name: product.name,
+            price: product.price,
+            image: product.image,
+            quantity: 1,
+          },
+        ];
+      });
+      toast.success('Added to cart');
+      if (isAuthenticated && itemKind !== 'service') {
+        addCartItem(product._id, 1).catch(() => null);
+      }
+    },
+    [isAuthenticated]
+  );
 
-  const clearCart = () => setCart([]);
+  const removeFromCart = useCallback(
+    (productId) => {
+      const removedItem = cart.find((it) => it.product === productId);
+      setCart((prev) => prev.filter((it) => it.product !== productId));
+      if (isAuthenticated && removedItem?.kind !== 'service') {
+        removeServerCartItem(productId).catch(() => null);
+      }
+    },
+    [isAuthenticated, cart]
+  );
+
+  const updateQuantity = useCallback(
+    (productId, quantity) => {
+      if (quantity < 1) return;
+      const item = cart.find((it) => it.product === productId);
+      setCart((prev) =>
+        prev.map((it) => (it.product === productId ? { ...it, quantity } : it))
+      );
+      if (isAuthenticated && item?.kind !== 'service') {
+        updateServerCartItem(productId, quantity).catch(() => null);
+      }
+    },
+    [isAuthenticated, cart]
+  );
+
+  const clearCart = useCallback(() => {
+    setCart([]);
+    if (isAuthenticated) {
+      clearServerCart().catch(() => null);
+    }
+  }, [isAuthenticated]);
 
   return (
     <CartContext.Provider value={{ cart, addToCart, removeFromCart, updateQuantity, clearCart }}>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { getService } from '../api/services.js';
@@ -7,14 +7,7 @@ import { createBooking } from '../api/bookings.js';
 import { formatPrice } from '../lib/booking.js';
 import PillButton from '../components/ui/PillButton.jsx';
 import FadeUp from '../components/ui/FadeUp.jsx';
-
-const TIME_SLOTS = [
-  '09:00', '10:00', '11:00', '12:00',
-  '13:00', '14:00', '15:00', '16:00',
-  '17:00', '18:00', '19:00', '20:00',
-];
-
-const todayISODate = () => new Date().toISOString().slice(0, 10);
+import SlotPicker from '../components/booking/SlotPicker.jsx';
 
 export default function BookingFlow() {
   const { serviceId } = useParams();
@@ -24,8 +17,7 @@ export default function BookingFlow() {
   const [addresses, setAddresses] = useState([]);
   const [selectedAddressId, setSelectedAddressId] = useState('');
   const [bookingType, setBookingType] = useState('instant');
-  const [date, setDate] = useState(todayISODate());
-  const [time, setTime] = useState('10:00');
+  const [scheduledAt, setScheduledAt] = useState(null);
   const [paymentMode, setPaymentMode] = useState('cod');
   const [autoAssign, setAutoAssign] = useState(true);
   const [notes, setNotes] = useState('');
@@ -61,11 +53,6 @@ export default function BookingFlow() {
       .catch(() => setShowAddressForm(true));
   }, []);
 
-  const scheduledAt = useMemo(() => {
-    if (bookingType !== 'scheduled') return null;
-    return new Date(`${date}T${time}:00`).toISOString();
-  }, [bookingType, date, time]);
-
   const onSaveAddress = async (e) => {
     e.preventDefault();
     try {
@@ -85,12 +72,16 @@ export default function BookingFlow() {
       toast.error('Select or add an address');
       return;
     }
+    if (bookingType === 'scheduled' && !scheduledAt) {
+      toast.error('Pick a slot to schedule');
+      return;
+    }
     setSubmitting(true);
     try {
       const booking = await createBooking({
         service: service._id,
         type: bookingType,
-        scheduledAt,
+        scheduledAt: bookingType === 'scheduled' ? scheduledAt : null,
         addressId: selectedAddressId || undefined,
         paymentMode,
         autoAssign,
@@ -99,7 +90,7 @@ export default function BookingFlow() {
       toast.success(`Booked — ${booking.code}`);
       navigate('/me/bookings');
     } catch (err) {
-      toast.error(err?.response?.data?.error || 'Booking failed');
+      toast.error(err?.response?.data?.error || err?.response?.data?.message || 'Booking failed');
     } finally {
       setSubmitting(false);
     }
@@ -141,29 +132,12 @@ export default function BookingFlow() {
                 </div>
 
                 {bookingType === 'scheduled' && (
-                  <div className="mt-4 grid grid-cols-2 gap-4">
-                    <Field label="Date">
-                      <input
-                        type="date"
-                        value={date}
-                        min={todayISODate()}
-                        onChange={(e) => setDate(e.target.value)}
-                        className="w-full rounded-pill border border-ink/20 bg-paper px-4 py-2 text-sm outline-none focus:border-ink dark:bg-transparent dark:text-paper"
-                      />
-                    </Field>
-                    <Field label="Time slot">
-                      <select
-                        value={time}
-                        onChange={(e) => setTime(e.target.value)}
-                        className="w-full rounded-pill border border-ink/20 bg-paper px-4 py-2 text-sm outline-none focus:border-ink dark:bg-transparent dark:text-paper"
-                      >
-                        {TIME_SLOTS.map((t) => (
-                          <option key={t} value={t}>
-                            {t}
-                          </option>
-                        ))}
-                      </select>
-                    </Field>
+                  <div className="mt-4">
+                    <SlotPicker
+                      serviceId={service._id}
+                      value={scheduledAt}
+                      onChange={setScheduledAt}
+                    />
                   </div>
                 )}
               </Section>
@@ -314,7 +288,20 @@ export default function BookingFlow() {
               <div className="mt-6 space-y-2 text-sm">
                 <Row label="Type" value={bookingType} />
                 {bookingType === 'scheduled' && (
-                  <Row label="Slot" value={`${date} ${time}`} />
+                  <Row
+                    label="Slot"
+                    value={
+                      scheduledAt
+                        ? new Date(scheduledAt).toLocaleString(undefined, {
+                            weekday: 'short',
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })
+                        : 'Pick a slot'
+                    }
+                  />
                 )}
                 <Row label="Auto-assign" value={autoAssign ? 'Yes' : 'No'} />
                 <Row label="Payment" value={paymentMode === 'cod' ? 'COD' : 'Online'} />

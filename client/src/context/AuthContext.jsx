@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import api from '../api/axios.js';
+import api, { onAuthEvent } from '../api/axios.js';
 
 const AuthContext = createContext(null);
 
@@ -34,6 +34,15 @@ export function AuthProvider({ children }) {
     return data.user;
   }, []);
 
+  // Apply a server-provided session payload (e.g., after OTP verify).
+  // Persists tokens, sets the user, and returns the user.
+  const applySession = useCallback((data) => {
+    if (!data?.accessToken || !data?.user) return null;
+    persistTokens(data.accessToken, data.refreshToken);
+    setUser(data.user);
+    return data.user;
+  }, []);
+
   const logout = useCallback(async () => {
     try {
       await api.post('/auth/logout');
@@ -57,9 +66,21 @@ export function AuthProvider({ children }) {
       .finally(() => setBootstrapping(false));
   }, []);
 
+  // React to auth events emitted by the axios interceptor (refresh / forced logout)
+  useEffect(() => {
+    const off = onAuthEvent(({ type, payload }) => {
+      if (type === 'logout') {
+        setUser(null);
+      } else if (type === 'refreshed' && payload?.user) {
+        setUser(payload.user);
+      }
+    });
+    return off;
+  }, []);
+
   return (
     <AuthContext.Provider
-      value={{ user, isAuthenticated: !!user, bootstrapping, login, signup, logout }}
+      value={{ user, isAuthenticated: !!user, bootstrapping, login, signup, logout, applySession }}
     >
       {children}
     </AuthContext.Provider>

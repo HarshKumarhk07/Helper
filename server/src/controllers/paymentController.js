@@ -4,7 +4,11 @@ import { ApiError, asyncHandler } from '../utils/asyncHandler.js';
 import Order from '../models/Order.js';
 import Booking from '../models/Booking.js';
 import Coupon from '../models/Coupon.js';
+import User from '../models/User.js';
 import { recordOrderHistory } from '../utils/ecommerce.js';
+import { logAudit } from '../utils/auditLogger.js';
+import { notifyBookingCancelled, notifyOrderStatus } from '../utils/notificationService.js';
+import { recordCouponUsage } from './couponController.js';
 
 let razorpay;
 try {
@@ -66,16 +70,134 @@ export const verifyRazorpayPayment = asyncHandler(async (req, res) => {
           { code: order.couponCode },
           { $inc: { usedCount: 1 } }
         );
+        recordCouponUsage({ couponCode: order.couponCode, userId: order.user }).catch(() => null);
       }
 
     } else if (type === 'booking') {
       await Booking.findByIdAndUpdate(referenceId, {
         paymentStatus: 'paid',
+        razorpayOrderId: razorpay_order_id,
+        razorpayPaymentId: razorpay_payment_id,
       });
     }
-    
+
     res.json({ message: 'Payment verified successfully' });
   } else {
     throw new ApiError(400, 'Invalid payment signature');
   }
+});
+
+const inr = (n) =>
+  `₹${Number(n || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
+
+export const refundPayment = asyncHandler(async (req, res) => {
+  if (!razorpay) throw new ApiError(500, 'Payment gateway not configured');
+
+  const { type, referenceId, amount, reason } = req.body;
+  if (!type || !referenceId) {
+    throw new ApiError(400, 'type and referenceId are required');
+  }
+
+  let target;
+  if (type === 'booking') {
+    target = await Booking.findById(referenceId);
+  } else if (type === 'order' || type === 'ecommerce') {
+    target = await Order.findById(referenceId);
+  } else {
+    throw new ApiError(400, 'Unknown refund type');
+  }
+  if (!target) throw new ApiError(404, 'Reference not found');
+
+  if (!target.razorpayPaymentId) {
+    throw new ApiError(
+      400,
+      'No Razorpay payment captured for this reference — refund cannot be processed online.'
+    );
+  }
+  if (target.paymentStatus === 'refunded') {
+    throw new ApiError(409, 'Already refunded');
+  }
+  if (target.paymentStatus !== 'paid') {
+    throw new ApiError(409, 'Only paid payments can be refunded');
+  }
+
+  const grossAmount = type === 'booking' ? target.amount : target.totalAmount;
+  const refundAmt = amount != null ? Number(amount) : grossAmount;
+  if (!Number.isFinite(refundAmt) || refundAmt <= 0) {
+    throw new ApiError(400, 'Invalid refund amount');
+  }
+  if (refundAmt > grossAmount) {
+    throw new ApiError(400, 'Refund amount exceeds payment amount');
+  }
+
+  let refund;
+  try {
+    refund = await razorpay.payments.refund(target.razorpayPaymentId, {
+      amount: Math.round(refundAmt * 100),
+      notes: { reason: String(reason || '').slice(0, 250) },
+    });
+  } catch (err) {
+    logAudit({
+      req,
+      action: 'razorpay_refund_failed',
+      resource: type,
+      resourceId: target._id,
+      status: 'failure',
+      errorMessage: err?.error?.description || err.message,
+    });
+    throw new ApiError(502, err?.error?.description || 'Razorpay refund failed');
+  }
+
+  target.razorpayRefundId = refund.id;
+  target.refundAmount = refundAmt;
+  target.refundedAt = new Date();
+  target.paymentStatus = 'refunded';
+
+  if (type === 'booking') {
+    await target.save();
+    const buyer = await User.findById(target.user);
+    if (buyer) {
+      notifyBookingCancelled({
+        user: buyer,
+        worker: null,
+        booking: target,
+        reason: `Refund of ${inr(refundAmt)} initiated. ${reason || ''}`.trim(),
+      });
+    }
+  } else {
+    recordOrderHistory(
+      target,
+      target.status,
+      target.status,
+      req.user?._id || null,
+      `Refund of ${inr(refundAmt)} processed${reason ? ` (${reason})` : ''}`
+    );
+    await target.save();
+    const buyer = await User.findById(target.user);
+    if (buyer) {
+      notifyOrderStatus({ user: buyer, order: target, status: 'refunded' });
+    }
+  }
+
+  logAudit({
+    req,
+    action: type === 'booking' ? 'refund_booking' : 'refund_order',
+    resource: type,
+    resourceId: target._id,
+    changes: {
+      paymentStatus: { from: 'paid', to: 'refunded' },
+      refundAmount: { from: 0, to: refundAmt },
+      razorpayRefundId: { from: null, to: refund.id },
+    },
+  });
+
+  res.json({
+    ok: true,
+    refund: {
+      id: refund.id,
+      amount: refundAmt,
+      status: refund.status,
+    },
+    [type === 'booking' ? 'booking' : 'order']: target,
+  });
 });

@@ -2,8 +2,12 @@ import Order from '../models/Order.js';
 import Product from '../models/Product.js';
 import Address from '../models/Address.js';
 import Coupon from '../models/Coupon.js';
+import User from '../models/User.js';
 import { ApiError, asyncHandler } from '../utils/asyncHandler.js';
 import { applyOrderStatusTimestamps, recordOrderHistory, resolveCouponForOrder } from '../utils/ecommerce.js';
+import { logAudit } from '../utils/auditLogger.js';
+import { notifyOrderPlaced, notifyOrderStatus } from '../utils/notificationService.js';
+import { recordCouponUsage } from './couponController.js';
 
 const resolveAddress = async (req) => {
   if (req.body.addressId) {
@@ -71,7 +75,21 @@ export const createOrder = asyncHandler(async (req, res) => {
 
   if (coupon && order.paymentMode === 'cod') {
     await Coupon.findByIdAndUpdate(coupon._id, { $inc: { usedCount: 1 } });
+    recordCouponUsage({ couponCode: coupon.code, userId: req.user._id }).catch(() => null);
   }
+
+  logAudit({
+    req,
+    action: 'create_order',
+    resource: 'order',
+    resourceId: order._id,
+    changes: {
+      total: { from: null, to: order.totalAmount },
+      paymentMode: { from: null, to: order.paymentMode },
+    },
+  });
+
+  notifyOrderPlaced({ user: req.user, order });
 
   res.status(201).json({ order });
 });
@@ -108,6 +126,19 @@ export const updateOrderStatus = asyncHandler(async (req, res) => {
   recordOrderHistory(order, from, status, req.user, `Status changed to ${status}`);
   await order.save();
 
+  logAudit({
+    req,
+    action: 'update_order_status',
+    resource: 'order',
+    resourceId: order._id,
+    changes: { status: { from, to: status } },
+  });
+
+  if (from !== status) {
+    const buyer = await User.findById(order.user);
+    if (buyer) notifyOrderStatus({ user: buyer, order, status });
+  }
+
   res.json({ order });
 });
 
@@ -119,6 +150,14 @@ export const updateOrderNote = asyncHandler(async (req, res) => {
   order.adminNote = String(note || '').trim();
   recordOrderHistory(order, order.status, order.status, req.user, 'Admin note updated');
   await order.save();
+
+  logAudit({
+    req,
+    action: 'update_order_note',
+    resource: 'order',
+    resourceId: order._id,
+    changes: { adminNote: { from: null, to: order.adminNote } },
+  });
 
   res.json({ order });
 });

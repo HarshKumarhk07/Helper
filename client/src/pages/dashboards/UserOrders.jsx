@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { listMyOrders } from '../../api/orders.js';
 import { downloadInvoice } from '../../api/invoices.js';
@@ -46,13 +47,21 @@ export default function UserOrders() {
                     <div className="text-xs text-green-700 dark:text-green-400 mt-1">Coupon: {order.couponCode} • Saved ₹{order.discountAmount || 0}</div>
                   )}
                   <div className="text-xs text-ink/70 dark:text-paper/60 mt-1">Placed: {formatDateTime(order.createdAt)}</div>
-                  <button
-                    type="button"
-                    onClick={() => setExpandedOrderId(expandedOrderId === order._id ? null : order._id)}
-                    className="mt-4 text-xs uppercase tracking-widest text-ink/70 hover:text-ink transition dark:text-paper/70 dark:hover:text-paper"
-                  >
-                    {expandedOrderId === order._id ? 'Hide details' : 'View details'}
-                  </button>
+                  <div className="mt-4 flex flex-wrap gap-3">
+                    <Link
+                      to={`/me/orders/${order._id}`}
+                      className="inline-flex items-center gap-2 rounded-full bg-ink px-4 py-1.5 text-xs uppercase tracking-widest text-paper transition hover:opacity-90 dark:bg-paper dark:text-ink"
+                    >
+                      Open order →
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => setExpandedOrderId(expandedOrderId === order._id ? null : order._id)}
+                      className="text-xs uppercase tracking-widest text-ink/70 hover:text-ink transition dark:text-paper/70 dark:hover:text-paper"
+                    >
+                      {expandedOrderId === order._id ? 'Hide timeline' : 'Quick timeline'}
+                    </button>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   {order.items.map(item => (
