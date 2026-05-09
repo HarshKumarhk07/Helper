@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
-import { Banknote, AlertTriangle } from 'lucide-react';
+import { Banknote, AlertTriangle, Wallet, CreditCard } from 'lucide-react';
 import { refundPayment } from '../../api/refunds.js';
 
 const inr = (n) =>
@@ -13,23 +13,46 @@ export default function RefundModal({
   onRefunded,
 }) {
   const grossAmount = type === 'booking' ? reference?.amount : reference?.totalAmount;
+  const razorpayEligible =
+    !!reference?.razorpayPaymentId && reference?.paymentStatus === 'paid';
+  const alreadyRefunded = reference?.paymentStatus === 'refunded';
+
+  const [channel, setChannel] = useState(razorpayEligible ? 'razorpay' : 'wallet');
   const [amount, setAmount] = useState(grossAmount || 0);
   const [reason, setReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const eligible =
-    !!reference?.razorpayPaymentId &&
-    reference?.paymentStatus === 'paid';
+  const eligibility = useMemo(() => {
+    if (alreadyRefunded) {
+      return { ok: false, message: 'This record is already marked as refunded.' };
+    }
+    if (channel === 'razorpay') {
+      if (!reference?.razorpayPaymentId) {
+        return {
+          ok: false,
+          message:
+            'No Razorpay payment captured for this reference. Switch to wallet credit to record this refund.',
+        };
+      }
+      if (reference?.paymentStatus !== 'paid') {
+        return {
+          ok: false,
+          message: `Razorpay refunds require a paid payment (current: ${reference?.paymentStatus || 'unknown'}).`,
+        };
+      }
+    }
+    return { ok: true };
+  }, [channel, reference, alreadyRefunded]);
 
   const handleSubmit = async () => {
-    if (!eligible) return;
+    if (!eligibility.ok) return;
     const amt = Number(amount);
     if (!Number.isFinite(amt) || amt <= 0) {
       toast.error('Enter a valid amount');
       return;
     }
     if (amt > grossAmount) {
-      toast.error('Amount exceeds the original payment');
+      toast.error('Amount exceeds the original total');
       return;
     }
     setSubmitting(true);
@@ -39,8 +62,13 @@ export default function RefundModal({
         referenceId: reference._id,
         amount: amt,
         reason: reason.trim(),
+        target: channel,
       });
-      toast.success(`Refunded ${inr(amt)} (${result.refund?.status || 'queued'})`);
+      if (channel === 'razorpay') {
+        toast.success(`Refunded ${inr(amt)} (${result.refund?.status || 'queued'})`);
+      } else {
+        toast.success(`Credited ${inr(amt)} to customer wallet`);
+      }
       onRefunded?.(result);
       onClose?.();
     } catch (err) {
@@ -62,10 +90,16 @@ export default function RefundModal({
               {type === 'booking' ? reference?.code : reference?.orderId || reference?._id}
             </h3>
             <p className="mt-1 text-sm text-ink/70 dark:text-paper/60">
-              Original payment: {inr(grossAmount)} ·{' '}
+              Original total: {inr(grossAmount)} ·{' '}
               <span className="uppercase tracking-widest">
                 {reference?.paymentStatus || '—'}
               </span>
+              {reference?.paymentMode && (
+                <>
+                  {' · '}
+                  <span className="uppercase tracking-widest">{reference.paymentMode}</span>
+                </>
+              )}
             </p>
           </div>
           <button onClick={onClose} className="pill-btn text-xs">
@@ -73,21 +107,45 @@ export default function RefundModal({
           </button>
         </div>
 
-        {!eligible ? (
+        {/* Channel selector */}
+        <div className="mt-5 grid grid-cols-2 gap-2 rounded-pill border border-ink/15 p-1 dark:border-paper/15">
+          <button
+            type="button"
+            onClick={() => setChannel('razorpay')}
+            disabled={!razorpayEligible}
+            title={!razorpayEligible ? 'Needs an online Razorpay payment' : undefined}
+            className={`inline-flex items-center justify-center gap-2 rounded-pill px-3 py-1.5 text-xs uppercase tracking-widest transition disabled:cursor-not-allowed disabled:opacity-50 ${
+              channel === 'razorpay'
+                ? 'bg-ink text-paper dark:bg-paper dark:text-ink'
+                : 'text-ink/70 hover:text-ink dark:text-paper/60 dark:hover:text-paper'
+            }`}
+          >
+            <CreditCard size={12} /> Razorpay refund
+          </button>
+          <button
+            type="button"
+            onClick={() => setChannel('wallet')}
+            className={`inline-flex items-center justify-center gap-2 rounded-pill px-3 py-1.5 text-xs uppercase tracking-widest transition ${
+              channel === 'wallet'
+                ? 'bg-ink text-paper dark:bg-paper dark:text-ink'
+                : 'text-ink/70 hover:text-ink dark:text-paper/60 dark:hover:text-paper'
+            }`}
+          >
+            <Wallet size={12} /> Credit to wallet
+          </button>
+        </div>
+
+        <div className="mt-3 text-xs text-ink/60 dark:text-paper/55">
+          {channel === 'razorpay'
+            ? 'Funds go back to the original payment method (typically 5–7 business days).'
+            : "Funds appear in the customer's Velora wallet immediately. Works on COD too."}
+        </div>
+
+        {!eligibility.ok ? (
           <div className="mt-5 rounded-xl border border-amber-300 bg-amber-50/60 p-4 text-sm text-amber-800 dark:border-amber-400/20 dark:bg-amber-400/5 dark:text-amber-200">
             <div className="flex items-start gap-2">
               <AlertTriangle size={14} className="mt-0.5 shrink-0" />
-              <div>
-                {!reference?.razorpayPaymentId ? (
-                  <>
-                    No Razorpay payment captured for this reference. Refunds can only
-                    be issued through this UI for online-paid records. Process this
-                    refund manually if needed.
-                  </>
-                ) : (
-                  <>This payment is in <strong>{reference.paymentStatus}</strong> state and cannot be refunded.</>
-                )}
-              </div>
+              <div>{eligibility.message}</div>
             </div>
           </div>
         ) : (
@@ -95,7 +153,7 @@ export default function RefundModal({
             <div className="mt-5 space-y-4">
               <div>
                 <label className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
-                  Refund amount
+                  Amount
                 </label>
                 <div className="mt-2 flex items-center gap-2">
                   <span className="text-lg">₹</span>
@@ -148,10 +206,18 @@ export default function RefundModal({
               <button
                 onClick={handleSubmit}
                 disabled={submitting}
-                className="inline-flex items-center gap-2 rounded-full bg-red-600 px-5 py-2 text-xs uppercase tracking-widest text-white transition hover:bg-red-700 disabled:opacity-50"
+                className={`inline-flex items-center gap-2 rounded-full px-5 py-2 text-xs uppercase tracking-widest text-white transition disabled:opacity-50 ${
+                  channel === 'razorpay'
+                    ? 'bg-red-600 hover:bg-red-700'
+                    : 'bg-green-600 hover:bg-green-700'
+                }`}
               >
-                <Banknote size={14} />
-                {submitting ? 'Processing…' : `Refund ${inr(amount)}`}
+                {channel === 'razorpay' ? <Banknote size={14} /> : <Wallet size={14} />}
+                {submitting
+                  ? 'Processing…'
+                  : channel === 'razorpay'
+                  ? `Refund ${inr(amount)}`
+                  : `Credit ${inr(amount)} to wallet`}
               </button>
             </div>
           </>

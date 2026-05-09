@@ -9,6 +9,7 @@ import { recordOrderHistory } from '../utils/ecommerce.js';
 import { logAudit } from '../utils/auditLogger.js';
 import { notifyBookingCancelled, notifyOrderStatus } from '../utils/notificationService.js';
 import { recordCouponUsage } from './couponController.js';
+import { creditWallet } from '../utils/wallet.js';
 
 let razorpay;
 try {
@@ -91,11 +92,14 @@ const inr = (n) =>
   `₹${Number(n || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
 
 export const refundPayment = asyncHandler(async (req, res) => {
-  if (!razorpay) throw new ApiError(500, 'Payment gateway not configured');
+  const { type, referenceId, amount, reason, target: refundTargetType } = req.body;
+  const refundChannel = refundTargetType === 'wallet' ? 'wallet' : 'razorpay';
 
-  const { type, referenceId, amount, reason } = req.body;
   if (!type || !referenceId) {
     throw new ApiError(400, 'type and referenceId are required');
+  }
+  if (refundChannel === 'razorpay' && !razorpay) {
+    throw new ApiError(500, 'Payment gateway not configured');
   }
 
   let target;
@@ -108,17 +112,24 @@ export const refundPayment = asyncHandler(async (req, res) => {
   }
   if (!target) throw new ApiError(404, 'Reference not found');
 
-  if (!target.razorpayPaymentId) {
-    throw new ApiError(
-      400,
-      'No Razorpay payment captured for this reference — refund cannot be processed online.'
-    );
-  }
   if (target.paymentStatus === 'refunded') {
     throw new ApiError(409, 'Already refunded');
   }
-  if (target.paymentStatus !== 'paid') {
-    throw new ApiError(409, 'Only paid payments can be refunded');
+
+  // Eligibility differs by channel:
+  // - razorpay: must have a captured Razorpay payment
+  // - wallet: works on any non-refunded record (COD, online, even unpaid bookings —
+  //   admins use this for goodwill credits tied to a real order/booking)
+  if (refundChannel === 'razorpay') {
+    if (!target.razorpayPaymentId) {
+      throw new ApiError(
+        400,
+        'No Razorpay payment captured for this reference — use wallet credit instead.'
+      );
+    }
+    if (target.paymentStatus !== 'paid') {
+      throw new ApiError(409, 'Only paid payments can be refunded online');
+    }
   }
 
   const grossAmount = type === 'booking' ? target.amount : target.totalAmount;
@@ -127,31 +138,68 @@ export const refundPayment = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'Invalid refund amount');
   }
   if (refundAmt > grossAmount) {
-    throw new ApiError(400, 'Refund amount exceeds payment amount');
+    throw new ApiError(400, 'Refund amount exceeds the original total');
   }
 
-  let refund;
-  try {
-    refund = await razorpay.payments.refund(target.razorpayPaymentId, {
-      amount: Math.round(refundAmt * 100),
-      notes: { reason: String(reason || '').slice(0, 250) },
-    });
-  } catch (err) {
-    logAudit({
-      req,
-      action: 'razorpay_refund_failed',
-      resource: type,
-      resourceId: target._id,
-      status: 'failure',
-      errorMessage: err?.error?.description || err.message,
-    });
-    throw new ApiError(502, err?.error?.description || 'Razorpay refund failed');
+  let refund = null;
+  let walletTransaction = null;
+
+  if (refundChannel === 'razorpay') {
+    try {
+      refund = await razorpay.payments.refund(target.razorpayPaymentId, {
+        amount: Math.round(refundAmt * 100),
+        notes: { reason: String(reason || '').slice(0, 250) },
+      });
+    } catch (err) {
+      logAudit({
+        req,
+        action: 'razorpay_refund_failed',
+        resource: type,
+        resourceId: target._id,
+        status: 'failure',
+        errorMessage: err?.error?.description || err.message,
+      });
+      throw new ApiError(502, err?.error?.description || 'Razorpay refund failed');
+    }
+    target.razorpayRefundId = refund.id;
+  } else {
+    // Wallet credit
+    const referenceModel = type === 'booking' ? 'Booking' : 'Order';
+    try {
+      const result = await creditWallet({
+        userId: target.user,
+        amount: refundAmt,
+        source: 'refund',
+        referenceModel,
+        referenceId: target._id,
+        note:
+          (reason && String(reason).trim()) ||
+          `Refund for ${type === 'booking' ? target.code : target.orderId || target._id}`,
+        performedBy: req.user._id,
+      });
+      walletTransaction = result.transaction;
+    } catch (err) {
+      logAudit({
+        req,
+        action: 'wallet_refund_failed',
+        resource: type,
+        resourceId: target._id,
+        status: 'failure',
+        errorMessage: err.message,
+      });
+      throw err instanceof ApiError ? err : new ApiError(500, err.message);
+    }
   }
 
-  target.razorpayRefundId = refund.id;
   target.refundAmount = refundAmt;
   target.refundedAt = new Date();
-  target.paymentStatus = 'refunded';
+  // Only flip paymentStatus to 'refunded' on a full refund, or when there was a payment to begin with.
+  // Wallet credits on COD/unpaid records keep the payment status untouched.
+  if (refundChannel === 'razorpay' || target.paymentStatus === 'paid') {
+    if (refundAmt >= grossAmount) {
+      target.paymentStatus = 'refunded';
+    }
+  }
 
   if (type === 'booking') {
     await target.save();
@@ -161,7 +209,11 @@ export const refundPayment = asyncHandler(async (req, res) => {
         user: buyer,
         worker: null,
         booking: target,
-        reason: `Refund of ${inr(refundAmt)} initiated. ${reason || ''}`.trim(),
+        reason: `${
+          refundChannel === 'wallet'
+            ? `${inr(refundAmt)} credited to wallet`
+            : `Refund of ${inr(refundAmt)} initiated`
+        }. ${reason || ''}`.trim(),
       });
     }
   } else {
@@ -170,34 +222,46 @@ export const refundPayment = asyncHandler(async (req, res) => {
       target.status,
       target.status,
       req.user?._id || null,
-      `Refund of ${inr(refundAmt)} processed${reason ? ` (${reason})` : ''}`
+      `${
+        refundChannel === 'wallet' ? 'Wallet credit' : 'Razorpay refund'
+      } of ${inr(refundAmt)}${reason ? ` (${reason})` : ''}`
     );
     await target.save();
     const buyer = await User.findById(target.user);
     if (buyer) {
-      notifyOrderStatus({ user: buyer, order: target, status: 'refunded' });
+      notifyOrderStatus({
+        user: buyer,
+        order: target,
+        status: refundChannel === 'wallet' ? 'wallet_credited' : 'refunded',
+      });
     }
   }
 
   logAudit({
     req,
-    action: type === 'booking' ? 'refund_booking' : 'refund_order',
+    action:
+      type === 'booking'
+        ? `refund_booking_${refundChannel}`
+        : `refund_order_${refundChannel}`,
     resource: type,
     resourceId: target._id,
     changes: {
-      paymentStatus: { from: 'paid', to: 'refunded' },
+      channel: { from: null, to: refundChannel },
       refundAmount: { from: 0, to: refundAmt },
-      razorpayRefundId: { from: null, to: refund.id },
+      ...(refund ? { razorpayRefundId: { from: null, to: refund.id } } : {}),
+      ...(walletTransaction
+        ? { walletTransactionId: { from: null, to: String(walletTransaction._id) } }
+        : {}),
     },
   });
 
   res.json({
     ok: true,
-    refund: {
-      id: refund.id,
-      amount: refundAmt,
-      status: refund.status,
-    },
+    channel: refundChannel,
+    refund: refund
+      ? { id: refund.id, amount: refundAmt, status: refund.status }
+      : null,
+    walletTransaction,
     [type === 'booking' ? 'booking' : 'order']: target,
   });
 });

@@ -195,7 +195,7 @@ export default function AdminBookings() {
                         Mark complete
                       </button>
                     )}
-                    {isAdmin && b.paymentStatus === 'paid' && b.razorpayPaymentId && (
+                    {isAdmin && b.paymentStatus !== 'refunded' && (
                       <button
                         onClick={() => setRefundTarget(b)}
                         className="rounded-pill border border-red-300 px-3 py-1 text-[10px] uppercase tracking-widest text-red-700 hover:bg-red-50 dark:border-red-400/30 dark:text-red-300 dark:hover:bg-red-400/10"

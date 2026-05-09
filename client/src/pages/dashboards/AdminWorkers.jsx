@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { ShieldCheck, ShieldX, ShieldAlert, FileText, Eye } from 'lucide-react';
 import DashboardShell from './DashboardShell.jsx';
@@ -240,16 +241,24 @@ export default function AdminWorkers() {
                     )}
                   </td>
                   <td className="p-4">
-                    <button
-                      onClick={() => {
-                        setSelected(w);
-                        setRejectMode(false);
-                        setRejectReason('');
-                      }}
-                      className="text-xs uppercase tracking-widest hover:underline"
-                    >
-                      Review
-                    </button>
+                    <div className="flex flex-col items-start gap-1">
+                      <button
+                        onClick={() => {
+                          setSelected(w);
+                          setRejectMode(false);
+                          setRejectReason('');
+                        }}
+                        className="text-xs uppercase tracking-widest hover:underline"
+                      >
+                        Quick review
+                      </button>
+                      <Link
+                        to={`/admin/workers/${w._id}`}
+                        className="text-xs uppercase tracking-widest text-ink/60 hover:underline dark:text-paper/55"
+                      >
+                        Full profile →
+                      </Link>
+                    </div>
                   </td>
                 </tr>
               ))

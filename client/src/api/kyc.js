@@ -18,3 +18,6 @@ export const approveKyc = (id) =>
 
 export const rejectKyc = (id, reason) =>
   api.post(`/kyc/submissions/${id}/reject`, { reason }).then((r) => r.data.worker);
+
+export const getWorkerProfile = (id) =>
+  api.get(`/kyc/workers/${id}/profile`).then((r) => r.data);

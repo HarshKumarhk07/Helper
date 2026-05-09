@@ -84,7 +84,7 @@ export default function AdminOrders() {
                       {order.paymentStatus}
                     </span>
                   </div>
-                  {isAdmin && order.paymentStatus === 'paid' && order.razorpayPaymentId && (
+                  {isAdmin && order.paymentStatus !== 'refunded' && (
                     <button
                       onClick={() => setRefundTarget(order)}
                       className="mt-2 inline-flex items-center gap-1 rounded-full border border-red-300 px-3 py-1 text-xs uppercase tracking-widest text-red-600 hover:bg-red-50 dark:border-red-400/30 dark:text-red-300 dark:hover:bg-red-400/10"

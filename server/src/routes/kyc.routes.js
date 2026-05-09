@@ -9,6 +9,7 @@ import {
   getKycSubmission,
   approveKyc,
   rejectKyc,
+  getWorkerProfile,
 } from '../controllers/kycController.js';
 
 const router = Router();
@@ -37,6 +38,7 @@ router.post('/me', requireRole(ROLES.WORKER), kycMultipart, submitKyc);
 
 router.get('/submissions', requireRole(ROLES.ADMIN, ROLES.MANAGER), listKycSubmissions);
 router.get('/submissions/:id', requireRole(ROLES.ADMIN, ROLES.MANAGER), getKycSubmission);
+router.get('/workers/:id/profile', requireRole(ROLES.ADMIN, ROLES.MANAGER), getWorkerProfile);
 router.post('/submissions/:id/approve', requireRole(ROLES.ADMIN), approveKyc);
 router.post('/submissions/:id/reject', requireRole(ROLES.ADMIN), rejectKyc);
 

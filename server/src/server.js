@@ -4,6 +4,7 @@ import app from './app.js';
 import connectDB from './config/db.js';
 import { initSocket } from './sockets/index.js';
 import { refreshCommissionCacheFromDB } from './utils/earnings.js';
+import { startStaleWorkerSweeper, stopStaleWorkerSweeper } from './utils/staleWorkerSweeper.js';
 
 const PORT = process.env.PORT || 5000;
 
@@ -13,6 +14,14 @@ const start = async () => {
   const server = http.createServer(app);
 
   initSocket(server);
+  startStaleWorkerSweeper();
+
+  for (const sig of ['SIGTERM', 'SIGINT']) {
+    process.on(sig, () => {
+      stopStaleWorkerSweeper();
+      server.close(() => process.exit(0));
+    });
+  }
 
   server.listen(PORT, () => {
     console.log(`[velora] api ready on http://localhost:${PORT}`);

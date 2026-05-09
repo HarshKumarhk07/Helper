@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { listWorkerJobs, transitionStatus } from '../../api/bookings.js';
 import StatusBadge from '../../components/booking/StatusBadge.jsx';
@@ -107,6 +108,14 @@ export default function WorkerJobs() {
                 </div>
 
                 <div className="mt-4 flex flex-wrap gap-2">
+                  {(b.status === 'assigned' || b.status === 'in_progress') && (
+                    <Link
+                      to={`/worker/jobs/${b._id}/nav`}
+                      className="inline-flex items-center gap-1 rounded-full bg-sky-500 px-4 py-1.5 text-xs uppercase tracking-widest text-white hover:bg-sky-400"
+                    >
+                      Open navigation →
+                    </Link>
+                  )}
                   {b.status === 'assigned' && (
                     <button
                       onClick={() => move(b, 'in_progress', 'Started')}

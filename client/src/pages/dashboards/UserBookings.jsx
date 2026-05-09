@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { listMyBookings, transitionStatus } from '../../api/bookings.js';
 import { downloadInvoice } from '../../api/invoices.js';
@@ -96,12 +97,20 @@ export default function UserBookings() {
                   ['placed', 'assigned', 'in_progress'].includes(b.status) ? (
                     <div className="flex items-center justify-between">
                       {(b.status === 'assigned' || b.status === 'in_progress') && (
-                        <button
-                          onClick={() => setTrackingBooking(b)}
-                          className="rounded border border-ink/30 px-3 py-1 text-xs uppercase tracking-widest text-ink transition hover:bg-ink hover:text-paper dark:border-paper/30 dark:text-paper dark:hover:bg-paper dark:hover:text-ink"
-                        >
-                          Track Live & View PINs
-                        </button>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <button
+                            onClick={() => setTrackingBooking(b)}
+                            className="rounded border border-ink/30 px-3 py-1 text-xs uppercase tracking-widest text-ink transition hover:bg-ink hover:text-paper dark:border-paper/30 dark:text-paper dark:hover:bg-paper dark:hover:text-ink"
+                          >
+                            Track & PINs
+                          </button>
+                          <Link
+                            to={`/track/${b._id}`}
+                            className="rounded bg-sky-500 px-3 py-1 text-xs uppercase tracking-widest text-white hover:bg-sky-400"
+                          >
+                            Open full tracker →
+                          </Link>
+                        </div>
                       )}
                       
                       {['placed', 'assigned'].includes(b.status) && (

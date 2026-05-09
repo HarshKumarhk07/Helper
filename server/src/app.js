@@ -28,9 +28,14 @@ import managerRoutes from './routes/manager.routes.js';
 import supportRoutes from './routes/support.routes.js';
 import cartRoutes from './routes/cart.routes.js';
 import walletRoutes from './routes/wallet.routes.js';
+import trackingRoutes from './routes/tracking.routes.js';
 import { notFound, errorHandler } from './middleware/error.js';
 
 const app = express();
+
+// Disable ETag generation so every API response logs as 200 instead of 304
+// (304 just means the client's cached copy is still fresh — not an error).
+app.set('etag', false);
 
 app.use(helmet());
 app.use(
@@ -78,6 +83,7 @@ app.use('/api/manager', managerRoutes);
 app.use('/api/support', supportRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/wallet', walletRoutes);
+app.use('/api/tracking', trackingRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
