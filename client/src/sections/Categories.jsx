@@ -1,94 +1,109 @@
 import FadeUp from '../components/ui/FadeUp.jsx';
 import { ArrowUpRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { useState } from 'react';
 
 const CATEGORIES = [
-  { label: 'HOME SERVICES', count: 5, slug: 'home-services' },
-  { label: 'CLEANING SERVICES', count: 5, slug: 'cleaning-services' },
-  { label: 'BEAUTY & WELLNESS', count: 5, slug: 'beauty-wellness' },
-  { label: 'APPLIANCE SERVICES', count: 5, slug: 'appliance-services' },
-];
-
-const PRODUCT_PREVIEW = [
-  {
-    title: 'Floor Cleaner',
-    size: 'Cleaning Products',
-    price: '₹249',
-    image: '/assets/cleaning-products.svg',
+  { 
+    label: 'Home Essentials', 
+    slug: 'home-services', 
+    image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
   },
-  {
-    title: 'Skincare Kit',
-    size: 'Beauty Products',
-    price: '₹899',
-    image: '/assets/beauty-products.svg',
+  { 
+    label: 'Deep Cleaning', 
+    slug: 'cleaning-services', 
+    image: 'https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', // Replaced image
   },
-  {
-    title: 'Air Purifier',
-    size: 'Home Appliances',
-    price: '₹7,499',
-    image: '/assets/home-appliances.svg',
+  { 
+    label: 'Beauty & Wellness', 
+    slug: 'beauty-wellness', 
+    image: 'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+  },
+  { 
+    label: 'Appliance Repair', 
+    slug: 'appliance-services', 
+    image: 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
   },
 ];
 
 export default function Categories() {
-  return (
-    <section id="categories" className="bg-paper py-20 dark:bg-[#0E0E10]">
-      <div className="container-velora">
-        <div className="flex items-start justify-between">
-          <span className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
-            (Service categories)
-          </span>
-          <Link
-            to="/services"
-            className="inline-flex items-center gap-2 text-sm tracking-tightish hover:underline"
-          >
-            View all services
-            <ArrowUpRight size={14} />
-          </Link>
-        </div>
+  const [hoveredIdx, setHoveredIdx] = useState(0);
 
-        <div className="mt-10 grid gap-12 lg:grid-cols-[1fr,1.4fr]">
-          <ul className="space-y-2 md:space-y-3">
+  return (
+    <section id="categories" className="bg-sand py-24 md:py-32 relative overflow-hidden">
+      <div className="container-velora">
+        
+        <FadeUp>
+          <div className="flex items-center gap-4 mb-16">
+            <span className="text-xs font-bold tracking-[0.2em] text-ink/50 uppercase">
+              Curated Selection
+            </span>
+            <div className="h-[1px] w-12 bg-ink/20"></div>
+          </div>
+        </FadeUp>
+
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+          
+          {/* Typography Links */}
+          <div className="flex flex-col gap-8 md:gap-10 relative z-10">
             {CATEGORIES.map((c, i) => (
-              <FadeUp key={c.slug} delay={i * 0.04}>
+              <FadeUp key={c.slug} delay={i * 0.1}>
                 <Link
                   to={`/services?cat=${c.slug}`}
-                  className="group flex items-baseline gap-2"
+                  onMouseEnter={() => setHoveredIdx(i)}
+                  className="group flex flex-col md:flex-row md:items-baseline gap-2 md:gap-6 border-b border-ink/10 pb-6 hover:border-ink/40 transition-colors"
                 >
-                  <span className="heading-display text-4xl text-ink/30 transition-colors group-hover:text-ink md:text-6xl dark:text-paper/30 dark:group-hover:text-paper">
+                  <span className={`heading-display text-4xl sm:text-5xl lg:text-6xl transition-all duration-500 transform group-hover:translate-x-4 ${
+                    hoveredIdx === i ? 'text-ink' : 'text-ink/30'
+                  }`}>
                     {c.label}
                   </span>
-                  <sup className="text-xs text-ink/50 dark:text-paper/40">{c.count}</sup>
+                  <div className="flex items-center gap-4 mt-2 md:mt-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                    <span className="text-sm font-medium text-ink/60 uppercase tracking-widest">
+                      Explore
+                    </span>
+                    <ArrowUpRight size={18} className="text-ink" />
+                  </div>
                 </Link>
               </FadeUp>
             ))}
-          </ul>
-
-          <div className="flex gap-5 overflow-x-auto pb-2 scrollbar-hide">
-            {PRODUCT_PREVIEW.map((p, i) => (
-              <FadeUp
-                key={p.title}
-                delay={i * 0.07}
-                className="w-[260px] flex-shrink-0 sm:w-[300px]"
-              >
-                <div className="card-rounded transition hover:-translate-y-1 hover:shadow-soft">
-                  <div className="overflow-hidden">
-                    <img
-                      src={p.image}
-                      alt={p.title}
-                      loading="lazy"
-                      className="aspect-[4/5] w-full object-cover transition-transform duration-700 hover:scale-105"
-                    />
-                  </div>
-                  <div className="space-y-1 p-4">
-                    <div className="text-sm">{p.title}</div>
-                    <div className="text-xs text-ink/60 dark:text-paper/50">{p.size}</div>
-                    <div className="pt-1 text-xs">{p.price}</div>
-                  </div>
-                </div>
-              </FadeUp>
-            ))}
           </div>
+
+          {/* Right Side - Fixed Large Image Crossfade */}
+          <div className="hidden lg:flex justify-center items-center relative pointer-events-none">
+            {/* Increased Size and Elegant Curved Rectangle */}
+            <div className="w-[450px] h-[600px] relative rounded-[3rem] overflow-hidden bg-ink/5 shadow-2xl">
+              
+              {CATEGORIES.map((c, i) => (
+                <div 
+                  key={c.slug}
+                  className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
+                    hoveredIdx === i ? 'opacity-100 z-10' : 'opacity-0 z-0'
+                  }`}
+                >
+                  <img
+                    src={c.image}
+                    alt={c.label}
+                    className={`w-full h-full object-cover transition-transform duration-[2s] ease-out ${
+                      hoveredIdx === i ? 'scale-100' : 'scale-110'
+                    }`}
+                  />
+                </div>
+              ))}
+              
+              {/* Inner frame decoration */}
+              <div className="absolute inset-0 rounded-[3rem] border border-ink/10 pointer-events-none z-20"></div>
+            </div>
+            
+            {/* Minimalist Decoration */}
+            <motion.div 
+              animate={{ rotate: 360 }}
+              transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+              className="absolute -right-16 top-16 w-48 h-48 border border-ink/10 rounded-full border-dashed -z-10"
+            />
+          </div>
+
         </div>
       </div>
     </section>

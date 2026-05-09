@@ -78,7 +78,7 @@ function PageFallback() {
 
 export default function App() {
   return (
-    <div className="flex min-h-screen flex-col bg-sand text-ink dark:bg-[#0E0E10] dark:text-paper">
+    <div className="flex min-h-screen flex-col bg-sand text-ink">
       <Navbar />
       <main className="flex-1">
         <Suspense fallback={<PageFallback />}>

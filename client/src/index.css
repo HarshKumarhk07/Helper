@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -8,22 +10,17 @@
   }
   html, body, #root {
     height: 100%;
-  }
-  html {
-    font-family: 'Chivo Mono', monospace;
+    scroll-behavior: smooth;
   }
   body {
     @apply bg-paper text-ink antialiased;
-    font-family: 'Chivo Mono', monospace;
+    font-family: 'Inter', sans-serif;
   }
   button, input, textarea, select {
     font: inherit;
   }
   ::selection {
     @apply bg-ink text-paper;
-  }
-  .dark body {
-    @apply bg-[#0E0E10] text-paper;
   }
 }
 
@@ -33,31 +30,31 @@
   }
 
   .pill-btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-pill border border-ink/80 bg-transparent px-5 py-2.5 text-sm font-medium tracking-tightish text-ink transition hover:bg-ink hover:text-paper dark:border-paper/40 dark:text-paper dark:hover:bg-paper dark:hover:text-ink;
+    @apply inline-flex items-center justify-center gap-2 rounded-pill border border-ink/10 bg-paper/50 backdrop-blur-md px-6 py-3 text-sm font-medium tracking-tightish text-ink shadow-sm transition-all duration-300 hover:bg-ink hover:text-paper hover:border-ink hover:shadow-md;
   }
 
   .pill-btn-solid {
-    @apply inline-flex items-center justify-center gap-2 rounded-pill bg-ink px-5 py-2.5 text-sm font-medium tracking-tightish text-paper transition hover:bg-ink/90 dark:bg-paper dark:text-ink dark:hover:bg-paper/90;
+    @apply inline-flex items-center justify-center gap-2 rounded-pill bg-ink px-6 py-3 text-sm font-medium tracking-tightish text-paper shadow-md transition-all duration-300 hover:bg-ink/90 hover:shadow-lg hover:-translate-y-0.5;
   }
 
   .nav-link {
-    @apply text-sm tracking-tightish text-ink/80 transition hover:text-ink dark:text-paper/70 dark:hover:text-paper;
+    @apply text-sm tracking-tightish text-ink/70 transition-colors duration-300 hover:text-ink font-medium;
   }
 
   .heading-display {
-    @apply font-display font-medium tracking-tightest text-ink dark:text-paper;
+    @apply font-display font-medium tracking-tightest text-ink;
   }
 
   .card-rounded {
-    @apply rounded-card overflow-hidden bg-paper shadow-card dark:bg-[#14151A] dark:border dark:border-paper/20 dark:shadow-[0_20px_60px_rgba(0,0,0,0.45)];
+    @apply rounded-card overflow-hidden bg-paper shadow-card border border-ash/30 transition-all duration-300 hover:shadow-xl hover:border-ash/60;
   }
 
-  .overlay-info {
-    @apply absolute left-6 top-6 max-w-sm rounded-2xl bg-ink/95 p-5 text-paper backdrop-blur;
+  .glass-panel {
+    @apply bg-paper/70 backdrop-blur-xl border border-paper/40 shadow-xl rounded-card;
   }
 
   .skeleton {
-    @apply animate-pulse rounded-xl bg-ash/40;
+    @apply animate-pulse rounded-xl bg-ash/50;
   }
 }
 
