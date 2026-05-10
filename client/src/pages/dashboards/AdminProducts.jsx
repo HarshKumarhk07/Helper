@@ -55,7 +55,9 @@ export default function AdminProducts() {
       setNewProduct({ ...newProduct, image: res.data.url });
       toast.success('Image uploaded to Cloudinary!');
     } catch (err) {
-      toast.error('Image upload failed');
+      console.error('Image upload error:', err?.response || err?.message || err);
+      const message = err?.response?.data?.error || err?.response?.data?.details || err?.message || 'Image upload failed';
+      toast.error(String(message));
     } finally {
       setUploading(false);
     }
@@ -134,7 +136,7 @@ export default function AdminProducts() {
       </div>
 
       {lowStockProducts.length > 0 && (
-        <div className="mb-6 rounded-card border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-200">
+        <div className="mb-6 rounded-card border border-red-900 bg-red-900/5 p-4 text-sm text-red-900 dark:border-red-800/30 dark:bg-red-900/10 dark:text-red-200">
           <div className="font-bold uppercase tracking-widest text-xs mb-1">
             Low Stock Alert
           </div>
@@ -175,7 +177,7 @@ export default function AdminProducts() {
             </div>
             
             <div className="mb-6">
-              <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Product Image (Cloudinary)</label>
+              <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Product Image</label>
               <div className="flex items-center gap-4">
                 <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading} className="p-2 border rounded-xl flex-1 bg-white dark:bg-paper/10" />
                 {uploading && <span className="text-sm">Uploading...</span>}
@@ -213,9 +215,13 @@ export default function AdminProducts() {
                   <td className="p-4 font-medium">{p.name}</td>
                   <td className="p-4">₹{p.price}</td>
                   <td className="p-4">
-                    <span className={p.stock <= lowStockThreshold ? 'rounded-pill bg-amber-100 px-3 py-1 text-xs font-bold text-amber-900' : ''}>
-                      {p.stock}
-                    </span>
+                    {p.stock <= 0 ? (
+                      <span className="rounded-pill bg-red-900 px-3 py-1 text-xs font-bold text-white">Out of stock</span>
+                    ) : p.stock <= lowStockThreshold ? (
+                      <span className="rounded-pill bg-amber-100 px-3 py-1 text-xs font-bold text-amber-900">{p.stock}</span>
+                    ) : (
+                      <span>{p.stock}</span>
+                    )}
                   </td>
                   <td className="p-4">
                     <div className="flex gap-2">

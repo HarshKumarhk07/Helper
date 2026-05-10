@@ -151,6 +151,8 @@ export const mergeCart = asyncHandler(async (req, res) => {
   for (const incomingItem of filtered) {
     const product = byId.get(incomingItem.productId);
     if (!product) continue;
+    // Skip out-of-stock products — schema requires quantity >= 1.
+    if (product.stock != null && product.stock < 1) continue;
 
     const existing = cart.items.find(
       (it) => String(it.product) === incomingItem.productId
@@ -158,6 +160,7 @@ export const mergeCart = asyncHandler(async (req, res) => {
     const targetQty = (existing?.quantity || 0) + incomingItem.quantity;
     const cappedQty =
       product.stock != null ? Math.min(targetQty, product.stock) : targetQty;
+    if (cappedQty < 1) continue;
 
     if (existing) {
       existing.quantity = cappedQty;

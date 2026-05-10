@@ -66,6 +66,39 @@ export const sendEmail = async ({ to, subject, html, text }) => {
   }
 };
 
+// Map raw Twilio errors to user-actionable messages.
+// Twilio error codes: https://www.twilio.com/docs/api/errors
+const friendlyTwilioError = (err) => {
+  const code = err?.code;
+  const msg = err?.message || '';
+  if (code === 21212 || /Invalid From/i.test(msg)) {
+    return "Server SMS sender isn't a valid Twilio number. Set TWILIO_PHONE in server/.env to a number you've purchased in your Twilio console.";
+  }
+  if (code === 21211 || /Invalid 'To'/i.test(msg)) {
+    return 'That phone number looks invalid. Check the country code and try again.';
+  }
+  if (code === 21408 || /not enabled/i.test(msg)) {
+    return 'Your Twilio account is not enabled for SMS to this region. Enable the destination country in the Twilio console.';
+  }
+  if (code === 21610 || /unsubscribed/i.test(msg)) {
+    return 'This number has unsubscribed from SMS from your sender. The recipient must reply START to your Twilio number first.';
+  }
+  if (code === 21608 || /unverified/i.test(msg)) {
+    return 'Twilio trial mode: the recipient must be verified in your Twilio console before SMS will be delivered.';
+  }
+  if (code === 21614 || /not a mobile/i.test(msg)) {
+    return 'That number is not a mobile/SMS-capable number.';
+  }
+  if (code === 20003 || /authenticat/i.test(msg)) {
+    return 'Twilio authentication failed. Check TWILIO_SID and TWILIO_AUTH_TOKEN.';
+  }
+  if (code === 20429 || /rate limit/i.test(msg)) {
+    return 'Twilio rate limit reached. Try again in a moment.';
+  }
+  // Fallback — keep the original message but trim Twilio's marketing prefix.
+  return msg.replace(/^.*: /, '') || 'SMS provider rejected the request.';
+};
+
 export const sendSMS = async ({ to, body }) => {
   const number = e164(to);
   if (!number) return { skipped: true, reason: 'missing_to' };
@@ -79,8 +112,11 @@ export const sendSMS = async ({ to, body }) => {
     });
     return { ok: true, sid: msg.sid };
   } catch (err) {
-    console.error('[notification] sms failed:', err.message);
-    return { ok: false, error: err.message };
+    const friendly = friendlyTwilioError(err);
+    console.error(
+      `[notification] sms failed (twilio code=${err?.code || 'n/a'}): ${err.message} → ${friendly}`
+    );
+    return { ok: false, error: friendly, code: err?.code };
   }
 };
 
@@ -338,11 +374,6 @@ export const notifyPasswordReset = ({ user, resetUrl, expiresInMinutes }) =>
     }),
   ]);
 
-export const sendOtpSms = ({ phone, code, ttlMinutes }) =>
-  sendSMS({
-    to: phone,
-    body: `Velora House login code: ${code}. Valid for ${ttlMinutes} min. Don't share this code with anyone.`,
-  });
 
 export const notifySupportTicketCreated = ({ user, ticket }) =>
   Promise.allSettled([

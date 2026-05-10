@@ -19,11 +19,24 @@ export default function ProductDetail() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
     setLoading(true);
+    setProduct(null);
     getProduct(id)
-      .then(setProduct)
-      .catch(() => toast.error('Product not found'))
-      .finally(() => setLoading(false));
+      .then((p) => {
+        if (!cancelled) setProduct(p);
+      })
+      .catch(() => {
+        // Page renders a clean "Product not found" empty state — don't also
+        // double-fire a toast (especially under React StrictMode).
+        if (!cancelled) setProduct(null);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   const handleAddToCart = () => {
@@ -39,8 +52,8 @@ export default function ProductDetail() {
 
   if (loading) {
     return (
-      <section className="container-velora py-32 bg-sand min-h-screen">
-        <div className="grid gap-16 lg:grid-cols-2">
+      <section className="container-velora bg-sand pt-28 pb-16 lg:pt-32 lg:pb-20">
+        <div className="grid gap-12 lg:grid-cols-2">
           <SkeletonCard />
           <div className="space-y-4">
             <div className="skeleton h-6 w-1/4 rounded-full" />
@@ -55,17 +68,23 @@ export default function ProductDetail() {
 
   if (!product) {
     return (
-      <section className="container-velora py-40 text-center bg-sand min-h-screen">
+      <section className="container-velora bg-sand pt-32 pb-20 text-center">
         <h1 className="heading-display text-4xl text-ink">Product not found.</h1>
-        <Link to="/#categories" className="mt-8 inline-flex items-center gap-2 text-sm uppercase tracking-widest font-bold text-ink border-b border-ink pb-1">
-          Return to Shop
+        <p className="mt-3 text-sm text-ink/65">
+          It may have been removed or never existed.
+        </p>
+        <Link
+          to="/services"
+          className="mt-6 inline-flex items-center gap-2 rounded-full bg-ink px-5 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-paper hover:opacity-90"
+        >
+          Browse the catalog
         </Link>
       </section>
     );
   }
 
   return (
-    <section className="bg-sand py-24 lg:py-32 min-h-screen">
+    <section className="bg-sand pt-24 pb-16 lg:pt-28 lg:pb-20">
       <div className="container-velora">
         
         <FadeUp>
@@ -137,15 +156,20 @@ export default function ProductDetail() {
                 <div className="text-4xl lg:text-5xl font-medium tracking-tight text-ink">
                   {formatPrice(product.price)}
                 </div>
-                <span className="text-xs uppercase tracking-widest font-bold text-ink/40 mb-2">In stock ({product.stock})</span>
+                {product.stock > 0 ? (
+                  <span className="text-xs uppercase tracking-widest font-bold text-ink/40 mb-2">In stock ({product.stock})</span>
+                ) : (
+                  <span className="text-xs uppercase tracking-widest font-bold text-red-900 mb-2">Out of stock</span>
+                )}
               </div>
 
               <div className="flex flex-col sm:flex-row gap-4">
                 <button 
                   onClick={handleAddToCart}
-                  className="pill-btn !bg-ink !text-paper hover:!bg-ink/80 flex-1 justify-center py-4 text-sm shadow-xl hover:shadow-2xl hover:-translate-y-1"
+                  className={`pill-btn !bg-ink !text-paper hover:!bg-ink/80 flex-1 justify-center py-4 text-sm shadow-xl hover:shadow-2xl hover:-translate-y-1 ${product.stock <= 0 ? 'opacity-60 cursor-not-allowed hover:!bg-ink' : ''}`}
+                  disabled={product.stock <= 0}
                 >
-                  Add to cart <ShoppingCart size={18} />
+                  {product.stock > 0 ? 'Add to cart' : 'Unavailable'} <ShoppingCart size={18} />
                 </button>
               </div>
               

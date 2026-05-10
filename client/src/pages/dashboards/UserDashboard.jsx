@@ -1,6 +1,5 @@
 import DashboardShell from './DashboardShell.jsx';
 import PillButton from '../../components/ui/PillButton.jsx';
-import ProfileCompletionBanner from '../../components/ProfileCompletionBanner.jsx';
 
 const SLICES = [
   { tag: 'Live', title: 'My bookings', body: 'Track service status — Placed → Assigned → In Progress → Completed.' },
@@ -16,7 +15,6 @@ export default function UserDashboard() {
       title="YOUR VELORA."
       slices={SLICES}
     >
-      <ProfileCompletionBanner />
       <div className="flex flex-wrap gap-3">
         <PillButton variant="solid" to="/me/bookings">
           My bookings →

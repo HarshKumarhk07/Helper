@@ -1,5 +1,11 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import api, { onAuthEvent } from '../api/axios.js';
+import { googleSignIn } from '../api/auth.js';
+
+// Firebase is heavy (~150KB gzipped). Lazy-load it on first use so the initial
+// app bundle stays light — the SDK only ships when a user actually triggers
+// Google sign-in or logout-after-google-login.
+const loadFirebase = () => import('../lib/firebase.js');
 
 const AuthContext = createContext(null);
 
@@ -34,7 +40,7 @@ export function AuthProvider({ children }) {
     return data.user;
   }, []);
 
-  // Apply a server-provided session payload (e.g., after OTP verify).
+  // Apply a server-provided session payload (e.g., after Google sign-in).
   // Persists tokens, sets the user, and returns the user.
   const applySession = useCallback((data) => {
     if (!data?.accessToken || !data?.user) return null;
@@ -43,11 +49,30 @@ export function AuthProvider({ children }) {
     return data.user;
   }, []);
 
+  // Google sign-in: open Firebase popup → grab idToken → exchange with backend
+  // → persist tokens + user. Firebase SDK is dynamically imported here so the
+  // initial bundle stays light. Returns { user, created }.
+  const loginWithGoogle = useCallback(async () => {
+    const { signInWithGooglePopup } = await loadFirebase();
+    const { idToken } = await signInWithGooglePopup();
+    const data = await googleSignIn(idToken);
+    persistTokens(data.accessToken, data.refreshToken);
+    setUser(data.user);
+    return { user: data.user, created: !!data.created };
+  }, []);
+
   const logout = useCallback(async () => {
     try {
       await api.post('/auth/logout');
     } catch {
       /* ignore */
+    }
+    // Drop the Firebase session too if it was loaded — best-effort, never fails the logout.
+    try {
+      const { signOutOfFirebase } = await loadFirebase();
+      await signOutOfFirebase();
+    } catch {
+      /* Firebase wasn't loaded or failed to load — ignore */
     }
     clearTokens();
     setUser(null);
@@ -80,7 +105,17 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, isAuthenticated: !!user, bootstrapping, login, signup, logout, applySession }}
+      value={{
+        user,
+        setUser,
+        isAuthenticated: !!user,
+        bootstrapping,
+        login,
+        signup,
+        logout,
+        applySession,
+        loginWithGoogle,
+      }}
     >
       {children}
     </AuthContext.Provider>

@@ -75,7 +75,7 @@ export default function UserOrderDetail() {
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <Link
           to="/me/orders"
-          className="inline-flex items-center gap-2 text-xs uppercase tracking-widest text-ink/60 hover:text-ink dark:text-paper/60 dark:hover:text-paper"
+          className="inline-flex items-center gap-2 text-xs uppercase tracking-widest text-black/60 hover:text-black"
         >
           <ArrowLeft size={12} /> Back to orders
         </Link>
@@ -83,26 +83,50 @@ export default function UserOrderDetail() {
           <button
             onClick={handleInvoice}
             disabled={downloading}
-            className="inline-flex items-center gap-2 rounded-full border border-ink/15 px-4 py-2 text-xs uppercase tracking-widest hover:border-ink/40 disabled:opacity-50 dark:border-paper/15 dark:hover:border-paper/40"
+            className="inline-flex items-center gap-2 rounded-full border border-black/15 px-4 py-2 text-xs uppercase tracking-widest text-black hover:border-black/40 disabled:opacity-50"
           >
             <FileDown size={14} /> {downloading ? 'Preparing…' : 'Download invoice'}
           </button>
           <Link
             to={`/me/support?orderId=${order._id}&category=order&new=1`}
-            className="inline-flex items-center gap-2 rounded-full bg-ink px-4 py-2 text-xs uppercase tracking-widest text-paper transition hover:opacity-90 dark:bg-paper dark:text-ink"
+            className="inline-flex items-center gap-2 rounded-full bg-black px-4 py-2 text-xs uppercase tracking-widest text-white transition hover:opacity-90"
           >
             <HelpCircle size={14} /> Get help
           </Link>
         </div>
       </div>
 
+      <div className="card-rounded mb-6 border border-black/10 bg-white p-5 text-black">
+        <div className="text-xs uppercase tracking-widest text-black/60">
+          Live tracking
+        </div>
+        <div className="mt-2 text-sm text-black/80">
+          Live map tracking is available for service bookings, not every product order.
+          Open your bookings page to see the worker map, route, and live ETA.
+        </div>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Link
+            to="/me/bookings"
+            className="inline-flex items-center gap-2 rounded-full bg-black px-4 py-2 text-xs uppercase tracking-widest text-white transition hover:opacity-90"
+          >
+            Open my bookings
+          </Link>
+          <Link
+            to={`/me/support?orderId=${order._id}&category=order&new=1`}
+            className="inline-flex items-center gap-2 rounded-full border border-black/15 px-4 py-2 text-xs uppercase tracking-widest text-black hover:border-black/40"
+          >
+            Ask for tracking help
+          </Link>
+        </div>
+      </div>
+
       {/* Status timeline */}
       <div className="card-rounded mb-6 p-5">
-        <div className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+        <div className="text-xs uppercase tracking-widest text-black/60">
           Status
         </div>
         {cancelled ? (
-          <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-red-100 px-4 py-2 text-sm font-medium text-red-700 dark:bg-red-400/10 dark:text-red-200">
+          <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-red-100 px-4 py-2 text-sm font-medium text-red-700">
             <XCircle size={16} /> Order cancelled
             {order.cancelledAt && (
               <span className="ml-1 text-xs opacity-80">
@@ -121,10 +145,10 @@ export default function UserOrderDetail() {
                   key={step.key}
                   className={`relative rounded-2xl border p-3 text-center transition ${
                     current
-                      ? 'border-ink bg-ink text-paper dark:border-paper dark:bg-paper dark:text-ink'
+                      ? 'border-black bg-black text-white'
                       : reached
-                      ? 'border-green-300 bg-green-50/60 text-green-700 dark:border-green-400/20 dark:bg-green-400/5 dark:text-green-200'
-                      : 'border-ink/10 text-ink/50 dark:border-paper/10 dark:text-paper/40'
+                      ? 'border-black/20 bg-black/5 text-black'
+                      : 'border-black/10 text-black/50'
                   }`}
                 >
                   <Icon size={18} className="mx-auto mb-1" />
@@ -148,10 +172,10 @@ export default function UserOrderDetail() {
         {/* Items + history */}
         <div className="space-y-6">
           <div className="card-rounded p-5">
-            <div className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+            <div className="text-xs uppercase tracking-widest text-black/60">
               Items
             </div>
-            <div className="mt-4 divide-y divide-ink/10 dark:divide-paper/10">
+            <div className="mt-4 divide-y divide-black/10">
               {order.items.map((it, idx) => (
                 <div
                   key={idx}
@@ -162,23 +186,23 @@ export default function UserOrderDetail() {
                       <img
                         src={it.product.image}
                         alt={it.name}
-                        className="h-12 w-12 rounded-lg border border-ink/10 object-cover dark:border-paper/10"
+                        className="h-12 w-12 rounded-lg border border-black/10 object-cover"
                       />
                     )}
                     <div>
-                      <div className="font-medium">{it.name}</div>
-                      <div className="text-xs text-ink/60 dark:text-paper/50">
+                      <div className="font-medium text-black">{it.name}</div>
+                      <div className="text-xs text-black/60">
                         Qty {it.quantity} · {formatPrice(it.price)} ea.
                       </div>
                     </div>
                   </div>
-                  <div className="font-semibold tabular-nums">
+                  <div className="font-semibold tabular-nums text-black">
                     {formatPrice(it.price * it.quantity)}
                   </div>
                 </div>
               ))}
             </div>
-            <div className="mt-4 space-y-1 border-t border-ink/10 pt-4 text-sm dark:border-paper/10">
+            <div className="mt-4 space-y-1 border-t border-black/10 pt-4 text-sm">
               <Row label="Subtotal" value={formatPrice(order.subtotalAmount)} />
               {order.discountAmount > 0 && (
                 <Row
@@ -187,9 +211,9 @@ export default function UserOrderDetail() {
                   positive
                 />
               )}
-              <div className="mt-2 flex items-baseline justify-between border-t border-ink/10 pt-3 text-base font-semibold dark:border-paper/10">
+              <div className="mt-2 flex items-baseline justify-between border-t border-black/10 pt-3 text-base font-semibold">
                 <span>Total</span>
-                <span className="tabular-nums">{formatPrice(order.totalAmount)}</span>
+                <span className="tabular-nums text-black">{formatPrice(order.totalAmount)}</span>
               </div>
               {order.refundAmount > 0 && (
                 <Row
@@ -203,7 +227,7 @@ export default function UserOrderDetail() {
 
           {order.history?.length > 0 && (
             <div className="card-rounded p-5">
-              <div className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+              <div className="text-xs uppercase tracking-widest text-black/60">
                 Activity
               </div>
               <ol className="mt-4 space-y-3 text-sm">
@@ -212,17 +236,17 @@ export default function UserOrderDetail() {
                   .map((step, idx) => (
                     <li
                       key={idx}
-                      className="flex items-start justify-between gap-3 border-l-2 border-ink/10 pl-3 dark:border-paper/10"
+                      className="flex items-start justify-between gap-3 border-l-2 border-black/10 pl-3"
                     >
                       <div>
-                        <div className="text-[10px] uppercase tracking-widest text-ink/60 dark:text-paper/50">
+                        <div className="text-[10px] uppercase tracking-widest text-black/60">
                           {step.from} → {step.to}
                         </div>
-                        <div className="mt-0.5 text-ink/80 dark:text-paper/70">
+                        <div className="mt-0.5 text-black/80">
                           {step.note || 'Status update'}
                         </div>
                       </div>
-                      <div className="shrink-0 text-xs text-ink/55 dark:text-paper/45">
+                      <div className="shrink-0 text-xs text-black/55">
                         {formatDateTime(step.at)}
                       </div>
                     </li>
@@ -235,13 +259,13 @@ export default function UserOrderDetail() {
         {/* Payment + address sidebar */}
         <div className="space-y-6">
           <div className="card-rounded p-5">
-            <div className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+            <div className="text-xs uppercase tracking-widest text-black/60">
               Payment
             </div>
             <div className="mt-3 space-y-2 text-sm">
               <Row label="Mode" value={(order.paymentMode || '').toUpperCase()} />
               <div className="flex items-center justify-between">
-                <span className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+                <span className="text-xs uppercase tracking-widest text-black/60">
                   Status
                 </span>
                 <span
@@ -276,12 +300,12 @@ export default function UserOrderDetail() {
           </div>
 
           <div className="card-rounded p-5">
-            <div className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+            <div className="text-xs uppercase tracking-widest text-black/60">
               Delivery address
             </div>
-            <div className="mt-3 text-sm leading-relaxed text-ink/80 dark:text-paper/75">
+            <div className="mt-3 text-sm leading-relaxed text-black/80">
               {order.address?.label && (
-                <div className="text-[10px] uppercase tracking-widest text-ink/55 dark:text-paper/45">
+                <div className="text-[10px] uppercase tracking-widest text-black/55">
                   {order.address.label}
                 </div>
               )}
@@ -293,7 +317,7 @@ export default function UserOrderDetail() {
                   .join(', ')}
               </div>
               {order.address?.landmark && (
-                <div className="mt-1 text-xs text-ink/60 dark:text-paper/50">
+                <div className="mt-1 text-xs text-black/60">
                   Landmark: {order.address.landmark}
                 </div>
               )}
@@ -301,11 +325,11 @@ export default function UserOrderDetail() {
           </div>
 
           {order.adminNote && (
-            <div className="card-rounded border border-ink/10 bg-sand/40 p-5 text-sm dark:border-paper/10 dark:bg-paper/5">
-              <div className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+            <div className="card-rounded border border-black/10 bg-sand/40 p-5 text-sm">
+              <div className="text-xs uppercase tracking-widest text-black/60">
                 Note from our team
               </div>
-              <div className="mt-2 text-ink/80 dark:text-paper/75">
+              <div className="mt-2 text-black/80">
                 {order.adminNote}
               </div>
             </div>
@@ -319,14 +343,10 @@ export default function UserOrderDetail() {
 function Row({ label, value, positive }) {
   return (
     <div className="flex items-center justify-between text-sm">
-      <span className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+      <span className="text-xs uppercase tracking-widest text-black/60">
         {label}
       </span>
-      <span
-        className={`tabular-nums ${
-          positive ? 'text-green-700 dark:text-green-300' : ''
-        }`}
-      >
+      <span className={`tabular-nums ${positive ? 'text-green-700' : 'text-black'}`}>
         {value}
       </span>
     </div>

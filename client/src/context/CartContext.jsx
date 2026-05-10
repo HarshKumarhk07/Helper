@@ -12,15 +12,49 @@ import {
 import { useAuth } from './AuthContext.jsx';
 
 const CartContext = createContext();
-const STORAGE_KEY = 'velora_cart';
 
-const loadInitial = () => {
+// Per-user cart bucket — keeps one user's cart from leaking into another
+// user's session on the same browser.
+const GUEST_KEY = 'velora_cart_guest';
+const userCartKey = (userId) =>
+  userId ? `velora_cart_user_${userId}` : GUEST_KEY;
+
+// Legacy migration: anything stored under the old single-bucket key gets
+// pulled into the guest bucket once, then cleared.
+const LEGACY_KEY = 'velora_cart';
+
+const readKey = (key) => {
   try {
-    const saved = localStorage.getItem(STORAGE_KEY);
+    const saved = localStorage.getItem(key);
     return saved ? JSON.parse(saved) : [];
   } catch {
     return [];
   }
+};
+
+const writeKey = (key, value) => {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    /* ignore */
+  }
+};
+
+const loadInitial = () => {
+  // Migrate legacy single-bucket cart into the guest bucket on first run.
+  try {
+    const legacy = localStorage.getItem(LEGACY_KEY);
+    if (legacy) {
+      const parsed = JSON.parse(legacy);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        writeKey(GUEST_KEY, parsed);
+      }
+      localStorage.removeItem(LEGACY_KEY);
+    }
+  } catch {
+    /* ignore */
+  }
+  return readKey(GUEST_KEY);
 };
 
 // Merge server cart items (products) with local-only items (services).
@@ -32,13 +66,25 @@ const mergeServerWithLocal = (serverItems, localItems) => {
 
 export function CartProvider({ children }) {
   const { isAuthenticated, user } = useAuth();
+  const userId = user?._id || null;
+  const currentKey = userCartKey(userId);
+
   const [cart, setCart] = useState(loadInitial);
   const syncedForUserRef = useRef(null);
+  const lastKeyRef = useRef(currentKey);
 
-  // Persist locally on every change.
+  // When the active user changes, swap to that user's cart bucket so one
+  // user's cart never appears in another user's session.
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(cart));
-  }, [cart]);
+    if (lastKeyRef.current === currentKey) return;
+    setCart(readKey(currentKey));
+    lastKeyRef.current = currentKey;
+  }, [currentKey]);
+
+  // Persist locally on every change to the per-user bucket.
+  useEffect(() => {
+    writeKey(currentKey, cart);
+  }, [cart, currentKey]);
 
   // Validate the saved cart's product items still exist (drop ghosts).
   useEffect(() => {

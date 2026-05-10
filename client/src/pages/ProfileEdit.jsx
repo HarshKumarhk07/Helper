@@ -1,232 +1,302 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import {
+  ArrowLeft,
+  User as UserIcon,
+  Phone,
+  Mail,
+  Image as ImageIcon,
+  Upload,
+  CheckCircle2,
+} from 'lucide-react';
+import { motion } from 'framer-motion';
 import api from '../api/axios.js';
 import { useAuth } from '../context/AuthContext.jsx';
-import { ArrowLeft } from 'lucide-react';
+import { Field, PrimaryCTA, ErrorBanner } from '../components/auth/AuthFormPrimitives.jsx';
+
+const fadeUp = {
+  initial: { opacity: 0, y: 12 },
+  animate: { opacity: 1, y: 0 },
+};
+
+const PHONE_PLACEHOLDER_DOMAIN = '@phone.velora.local';
+const isPlaceholderEmail = (email) =>
+  typeof email === 'string' && email.toLowerCase().endsWith(PHONE_PLACEHOLDER_DOMAIN);
+
+const friendlyError = (err) => {
+  const msg =
+    err?.response?.data?.message || err?.response?.data?.error || err?.message || '';
+  if (/already in use/i.test(msg)) return 'That email is already taken.';
+  return msg || 'Could not save your profile. Please try again.';
+};
 
 export default function ProfileEdit() {
-  const { user: currentUser, setUser } = useAuth();
+  const { user, setUser } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
   const [form, setForm] = useState({
     name: '',
     phone: '',
-    aadhaarNumber: '',
-    panNumber: '',
+    email: '',
     passportPhoto: '',
   });
-  const [kycStatus, setKycStatus] = useState('pending');
+
+  const [photoState, setPhotoState] = useState('idle'); // idle | uploading | done
 
   useEffect(() => {
-    if (currentUser) {
-      setForm({
-        name: currentUser.name || '',
-        phone: currentUser.phone || '',
-        aadhaarNumber: currentUser.aadhaarNumber || '',
-        panNumber: currentUser.panNumber || '',
-        passportPhoto: currentUser.passportPhoto || currentUser.avatar || '',
-      });
-      setKycStatus(currentUser.kycStatus || 'pending');
-    }
-  }, [currentUser]);
-
-  const uploadPassportPhoto = async (file) => {
-    const formData = new FormData();
-    formData.append('image', file);
-    const response = await api.post('/upload', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
+    if (!user) return;
+    setForm({
+      name: user.name || '',
+      phone: user.phone || '',
+      // Hide the phone-OTP placeholder email so users can fill in a real one.
+      email: isPlaceholderEmail(user.email) ? '' : user.email || '',
+      passportPhoto: user.passportPhoto || user.avatar || '',
     });
-    return response.data.url;
+  }, [user]);
+
+  const emailValid =
+    !form.email || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim());
+
+  const uploadPhoto = async (file) => {
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('File too large (max 5 MB)');
+      return;
+    }
+    setPhotoState('uploading');
+    try {
+      const fd = new FormData();
+      fd.append('image', file);
+      const { data } = await api.post('/upload', fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      setForm((f) => ({ ...f, passportPhoto: data.url }));
+      setPhotoState('done');
+      toast.success('Photo uploaded');
+      setTimeout(() => setPhotoState('idle'), 1500);
+    } catch (err) {
+      setPhotoState('idle');
+      toast.error(err?.response?.data?.error || 'Upload failed');
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+    if (!emailValid) {
+      setError("That doesn't look like a valid email.");
+      return;
+    }
     setLoading(true);
-
     try {
-      const response = await api.patch('/users/me', form);
-      setUser(response.data.user);
-      toast.success('Profile updated successfully');
+      const payload = {
+        name: form.name.trim(),
+        phone: form.phone.trim(),
+        passportPhoto: form.passportPhoto || '',
+      };
+      // Only send email if the user typed one (don't accidentally clear or revert).
+      if (form.email.trim()) payload.email = form.email.trim();
+      const { data } = await api.patch('/users/me', payload);
+      if (typeof setUser === 'function') setUser(data.user);
+      toast.success('Profile updated');
       navigate(-1);
     } catch (err) {
-      toast.error(err?.response?.data?.error || 'Failed to update profile');
+      const message = friendlyError(err);
+      setError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
   };
 
+  const isWorker = user?.role === 'worker';
+  const showEmailField = !user?.email || isPlaceholderEmail(user?.email);
+
   return (
-    <div className="min-h-screen bg-paper dark:bg-[#0B0C0F] text-ink dark:text-paper">
-      <div className="max-w-2xl mx-auto px-4 py-8">
-        <div className="flex items-center gap-4 mb-8">
-          <button
-            onClick={() => navigate(-1)}
-            className="p-2 hover:bg-ink/5 dark:hover:bg-paper/5 rounded-lg transition"
+    <>
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-0 -z-10 bg-paper dark:bg-[#0E0E10]"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-0 -z-10 opacity-70 dark:opacity-50"
+        style={{
+          backgroundImage:
+            'radial-gradient(60rem 60rem at 12% 0%, rgba(26,26,26,0.06), transparent 60%)',
+        }}
+      />
+
+      <section
+        className="relative px-4 sm:px-6"
+        style={{
+          paddingTop: 'calc(6rem + env(safe-area-inset-top))',
+          paddingBottom: 'calc(2rem + env(safe-area-inset-bottom))',
+        }}
+      >
+        <div className="mx-auto w-full max-w-2xl">
+          <motion.div
+            {...fadeUp}
+            transition={{ duration: 0.45 }}
+            className="mb-6 flex items-start gap-4"
           >
-            <ArrowLeft size={20} />
-          </button>
-          <div>
-            <h1 className="text-3xl font-bold">Edit My Profile</h1>
-            <p className="text-ink/60 dark:text-paper/60 text-sm mt-1">Update your personal and KYC details</p>
-          </div>
-        </div>
-
-        <form onSubmit={handleSubmit} className="bg-sand/20 dark:bg-paper/5 rounded-2xl border border-ink/10 dark:border-paper/10 p-6 space-y-6">
-          {/* Personal Information */}
-          <div>
-            <h2 className="text-lg font-semibold mb-4 uppercase tracking-widest text-ink/70 dark:text-paper/70">
-              Personal Information
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input
-                required
-                placeholder="Full Name"
-                className="p-3 border rounded-xl bg-white dark:bg-paper/10 text-ink dark:text-paper border-ink/20 dark:border-paper/20 focus:outline-none focus:border-ink dark:focus:border-paper"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-              />
-              <input
-                placeholder="Phone Number"
-                className="p-3 border rounded-xl bg-white dark:bg-paper/10 text-ink dark:text-paper border-ink/20 dark:border-paper/20 focus:outline-none focus:border-ink dark:focus:border-paper"
-                value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
-              />
+            <button
+              onClick={() => navigate(-1)}
+              aria-label="Back"
+              className="rounded-full border-2 border-ink/15 bg-paper p-2 text-ink transition-colors hover:border-ink hover:bg-ink hover:text-paper dark:border-paper/15 dark:bg-paper/[0.04] dark:text-paper dark:hover:border-paper dark:hover:bg-paper dark:hover:text-ink"
+            >
+              <ArrowLeft size={18} />
+            </button>
+            <div>
+              <h1 className="font-display text-3xl font-semibold tracking-tightish text-ink sm:text-4xl">
+                Edit my profile
+              </h1>
+              <p className="mt-1 text-sm text-ink/60 dark:text-paper/55">
+                Update your personal details. Workers manage KYC documents on the dedicated worker page.
+              </p>
             </div>
-          </div>
+          </motion.div>
 
-          {/* KYC Documents */}
-          <div>
-            <h2 className="text-lg font-semibold mb-4 uppercase tracking-widest text-ink/70 dark:text-paper/70">
-              KYC Documents
-            </h2>
-            <div className="space-y-4">
-              {/* Passport Photo */}
-              <div>
-                <label className="block text-sm font-medium mb-2 uppercase tracking-widest text-ink/60 dark:text-paper/60">
-                  Passport Photo URL
-                </label>
-                <input
-                  placeholder="https://example.com/passport-photo.jpg"
-                  className="w-full p-3 border rounded-xl bg-white dark:bg-paper/10 text-ink dark:text-paper border-ink/20 dark:border-paper/20 focus:outline-none focus:border-ink dark:focus:border-paper"
-                  value={form.passportPhoto}
-                  onChange={(e) => setForm({ ...form, passportPhoto: e.target.value })}
+          <motion.form
+            {...fadeUp}
+            transition={{ duration: 0.45, delay: 0.05 }}
+            onSubmit={handleSubmit}
+            className="space-y-5 rounded-[28px] border border-ink/10 bg-paper/95 p-5 shadow-card backdrop-blur-xl sm:p-7 dark:border-paper/10 dark:bg-[#141417]/85"
+          >
+            <Section title="Personal information">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <Field
+                  label="Full name"
+                  value={form.name}
+                  onChange={(v) => setForm((f) => ({ ...f, name: v }))}
+                  placeholder="First and last name"
+                  autoComplete="name"
+                  required
+                  leadingIcon={<UserIcon size={16} />}
+                />
+                <Field
+                  label="Phone"
+                  type="tel"
+                  value={form.phone}
+                  onChange={(v) => setForm((f) => ({ ...f, phone: v }))}
+                  placeholder="10-digit number"
+                  autoComplete="tel"
+                  leadingIcon={<Phone size={16} />}
                 />
               </div>
 
-              {/* File Upload */}
-              <div className="rounded-xl border border-dashed border-ink/20 dark:border-paper/20 bg-transparent p-4">
-                <div className="mb-2 text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">Or choose from computer</div>
-                <div className="flex flex-col gap-3 md:flex-row md:items-center">
+              {showEmailField && (
+                <div className="mt-4">
+                  <Field
+                    label="Email"
+                    type="email"
+                    value={form.email}
+                    onChange={(v) => setForm((f) => ({ ...f, email: v }))}
+                    placeholder="you@example.com"
+                    autoComplete="email"
+                    leadingIcon={<Mail size={16} />}
+                    error={!emailValid}
+                    helper={!emailValid ? "Doesn't look right" : 'For receipts and notifications'}
+                  />
+                </div>
+              )}
+            </Section>
+
+            <Section title="Profile photo">
+              <Field
+                label="Image URL"
+                type="url"
+                value={form.passportPhoto}
+                onChange={(v) => setForm((f) => ({ ...f, passportPhoto: v }))}
+                placeholder="https://… (or upload below)"
+                leadingIcon={<ImageIcon size={16} />}
+              />
+              <div className="mt-3 grid grid-cols-1 items-start gap-3 sm:grid-cols-[1fr_auto]">
+                <label className="relative flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-ink/15 bg-ink/[0.02] px-3 py-3 text-xs font-medium text-ink/70 transition-colors hover:border-ink/40 dark:border-paper/15 dark:bg-paper/[0.03] dark:text-paper/65 dark:hover:border-paper/40">
+                  {photoState === 'uploading' ? (
+                    <>
+                      <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-ink/30 border-t-ink dark:border-paper/30 dark:border-t-paper" />
+                      Uploading…
+                    </>
+                  ) : photoState === 'done' ? (
+                    <>
+                      <CheckCircle2 size={13} className="text-emerald-500" />
+                      Uploaded
+                    </>
+                  ) : (
+                    <>
+                      <Upload size={13} /> Choose image
+                    </>
+                  )}
                   <input
                     type="file"
                     accept="image/*"
-                    className="w-full text-sm text-ink/70 file:mr-4 file:rounded-pill file:border-0 file:bg-ink file:px-4 file:py-2 file:text-paper dark:text-paper/70 dark:file:bg-paper dark:file:text-ink"
-                    onChange={async (e) => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-                      try {
-                        const url = await uploadPassportPhoto(file);
-                        setForm((current) => ({ ...current, passportPhoto: url }));
-                        toast.success('Passport photo uploaded');
-                      } catch {
-                        toast.error('Failed to upload passport photo');
-                      }
+                    disabled={photoState === 'uploading'}
+                    onChange={(e) => uploadPhoto(e.target.files?.[0])}
+                    className="absolute inset-0 cursor-pointer opacity-0 disabled:cursor-wait"
+                  />
+                </label>
+                {form.passportPhoto && (
+                  <img
+                    src={form.passportPhoto}
+                    alt="Profile photo preview"
+                    className="h-16 w-16 rounded-xl border-2 border-ink/15 object-cover dark:border-paper/15"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
                     }}
                   />
-                  {form.passportPhoto && (
-                    <img
-                      src={form.passportPhoto}
-                      alt="Passport photo preview"
-                      className="h-16 w-16 rounded-xl object-cover border border-ink/10"
-                    />
-                  )}
-                </div>
+                )}
               </div>
+            </Section>
 
-              {/* Aadhaar & PAN */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2 uppercase tracking-widest text-ink/60 dark:text-paper/60">
-                    Aadhaar Number (12 digits)
-                  </label>
-                  <input
-                    placeholder="123456789012"
-                    inputMode="numeric"
-                    maxLength={12}
-                    className="w-full p-3 border rounded-xl bg-white dark:bg-paper/10 text-ink dark:text-paper border-ink/20 dark:border-paper/20 focus:outline-none focus:border-ink dark:focus:border-paper"
-                    value={form.aadhaarNumber}
-                    onChange={(e) => setForm({ ...form, aadhaarNumber: e.target.value.replace(/\D/g, '').slice(0, 12) })}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2 uppercase tracking-widest text-ink/60 dark:text-paper/60">
-                    PAN Number (format: AAAAA0000A)
-                  </label>
-                  <input
-                    placeholder="AAAAA0000A"
-                    maxLength={10}
-                    className="w-full p-3 border rounded-xl bg-white dark:bg-paper/10 text-ink dark:text-paper border-ink/20 dark:border-paper/20 focus:outline-none focus:border-ink dark:focus:border-paper uppercase"
-                    value={form.panNumber}
-                    onChange={(e) => setForm({ ...form, panNumber: e.target.value.toUpperCase().slice(0, 10) })}
-                  />
-                </div>
+            {isWorker && (
+              <div className="rounded-2xl border-2 border-amber-300 bg-amber-50/70 p-4 text-sm text-amber-900 dark:border-amber-400/30 dark:bg-amber-400/[0.06] dark:text-amber-200">
+                <div className="font-semibold">Manage your KYC</div>
+                <p className="mt-1 text-xs">
+                  Workers verify identity on a dedicated KYC page that supports
+                  Aadhaar, PAN and selfie uploads.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => navigate('/worker/kyc')}
+                  className="mt-3 inline-flex items-center gap-2 rounded-full bg-ink px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-paper hover:opacity-90 dark:bg-paper dark:text-ink"
+                >
+                  Open KYC page →
+                </button>
               </div>
-            </div>
-          </div>
+            )}
 
-          {/* KYC Status (Read-only) */}
-          <div>
-            <h2 className="text-lg font-semibold mb-4 uppercase tracking-widest text-ink/70 dark:text-paper/70">
-              KYC Status
-            </h2>
-            <div className="flex items-center gap-3 p-4 rounded-xl bg-white dark:bg-paper/10 border border-ink/10 dark:border-paper/10">
-              <span
-                className={`inline-flex rounded-full px-3 py-1 text-xs font-medium uppercase tracking-widest ${
-                  kycStatus === 'verified'
-                    ? 'bg-green-100 text-green-700 dark:bg-green-400/10 dark:text-green-300'
-                    : kycStatus === 'rejected'
-                      ? 'bg-red-100 text-red-700 dark:bg-red-400/10 dark:text-red-300'
-                      : 'bg-amber-100 text-amber-800 dark:bg-amber-400/10 dark:text-amber-200'
-                }`}
+            {error && <ErrorBanner>{error}</ErrorBanner>}
+
+            <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:items-center sm:justify-end">
+              <button
+                type="button"
+                onClick={() => navigate(-1)}
+                className="rounded-full border-2 border-ink/15 px-5 py-2.5 text-sm font-medium text-ink transition-colors hover:border-ink dark:border-paper/15 dark:text-paper dark:hover:border-paper"
               >
-                {kycStatus === 'verified' ? '✓ Verified' : kycStatus === 'rejected' ? '✗ Rejected' : '⊙ Pending Review'}
-              </span>
-              <p className="text-sm text-ink/60 dark:text-paper/60">
-                {kycStatus === 'pending'
-                  ? 'Your KYC documents are awaiting admin review.'
-                  : kycStatus === 'verified'
-                    ? 'Your identity has been verified. You can accept bookings.'
-                    : 'Your KYC was rejected. Please contact support.'}
-              </p>
+                Cancel
+              </button>
+              <div className="sm:w-auto sm:min-w-[200px]">
+                <PrimaryCTA loading={loading} label="Save changes" />
+              </div>
             </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex gap-4 pt-4">
-            <button
-              type="button"
-              onClick={() => navigate(-1)}
-              className="flex-1 px-6 py-3 rounded-xl border border-ink/20 dark:border-paper/20 hover:bg-ink/5 dark:hover:bg-paper/5 transition"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex-1 px-6 py-3 bg-ink text-paper dark:bg-paper dark:text-ink rounded-xl font-medium uppercase tracking-widest hover:opacity-90 transition disabled:opacity-50"
-            >
-              {loading ? 'Saving...' : 'Save Changes'}
-            </button>
-          </div>
-        </form>
-
-        <div className="mt-6 p-4 rounded-xl bg-blue-50 dark:bg-blue-400/10 border border-blue-200 dark:border-blue-400/20">
-          <p className="text-sm text-blue-900 dark:text-blue-200">
-            <strong>Note:</strong> After you submit your KYC details, an admin will review and verify your information. Your KYC status will be updated once the review is complete.
-          </p>
+          </motion.form>
         </div>
-      </div>
-    </div>
+      </section>
+    </>
+  );
+}
+
+function Section({ title, children }) {
+  return (
+    <section className="space-y-4">
+      <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-ink/70 dark:text-paper/65">
+        {title}
+      </h2>
+      {children}
+    </section>
   );
 }

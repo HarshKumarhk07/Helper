@@ -56,6 +56,16 @@ export default function Navbar() {
     }
   }, [searchOpen]);
 
+  // Prevent body scroll when drawer is open
+  useEffect(() => {
+    if (open) {
+      document.documentElement.style.overflow = 'hidden';
+      return () => {
+        document.documentElement.style.overflow = '';
+      };
+    }
+  }, [open]);
+
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     const query = searchValue.trim();
@@ -66,17 +76,17 @@ export default function Navbar() {
   };
 
   return (
-    <header 
+    <header
       className={`fixed inset-x-0 z-50 transition-all duration-500 flex justify-center w-full px-4 md:px-10 ${
-        scrolled ? 'top-4' : 'top-6'
+        scrolled ? 'top-3' : 'top-4'
       }`}
     >
       {/* Floating Glass Island */}
-      <div 
-        className={`w-full max-w-[1400px] transition-all duration-500 rounded-[2rem] border overflow-visible ${
-          scrolled 
-            ? 'bg-paper/95 backdrop-blur-2xl border-ink/10 shadow-[0_8px_30px_rgb(0,0,0,0.12)] py-3 px-6 md:px-8' 
-            : 'bg-paper/90 backdrop-blur-xl border-white/40 shadow-2xl py-4 px-6 md:px-8'
+      <div
+        className={`w-full max-w-[1400px] transition-all duration-500 rounded-[1.75rem] border overflow-visible ${
+          scrolled
+            ? 'bg-paper/95 backdrop-blur-2xl border-ink/10 shadow-[0_8px_30px_rgb(0,0,0,0.12)] py-2 px-5 md:px-7'
+            : 'bg-paper/90 backdrop-blur-xl border-white/40 shadow-xl py-2.5 px-5 md:px-7'
         }`}
       >
         <div className="flex items-center justify-between gap-4 w-full h-full relative">
@@ -221,49 +231,186 @@ export default function Navbar() {
         {/* Mobile Menu Expansion */}
         <AnimatePresence>
           {open && (
-            <motion.div
-              initial={{ opacity: 0, height: 0, marginTop: 0 }}
-              animate={{ opacity: 1, height: 'auto', marginTop: 16 }}
-              exit={{ opacity: 0, height: 0, marginTop: 0 }}
-              className="md:hidden overflow-hidden border-t border-ink/5"
-            >
-              <div className="flex flex-col gap-4 py-4 px-2">
-                {NAV.map((n) => (
-                  <NavLink
-                    key={n.to}
-                    to={n.to}
-                    end={n.to === '/'}
-                    onClick={() => setOpen(false)}
-                    className="text-base font-medium text-ink/80 hover:text-ink transition-colors px-2 py-1 rounded-lg hover:bg-ink/5"
-                  >
-                    {n.label}
-                  </NavLink>
-                ))}
-                
-                <div className="flex gap-4 px-2 py-2">
-                  <button onClick={() => { setOpen(false); navigate('/favorites'); }} className="flex items-center gap-2 text-ink/80 hover:text-ink">
-                    <Heart size={18} /> <span className="text-sm font-medium">Favorites ({favorites.length})</span>
-                  </button>
+            <>
+              {/* Overlay Backdrop */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                onClick={() => setOpen(false)}
+                className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
+                style={{ top: 0, left: 0, right: 0, bottom: 0 }}
+              />
+
+              {/* Drawer Sidebar */}
+              <motion.div
+                initial={{ x: '-100%' }}
+                animate={{ x: 0 }}
+                exit={{ x: '-100%' }}
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                className="fixed left-0 top-0 bottom-0 z-50 h-screen flex flex-col bg-paper shadow-2xl"
+                style={{
+                  width: 'min(85vw, 380px)',
+                  paddingTop: 'env(safe-area-inset-top)',
+                }}
+              >
+                {/* Header */}
+                <div className="flex-shrink-0 border-b border-ink/5 bg-gradient-to-b from-paper to-paper/95 px-4 py-3">
+                  <div className="flex items-center justify-between gap-3">
+                    {/* Close Button */}
+                    <button
+                      type="button"
+                      onClick={() => setOpen(false)}
+                      className="flex-shrink-0 h-10 w-10 flex items-center justify-center rounded-lg text-ink/60 hover:text-ink hover:bg-ink/5 transition-all duration-200 active:scale-95"
+                      aria-label="close menu"
+                    >
+                      <X size={24} strokeWidth={1.5} />
+                    </button>
+
+                    {/* Logo in Drawer */}
+                    <div className="flex-1 flex items-center justify-center gap-2">
+                      <div className="h-7 w-7 rounded-full bg-ink text-paper flex items-center justify-center font-serif text-sm font-bold">U</div>
+                      <span className="text-xs font-semibold tracking-widest uppercase text-ink">Velora</span>
+                    </div>
+
+                    {/* Right Icons - Search and Cart */}
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setOpen(false);
+                          setSearchOpen(true);
+                        }}
+                        className="flex-shrink-0 h-10 w-10 flex items-center justify-center rounded-lg text-ink/60 hover:text-ink hover:bg-ink/5 transition-all duration-200 active:scale-95"
+                        aria-label="search"
+                      >
+                        <Search size={20} strokeWidth={1.5} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setOpen(false);
+                          navigate('/cart');
+                        }}
+                        className="relative flex-shrink-0 h-10 w-10 flex items-center justify-center rounded-lg text-ink/60 hover:text-ink hover:bg-ink/5 transition-all duration-200 active:scale-95"
+                        aria-label="cart"
+                      >
+                        <ShoppingBag size={20} strokeWidth={1.5} />
+                        {cart.length > 0 && (
+                          <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-ink px-1 text-[10px] font-bold text-paper border border-paper">
+                            {cart.length}
+                          </span>
+                        )}
+                      </button>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="h-px w-full bg-ink/5 my-1"></div>
-                
-                {isAuthenticated ? (
-                  <>
-                    <Link to={panelPath} onClick={() => setOpen(false)} className="text-base font-medium text-ink/80 hover:text-ink transition-colors px-2 py-1 rounded-lg hover:bg-ink/5">
-                      {panelLabel}
-                    </Link>
-                    <button onClick={() => { logout(); setOpen(false); navigate('/'); }} className="text-left text-base font-medium text-ink/80 hover:text-ink transition-colors px-2 py-1 rounded-lg hover:bg-ink/5">
+                {/* Scrollable Content */}
+                <div className="flex-1 overflow-y-auto scroll-smooth drawer-scroll">
+                  {/* Main Navigation */}
+                  <nav className="px-3 py-4 space-y-1">
+                    <div className="text-[11px] font-semibold uppercase tracking-widest text-ink px-3 py-2">Navigation</div>
+                    {NAV.map((n) => (
+                      <NavLink
+                        key={n.to}
+                        to={n.to}
+                        end={n.to === '/'}
+                        onClick={() => setOpen(false)}
+                        className={({ isActive }) =>
+                          `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 relative group ${
+                            isActive
+                              ? 'text-ink bg-ink/8'
+                              : 'text-ink hover:text-ink hover:bg-ink/5'
+                          }`
+                        }
+                      >
+                        {({ isActive }) => (
+                          <>
+                            <span className={`h-1.5 w-1.5 rounded-full transition-all ${isActive ? 'bg-ink' : 'bg-ink/30'}`} />
+                            {n.label}
+                            {isActive && (
+                              <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-ink rounded-r-lg" />
+                            )}
+                          </>
+                        )}
+                      </NavLink>
+                    ))}
+                  </nav>
+
+                  {/* Favorites */}
+                  <div className="px-3 py-2 mt-2">
+                    <button
+                      onClick={() => {
+                        setOpen(false);
+                        navigate('/favorites');
+                      }}
+                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-ink hover:text-ink hover:bg-ink/5 transition-all duration-200"
+                    >
+                      <Heart size={18} className="flex-shrink-0" />
+                      <span className="flex-1 text-left text-ink">Saved Items</span>
+                      {favorites.length > 0 && (
+                        <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-ink/10 px-1.5 text-[11px] font-semibold text-ink">
+                          {favorites.length}
+                        </span>
+                      )}
+                    </button>
+                  </div>
+
+                  {/* Divider */}
+                  <div className="h-px bg-gradient-to-r from-ink/0 via-ink/10 to-ink/0 my-3 mx-3" />
+
+                  {/* Account Section */}
+                  {isAuthenticated && (
+                    <nav className="px-3 py-4 space-y-1">
+                      <div className="text-[11px] font-semibold uppercase tracking-widest text-ink px-3 py-2">Account</div>
+                      <Link
+                        to={panelPath}
+                        onClick={() => setOpen(false)}
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-ink hover:text-ink hover:bg-ink/5 transition-all duration-200"
+                      >
+                        <UserIcon size={18} className="flex-shrink-0" />
+                        {panelLabel}
+                      </Link>
+                    </nav>
+                  )}
+                </div>
+
+                {/* Bottom Actions */}
+                <div className="flex-shrink-0 border-t border-ink/5 bg-gradient-to-t from-paper/95 to-paper px-3 py-3 space-y-2 safe-area-bottom-pad" style={{ paddingBottom: `calc(0.75rem + env(safe-area-inset-bottom))` }}>
+                  {isAuthenticated ? (
+                    <button
+                      onClick={async () => {
+                        await logout();
+                        setOpen(false);
+                        navigate('/');
+                      }}
+                      className="w-full py-2.5 px-3 rounded-lg bg-ink text-paper text-sm font-semibold hover:bg-ink/90 transition-all duration-200 active:scale-95 shadow-sm hover:shadow-md"
+                    >
                       Sign out
                     </button>
-                  </>
-                ) : (
-                  <Link to="/login" onClick={() => setOpen(false)} className="text-base font-medium text-ink/80 hover:text-ink transition-colors px-2 py-1 rounded-lg hover:bg-ink/5 flex items-center gap-2">
-                    <UserIcon size={18} /> Account Login
-                  </Link>
-                )}
-              </div>
-            </motion.div>
+                  ) : (
+                    <>
+                      <Link
+                        to="/login"
+                        onClick={() => setOpen(false)}
+                        className="w-full block py-2.5 px-3 rounded-lg text-center bg-ink text-paper text-sm font-semibold hover:bg-ink/90 transition-all duration-200 active:scale-95 shadow-sm hover:shadow-md"
+                      >
+                        Sign in
+                      </Link>
+                      <Link
+                        to="/signup"
+                        onClick={() => setOpen(false)}
+                        className="w-full block py-2.5 px-3 rounded-lg text-center border border-ink/20 text-ink text-sm font-semibold hover:bg-ink/5 transition-all duration-200 active:scale-95"
+                      >
+                        Create account
+                      </Link>
+                    </>
+                  )}
+                </div>
+              </motion.div>
+            </>
           )}
         </AnimatePresence>
       </div>

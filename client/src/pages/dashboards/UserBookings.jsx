@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { MapPin } from 'lucide-react';
 import { listMyBookings, transitionStatus } from '../../api/bookings.js';
 import { downloadInvoice } from '../../api/invoices.js';
 import BookingCard from '../../components/booking/BookingCard.jsx';
@@ -50,13 +51,38 @@ export default function UserBookings() {
 
   return (
     <section className="container-velora py-12 md:py-16">
-      <div className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+      <div className="text-xs uppercase tracking-widest text-black/60">
         (My bookings)
       </div>
       <h1 className="heading-display mt-3 text-4xl md:text-6xl">YOUR VELORA.</h1>
-      <p className="mt-3 text-sm text-ink/70 dark:text-paper/60">
-        Signed in as <span className="text-ink dark:text-paper">{user?.name}</span>
+      <p className="mt-3 text-sm text-black/70">
+        Signed in as <span className="text-black">{user?.name}</span>
       </p>
+
+      <div className="mt-6 rounded-card border border-black/10 bg-white p-5 text-black shadow-sm">
+        <div className="text-xs uppercase tracking-widest text-black/60">
+          What you can see here
+        </div>
+        <p className="mt-2 text-sm text-black/80">
+          This page shows service bookings only. Product orders are in My orders.
+          The live map appears only for bookings that are assigned or in progress,
+          using the Track & PINs button or the full tracker link inside each booking card.
+        </p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Link
+            to="/me/orders"
+            className="inline-flex items-center gap-2 rounded-full border border-black/15 px-4 py-2 text-xs uppercase tracking-widest text-black hover:border-black/40"
+          >
+            View my orders
+          </Link>
+          <Link
+            to="/services"
+            className="inline-flex items-center gap-2 rounded-full bg-black px-4 py-2 text-xs uppercase tracking-widest text-white transition hover:opacity-90"
+          >
+            Browse services
+          </Link>
+        </div>
+      </div>
 
       <div className="mt-8 flex flex-wrap gap-2">
         {FILTERS.map((f) => (
@@ -66,7 +92,7 @@ export default function UserBookings() {
             className={`rounded-pill border px-4 py-2 text-xs uppercase tracking-widest transition ${
               filter === f.key
                 ? 'border-ink bg-ink text-paper'
-                : 'border-ink/30 hover:bg-ink hover:text-paper dark:border-paper/30 dark:text-paper'
+                : 'border-ink bg-ink/85 text-paper hover:bg-ink hover:text-paper dark:border-paper/50 dark:text-paper'
             }`}
           >
             {f.label}
@@ -80,13 +106,18 @@ export default function UserBookings() {
             <div key={i} className="skeleton h-32 w-full" />
           ))
         ) : bookings.length === 0 ? (
-          <div className="col-span-full rounded-card border border-ink/10 bg-sand/40 p-10 text-center text-sm dark:border-paper/10">
-            <div className="text-ink/70 dark:text-paper/60">
-              No bookings here yet — start with the catalog.
+          <div className="col-span-full rounded-card border border-black/10 bg-sand/40 p-10 text-center text-sm text-black">
+            <div className="text-black/70">
+              No bookings here yet. If you were looking for an order, open My orders.
             </div>
-            <PillButton to="/services" className="mt-4">
-              Browse services
-            </PillButton>
+            <div className="mt-4 flex flex-wrap justify-center gap-3">
+              <PillButton to="/services">
+                Browse services
+              </PillButton>
+              <PillButton to="/me/orders" className="border border-black/15 bg-white text-black hover:bg-black hover:text-white">
+                View my orders
+              </PillButton>
+            </div>
           </div>
         ) : (
           bookings.map((b, i) => (
@@ -98,6 +129,9 @@ export default function UserBookings() {
                     <div className="flex items-center justify-between">
                       {(b.status === 'assigned' || b.status === 'in_progress') && (
                         <div className="flex flex-wrap items-center gap-2">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-black px-2.5 py-1 text-[10px] uppercase tracking-widest text-white">
+                            <MapPin size={10} /> Live map
+                          </span>
                           <button
                             onClick={() => setTrackingBooking(b)}
                             className="rounded border border-ink/30 px-3 py-1 text-xs uppercase tracking-widest text-ink transition hover:bg-ink hover:text-paper dark:border-paper/30 dark:text-paper dark:hover:bg-paper dark:hover:text-ink"

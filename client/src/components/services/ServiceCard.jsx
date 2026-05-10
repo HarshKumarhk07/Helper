@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
-import { Star, Clock, ArrowUpRight } from 'lucide-react';
+import { Star, Clock, ArrowUpRight, Heart } from 'lucide-react';
 import { formatPrice } from '../../lib/booking.js';
+import { useFavorites } from '../../context/FavoritesContext.jsx';
 
 const FALLBACK_IMAGES = [
   'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
@@ -11,6 +12,15 @@ const FALLBACK_IMAGES = [
 
 export default function ServiceCard({ service, index = 0 }) {
   const image = service.image || FALLBACK_IMAGES[index % 4];
+  const { favorites, toggleFavorite } = useFavorites();
+  
+  const isFavorited = favorites.some(fav => fav._id === service._id);
+
+  const handleFavorite = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleFavorite(service);
+  };
 
   return (
     <Link
@@ -28,8 +38,23 @@ export default function ServiceCard({ service, index = 0 }) {
         {/* Dark gradient for text/icon readability */}
         <div className="absolute inset-0 bg-gradient-to-t from-ink/60 via-ink/10 to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-500"></div>
         
+        {/* Heart Button */}
+        <button
+          type="button"
+          onClick={handleFavorite}
+          className="absolute top-4 right-4 p-3 rounded-full bg-white shadow-xl hover:shadow-2xl transition-all hover:scale-110 flex items-center justify-center border-2 border-white"
+          style={{ zIndex: 100 }}
+          title={isFavorited ? "Remove from favorites" : "Add to favorites"}
+        >
+          <Heart 
+            size={24} 
+            className={isFavorited ? "fill-red-500 text-red-500" : "text-red-400"}
+            strokeWidth={2}
+          />
+        </button>
+        
         {/* Hover Arrow Icon */}
-        <div className="absolute top-6 right-6 w-10 h-10 rounded-full bg-paper/20 backdrop-blur-md flex items-center justify-center text-paper opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500">
+        <div className="absolute bottom-6 right-6 w-10 h-10 rounded-full bg-paper/20 backdrop-blur-md flex items-center justify-center text-paper opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500">
           <ArrowUpRight size={18} strokeWidth={2} />
         </div>
 
@@ -46,14 +71,14 @@ export default function ServiceCard({ service, index = 0 }) {
         </div>
       </div>
       
-      <div className="mt-6 px-2">
-        <div className="text-[10px] uppercase tracking-[0.15em] font-bold text-ink/40 mb-1">
+      <div className="mt-4 px-2">
+        <div className="text-[12px] uppercase tracking-[0.25em] font-extrabold text-ink/90 mb-1">
           {service.category?.name || 'Service'}
         </div>
-        <h3 className="text-lg font-medium text-ink tracking-tight hover:text-ink/60 transition-colors line-clamp-1">
+        <h3 className="text-base font-bold text-ink line-clamp-2">
           {service.name}
         </h3>
-        <p className="mt-1 text-sm font-semibold text-ink/80">{formatPrice(service.price)}</p>
+        <p className="mt-2 text-sm font-bold text-ink">{formatPrice(service.price)}</p>
       </div>
     </Link>
   );

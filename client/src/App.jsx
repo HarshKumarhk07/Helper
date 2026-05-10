@@ -16,6 +16,7 @@ import RoleRedirect from './components/RoleRedirect.jsx';
 // Lazy — pulled on demand. Each becomes its own JS chunk after vite build.
 const ServicesIndex = lazy(() => import('./pages/ServicesIndex.jsx'));
 const ServiceDetail = lazy(() => import('./pages/ServiceDetail.jsx'));
+const ProductsIndex = lazy(() => import('./pages/ProductsIndex.jsx'));
 const ProductDetail = lazy(() => import('./pages/ProductDetail.jsx'));
 const BookingFlow = lazy(() => import('./pages/BookingFlow.jsx'));
 const CartPage = lazy(() => import('./pages/CartPage.jsx'));
@@ -80,7 +81,7 @@ export default function App() {
   return (
     <div className="flex min-h-screen flex-col bg-sand text-ink">
       <Navbar />
-      <main className="flex-1">
+      <main className="flex-1 pt-28">
         <Suspense fallback={<PageFallback />}>
           <Routes>
             <Route path="/" element={<Home />} />
@@ -91,6 +92,7 @@ export default function App() {
 
             <Route path="/services" element={<ServicesIndex />} />
             <Route path="/services/:id" element={<ServiceDetail />} />
+            <Route path="/products" element={<ProductsIndex />} />
             <Route path="/products/:id" element={<ProductDetail />} />
             <Route
               path="/book/:serviceId"

@@ -86,7 +86,7 @@ export default function AdminBookings() {
             className={`rounded-pill border px-4 py-2 text-xs uppercase tracking-widest transition ${
               filter === f.key
                 ? 'border-ink bg-ink text-paper'
-                : 'border-ink/30 hover:bg-ink hover:text-paper dark:border-paper/30 dark:text-paper'
+                : 'border-ink bg-ink/85 text-paper hover:bg-ink hover:text-paper dark:border-paper/50 dark:text-paper'
             }`}
           >
             {f.label}
@@ -174,7 +174,7 @@ export default function AdminBookings() {
                     {b.status === 'placed' && !b.worker && (
                       <button
                         onClick={() => onAuto(b)}
-                        className="rounded-pill border border-ink/30 px-3 py-1 text-[10px] uppercase tracking-widest hover:bg-ink hover:text-paper"
+                        className="rounded-pill border border-ink bg-ink/85 text-paper px-3 py-1 text-[10px] uppercase tracking-widest hover:bg-ink hover:text-paper dark:border-paper/50 dark:text-paper"
                       >
                         Auto
                       </button>
@@ -182,7 +182,7 @@ export default function AdminBookings() {
                     {['placed', 'assigned'].includes(b.status) && (
                       <button
                         onClick={() => onTransition(b, 'cancelled')}
-                        className="rounded-pill border border-red-300 px-3 py-1 text-[10px] uppercase tracking-widest text-red-700 hover:bg-red-700 hover:text-paper"
+                        className="rounded-pill border border-red-300 px-3 py-1 text-[10px] uppercase tracking-widest text-red-700 hover:bg-red-700 hover:text-paper dark:border-red-400/50 dark:text-red-400"
                       >
                         Cancel
                       </button>
@@ -190,7 +190,7 @@ export default function AdminBookings() {
                     {b.status === 'in_progress' && (
                       <button
                         onClick={() => onTransition(b, 'completed')}
-                        className="rounded-pill border border-ink/30 px-3 py-1 text-[10px] uppercase tracking-widest hover:bg-ink hover:text-paper"
+                        className="rounded-pill border border-ink bg-ink/85 text-paper px-3 py-1 text-[10px] uppercase tracking-widest hover:bg-ink hover:text-paper dark:border-paper/50 dark:text-paper"
                       >
                         Mark complete
                       </button>

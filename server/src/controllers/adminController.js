@@ -27,7 +27,7 @@ export const getDashboardStats = asyncHandler(async (req, res) => {
   const bookingsRevenue = bookingsRevenueResult[0]?.total || 0;
 
   const ordersRevenueResult = await Order.aggregate([
-    { $match: { status: 'delivered' } },
+    { $match: { $or: [{ status: 'delivered' }, { paymentStatus: 'paid' }] } },
     { $group: { _id: null, total: { $sum: '$totalAmount' } } }
   ]);
   const ordersRevenue = ordersRevenueResult[0]?.total || 0;
@@ -64,7 +64,7 @@ export const getDashboardStats = asyncHandler(async (req, res) => {
       { $sort: { _id: 1 } }
     ]),
     Order.aggregate([
-      { $match: { status: 'delivered', createdAt: { $gte: thirtyDaysAgo } } },
+      { $match: { $and: [ { createdAt: { $gte: thirtyDaysAgo } }, { $or: [{ status: 'delivered' }, { paymentStatus: 'paid' }] } ] } },
       { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt', timezone: '+00:00' } }, revenue: { $sum: '$totalAmount' } } },
       { $sort: { _id: 1 } }
     ]),

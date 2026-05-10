@@ -49,8 +49,8 @@ export default function ServiceDetail() {
 
   if (loading) {
     return (
-      <section className="container-velora py-32 bg-sand min-h-screen">
-        <div className="grid gap-16 lg:grid-cols-2">
+      <section className="container-velora bg-sand pt-28 pb-16 lg:pt-32 lg:pb-20">
+        <div className="grid gap-12 lg:grid-cols-2">
           <SkeletonCard />
           <div className="space-y-4">
             <div className="skeleton h-6 w-1/4 rounded-full" />
@@ -65,17 +65,23 @@ export default function ServiceDetail() {
 
   if (!service) {
     return (
-      <section className="container-velora py-40 text-center bg-sand min-h-screen">
+      <section className="container-velora bg-sand pt-32 pb-20 text-center">
         <h1 className="heading-display text-4xl text-ink">Service not found.</h1>
-        <Link to="/services" className="mt-8 inline-flex items-center gap-2 text-sm uppercase tracking-widest font-bold text-ink border-b border-ink pb-1">
-          Return to Catalog
+        <p className="mt-3 text-sm text-ink/65">
+          It may have been removed or never existed.
+        </p>
+        <Link
+          to="/services"
+          className="mt-6 inline-flex items-center gap-2 rounded-full bg-ink px-5 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-paper hover:opacity-90"
+        >
+          Browse the catalog
         </Link>
       </section>
     );
   }
 
   return (
-    <section className="bg-sand py-24 lg:py-32 min-h-screen">
+    <section className="bg-sand pt-24 pb-16 lg:pt-28 lg:pb-20">
       <div className="container-velora">
         
         <FadeUp>

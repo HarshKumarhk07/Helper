@@ -67,8 +67,17 @@ export const adminUpdateUser = asyncHandler(async (req, res) => {
 });
 
 export const updateMe = asyncHandler(async (req, res) => {
-  const updates = req.body;
-  Object.assign(req.user, updates);
+  const { kycDocuments, ...rest } = req.body || {};
+  Object.assign(req.user, rest);
+
+  // Merge kycDocuments rather than overwriting — partial uploads must keep
+  // existing URLs intact (e.g., uploading Aadhaar front shouldn't wipe PAN).
+  if (kycDocuments && typeof kycDocuments === 'object') {
+    const current =
+      req.user.kycDocuments?.toObject?.() || req.user.kycDocuments || {};
+    req.user.kycDocuments = { ...current, ...kycDocuments };
+  }
+
   await req.user.save();
   res.json({ user: req.user.toSafeJSON() });
 });

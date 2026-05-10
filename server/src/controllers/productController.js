@@ -1,12 +1,13 @@
 import Product from '../models/Product.js';
 import { ApiError, asyncHandler } from '../utils/asyncHandler.js';
+import mongoose from 'mongoose';
 import { ROLES } from '../config/roles.js';
 
 export const listProducts = asyncHandler(async (req, res) => {
-  const { category, search, lowStock, stockThreshold = 5, includeInactive } = req.query;
-  const filter = includeInactive === 'true' ? {} : { isActive: true };
+  const { category, search, q, lowStock, stockThreshold = 5 } = req.query;
+  const filter = { isActive: true }; // Only show active products by default
   if (category) filter.category = category;
-  if (search) filter.name = { $regex: search, $options: 'i' };
+  if (search || q) filter.name = { $regex: search || q, $options: 'i' };
   if (lowStock === 'true') {
     filter.stock = { $lte: Number(stockThreshold) };
   }
@@ -16,7 +17,17 @@ export const listProducts = asyncHandler(async (req, res) => {
 });
 
 export const getProduct = asyncHandler(async (req, res) => {
-  const product = await Product.findById(req.params.id);
+  const identifier = req.params.id;
+  let product = null;
+
+  // Accept either a Mongo ObjectId or a slug string. This prevents
+  // a CastError (400) when the client passes a slug instead of an id.
+  if (mongoose.isValidObjectId(identifier)) {
+    product = await Product.findById(identifier);
+  } else {
+    product = await Product.findOne({ slug: identifier });
+  }
+
   if (!product || !product.isActive) {
     throw new ApiError(404, 'Product not found');
   }

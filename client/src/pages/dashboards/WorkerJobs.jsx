@@ -66,7 +66,7 @@ export default function WorkerJobs() {
             className={`rounded-pill border px-4 py-2 text-xs uppercase tracking-widest transition ${
               filter === f.key
                 ? 'border-ink bg-ink text-paper'
-                : 'border-ink/30 hover:bg-ink hover:text-paper dark:border-paper/30 dark:text-paper'
+                : 'border-ink bg-ink/85 text-paper hover:bg-ink hover:text-paper dark:border-paper/50 dark:text-paper'
             }`}
           >
             {f.label}

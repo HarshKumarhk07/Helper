@@ -8,7 +8,7 @@ import {
   forgotPassword,
   resetPassword,
 } from '../controllers/authController.js';
-import { sendOtp, verifyOtp } from '../controllers/otpController.js';
+import { googleSignIn } from '../controllers/googleAuthController.js';
 import { requireAuth } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
 import { signupSchema, loginSchema } from '../validators/auth.schema.js';
@@ -21,8 +21,7 @@ router.post('/refresh', refresh);
 router.post('/logout', logout);
 router.post('/forgot-password', forgotPassword);
 router.post('/reset-password', resetPassword);
-router.post('/otp/send', sendOtp);
-router.post('/otp/verify', verifyOtp);
+router.post('/google', googleSignIn);
 router.get('/me', requireAuth, me);
 
 export default router;

@@ -10,7 +10,17 @@ export default function CartPage() {
 
   const productCart = cart.filter((item) => item.kind !== 'service');
   const serviceCart = cart.filter((item) => item.kind === 'service');
-  const total = productCart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const productSubtotal = productCart.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
+  const serviceSubtotal = serviceCart.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
+  const grandTotal = productSubtotal + serviceSubtotal;
+  const hasProducts = productCart.length > 0;
+  const serviceOnlyCart = !hasProducts && serviceCart.length > 0;
 
   if (cart.length === 0) {
     return (
@@ -83,33 +93,64 @@ export default function CartPage() {
         </div>
         
         <div>
-          <div className="card-rounded p-6 sticky top-24">
-            <h2 className="heading-display text-xl mb-6">ORDER SUMMARY</h2>
+          <div className="card-rounded p-6 sticky top-24 text-ink dark:text-paper">
+            <h2 className="heading-display text-xl mb-6 text-ink dark:text-paper">ORDER SUMMARY</h2>
             <div className="space-y-3 text-sm mb-6 border-b border-ink/10 dark:border-paper/10 pb-6">
-              <div className="flex justify-between">
-                <span className="text-ink/70 dark:text-paper/60">Subtotal</span>
-                <span>₹{total}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-ink/70 dark:text-paper/60">Shipping</span>
-                <span>Free</span>
-              </div>
+              {hasProducts && (
+                <div className="flex justify-between">
+                  <span className="text-ink/70 dark:text-paper/60">Products subtotal</span>
+                  <span className="text-ink dark:text-paper tabular-nums">₹{productSubtotal}</span>
+                </div>
+              )}
+              {serviceCart.length > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-ink/70 dark:text-paper/60">
+                    Services <span className="text-[10px] uppercase tracking-widest opacity-60">({serviceCart.length})</span>
+                  </span>
+                  <span className="text-ink dark:text-paper tabular-nums">₹{serviceSubtotal}</span>
+                </div>
+              )}
+              {hasProducts && (
+                <div className="flex justify-between">
+                  <span className="text-ink/70 dark:text-paper/60">Shipping</span>
+                  <span className="text-ink dark:text-paper">Free</span>
+                </div>
+              )}
             </div>
-            <div className="flex justify-between font-bold text-lg mb-8">
+            <div className="flex justify-between font-bold text-lg mb-2 text-ink dark:text-paper">
               <span>Total</span>
-              <span>₹{total}</span>
+              <span className="tabular-nums">₹{grandTotal}</span>
             </div>
             {serviceCart.length > 0 && (
-              <div className="mb-4 text-xs text-ink/60 dark:text-paper/50">
-                {serviceCart.length} service item(s) are saved in the cart and can be booked separately.
-              </div>
+              <p className="mb-6 text-xs text-ink/60 dark:text-paper/50">
+                Services are paid when you confirm each booking. Tap a service below to schedule it.
+              </p>
             )}
-            <button 
-              onClick={() => navigate('/checkout')}
-              className="w-full rounded-pill bg-ink py-3 text-sm font-medium tracking-tightish text-paper transition hover:bg-ink/90 dark:bg-paper dark:text-ink dark:hover:bg-paper/90"
-            >
-              Proceed to Checkout
-            </button>
+
+            {hasProducts ? (
+              <button
+                onClick={() => navigate('/checkout')}
+                className="w-full rounded-pill bg-ink py-3 text-sm font-semibold tracking-tightish text-paper transition hover:opacity-90 dark:bg-paper dark:text-ink"
+              >
+                Proceed to Checkout · ₹{productSubtotal}
+              </button>
+            ) : serviceOnlyCart ? (
+              <div className="space-y-2">
+                {serviceCart.map((s) => (
+                  <button
+                    key={s.product}
+                    onClick={() => navigate(`/book/${s.product}`)}
+                    className="flex w-full items-center justify-between gap-2 rounded-pill bg-ink px-4 py-2.5 text-sm font-semibold text-paper transition hover:opacity-90 dark:bg-paper dark:text-ink"
+                  >
+                    <span className="truncate">Book {s.name}</span>
+                    <span className="shrink-0 tabular-nums opacity-80">₹{s.price}</span>
+                  </button>
+                ))}
+                <p className="pt-2 text-center text-[11px] uppercase tracking-widest text-ink/50 dark:text-paper/45">
+                  Services are checked out via the booking flow
+                </p>
+              </div>
+            ) : null}
           </div>
         </div>
       </div>

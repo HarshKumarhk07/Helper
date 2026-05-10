@@ -1,5 +1,10 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  // Class-based dark mode — matches the existing ThemeContext that toggles
+  // a `dark` class on <html>. Without this, Tailwind auto-activates `dark:`
+  // styles whenever the OS is in dark mode — which makes white text land on
+  // white cards across the whole app and produces the "invisible text" bug.
+  darkMode: 'class',
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",

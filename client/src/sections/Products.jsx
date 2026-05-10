@@ -1,35 +1,63 @@
 import FadeUp from '../components/ui/FadeUp.jsx';
 import { Link } from 'react-router-dom';
 import { ArrowUpRight } from 'lucide-react';
-
-const PRODUCT_CATEGORIES = [
-  {
-    title: 'Cleaning Essentials',
-    count: '24 items',
-    image: 'https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    link: '/products',
-  },
-  {
-    title: 'Beauty & Skincare',
-    count: '36 items',
-    image: 'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    link: '/products',
-  },
-  {
-    title: 'Smart Home Devices',
-    count: '12 items',
-    image: 'https://images.unsplash.com/photo-1558002038-1055907df827?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    link: '/products',
-  },
-  {
-    title: 'Luxury Decor',
-    count: '18 items',
-    image: 'https://images.unsplash.com/photo-1505691938895-1758d7feb511?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    link: '/products',
-  },
-];
+import { useEffect, useState } from 'react';
+import { listProducts } from '../api/products.js';
+import { listCategories } from '../api/categories.js';
+import toast from 'react-hot-toast';
 
 export default function Products() {
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [categoryCounts, setCategoryCounts] = useState({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.all([
+      listProducts({ limit: 1000 })
+        .then(setProducts)
+        .catch(() => toast.error('Failed to load products')),
+      listCategories({ active: 'true' })
+        .then(setCategories)
+        .catch(() => toast.error('Failed to load categories')),
+    ]).finally(() => setLoading(false));
+  }, []);
+
+  // Calculate product counts per category
+  useEffect(() => {
+    if (products.length > 0 && categories.length > 0) {
+      const CATEGORY_MAP = {
+        'home-services': 'Repair Accessories',
+        'cleaning-services': 'Cleaning Products',
+        'beauty-wellness': 'Beauty Products',
+        'appliance-services': 'Home Appliances',
+      };
+      const counts = {};
+      categories.forEach((cat) => {
+        const productCat = CATEGORY_MAP[cat.slug];
+        counts[cat.slug] = productCat 
+          ? products.filter(p => p.category === productCat).length
+          : 0;
+      });
+      setCategoryCounts(counts);
+    }
+  }, [products, categories]);
+
+  // Default images for categories
+  const CAT_IMAGES = {
+    'home-services': 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    'cleaning-services': 'https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    'beauty-wellness': 'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    'appliance-services': 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+  };
+
+  const FEATURED_CATEGORIES = categories.slice(0, 4).map((cat) => ({
+    title: cat.name,
+    count: `${categoryCounts[cat.slug] || 0} items`,
+    slug: cat.slug,
+    image: cat.image || CAT_IMAGES[cat.slug] || 'https://images.unsplash.com/photo-1584820927498-cafe2c1c6843?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+  }));
+
   return (
     <section className="bg-sand py-24 md:py-32 relative">
       <div className="container-velora">
@@ -60,16 +88,19 @@ export default function Products() {
         </FadeUp>
 
         {/* Product Categories Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
-          {PRODUCT_CATEGORIES.map((cat, i) => (
-            <FadeUp key={cat.title} delay={i * 0.1}>
-              <Link to={cat.link} className="group block w-full h-full cursor-pointer relative overflow-hidden rounded-[2rem] bg-paper shadow-sm transition-all duration-700 hover:shadow-2xl">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+          {(FEATURED_CATEGORIES.length > 0 ? FEATURED_CATEGORIES : categories.slice(0, 4)).map((cat, i) => (
+            <FadeUp key={cat.title || cat.slug} delay={i * 0.1}>
+              <Link to={`/products?category=${cat.slug}`} className="group block w-full h-full cursor-pointer relative overflow-hidden rounded-[2rem] bg-paper shadow-sm transition-all duration-700 hover:shadow-2xl">
                 
-                <div className="relative aspect-[4/5] overflow-hidden">
+                <div className="relative aspect-[4/5] overflow-hidden bg-gradient-to-br from-sand to-ash">
                   <img
                     src={cat.image}
                     alt={cat.title}
                     loading="lazy"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                    }}
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
                   />
                   {/* Subtle dark gradient overlay for text readability */}

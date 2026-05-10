@@ -38,11 +38,22 @@ export const adminUpdateUserSchema = z.object({
   isActive: z.boolean().optional(),
 });
 
+const optionalUrl = z.string().url().optional().or(z.literal(''));
+
 export const updateMeSchema = z.object({
   name: z.string().min(2).max(80).optional(),
   phone: z.string().max(20).optional(),
   avatar: z.string().url().optional(),
-  passportPhoto: z.string().url().optional().or(z.literal('')),
+  passportPhoto: optionalUrl,
   aadhaarNumber: z.string().trim().regex(/^\d{12}$/).optional().or(z.literal('')),
   panNumber: z.string().trim().regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/i).optional().or(z.literal('')),
+  kycDocuments: z
+    .object({
+      aadhaarFront: optionalUrl,
+      aadhaarBack: optionalUrl,
+      panCard: optionalUrl,
+      selfie: optionalUrl,
+    })
+    .partial()
+    .optional(),
 });

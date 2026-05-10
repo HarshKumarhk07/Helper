@@ -1,17 +1,19 @@
-﻿import { Router } from 'express';
-import { requireAuth, requireRole } from '../middleware/auth.js';
-import { ROLES } from '../config/roles.js';
+import { Router } from 'express';
+import { requireAuth } from '../middleware/auth.js';
 import { upload } from '../utils/cloudinary.js';
 
 const router = Router();
 
-router.post('/', requireAuth, requireRole(ROLES.ADMIN, ROLES.MANAGER), (req, res, next) => {
+// Any authenticated user can upload an image — used for profile photos and
+// inline KYC document uploads. Cloudinary applies type + size limits inside
+// `utils/cloudinary.js` (8x.png/jpg/jpeg/webp, capped at 800x800).
+router.post('/', requireAuth, (req, res) => {
   upload.single('image')(req, res, (err) => {
     if (err) {
-      console.error('Upload error:', err.message);
-      return res.status(500).json({ 
+      console.error('[upload] error:', err.message);
+      return res.status(500).json({
         error: 'Image upload failed',
-        details: process.env.NODE_ENV !== 'production' ? err.message : undefined
+        details: process.env.NODE_ENV !== 'production' ? err.message : undefined,
       });
     }
     if (!req.file) {

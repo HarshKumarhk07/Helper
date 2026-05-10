@@ -181,7 +181,7 @@ export default function AdminWorkers() {
       </FadeUp>
 
       <div className="card-rounded overflow-x-auto">
-        <table className="w-full text-left text-sm">
+        <table className="w-full text-left text-sm text-ink">
           <thead className="bg-sand/50 text-xs uppercase tracking-widest text-ink/60 dark:bg-[#18181A] dark:text-paper/60">
             <tr>
               <th className="p-4 font-normal">Worker</th>
@@ -210,10 +210,10 @@ export default function AdminWorkers() {
                   key={w._id}
                   className="transition hover:bg-sand/30 dark:hover:bg-[#18181A]/50"
                 >
-                  <td className="p-4">
-                    <div className="font-medium">{w.name}</div>
-                    <div className="text-xs text-ink/60 dark:text-paper/50">{w.email}</div>
-                    <div className="text-xs text-ink/60 dark:text-paper/50">{w.phone || '—'}</div>
+                  <td className="p-4 text-ink">
+                    <div className="font-medium text-ink">{w.name}</div>
+                    <div className="text-xs text-ink">{w.email}</div>
+                    <div className="text-xs text-ink">{w.phone || '—'}</div>
                   </td>
                   <td className="p-4">
                     <span
@@ -229,13 +229,13 @@ export default function AdminWorkers() {
                       </div>
                     )}
                   </td>
-                  <td className="p-4 text-xs text-ink/70 dark:text-paper/70">
+                  <td className="p-4 text-xs text-ink">
                     {fmtDate(w.kycSubmittedAt)}
                   </td>
-                  <td className="p-4 text-xs text-ink/70 dark:text-paper/70">
+                  <td className="p-4 text-xs text-ink">
                     {fmtDate(w.kycReviewedAt)}
                     {w.kycReviewedBy?.name && (
-                      <div className="text-ink/50 dark:text-paper/40">
+                      <div className="text-ink">
                         by {w.kycReviewedBy.name}
                       </div>
                     )}
@@ -248,13 +248,13 @@ export default function AdminWorkers() {
                           setRejectMode(false);
                           setRejectReason('');
                         }}
-                        className="text-xs uppercase tracking-widest hover:underline"
+                        className="text-xs uppercase tracking-widest text-ink hover:underline"
                       >
                         Quick review
                       </button>
                       <Link
                         to={`/admin/workers/${w._id}`}
-                        className="text-xs uppercase tracking-widest text-ink/60 hover:underline dark:text-paper/55"
+                        className="text-xs uppercase tracking-widest text-ink hover:underline"
                       >
                         Full profile →
                       </Link>
