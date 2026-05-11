@@ -137,7 +137,7 @@ export default function Navbar() {
             className="flex-shrink-0 flex justify-center items-center gap-2 group"
           >
             <div className="h-8 w-8 rounded-full bg-ink text-paper flex items-center justify-center font-serif text-lg group-hover:bg-ink/80 transition-colors">U</div>
-            <span className="font-semibold tracking-[0.15em] text-sm uppercase text-ink">Velora House</span>
+            <span className="font-semibold tracking-[0.15em] text-sm uppercase text-ink">UrbanEase</span>
           </Link>
 
           {/* Right Actions */}

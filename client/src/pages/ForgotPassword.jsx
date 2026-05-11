@@ -95,7 +95,7 @@ export default function ForgotPassword() {
               </h1>
               <div className="h-px w-16 bg-gradient-to-r from-ink/40 to-transparent dark:from-paper/40" />
               <p className="max-w-md text-base leading-relaxed text-ink/70 dark:text-paper/65">
-                Enter the email tied to your Velora House account and we'll send a secure link
+                Enter the email tied to your UrbanEase account and we'll send a secure link
                 to set a new password. The link expires after 30 minutes.
               </p>
             </div>

@@ -100,7 +100,7 @@ export default function Signup() {
         phone: form.phone.trim(),
         password: form.password,
       });
-      toast.success('Welcome to Velora House');
+      toast.success('Welcome to UrbanEase');
       navigate('/dashboard', { replace: true });
     } catch (err) {
       const message = friendlyError(err);
@@ -152,7 +152,7 @@ export default function Signup() {
             <div className="space-y-5">
               <h1 className="font-display text-[clamp(2.4rem,5vw,4.25rem)] font-light leading-[1.05] tracking-tightest text-ink">
                 Join
-                <span className="mt-1 block font-semibold">Velora House.</span>
+                <span className="mt-1 block font-semibold">UrbanEase.</span>
               </h1>
               <div className="h-px w-16 bg-gradient-to-r from-ink/40 to-transparent dark:from-paper/40" />
               <p className="max-w-md text-base leading-relaxed text-ink/70 dark:text-paper/65">

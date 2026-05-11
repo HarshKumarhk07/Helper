@@ -53,7 +53,7 @@ export const sendEmail = async ({ to, subject, html, text }) => {
   if (!transport) return { skipped: true, reason: 'smtp_not_configured' };
   try {
     const info = await transport.sendMail({
-      from: process.env.MAIL_FROM || `Velora House <${process.env.SMTP_USER}>`,
+      from: process.env.MAIL_FROM || `UrbanEase <${process.env.SMTP_USER}>`,
       to,
       subject,
       html,
@@ -125,14 +125,14 @@ const stripHtml = (html = '') => html.replace(/<[^>]+>/g, '').replace(/\s+/g, ' 
 const wrapEmail = (title, bodyHtml) => `
   <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:560px;margin:0 auto;background:#faf6ef;color:#1a1a1a;border-radius:14px;overflow:hidden;border:1px solid #e7e1d6;">
     <div style="padding:24px 28px;border-bottom:1px solid #e7e1d6;background:#1a1a1a;color:#faf6ef;">
-      <div style="font-size:11px;letter-spacing:0.18em;text-transform:uppercase;opacity:0.7;">Velora House</div>
+      <div style="font-size:11px;letter-spacing:0.18em;text-transform:uppercase;opacity:0.7;">UrbanEase</div>
       <div style="font-size:22px;font-weight:600;margin-top:6px;">${title}</div>
     </div>
     <div style="padding:24px 28px;line-height:1.6;font-size:14px;">
       ${bodyHtml}
     </div>
     <div style="padding:18px 28px;font-size:11px;color:#777;border-top:1px solid #e7e1d6;background:#f3eee5;">
-      You're receiving this because you have an account with Velora House.
+      You're receiving this because you have an account with UrbanEase.
     </div>
   </div>
 `;
@@ -167,7 +167,7 @@ export const notifyBookingPlaced = ({ user, booking }) =>
     }),
     sendSMS({
       to: user?.phone,
-      body: `Velora House: Booking ${booking.code} confirmed for ${inr(booking.amount)}. We'll assign a worker shortly.`,
+      body: `UrbanEase: Booking ${booking.code} confirmed for ${inr(booking.amount)}. We'll assign a worker shortly.`,
     }),
   ]);
 
@@ -192,11 +192,11 @@ export const notifyWorkerAssigned = ({ user, worker, booking, startPin }) =>
     }),
     sendSMS({
       to: user?.phone,
-      body: `Velora House: ${worker?.name || 'A worker'} assigned to ${booking.code}. Start PIN: ${startPin}. Share only on arrival.`,
+      body: `UrbanEase: ${worker?.name || 'A worker'} assigned to ${booking.code}. Start PIN: ${startPin}. Share only on arrival.`,
     }),
     sendSMS({
       to: worker?.phone,
-      body: `Velora House: New job ${booking.code}. ${fmtAddress(booking.address)}. Ask user for Start PIN on arrival.`,
+      body: `UrbanEase: New job ${booking.code}. ${fmtAddress(booking.address)}. Ask user for Start PIN on arrival.`,
     }),
   ]);
 
@@ -215,7 +215,7 @@ export const notifyJobStarted = ({ user, booking, endPin }) =>
     }),
     sendSMS({
       to: user?.phone,
-      body: `Velora House: Service ${booking.code} started. End PIN: ${endPin}. Share only after completion.`,
+      body: `UrbanEase: Service ${booking.code} started. End PIN: ${endPin}. Share only after completion.`,
     }),
   ]);
 
@@ -225,7 +225,7 @@ export const notifyJobCompleted = ({ user, booking, invoiceUrl }) =>
       to: user?.email,
       subject: `Service completed · ${booking.code}`,
       html: wrapEmail(
-        'Thank you for choosing Velora House',
+        'Thank you for choosing UrbanEase',
         `
         <p>Your service has been completed.</p>
         <table style="width:100%;border-collapse:collapse;margin:14px 0;">
@@ -239,7 +239,7 @@ export const notifyJobCompleted = ({ user, booking, invoiceUrl }) =>
     }),
     sendSMS({
       to: user?.phone,
-      body: `Velora House: ${booking.code} completed. ${inr(booking.amount)}. Rate your experience in the app.`,
+      body: `UrbanEase: ${booking.code} completed. ${inr(booking.amount)}. Rate your experience in the app.`,
     }),
   ]);
 
@@ -259,12 +259,12 @@ export const notifyBookingCancelled = ({ user, worker, booking, reason }) =>
     }),
     sendSMS({
       to: user?.phone,
-      body: `Velora House: Booking ${booking.code} cancelled.${reason ? ' ' + reason : ''}`,
+      body: `UrbanEase: Booking ${booking.code} cancelled.${reason ? ' ' + reason : ''}`,
     }),
     worker?.phone
       ? sendSMS({
           to: worker.phone,
-          body: `Velora House: Booking ${booking.code} cancelled. Job removed from your list.`,
+          body: `UrbanEase: Booking ${booking.code} cancelled. Job removed from your list.`,
         })
       : Promise.resolve({ skipped: true }),
   ]);
@@ -273,19 +273,19 @@ export const notifyKycApproved = ({ worker }) =>
   Promise.allSettled([
     sendEmail({
       to: worker?.email,
-      subject: 'KYC approved · Welcome to Velora House',
+      subject: 'KYC approved · Welcome to UrbanEase',
       html: wrapEmail(
         'You are verified',
         `
         <p>Hi ${worker?.name || 'there'},</p>
-        <p>Your KYC has been approved. You can now start receiving job assignments through the Velora House worker app.</p>
+        <p>Your KYC has been approved. You can now start receiving job assignments through the UrbanEase worker app.</p>
         <p style="color:#666;">Make sure your availability is set so dispatch can reach you.</p>
         `
       ),
     }),
     sendSMS({
       to: worker?.phone,
-      body: `Velora House: KYC approved. You can start accepting jobs now.`,
+      body: `UrbanEase: KYC approved. You can start accepting jobs now.`,
     }),
   ]);
 
@@ -306,7 +306,7 @@ export const notifyKycRejected = ({ worker, reason }) =>
     }),
     sendSMS({
       to: worker?.phone,
-      body: `Velora House: KYC rejected.${reason ? ' Reason: ' + reason : ''} Re-upload documents in the app.`,
+      body: `UrbanEase: KYC rejected.${reason ? ' Reason: ' + reason : ''} Re-upload documents in the app.`,
     }),
   ]);
 
@@ -330,7 +330,7 @@ export const notifyOrderPlaced = ({ user, order }) =>
     }),
     sendSMS({
       to: user?.phone,
-      body: `Velora House: Order ${order.code || order._id} placed for ${inr(order.totalAmount || order.total)}.`,
+      body: `UrbanEase: Order ${order.code || order._id} placed for ${inr(order.totalAmount || order.total)}.`,
     }),
   ]);
 
@@ -346,7 +346,7 @@ export const notifyOrderStatus = ({ user, order, status }) =>
     }),
     sendSMS({
       to: user?.phone,
-      body: `Velora House: Order ${order.code || order._id} is now ${status}.`,
+      body: `UrbanEase: Order ${order.code || order._id} is now ${status}.`,
     }),
   ]);
 
@@ -354,12 +354,12 @@ export const notifyPasswordReset = ({ user, resetUrl, expiresInMinutes }) =>
   Promise.allSettled([
     sendEmail({
       to: user?.email,
-      subject: 'Reset your Velora House password',
+      subject: 'Reset your UrbanEase password',
       html: wrapEmail(
         'Password reset requested',
         `
         <p>Hi ${user?.name || 'there'},</p>
-        <p>We received a request to reset the password on your Velora House account. Click the button below to choose a new password.</p>
+        <p>We received a request to reset the password on your UrbanEase account. Click the button below to choose a new password.</p>
         <p style="margin:20px 0;">
           <a href="${resetUrl}" style="display:inline-block;padding:12px 22px;background:#1a1a1a;color:#faf6ef;border-radius:8px;text-decoration:none;font-weight:600;">Reset password</a>
         </p>
@@ -370,7 +370,7 @@ export const notifyPasswordReset = ({ user, resetUrl, expiresInMinutes }) =>
     }),
     sendSMS({
       to: user?.phone,
-      body: `Velora House: Password reset requested. Open the link in your email — expires in ${expiresInMinutes} min. If this wasn't you, ignore.`,
+      body: `UrbanEase: Password reset requested. Open the link in your email — expires in ${expiresInMinutes} min. If this wasn't you, ignore.`,
     }),
   ]);
 
@@ -407,7 +407,7 @@ export const notifySupportTicketReplied = ({ user, ticket, replyText, fromAgent 
         fromAgent ? 'We replied to your ticket' : 'Message added',
         `
         <p>Hi ${user?.name || 'there'},</p>
-        <p>${fromAgent ? 'A Velora House agent has replied' : 'A new message was added'} to ticket <strong>${ticket.code}</strong>.</p>
+        <p>${fromAgent ? 'An UrbanEase agent has replied' : 'A new message was added'} to ticket <strong>${ticket.code}</strong>.</p>
         <blockquote style="margin:14px 0;padding:12px 16px;border-left:3px solid #1a1a1a;background:#f3eee5;color:#333;">
           ${escapeHtml(replyText).slice(0, 600)}${replyText.length > 600 ? '…' : ''}
         </blockquote>
@@ -418,7 +418,7 @@ export const notifySupportTicketReplied = ({ user, ticket, replyText, fromAgent 
     fromAgent
       ? sendSMS({
           to: user?.phone,
-          body: `Velora House: New reply on support ticket ${ticket.code}. Open the app to view.`,
+          body: `UrbanEase: New reply on support ticket ${ticket.code}. Open the app to view.`,
         })
       : Promise.resolve({ skipped: true }),
   ]);

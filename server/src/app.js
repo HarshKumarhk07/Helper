@@ -63,7 +63,7 @@ app.get('/', (_req, res) => {
 });
 
 app.get('/api/health', (_req, res) =>
-  res.json({ status: 'ok', service: 'velora-house', time: new Date().toISOString() })
+  res.json({ status: 'ok', service: 'urbanease', time: new Date().toISOString() })
 );
 
 app.use('/api/auth', authLimiter, authRoutes);

@@ -11,7 +11,7 @@ const adminSettingsSchema = new mongoose.Schema(
     gstRate: { type: Number, min: 0, max: 1, default: 0.18 },
 
     // Branding / contact
-    platformName: { type: String, default: 'Velora House', maxlength: 80 },
+    platformName: { type: String, default: 'UrbanEase', maxlength: 80 },
     supportEmail: { type: String, default: '', maxlength: 120 },
     supportPhone: { type: String, default: '', maxlength: 30 },
     supportHoursLabel: { type: String, default: 'Mon–Sat, 9am–9pm IST', maxlength: 80 },

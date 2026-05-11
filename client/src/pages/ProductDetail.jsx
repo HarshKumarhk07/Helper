@@ -133,7 +133,7 @@ export default function ProductDetail() {
                 <h3 className="text-xs font-bold uppercase tracking-widest text-ink/40">Product Details</h3>
                 <p className="text-base leading-relaxed text-ink/80 font-light">
                   {product.description ||
-                    'Premium quality item exclusively available through Velora House. Designed to elevate your daily routine and beautifully blend into your modern home.'}
+                    'Premium quality item exclusively available through UrbanEase. Designed to elevate your daily routine and beautifully blend into your modern home.'}
                 </p>
               </div>
 

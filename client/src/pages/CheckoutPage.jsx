@@ -113,7 +113,7 @@ export default function CheckoutPage() {
           key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_xxxx', 
           amount: rpOrder.amount,
           currency: rpOrder.currency,
-          name: "Velora House",
+          name: "UrbanEase",
           description: "Premium Order Checkout",
           order_id: rpOrder.id,
           handler: async function (response) {
@@ -174,7 +174,7 @@ export default function CheckoutPage() {
           className="mb-12 text-center"
         >
           <h1 className="heading-display text-4xl md:text-5xl text-ink">SECURE CHECKOUT</h1>
-          <p className="mt-4 text-ink/60 text-sm font-medium">Complete your order with Velora House.</p>
+          <p className="mt-4 text-ink/60 text-sm font-medium">Complete your order with UrbanEase.</p>
         </motion.div>
         
         <form onSubmit={handleCheckout} className="grid md:grid-cols-[1fr,360px] gap-8 items-start">

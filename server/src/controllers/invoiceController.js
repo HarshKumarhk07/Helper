@@ -35,7 +35,7 @@ export const generateInvoice = asyncHandler(async (req, res) => {
   doc
     .fillColor('#18181a')
     .fontSize(28)
-    .text('VELORA HOUSE', { align: 'right' })
+    .text('URBANEASE', { align: 'right' })
     .fontSize(10)
     .text('Luxury Minimal Services', { align: 'right' })
     .moveDown();
@@ -121,7 +121,7 @@ export const generateInvoice = asyncHandler(async (req, res) => {
   doc
     .fontSize(10)
     .fillColor('#b8b8b9')
-    .text('Thank you for choosing Velora House.', 50, 700, { align: 'center', width: 500 });
+    .text('Thank you for choosing UrbanEase.', 50, 700, { align: 'center', width: 500 });
 
   doc.end();
 });

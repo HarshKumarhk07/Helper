@@ -7,7 +7,7 @@ export default function PhilosophySection() {
           <div className="md:col-span-2">
             <div className="font-mono text-gray-400 text-xs mb-2">Timeless Style, Modern Spirit</div>
             <div className="font-mono text-black text-lg mb-6">
-              At Velora House, every collection blends refined silhouettes with contemporary accents, offering clothing that feels elevated, versatile, and effortlessly stylish.
+              At UrbanEase, every collection blends refined silhouettes with contemporary accents, offering clothing that feels elevated, versatile, and effortlessly stylish.
             </div>
             <div className="font-mono text-gray-400 text-xs mb-2">Responsibly Crafted Pieces</div>
             <div className="font-mono text-black text-base mb-6">

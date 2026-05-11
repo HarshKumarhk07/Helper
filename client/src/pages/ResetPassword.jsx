@@ -147,7 +147,7 @@ export default function ResetPassword() {
               </h1>
               <div className="h-px w-16 bg-gradient-to-r from-ink/40 to-transparent dark:from-paper/40" />
               <p className="max-w-md text-base leading-relaxed text-ink/70 dark:text-paper/65">
-                Choose something memorable but unique to Velora House. Once saved, you'll be
+                Choose something memorable but unique to UrbanEase. Once saved, you'll be
                 redirected to sign in.
               </p>
             </div>

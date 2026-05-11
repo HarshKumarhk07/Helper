@@ -110,7 +110,7 @@ export default function Login() {
             <div className="space-y-5">
               <h1 className="font-display text-[clamp(2.4rem,5vw,4.25rem)] font-light leading-[1.05] tracking-tightest text-ink">
                 Sign in to
-                <span className="mt-1 block font-semibold">Velora House.</span>
+                <span className="mt-1 block font-semibold">UrbanEase.</span>
               </h1>
               <div className="h-px w-16 bg-gradient-to-r from-ink/40 to-transparent dark:from-paper/40" />
               <p className="max-w-md text-base leading-relaxed text-ink/70 dark:text-paper/65">
@@ -239,7 +239,7 @@ export default function Login() {
                   </form>
 
                   <div className="border-t border-ink/10 pt-5 text-center text-sm text-ink/65 dark:border-paper/10 dark:text-paper/60">
-                    New to Velora House?{' '}
+                    New to UrbanEase?{' '}
                     <Link
                       to="/signup"
                       className="font-semibold text-ink underline-offset-4 hover:underline dark:text-paper"

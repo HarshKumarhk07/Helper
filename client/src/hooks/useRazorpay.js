@@ -69,8 +69,8 @@ export default function useRazorpay() {
       type, // 'booking' | 'ecommerce' | 'order' (alias of ecommerce)
       referenceId,
       receipt,
-      name = 'Velora House',
-      description = 'Velora House payment',
+      name = 'UrbanEase',
+      description = 'UrbanEase payment',
       prefill,
       theme,
       onSuccess,
