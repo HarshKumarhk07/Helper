@@ -1,5 +1,5 @@
 import FadeUp from '../components/ui/FadeUp.jsx';
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
@@ -16,7 +16,7 @@ const CATEGORIES = [
     image: 'https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', // Replaced image
   },
   { 
-    label: 'Beauty & Wellness', 
+    label: 'Beauty | Wellness', 
     slug: 'beauty-wellness', 
     image: 'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
   },
@@ -30,16 +30,22 @@ const CATEGORIES = [
 export default function Categories() {
   const [hoveredIdx, setHoveredIdx] = useState(0);
 
+
   return (
     <section id="categories" className="bg-sand py-24 md:py-32 relative overflow-hidden">
       <div className="container-velora">
         
         <FadeUp>
-          <div className="flex items-center gap-4 mb-16">
-            <span className="text-xs font-bold tracking-[0.2em] text-ink/50 uppercase">
-              Curated Selection
-            </span>
-            <div className="h-[1px] w-12 bg-ink/20"></div>
+          <div className="mb-16 flex items-center gap-4">
+            <div className="flex h-11 w-11 items-center justify-center rounded-full border border-ink/10 bg-paper shadow-sm">
+              <ShieldCheck size={18} className="text-ink/70" />
+            </div>
+            <div>
+              <span className="block text-xs font-semibold uppercase tracking-[0.22em] text-ink/50">
+                Professional Standards
+              </span>
+              <div className="mt-3 h-[1px] w-16 bg-ink/20"></div>
+            </div>
           </div>
         </FadeUp>
 
@@ -96,7 +102,7 @@ export default function Categories() {
               <div className="absolute inset-0 rounded-[3rem] border border-ink/10 pointer-events-none z-20"></div>
             </div>
             
-            {/* Minimalist Decoration */}
+            {/* Professional seal accent */}
             <motion.div 
               animate={{ rotate: 360 }}
               transition={{ duration: 30, repeat: Infinity, ease: "linear" }}

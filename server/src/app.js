@@ -40,7 +40,10 @@ app.set('etag', false);
 app.use(helmet());
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    origin: [
+      process.env.CLIENT_URL || 'http://localhost:5173',
+      'https://urban-company-seven.vercel.app',
+    ],
     credentials: true,
   })
 );
@@ -53,6 +56,10 @@ const authLimiter = rateLimit({
   max: 50,
   standardHeaders: true,
   legacyHeaders: false,
+});
+
+app.get('/', (_req, res) => {
+  res.status(200).send('API Running Successfully');
 });
 
 app.get('/api/health', (_req, res) =>
