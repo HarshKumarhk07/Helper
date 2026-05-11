@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const baseURL = import.meta.env.VITE_API_URL
+export const API_BASE_URL = import.meta.env.VITE_API_URL
   ? `${import.meta.env.VITE_API_URL}/api`
   : '/api';
 
@@ -8,13 +8,13 @@ const ACCESS_KEY = 'velora_access_token';
 const REFRESH_KEY = 'velora_refresh_token';
 
 export const api = axios.create({
-  baseURL,
+  baseURL: API_BASE_URL,
   withCredentials: false,
 });
 
 // A bare axios instance for the refresh call so it bypasses our interceptors
 // and can't recursively trigger another refresh.
-const refreshClient = axios.create({ baseURL });
+const refreshClient = axios.create({ baseURL: API_BASE_URL });
 
 // Centralized auth-event broadcaster so AuthContext can react.
 const authListeners = new Set();
