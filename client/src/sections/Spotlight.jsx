@@ -74,23 +74,35 @@ export default function Spotlight() {
           </h2>
         </FadeUp>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
           {CARDS.map((c, i) => (
-            <FadeUp key={c.title} delay={i * 0.05}>
+            <FadeUp key={c.title} delay={i * 0.05} className="h-full">
+              {/* Mobile: stacked image-on-top layout. sm+: side-by-side. */}
               <Link
                 to={c.to}
-                className={`group relative block h-56 md:h-60 rounded-2xl overflow-hidden ${c.bg} shadow-soft hover:shadow-card hover:-translate-y-1 transition-all duration-500`}
+                className={`group relative flex flex-col sm:block h-full sm:h-56 md:h-60 rounded-2xl overflow-hidden ${c.bg} shadow-soft hover:shadow-card hover:-translate-y-1 transition-all duration-500`}
               >
-                {/* Background image (right side, masked into the panel) */}
+                {/* MOBILE image (top half) */}
+                <div className="relative w-full aspect-[16/9] sm:hidden overflow-hidden">
+                  <img
+                    src={c.image}
+                    alt={c.imageAlt}
+                    loading="lazy"
+                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-[1.2s] group-hover:scale-110"
+                  />
+                </div>
+
+                {/* DESKTOP image (right-half, masked) — hidden on mobile */}
                 <img
                   src={c.image}
-                  alt={c.imageAlt}
+                  alt=""
                   loading="lazy"
-                  className="absolute inset-y-0 right-0 h-full w-[58%] object-cover opacity-90 transition-transform duration-[1.2s] group-hover:scale-110"
+                  aria-hidden
+                  className="hidden sm:block absolute inset-y-0 right-0 h-full w-[58%] object-cover opacity-90 transition-transform duration-[1.2s] group-hover:scale-110"
                 />
-                {/* Solid panel + fade so left text stays readable */}
                 <div
-                  className={`absolute inset-y-0 left-0 w-[60%] ${c.bg}`}
+                  aria-hidden
+                  className={`hidden sm:block absolute inset-y-0 left-0 w-[60%] ${c.bg}`}
                   style={{
                     WebkitMaskImage:
                       'linear-gradient(to right, #000 75%, transparent 100%)',
@@ -100,33 +112,33 @@ export default function Spotlight() {
                 />
 
                 {/* Content */}
-                <div className="relative z-10 h-full flex flex-col justify-between p-5 md:p-6 w-[60%]">
+                <div className="relative z-10 flex flex-1 flex-col justify-between p-3.5 sm:p-5 md:p-6 sm:h-full sm:w-[60%]">
                   <div>
                     {c.badge && (
                       <span
-                        className={`inline-block ${c.badge.cls} text-[10px] md:text-[11px] font-semibold tracking-wide px-2.5 py-1 rounded-md mb-3`}
+                        className={`inline-block ${c.badge.cls} text-[10px] md:text-[11px] font-semibold tracking-wide px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md mb-2 sm:mb-3 whitespace-nowrap`}
                       >
                         {c.badge.label}
                       </span>
                     )}
                     <h3
-                      className={`${c.text} text-[15px] md:text-[17px] font-semibold leading-snug tracking-tight`}
+                      className={`${c.text} text-[13px] sm:text-[15px] md:text-[17px] font-semibold leading-snug tracking-tight line-clamp-3`}
                     >
                       {c.title}
                     </h3>
                     {c.subtitle && (
                       <p
-                        className={`mt-1 text-xs md:text-[13px] ${c.text} opacity-80 leading-snug`}
+                        className={`mt-1 text-[11px] sm:text-xs md:text-[13px] ${c.text} opacity-80 leading-snug line-clamp-2`}
                       >
                         {c.subtitle}
                       </p>
                     )}
                     {c.chips && (
-                      <div className="mt-3 flex flex-wrap gap-2">
+                      <div className="mt-2 sm:mt-3 flex flex-wrap gap-1.5 sm:gap-2">
                         {c.chips.map((chip) => (
                           <span
                             key={chip}
-                            className="text-[10px] md:text-[11px] font-medium px-2.5 py-1 rounded-full bg-paper/60 text-ink/70 border border-ink/8"
+                            className="text-[10px] md:text-[11px] font-medium px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-paper/60 text-ink/70 border border-ink/8"
                           >
                             {chip}
                           </span>
@@ -137,7 +149,7 @@ export default function Spotlight() {
 
                   {c.cta && (
                     <span
-                      className={`inline-flex w-fit items-center justify-center rounded-full text-xs font-semibold px-4 py-2 transition-colors duration-300 ${c.ctaCls}`}
+                      className={`mt-3 inline-flex w-fit items-center justify-center whitespace-nowrap rounded-full text-[11px] sm:text-xs font-semibold px-3 sm:px-4 py-1.5 sm:py-2 transition-colors duration-300 ${c.ctaCls}`}
                     >
                       {c.cta}
                     </span>

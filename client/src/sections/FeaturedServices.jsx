@@ -96,70 +96,78 @@ export default function FeaturedServices() {
           </div>
         </FadeUp>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 md:gap-6">
           {FEATURED.map((svc, i) => {
             const disc = discountPct(svc.price, svc.mrp);
             return (
-              <FadeUp key={svc.title} delay={i * 0.05}>
+              <FadeUp key={svc.title} delay={i * 0.05} className="h-full">
                 <div className="group h-full flex flex-col rounded-2xl bg-paper border border-ink/8 overflow-hidden shadow-soft hover:shadow-[0_24px_60px_-20px_rgba(0,0,0,0.18)] hover:-translate-y-1 transition-all duration-500">
                   {/* Image */}
-                  <div className="relative aspect-[4/3] overflow-hidden bg-ash/40">
+                  <div className="relative aspect-[4/3] overflow-hidden bg-ash/40 shrink-0">
                     <img
                       src={svc.image}
                       alt={svc.title}
                       loading="lazy"
                       className="h-full w-full object-cover transition-transform duration-[1.2s] group-hover:scale-[1.07]"
                     />
-                    {/* Tag */}
-                    {svc.tag && (
-                      <span className="absolute top-3 left-3 rounded-full bg-paper/95 backdrop-blur px-3 py-1 text-[11px] font-semibold tracking-wide text-ink shadow-sm">
-                        {svc.tag}
-                      </span>
-                    )}
-                    {/* Discount */}
-                    {disc != null && (
-                      <span className="absolute top-3 right-3 rounded-full bg-emerald-500 text-white px-2.5 py-1 text-[11px] font-bold shadow-sm">
+                    {/* Only one badge on mobile to prevent collision: prefer discount > tag */}
+                    {disc != null ? (
+                      <span className="absolute top-2 left-2 sm:top-3 sm:right-3 sm:left-auto rounded-full bg-emerald-500 text-white px-2 py-0.5 sm:px-2.5 sm:py-1 text-[10px] sm:text-[11px] font-bold shadow-sm">
                         {disc}% OFF
+                      </span>
+                    ) : (
+                      svc.tag && (
+                        <span className="absolute top-2 left-2 sm:top-3 sm:left-3 rounded-full bg-paper/95 backdrop-blur px-2 py-0.5 sm:px-3 sm:py-1 text-[10px] sm:text-[11px] font-semibold tracking-wide text-ink shadow-sm">
+                          {svc.tag}
+                        </span>
+                      )
+                    )}
+                    {/* Tag also visible on sm+ when there's a discount */}
+                    {disc != null && svc.tag && (
+                      <span className="hidden sm:inline-block absolute top-3 left-3 rounded-full bg-paper/95 backdrop-blur px-3 py-1 text-[11px] font-semibold tracking-wide text-ink shadow-sm">
+                        {svc.tag}
                       </span>
                     )}
                   </div>
 
                   {/* Body */}
-                  <div className="flex flex-col flex-1 p-5">
-                    <h3 className="text-base font-semibold text-ink tracking-tight line-clamp-1">
+                  <div className="flex flex-col flex-1 p-3 sm:p-5">
+                    {/* Title — fixed 2-line height on mobile so all cards align */}
+                    <h3 className="text-[13px] sm:text-base font-semibold text-ink tracking-tight line-clamp-2 leading-snug min-h-[2.4rem] sm:min-h-[1.6rem]">
                       {svc.title}
                     </h3>
-                    <p className="mt-1 text-xs text-ink/55 line-clamp-2 leading-relaxed">
+                    {/* Blurb — fixed 2-line height */}
+                    <p className="mt-1 text-[11px] sm:text-xs text-ink/55 line-clamp-2 leading-relaxed min-h-[2.1rem] sm:min-h-[2.4rem]">
                       {svc.blurb}
                     </p>
 
                     {/* Rating + duration */}
-                    <div className="mt-3 flex items-center gap-3 text-xs">
-                      <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-0.5 font-semibold text-emerald-700">
-                        <Star size={12} className="fill-emerald-600 text-emerald-600" />
+                    <div className="mt-2.5 sm:mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] sm:text-xs">
+                      <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-1.5 py-0.5 sm:px-2 font-semibold text-emerald-700">
+                        <Star size={11} className="fill-emerald-600 text-emerald-600" />
                         {svc.rating}
                       </span>
                       <span className="text-ink/45">({svc.reviews})</span>
-                      <span className="inline-flex items-center gap-1 text-ink/50">
+                      <span className="hidden sm:inline-flex items-center gap-1 text-ink/50">
                         <Clock size={12} /> {svc.duration}
                       </span>
                     </div>
 
-                    {/* Price + CTA */}
-                    <div className="mt-5 pt-4 border-t border-ink/8 flex items-end justify-between gap-3">
+                    {/* Price + CTA — pinned to the bottom via mt-auto so cards have symmetric footers */}
+                    <div className="mt-auto pt-3 sm:pt-4 border-t border-ink/8 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 sm:gap-3">
                       <div>
-                        <div className="text-lg font-semibold text-ink leading-none">
+                        <div className="text-base sm:text-lg font-semibold text-ink leading-none">
                           ₹{svc.price.toLocaleString('en-IN')}
                         </div>
                         {svc.mrp > svc.price && (
-                          <div className="mt-1 text-xs text-ink/40 line-through">
+                          <div className="mt-0.5 sm:mt-1 text-[11px] sm:text-xs text-ink/40 line-through">
                             ₹{svc.mrp.toLocaleString('en-IN')}
                           </div>
                         )}
                       </div>
                       <Link
                         to={`/services?cat=${svc.slug}`}
-                        className="inline-flex items-center gap-1.5 rounded-full bg-ink text-paper text-xs font-semibold px-4 py-2.5 hover:bg-[#6f5cff] transition-all duration-300 hover:translate-x-0.5"
+                        className="inline-flex w-full sm:w-auto justify-center items-center gap-1.5 whitespace-nowrap rounded-full bg-ink text-paper text-[11px] sm:text-xs font-semibold px-3 sm:px-4 py-2 sm:py-2.5 hover:bg-[#6f5cff] transition-all duration-300 hover:translate-x-0.5"
                       >
                         Book now <ArrowRight size={12} />
                       </Link>
