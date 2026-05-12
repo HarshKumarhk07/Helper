@@ -6,9 +6,6 @@ import {
   EyeOff,
   Mail,
   Lock,
-  Sparkles,
-  ShieldCheck,
-  KeyRound,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -90,9 +87,9 @@ export default function Login() {
       />
 
       <section
-        className="relative flex min-h-[100dvh] items-center justify-center px-4 sm:px-6"
+        className="relative flex min-h-[100dvh] items-start justify-center px-4 sm:px-6"
         style={{
-          paddingTop: 'calc(7rem + env(safe-area-inset-top))',
+          paddingTop: 'calc(1rem + env(safe-area-inset-top))',
           paddingBottom: 'calc(2.5rem + env(safe-area-inset-bottom))',
         }}
       >
@@ -103,8 +100,8 @@ export default function Login() {
             transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
             className="space-y-7 lg:space-y-9"
           >
-            <span className="inline-flex items-center gap-2 rounded-full border border-ink/15 bg-paper/70 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-ink/70 backdrop-blur dark:border-paper/15 dark:bg-paper/[0.04] dark:text-paper/70">
-              <Sparkles size={12} className="opacity-70" /> Members area
+            <span className="inline-flex items-center rounded-full border px-3 py-1 text-ink/90 font-semibold backdrop-blur dark:border-paper/15 dark:bg-paper/[0.04]">
+              Members area
             </span>
 
             <div className="space-y-5">
@@ -113,21 +110,21 @@ export default function Login() {
                 <span className="mt-1 block font-semibold">UrbanEase.</span>
               </h1>
               <div className="h-px w-16 bg-gradient-to-r from-ink/40 to-transparent dark:from-paper/40" />
-              <p className="max-w-md text-base leading-relaxed text-ink/70 dark:text-paper/65">
+              <p className="max-w-md text-base font-semibold leading-relaxed text-ink/85">
                 Your bookings, orders, and saved looks live in one elegant place. Sign in to
                 pick up where you left off.
               </p>
             </div>
 
-            <ul className="hidden flex-wrap items-center gap-x-3 gap-y-2 text-xs uppercase tracking-[0.18em] text-ink/55 dark:text-paper/55 lg:flex">
-              <li className="inline-flex items-center gap-1.5 rounded-full border border-ink/10 bg-paper/60 px-3 py-1 dark:border-paper/10 dark:bg-paper/[0.03]">
-                <ShieldCheck size={11} /> Secure auth
+            <ul className="hidden flex-wrap items-center gap-x-3 gap-y-2 text-xs uppercase tracking-[0.18em] text-ink/70 lg:flex">
+              <li className="inline-flex items-center rounded-full border border-ink/10 px-3 py-1 font-semibold dark:border-paper/10 dark:bg-paper/[0.03]">
+                Secure auth
               </li>
-              <li className="inline-flex items-center gap-1.5 rounded-full border border-ink/10 bg-paper/60 px-3 py-1 dark:border-paper/10 dark:bg-paper/[0.03]">
-                <KeyRound size={11} /> Google sign-in
+              <li className="inline-flex items-center rounded-full border border-ink/10 px-3 py-1 font-semibold dark:border-paper/10 dark:bg-paper/[0.03]">
+                Google sign-in
               </li>
-              <li className="inline-flex items-center gap-1.5 rounded-full border border-ink/10 bg-paper/60 px-3 py-1 dark:border-paper/10 dark:bg-paper/[0.03]">
-                <Sparkles size={11} /> Curated for you
+              <li className="inline-flex items-center rounded-full border border-ink/10 px-3 py-1 font-semibold dark:border-paper/10 dark:bg-paper/[0.03]">
+                Curated for you
               </li>
             </ul>
           </motion.div>
@@ -238,7 +235,7 @@ export default function Login() {
                     <PrimaryCTA loading={submitting} label="Sign in" />
                   </form>
 
-                  <div className="border-t border-ink/10 pt-5 text-center text-sm text-ink/65 dark:border-paper/10 dark:text-paper/60">
+                  <div className="border-t border-ink/10 pt-5 text-center text-sm text-ink/75 dark:border-paper/10 dark:text-paper/65">
                     New to UrbanEase?{' '}
                     <Link
                       to="/signup"
@@ -250,7 +247,7 @@ export default function Login() {
                 </div>
               </div>
 
-              <p className="mt-4 text-center text-[11px] uppercase tracking-[0.18em] text-ink/40 dark:text-paper/40">
+              <p className="mt-4 text-center text-[11px] uppercase tracking-[0.18em] text-ink/50 dark:text-paper/45">
                 Protected by enterprise-grade encryption
               </p>
             </div>

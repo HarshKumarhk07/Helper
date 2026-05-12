@@ -39,6 +39,9 @@ export default {
       animation: {
         'fade-up': 'fadeUp 0.7s ease-out both',
         'float': 'float 6s ease-in-out infinite',
+        'blob-1': 'blob1 18s ease-in-out infinite',
+        'blob-2': 'blob2 22s ease-in-out infinite',
+        'gradient-x': 'gradientX 14s ease infinite',
       },
       keyframes: {
         fadeUp: {
@@ -48,7 +51,21 @@ export default {
         float: {
           '0%, 100%': { transform: 'translateY(0)' },
           '50%': { transform: 'translateY(-10px)' },
-        }
+        },
+        blob1: {
+          '0%, 100%': { transform: 'translate(0, 0) scale(1)' },
+          '33%': { transform: 'translate(30px, -40px) scale(1.06)' },
+          '66%': { transform: 'translate(-20px, 30px) scale(0.96)' },
+        },
+        blob2: {
+          '0%, 100%': { transform: 'translate(0, 0) scale(1)' },
+          '33%': { transform: 'translate(-40px, 30px) scale(1.05)' },
+          '66%': { transform: 'translate(25px, -25px) scale(0.97)' },
+        },
+        gradientX: {
+          '0%, 100%': { 'background-position': '0% 50%' },
+          '50%': { 'background-position': '100% 50%' },
+        },
       },
     },
   },

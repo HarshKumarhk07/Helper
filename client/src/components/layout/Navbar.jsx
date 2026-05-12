@@ -1,9 +1,11 @@
-import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { Search, Heart, ShoppingBag, User as UserIcon, Menu, X } from 'lucide-react';
+import { Link, useNavigate, useLocation as useRouterLocation } from 'react-router-dom';
+import { Search, Heart, ShoppingBag, User as UserIcon, Menu, X, MapPin, ChevronDown } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useCart } from '../../context/CartContext.jsx';
 import { useFavorites } from '../../context/FavoritesContext.jsx';
+import { useLocation } from '../../context/LocationContext.jsx';
+import LocationModal from '../location/LocationModal.jsx';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const NAV = [
@@ -32,7 +34,18 @@ export default function Navbar() {
   const { user, isAuthenticated, logout } = useAuth();
   const { cart } = useCart();
   const { favorites } = useFavorites();
+  const { location, openLocationModal } = useLocation();
   const navigate = useNavigate();
+  const routerLocation = useRouterLocation();
+
+  // Compute active link manually — pathname-only matching makes all
+  // /services?cat=... links share the same active state, so we have to
+  // compare the full path+query.
+  const currentUrl = `${routerLocation.pathname}${routerLocation.search}`;
+  const isNavActive = (to) => {
+    if (to === '/') return routerLocation.pathname === '/';
+    return currentUrl === to;
+  };
   const [open, setOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchValue, setSearchValue] = useState('');
@@ -76,6 +89,7 @@ export default function Navbar() {
   };
 
   return (
+    <>
     <header
       className={`fixed inset-x-0 z-50 transition-all duration-500 flex justify-center w-full px-4 md:px-10 ${
         scrolled ? 'top-3' : 'top-4'
@@ -93,30 +107,26 @@ export default function Navbar() {
           
           {/* Desktop Navigation */}
           <nav className="hidden min-w-0 items-center gap-6 md:flex flex-1">
-            {NAV.map((n) => (
-              <NavLink
-                key={n.to}
-                to={n.to}
-                end={n.to === '/'}
-                className={({ isActive }) =>
-                  `text-sm font-medium tracking-tightish transition-colors duration-300 relative group ${
-                    isActive ? 'text-ink' : 'text-ink/60 hover:text-ink'
-                  }`
-                }
-              >
-                {({ isActive }) => (
-                  <>
-                    {n.label}
-                    {isActive && (
-                      <motion.div 
-                        layoutId="nav-indicator"
-                        className="absolute -bottom-1 left-0 right-0 h-0.5 bg-ink rounded-full"
-                      />
-                    )}
-                  </>
-                )}
-              </NavLink>
-            ))}
+            {NAV.map((n) => {
+              const active = isNavActive(n.to);
+              return (
+                <Link
+                  key={n.to}
+                  to={n.to}
+                  className={`no-underline text-sm font-medium tracking-tightish transition-colors duration-300 relative ${
+                    active ? 'text-ink' : 'text-ink/60 hover:text-ink'
+                  }`}
+                >
+                  {n.label}
+                  {active && (
+                    <motion.div
+                      layoutId="nav-indicator"
+                      className="absolute -bottom-1 left-0 right-0 h-0.5 bg-ink rounded-full"
+                    />
+                  )}
+                </Link>
+              );
+            })}
           </nav>
 
           {/* Mobile Menu Button */}
@@ -141,7 +151,34 @@ export default function Navbar() {
           </Link>
 
           {/* Right Actions */}
-          <div className="flex flex-1 items-center justify-end gap-4 md:gap-5">
+          <div className="flex flex-1 items-center justify-end gap-3 md:gap-4">
+            {/* Select Location */}
+            <button
+              type="button"
+              onClick={openLocationModal}
+              className="hidden md:inline-flex items-center gap-2 max-w-[200px] pr-3 mr-1 border-r border-ink/10 text-ink/80 hover:text-ink transition-colors"
+              aria-label="Select location"
+            >
+              <MapPin size={16} strokeWidth={1.75} className="shrink-0 text-[#6f5cff]" />
+              <span
+                className="text-sm font-medium tracking-tightish truncate max-w-[160px]"
+                title={location?.address || location?.label || 'Select Location'}
+              >
+                {location?.label || 'Select Location'}
+              </span>
+              <ChevronDown size={14} strokeWidth={1.75} className="shrink-0 text-ink/40" />
+            </button>
+
+            {/* Mobile: compact pin */}
+            <button
+              type="button"
+              onClick={openLocationModal}
+              className="md:hidden inline-flex items-center justify-center text-ink/80 hover:text-ink transition-colors"
+              aria-label="Select location"
+            >
+              <MapPin size={20} strokeWidth={1.5} className="text-[#6f5cff]" />
+            </button>
+
             <div className="flex items-center">
               {searchOpen ? (
                 <motion.form
@@ -312,35 +349,48 @@ export default function Navbar() {
                   {/* Main Navigation */}
                   <nav className="px-3 py-4 space-y-1">
                     <div className="text-[11px] font-semibold uppercase tracking-widest text-ink px-3 py-2">Navigation</div>
-                    {NAV.map((n) => (
-                      <NavLink
-                        key={n.to}
-                        to={n.to}
-                        end={n.to === '/'}
-                        onClick={() => setOpen(false)}
-                        className={({ isActive }) =>
-                          `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 relative group ${
-                            isActive
+                    {NAV.map((n) => {
+                      const active = isNavActive(n.to);
+                      return (
+                        <Link
+                          key={n.to}
+                          to={n.to}
+                          onClick={() => setOpen(false)}
+                          className={`no-underline flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 relative ${
+                            active
                               ? 'text-ink bg-ink/8'
                               : 'text-ink hover:text-ink hover:bg-ink/5'
-                          }`
-                        }
-                      >
-                        {({ isActive }) => (
-                          <>
-                            <span className={`h-1.5 w-1.5 rounded-full transition-all ${isActive ? 'bg-ink' : 'bg-ink/30'}`} />
-                            {n.label}
-                            {isActive && (
-                              <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-ink rounded-r-lg" />
-                            )}
-                          </>
-                        )}
-                      </NavLink>
-                    ))}
+                          }`}
+                        >
+                          <span className={`h-1.5 w-1.5 rounded-full transition-all ${active ? 'bg-ink' : 'bg-ink/30'}`} />
+                          {n.label}
+                          {active && (
+                            <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-ink rounded-r-lg" />
+                          )}
+                        </Link>
+                      );
+                    })}
                   </nav>
 
-                  {/* Favorites */}
+                  {/* Location */}
                   <div className="px-3 py-2 mt-2">
+                    <button
+                      onClick={() => {
+                        setOpen(false);
+                        openLocationModal();
+                      }}
+                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-ink hover:text-ink hover:bg-ink/5 transition-all duration-200"
+                    >
+                      <MapPin size={18} className="flex-shrink-0 text-[#6f5cff]" />
+                      <span className="flex-1 text-left text-ink truncate">
+                        {location?.label || 'Select location'}
+                      </span>
+                      <ChevronDown size={14} className="text-ink/40 flex-shrink-0" />
+                    </button>
+                  </div>
+
+                  {/* Favorites */}
+                  <div className="px-3 py-2">
                     <button
                       onClick={() => {
                         setOpen(false);
@@ -415,5 +465,7 @@ export default function Navbar() {
         </AnimatePresence>
       </div>
     </header>
+    <LocationModal />
+    </>
   );
 }

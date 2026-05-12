@@ -9,9 +9,6 @@ import {
   Lock,
   Eye,
   EyeOff,
-  Sparkles,
-  Gift,
-  ShieldCheck,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { Field, PrimaryCTA, ErrorBanner } from '../components/auth/AuthFormPrimitives.jsx';
@@ -64,10 +61,6 @@ export default function Signup() {
   const [submitting, setSubmitting] = useState(false);
   const [agreed, setAgreed] = useState(true);
   const [error, setError] = useState('');
-
-  if (bootstrapping) return null;
-  if (isAuthenticated) return <Navigate to="/dashboard" replace />;
-
   const strength = useMemo(() => scorePassword(form.password), [form.password]);
   const fieldErrors = useMemo(() => {
     const errs = {};
@@ -79,6 +72,9 @@ export default function Signup() {
     }
     return errs;
   }, [form.email, form.password]);
+
+  if (bootstrapping) return null;
+  if (isAuthenticated) return <Navigate to="/dashboard" replace />;
 
   const canSubmit =
     form.name.trim().length >= 2 &&
@@ -132,9 +128,9 @@ export default function Signup() {
       />
 
       <section
-        className="relative flex min-h-[100dvh] items-center justify-center px-4 sm:px-6"
+        className="relative flex min-h-[100dvh] items-start justify-center px-4 sm:px-6"
         style={{
-          paddingTop: 'calc(7rem + env(safe-area-inset-top))',
+          paddingTop: 'calc(1rem + env(safe-area-inset-top))',
           paddingBottom: 'calc(2.5rem + env(safe-area-inset-bottom))',
         }}
       >
@@ -145,56 +141,35 @@ export default function Signup() {
             transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
             className="space-y-7 lg:space-y-9"
           >
-            <span className="inline-flex items-center gap-2 rounded-full border border-ink/15 bg-paper/70 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-ink/70 backdrop-blur dark:border-paper/15 dark:bg-paper/[0.04] dark:text-paper/70">
-              <Sparkles size={12} className="opacity-70" /> Create your account
+            <span className="inline-flex items-center gap-2 rounded-full border border-ink/15 bg-paper/80 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-ink/90 backdrop-blur dark:border-paper/15 dark:bg-paper/[0.04] ">
+              Create your account
             </span>
 
-            <div className="space-y-5">
-              <h1 className="font-display text-[clamp(2.4rem,5vw,4.25rem)] font-light leading-[1.05] tracking-tightest text-ink">
+            <div className="space-y-6">
+              <h1 className="font-display text-[clamp(2.4rem,5vw,4.25rem)] font-light leading-[1.02] tracking-tightest text-ink">
                 Join
                 <span className="mt-1 block font-semibold">UrbanEase.</span>
               </h1>
-              <div className="h-px w-16 bg-gradient-to-r from-ink/40 to-transparent dark:from-paper/40" />
-              <p className="max-w-md text-base leading-relaxed text-ink/70 dark:text-paper/65">
+              <div className="h-px w-20 bg-gradient-to-r from-ink/40 to-transparent dark:from-paper/40" />
+              <p className="max-w-lg text-lg font-medium leading-relaxed text-ink/90 dark:text-paper/75">
                 Book vetted urban services and shop the heritage collection from one elegant
                 account. Workers and managers are invited by an admin.
               </p>
             </div>
 
             {/* Benefits — only on desktop, kept tight */}
-            <ul className="hidden space-y-3 text-sm text-ink/75 lg:block dark:text-paper/70">
-              <li className="flex items-start gap-3">
-                <span className="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-ink/[0.06] text-ink dark:bg-paper/[0.06] dark:text-paper">
-                  <ShieldCheck size={14} />
-                </span>
-                <span>
-                  <strong className="font-semibold text-ink dark:text-paper">
-                    Verified professionals
-                  </strong>{' '}
-                  for every booking — KYC-checked, rated, on schedule.
-                </span>
+            <ul className="hidden space-y-4 text-sm lg:block">
+              <li className="flex flex-col gap-1">
+                <span className="font-semibold text-ink dark:text-paper">Verified professionals</span>
+                <span className="text-ink/70 dark:text-paper/65">for every booking — KYC-checked, rated, on schedule.</span>
               </li>
-              <li className="flex items-start gap-3">
-                <span className="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-ink/[0.06] text-ink dark:bg-paper/[0.06] dark:text-paper">
-                  <Gift size={14} />
-                </span>
-                <span>
-                  <strong className="font-semibold text-ink dark:text-paper">
-                    First-order welcome offers
-                  </strong>{' '}
-                  unlocked the moment your account is created.
-                </span>
+              <li className="flex flex-col gap-1">
+                <span className="font-semibold text-ink dark:text-paper">First-order welcome offers</span>
+                <span className="text-ink/70 dark:text-paper/65">unlocked the moment your account is created.</span>
               </li>
-              <li className="flex items-start gap-3">
-                <span className="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-ink/[0.06] text-ink dark:bg-paper/[0.06] dark:text-paper">
-                  <Sparkles size={14} />
-                </span>
-                <span>
-                  <strong className="font-semibold text-ink dark:text-paper">
-                    Curated for you
-                  </strong>{' '}
-                  — bookings, orders, wallet, support, all in one place.
-                </span>
+              <li className="flex flex-col gap-1">
+                <span className="font-semibold text-ink dark:text-paper">Curated for you</span>
+                <span className="text-ink/70 dark:text-paper/65">— bookings, orders, wallet, support, all in one place.</span>
               </li>
             </ul>
           </motion.div>
@@ -369,7 +344,7 @@ export default function Signup() {
                     disabled={!canSubmit}
                   />
 
-                  <div className="border-t border-ink/10 pt-5 text-center text-sm text-ink/65 dark:border-paper/10 dark:text-paper/60">
+                  <div className="border-t border-ink/10 pt-5 text-center text-sm text-ink/75 dark:border-paper/10 dark:text-paper/65">
                     Already have an account?{' '}
                     <Link
                       to="/login"
@@ -381,7 +356,7 @@ export default function Signup() {
                 </form>
               </div>
 
-              <p className="mt-4 text-center text-[11px] uppercase tracking-[0.18em] text-ink/40 dark:text-paper/40">
+              <p className="mt-4 text-center text-[11px] uppercase tracking-[0.18em] text-ink/50 dark:text-paper/45">
                 Protected by enterprise-grade encryption
               </p>
             </div>
