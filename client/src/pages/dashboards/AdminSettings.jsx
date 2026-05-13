@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { Save, Plug, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Save } from 'lucide-react';
 import DashboardShell from './DashboardShell.jsx';
 import FadeUp from '../../components/ui/FadeUp.jsx';
 import { getSettings, updateSettings } from '../../api/settings.js';
@@ -14,14 +14,12 @@ export default function AdminSettings() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [integrations, setIntegrations] = useState(null);
   const [form, setForm] = useState(null);
 
   const load = () => {
     setLoading(true);
     getSettings()
-      .then(({ settings, integrations }) => {
-        setIntegrations(integrations);
+      .then(({ settings }) => {
         setForm({
           platformCommissionRate: Math.round((settings.platformCommissionRate || 0) * 1000) / 10,
           gstRate: Math.round((settings.gstRate || 0) * 1000) / 10,
@@ -213,57 +211,6 @@ export default function AdminSettings() {
             </div>
           )}
         </div>
-
-        <FadeUp>
-          <div className="card-rounded sticky top-24 self-start p-5">
-            <div className="flex items-center gap-2 text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
-              <Plug size={14} /> Integrations
-            </div>
-            <div className="mt-4 space-y-3 text-sm">
-              <IntegrationRow
-                name="Razorpay"
-                ok={integrations?.razorpay?.configured}
-                detail={integrations?.razorpay?.keyId || 'Add RAZORPAY_KEY_ID + SECRET in .env'}
-              />
-              <IntegrationRow
-                name="Cloudinary"
-                ok={integrations?.cloudinary?.configured}
-                detail={integrations?.cloudinary?.cloudName || 'Add CLOUDINARY_* in .env'}
-              />
-              <IntegrationRow
-                name="Email (SMTP)"
-                ok={integrations?.smtp?.configured}
-                detail={integrations?.smtp?.host || 'Add SMTP_* in .env'}
-              />
-              <IntegrationRow
-                name="SMS (Twilio)"
-                ok={integrations?.twilio?.configured}
-                detail={integrations?.twilio?.phone || 'Add TWILIO_* in .env'}
-              />
-              <IntegrationRow
-                name="Google Maps"
-                ok={integrations?.googleMaps?.configured}
-                detail={
-                  integrations?.googleMaps?.configured
-                    ? 'API key set'
-                    : 'Add GOOGLE_MAPS_API_KEY in .env'
-                }
-              />
-            </div>
-            <div className="mt-4 rounded-xl border border-amber-300 bg-amber-50/60 p-3 text-xs text-amber-800 dark:border-amber-400/20 dark:bg-amber-400/5 dark:text-amber-200">
-              <div className="flex items-start gap-2">
-                <AlertTriangle size={14} className="mt-0.5 shrink-0" />
-                <div>
-                  Secrets are environment-driven. To change them, edit
-                  <code className="mx-1 rounded bg-black/10 px-1 py-0.5 dark:bg-white/10">
-                    server/.env
-                  </code>
-                  and restart.
-                </div>
-              </div>
-            </div>
-          </div>
-        </FadeUp>
       </div>
     </DashboardShell>
   );
@@ -327,22 +274,3 @@ function NumberField({ label, value, onChange, hint, disabled, step, min, max })
   );
 }
 
-function IntegrationRow({ name, ok, detail }) {
-  return (
-    <div className="flex items-start justify-between gap-3 rounded-xl border border-ink/10 p-3 dark:border-paper/10">
-      <div>
-        <div className="font-medium">{name}</div>
-        <div className="mt-0.5 text-xs text-ink/60 dark:text-paper/50">{detail}</div>
-      </div>
-      {ok ? (
-        <span className="inline-flex items-center gap-1 text-xs text-green-600 dark:text-green-300">
-          <CheckCircle2 size={14} /> Live
-        </span>
-      ) : (
-        <span className="inline-flex items-center gap-1 text-xs text-amber-700 dark:text-amber-300">
-          <AlertTriangle size={14} /> Off
-        </span>
-      )}
-    </div>
-  );
-}
