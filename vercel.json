@@ -1,9 +1,8 @@
 {
-  "buildCommand": "bash build.sh",
-  "outputDirectory": "client/dist",
-  "cleanUrls": true,
-  "trailingSlash": false,
   "rewrites": [
-    { "source": "/((?!api/).*)", "destination": "/index.html" }
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
   ]
 }
