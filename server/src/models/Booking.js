@@ -75,6 +75,8 @@ const bookingSchema = new mongoose.Schema(
     startPin: { type: String, select: false },
     endPin: { type: String, select: false },
     amount: { type: Number, required: true, min: 0 },
+    couponCode: { type: String, default: null },
+    discountAmount: { type: Number, default: 0 },
     paymentMode: { type: String, enum: PAYMENT_MODE_LIST, default: PAYMENT_MODE.COD },
     paymentStatus: {
       type: String,

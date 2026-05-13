@@ -107,11 +107,11 @@ export default function ResetPassword() {
       {/* Layered, premium background */}
       <div
         aria-hidden
-        className="pointer-events-none fixed inset-0 -z-10 bg-paper dark:bg-[#0E0E10]"
+        className="pointer-events-none fixed inset-0 -z-10 bg-paper"
       />
       <div
         aria-hidden
-        className="pointer-events-none fixed inset-0 -z-10 opacity-70 dark:opacity-50"
+        className="pointer-events-none fixed inset-0 -z-10 opacity-70"
         style={{
           backgroundImage:
             'radial-gradient(60rem 60rem at 12% 0%, rgba(26,26,26,0.06), transparent 60%), radial-gradient(50rem 50rem at 100% 100%, rgba(26,26,26,0.05), transparent 55%)',
@@ -119,7 +119,7 @@ export default function ResetPassword() {
       />
       <div
         aria-hidden
-        className="pointer-events-none fixed inset-x-0 top-0 -z-10 h-[40vh] bg-gradient-to-b from-sand/60 to-transparent dark:from-paper/[0.03]"
+        className="pointer-events-none fixed inset-x-0 top-0 -z-10 h-[40vh] bg-gradient-to-b from-sand/60 to-transparent.03]"
       />
 
       <section
@@ -136,7 +136,7 @@ export default function ResetPassword() {
             transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
             className="space-y-6 lg:space-y-9"
           >
-            <span className="inline-flex items-center gap-2 rounded-full border border-ink/15 bg-paper/70 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-ink/70 backdrop-blur dark:border-paper/15 dark:bg-paper/[0.04] dark:text-paper/70">
+            <span className="inline-flex items-center gap-2 rounded-full border border-ink/15 bg-paper/70 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-ink/70 backdrop-blur.04]">
               <ShieldCheck size={12} className="opacity-70" /> Account security
             </span>
 
@@ -145,8 +145,8 @@ export default function ResetPassword() {
                 Set a new
                 <span className="mt-1 block font-semibold">password.</span>
               </h1>
-              <div className="h-px w-16 bg-gradient-to-r from-ink/40 to-transparent dark:from-paper/40" />
-              <p className="max-w-md text-base leading-relaxed text-ink/70 dark:text-paper/65">
+              <div className="h-px w-16 bg-gradient-to-r from-ink/40 to-transparent" />
+              <p className="max-w-md text-base leading-relaxed text-ink/70">
                 Choose something memorable but unique to UrbanEase. Once saved, you'll be
                 redirected to sign in.
               </p>
@@ -163,15 +163,15 @@ export default function ResetPassword() {
             <div className="relative">
               <div
                 aria-hidden
-                className="absolute -inset-4 -z-10 rounded-[32px] bg-gradient-to-br from-ink/5 via-transparent to-ink/[0.02] blur-2xl dark:from-paper/[0.04] dark:to-paper/[0.02]"
+                className="absolute -inset-4 -z-10 rounded-[32px] bg-gradient-to-br from-ink/5 via-transparent to-ink/[0.02] blur-2xl.04].02]"
               />
 
-              <div className="overflow-hidden rounded-[28px] border border-ink/10 bg-paper/95 shadow-card backdrop-blur-xl dark:border-paper/10 dark:bg-[#141417]/85">
+              <div className="overflow-hidden rounded-[28px] border border-ink/10 bg-paper/95 shadow-card backdrop-blur-xl">
                 <div className="px-6 pt-6 pb-1 sm:px-8 sm:pt-8">
-                  <h2 className="text-[26px] font-semibold leading-tight tracking-tight text-ink dark:text-paper">
+                  <h2 className="text-[26px] font-semibold leading-tight tracking-tight text-ink">
                     {done ? 'All set' : 'New password'}
                   </h2>
-                  <p className="mt-1 text-sm text-ink/60 dark:text-paper/55">
+                  <p className="mt-1 text-sm text-ink/60">
                     {done
                       ? 'Redirecting you to sign in…'
                       : tokenMissing
@@ -182,7 +182,7 @@ export default function ResetPassword() {
 
                 <div className="space-y-4 px-6 pb-6 pt-5 sm:px-8 sm:pb-8">
                   {tokenMissing ? (
-                    <div className="flex items-start gap-2 rounded-xl border border-amber-300 bg-amber-50/70 px-3 py-2.5 text-sm text-amber-900 dark:border-amber-400/30 dark:bg-amber-400/[0.06] dark:text-amber-200">
+                    <div className="flex items-start gap-2 rounded-xl border border-amber-300 bg-amber-50/70 px-3 py-2.5 text-sm text-amber-900.06]">
                       <AlertTriangle size={14} className="mt-0.5 shrink-0" />
                       <div>
                         Open the link from the password-reset email, or{' '}
@@ -196,7 +196,7 @@ export default function ResetPassword() {
                       </div>
                     </div>
                   ) : done ? (
-                    <div className="flex items-start gap-2 rounded-xl border border-emerald-300 bg-emerald-50/70 px-3 py-2.5 text-sm text-emerald-900 dark:border-emerald-400/30 dark:bg-emerald-400/[0.06] dark:text-emerald-200">
+                    <div className="flex items-start gap-2 rounded-xl border border-emerald-300 bg-emerald-50/70 px-3 py-2.5 text-sm text-emerald-900.06]">
                       <CheckCircle2 size={14} className="mt-0.5 shrink-0" />
                       <div>Password updated successfully. Taking you to sign in…</div>
                     </div>
@@ -221,7 +221,7 @@ export default function ResetPassword() {
                             <button
                               type="button"
                               onClick={() => setShowPassword((v) => !v)}
-                              className="text-ink/45 transition-colors hover:text-ink dark:text-paper/45 dark:hover:text-paper"
+                              className="text-ink/45 transition-colors hover:text-ink:text-paper"
                               aria-label={showPassword ? 'Hide password' : 'Show password'}
                               tabIndex={-1}
                             >
@@ -242,12 +242,12 @@ export default function ResetPassword() {
                                       ? strengthBar[
                                           Math.min(strength.score, strengthBar.length - 1)
                                         ]
-                                      : 'bg-ink/10 dark:bg-paper/10'
+                                      : 'bg-ink/10'
                                   }`}
                                 />
                               ))}
                             </div>
-                            <span className="w-16 text-right text-[10px] font-medium uppercase tracking-[0.16em] text-ink/55 dark:text-paper/55">
+                            <span className="w-16 text-right text-[10px] font-medium uppercase tracking-[0.16em] text-ink/55">
                               {strength.label}
                             </span>
                           </div>
@@ -281,10 +281,10 @@ export default function ResetPassword() {
                     </form>
                   )}
 
-                  <div className="border-t border-ink/10 pt-5 text-center text-sm text-ink/65 dark:border-paper/10 dark:text-paper/60">
+                  <div className="border-t border-ink/10 pt-5 text-center text-sm text-ink/65">
                     <Link
                       to="/login"
-                      className="font-semibold text-ink underline-offset-4 hover:underline dark:text-paper"
+                      className="font-semibold text-ink underline-offset-4 hover:underline"
                     >
                       Back to sign in
                     </Link>
@@ -292,7 +292,7 @@ export default function ResetPassword() {
                 </div>
               </div>
 
-              <p className="mt-4 text-center text-[11px] uppercase tracking-[0.18em] text-ink/40 dark:text-paper/40">
+              <p className="mt-4 text-center text-[11px] uppercase tracking-[0.18em] text-ink/40">
                 Protected by enterprise-grade encryption
               </p>
             </div>

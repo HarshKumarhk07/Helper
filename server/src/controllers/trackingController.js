@@ -18,7 +18,7 @@ const populateBooking = (q) =>
 // If we don't have a cached route yet but the worker has a known position,
 // we synchronously ask OSRM for one — kept short via the routing util's timeout.
 export const getTrackingState = asyncHandler(async (req, res) => {
-  const booking = await populateBooking(Booking.findById(req.params.id));
+  const booking = await populateBooking(Booking.findById(req.params.id).select('+startPin +endPin'));
   if (!booking) throw new ApiError(404, 'Booking not found');
 
   // Authorization — the customer who made the booking, the assigned worker, or any admin/manager.
@@ -72,6 +72,8 @@ export const getTrackingState = asyncHandler(async (req, res) => {
       worker: booking.worker,
       user: booking.user,
       address: booking.address,
+      startPin: isOwner || isPrivileged ? booking.startPin : undefined,
+      endPin: isOwner || isPrivileged ? booking.endPin : undefined,
     },
     destination: dest,
     workerLocation,

@@ -24,17 +24,17 @@ export default function ReviewModal({ booking, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/80 p-4 backdrop-blur-sm">
-      <div className="relative w-full max-w-md overflow-hidden rounded-2xl bg-paper shadow-2xl dark:bg-[#18181A]">
+      <div className="relative w-full max-w-md overflow-hidden rounded-2xl bg-paper shadow-2xl">
         <button
           onClick={onClose}
-          className="absolute right-4 top-4 z-10 rounded-full bg-paper p-2 text-ink shadow hover:bg-sand dark:bg-[#28282A] dark:text-paper"
+          className="absolute right-4 top-4 z-10 rounded-full bg-paper p-2 text-ink shadow hover:bg-sand"
         >
           <X size={20} />
         </button>
 
         <form onSubmit={handleSubmit} className="p-6">
-          <h2 className="heading-display text-2xl font-bold mb-6 text-ink dark:text-paper">RATE YOUR EXPERIENCE</h2>
-          <p className="text-sm text-ink/70 dark:text-paper/60 mb-6">
+          <h2 className="heading-display text-2xl font-bold mb-6 text-ink">RATE YOUR EXPERIENCE</h2>
+          <p className="text-sm text-ink/70 mb-6">
             How was the service provided for {booking.service?.name}?
           </p>
 
@@ -44,7 +44,7 @@ export default function ReviewModal({ booking, onClose }) {
                 key={star}
                 type="button"
                 onClick={() => setRating(star)}
-                className={`transition ${star <= rating ? 'text-yellow-500' : 'text-ink/20 dark:text-paper/20'}`}
+                className={`transition ${star <= rating ? 'text-yellow-500' : 'text-ink/20'}`}
               >
                 <Star size={32} fill={star <= rating ? 'currentColor' : 'none'} />
               </button>
@@ -55,7 +55,7 @@ export default function ReviewModal({ booking, onClose }) {
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             placeholder="Tell us more about your experience (optional)"
-            className="w-full rounded-xl border border-ink/20 bg-transparent p-3 text-sm focus:border-ink focus:outline-none dark:border-paper/20 dark:focus:border-paper mb-6 h-32 resize-none"
+            className="w-full rounded-xl border border-ink/20 bg-transparent p-3 text-sm focus:border-ink focus:outline-none:border-paper mb-6 h-32 resize-none"
           />
 
           <button

@@ -2,10 +2,15 @@ import { useEffect, useMemo, useState } from 'react';
 import { CalendarDays, Clock, Sun, Sunrise, Moon, ChevronLeft, ChevronRight, Users } from 'lucide-react';
 import { getServiceSlots } from '../../api/slots.js';
 
+const localDateString = (d) => {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 const todayISO = () => {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  return d.toISOString().slice(0, 10);
+  return localDateString(new Date());
 };
 
 const fmtTime = (iso) => {
@@ -26,7 +31,7 @@ const buildDateOptions = (startOffset = 0, count = 7) => {
     d.setDate(d.getDate() + startOffset + i);
     d.setHours(0, 0, 0, 0);
     opts.push({
-      value: d.toISOString().slice(0, 10),
+      value: localDateString(d),
       weekday: d.toLocaleDateString(undefined, { weekday: 'short' }),
       day: d.getDate(),
       month: d.toLocaleDateString(undefined, { month: 'short' }),

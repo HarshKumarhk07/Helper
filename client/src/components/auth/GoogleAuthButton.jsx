@@ -69,11 +69,11 @@ export default function GoogleAuthButton({ label = 'Continue with Google', onSuc
       type="button"
       onClick={handleClick}
       disabled={loading}
-      className="group flex w-full items-center justify-center gap-3 rounded-full border-2 border-ink/15 bg-paper px-5 py-3 text-sm font-semibold text-ink shadow-sm transition-all duration-200 hover:border-ink/40 hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-paper/15 dark:bg-paper/[0.04] dark:text-paper dark:hover:border-paper/40 dark:focus-visible:ring-paper/30"
+      className="group flex w-full items-center justify-center gap-3 rounded-full border-2 border-ink/15 bg-paper px-5 py-3 text-sm font-semibold text-ink shadow-sm transition-all duration-200 hover:border-ink/40 hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/30 disabled:cursor-not-allowed disabled:opacity-60.04]:border-paper/40:ring-paper/30"
     >
       {loading ? (
         <>
-          <span className="h-4 w-4 animate-spin rounded-full border-2 border-ink/30 border-t-ink dark:border-paper/30 dark:border-t-paper" />
+          <span className="h-4 w-4 animate-spin rounded-full border-2 border-ink/30 border-t-ink" />
           <span>Connecting…</span>
         </>
       ) : (

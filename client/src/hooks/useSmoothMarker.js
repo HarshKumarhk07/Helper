@@ -9,7 +9,7 @@ const lerp = (a, b, t) => a + (b - a) * t;
 // usage:
 //   const animated = useSmoothMarker(target);
 //   <Marker position={animated || target} />
-export default function useSmoothMarker(target, { duration = 9000 } = {}) {
+export default function useSmoothMarker(target, { duration = 900 } = {}) {
   const [animated, setAnimated] = useState(target);
   const rafRef = useRef(null);
   const fromRef = useRef(target);

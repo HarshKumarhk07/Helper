@@ -7,12 +7,12 @@ import FadeUp from '../../components/ui/FadeUp.jsx';
 import { listMyTickets, createTicket } from '../../api/support.js';
 
 const STATUS_BADGE = {
-  open: 'bg-amber-100 text-amber-800 dark:bg-amber-400/10 dark:text-amber-200',
-  awaiting_user: 'bg-blue-100 text-blue-700 dark:bg-blue-400/10 dark:text-blue-200',
+  open: 'bg-amber-100 text-amber-800',
+  awaiting_user: 'bg-blue-100 text-blue-700',
   awaiting_agent:
-    'bg-amber-100 text-amber-800 dark:bg-amber-400/10 dark:text-amber-200',
-  resolved: 'bg-green-100 text-green-700 dark:bg-green-400/10 dark:text-green-300',
-  closed: 'bg-ink/10 text-ink/60 dark:bg-paper/10 dark:text-paper/60',
+    'bg-amber-100 text-amber-800',
+  resolved: 'bg-green-100 text-green-700',
+  closed: 'bg-ink/10 text-ink/60',
 };
 
 const STATUS_LABEL = {
@@ -135,8 +135,8 @@ export default function UserSupport() {
                 onClick={() => setFilter(f.key)}
                 className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs uppercase tracking-widest transition ${
                   active
-                    ? 'bg-ink text-paper dark:bg-paper dark:text-ink'
-                    : 'border border-ink/15 hover:border-ink/40 dark:border-paper/15 dark:hover:border-paper/40'
+                    ? 'bg-ink text-paper'
+                    : 'border border-ink/15 hover:border-ink/40:border-paper/40'
                 }`}
               >
                 <Filter size={12} /> {f.label}
@@ -146,7 +146,7 @@ export default function UserSupport() {
         </div>
         <button
           onClick={() => setShowForm((v) => !v)}
-          className="inline-flex items-center gap-2 rounded-full bg-ink px-4 py-2 text-xs uppercase tracking-widest text-paper transition hover:opacity-90 dark:bg-paper dark:text-ink"
+          className="inline-flex items-center gap-2 rounded-full bg-ink px-4 py-2 text-xs uppercase tracking-widest text-paper transition hover:opacity-90"
         >
           <Plus size={14} /> {showForm ? 'Cancel' : 'New ticket'}
         </button>
@@ -198,10 +198,10 @@ export default function UserSupport() {
               </select>
             </div>
             {(form.bookingId || form.orderId) && (
-              <div className="md:col-span-2 rounded-xl border border-ink/15 bg-sand/30 p-3 text-xs dark:border-paper/15 dark:bg-paper/5">
+              <div className="md:col-span-2 rounded-xl border border-ink/15 bg-sand/30 p-3 text-xs">
                 {form.bookingId && (
                   <div>
-                    <span className="text-ink/60 dark:text-paper/50">
+                    <span className="text-ink/60">
                       Linked booking:
                     </span>{' '}
                     <span className="font-mono">{form.bookingId.slice(-6)}</span>
@@ -209,7 +209,7 @@ export default function UserSupport() {
                 )}
                 {form.orderId && (
                   <div>
-                    <span className="text-ink/60 dark:text-paper/50">
+                    <span className="text-ink/60">
                       Linked order:
                     </span>{' '}
                     <span className="font-mono">{form.orderId.slice(-6)}</span>
@@ -232,7 +232,7 @@ export default function UserSupport() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="inline-flex items-center gap-2 rounded-full bg-ink px-5 py-2 text-xs uppercase tracking-widest text-paper transition hover:opacity-90 disabled:opacity-50 dark:bg-paper dark:text-ink"
+                className="inline-flex items-center gap-2 rounded-full bg-ink px-5 py-2 text-xs uppercase tracking-widest text-paper transition hover:opacity-90 disabled:opacity-50"
               >
                 {submitting ? 'Submitting…' : 'Send ticket'}
               </button>
@@ -248,7 +248,7 @@ export default function UserSupport() {
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="card-rounded p-10 text-center text-sm text-ink/60 dark:text-paper/50">
+        <div className="card-rounded p-10 text-center text-sm text-ink/60">
           <Inbox size={32} className="mx-auto mb-3 opacity-40" />
           {filter === 'all'
             ? "You don't have any tickets yet. Need help with something? Create one above."
@@ -260,11 +260,11 @@ export default function UserSupport() {
             <Link
               key={t._id}
               to={`/me/support/${t._id}`}
-              className="card-rounded block p-5 transition hover:border-ink/30 hover:-translate-y-0.5 dark:hover:border-paper/30"
+              className="card-rounded block p-5 transition hover:border-ink/30 hover:-translate-y-0.5:border-paper/30"
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <div className="text-[10px] font-mono uppercase tracking-widest text-ink/50 dark:text-paper/40">
+                  <div className="text-[10px] font-mono uppercase tracking-widest text-ink/50">
                     {t.code}
                   </div>
                   <div className="mt-1 line-clamp-1 font-semibold">{t.subject}</div>
@@ -278,11 +278,11 @@ export default function UserSupport() {
                 </span>
               </div>
               {t.lastMessagePreview && (
-                <p className="mt-3 line-clamp-2 text-sm text-ink/65 dark:text-paper/60">
+                <p className="mt-3 line-clamp-2 text-sm text-ink/65">
                   {t.lastMessagePreview.text}
                 </p>
               )}
-              <div className="mt-3 flex items-center justify-between text-xs text-ink/55 dark:text-paper/50">
+              <div className="mt-3 flex items-center justify-between text-xs text-ink/55">
                 <span className="inline-flex items-center gap-1">
                   <MessageSquare size={11} />
                   {t.messageCount} message{t.messageCount === 1 ? '' : 's'}
@@ -302,11 +302,11 @@ export default function UserSupport() {
 
 function Label({ children }) {
   return (
-    <label className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+    <label className="text-xs uppercase tracking-widest text-ink/60">
       {children}
     </label>
   );
 }
 
 const inputClass =
-  'mt-2 w-full rounded-xl border border-ink/15 bg-transparent p-3 text-sm focus:border-ink focus:outline-none dark:border-paper/15 dark:focus:border-paper/60';
+  'mt-2 w-full rounded-xl border border-ink/15 bg-transparent p-3 text-sm focus:border-ink focus:outline-none:border-paper/60';

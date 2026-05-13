@@ -119,11 +119,11 @@ export default function ProfileEdit() {
     <>
       <div
         aria-hidden
-        className="pointer-events-none fixed inset-0 -z-10 bg-paper dark:bg-[#0E0E10]"
+        className="pointer-events-none fixed inset-0 -z-10 bg-paper"
       />
       <div
         aria-hidden
-        className="pointer-events-none fixed inset-0 -z-10 opacity-70 dark:opacity-50"
+        className="pointer-events-none fixed inset-0 -z-10 opacity-70"
         style={{
           backgroundImage:
             'radial-gradient(60rem 60rem at 12% 0%, rgba(26,26,26,0.06), transparent 60%)',
@@ -146,7 +146,7 @@ export default function ProfileEdit() {
             <button
               onClick={() => navigate(-1)}
               aria-label="Back"
-              className="rounded-full border-2 border-ink/15 bg-paper p-2 text-ink transition-colors hover:border-ink hover:bg-ink hover:text-paper dark:border-paper/15 dark:bg-paper/[0.04] dark:text-paper dark:hover:border-paper dark:hover:bg-paper dark:hover:text-ink"
+              className="rounded-full border-2 border-ink/15 bg-paper p-2 text-ink transition-colors hover:border-ink hover:bg-ink hover:text-paper.04]:border-paper:bg-paper:text-ink"
             >
               <ArrowLeft size={18} />
             </button>
@@ -154,7 +154,7 @@ export default function ProfileEdit() {
               <h1 className="font-display text-3xl font-semibold tracking-tightish text-ink sm:text-4xl">
                 Edit my profile
               </h1>
-              <p className="mt-1 text-sm text-ink/60 dark:text-paper/55">
+              <p className="mt-1 text-sm text-ink/60">
                 Update your personal details. Workers manage KYC documents on the dedicated worker page.
               </p>
             </div>
@@ -164,7 +164,7 @@ export default function ProfileEdit() {
             {...fadeUp}
             transition={{ duration: 0.45, delay: 0.05 }}
             onSubmit={handleSubmit}
-            className="space-y-5 rounded-[28px] border border-ink/10 bg-paper/95 p-5 shadow-card backdrop-blur-xl sm:p-7 dark:border-paper/10 dark:bg-[#141417]/85"
+            className="space-y-5 rounded-[28px] border border-ink/10 bg-paper/95 p-5 shadow-card backdrop-blur-xl sm:p-7"
           >
             <Section title="Personal information">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -215,10 +215,10 @@ export default function ProfileEdit() {
                 leadingIcon={<ImageIcon size={16} />}
               />
               <div className="mt-3 grid grid-cols-1 items-start gap-3 sm:grid-cols-[1fr_auto]">
-                <label className="relative flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-ink/15 bg-ink/[0.02] px-3 py-3 text-xs font-medium text-ink/70 transition-colors hover:border-ink/40 dark:border-paper/15 dark:bg-paper/[0.03] dark:text-paper/65 dark:hover:border-paper/40">
+                <label className="relative flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-ink/15 bg-ink/[0.02] px-3 py-3 text-xs font-medium text-ink/70 transition-colors hover:border-ink/40.03]:border-paper/40">
                   {photoState === 'uploading' ? (
                     <>
-                      <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-ink/30 border-t-ink dark:border-paper/30 dark:border-t-paper" />
+                      <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-ink/30 border-t-ink" />
                       Uploading…
                     </>
                   ) : photoState === 'done' ? (
@@ -243,7 +243,7 @@ export default function ProfileEdit() {
                   <img
                     src={form.passportPhoto}
                     alt="Profile photo preview"
-                    className="h-16 w-16 rounded-xl border-2 border-ink/15 object-cover dark:border-paper/15"
+                    className="h-16 w-16 rounded-xl border-2 border-ink/15 object-cover"
                     onError={(e) => {
                       e.currentTarget.style.display = 'none';
                     }}
@@ -252,22 +252,21 @@ export default function ProfileEdit() {
               </div>
             </Section>
 
-            {isWorker && (
-              <div className="rounded-2xl border-2 border-amber-300 bg-amber-50/70 p-4 text-sm text-amber-900 dark:border-amber-400/30 dark:bg-amber-400/[0.06] dark:text-amber-200">
-                <div className="font-semibold">Manage your KYC</div>
-                <p className="mt-1 text-xs">
-                  Workers verify identity on a dedicated KYC page that supports
-                  Aadhaar, PAN and selfie uploads.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => navigate('/worker/kyc')}
-                  className="mt-3 inline-flex items-center gap-2 rounded-full bg-ink px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-paper hover:opacity-90 dark:bg-paper dark:text-ink"
-                >
-                  Open KYC page →
-                </button>
-              </div>
-            )}
+            <div className="rounded-2xl border-2 border-amber-300 bg-amber-50/70 p-4 text-sm text-amber-900.06]">
+              <div className="font-semibold">Manage your KYC</div>
+              <p className="mt-1 text-xs">
+                {isWorker 
+                  ? "Workers verify identity on a dedicated KYC page that supports Aadhaar, PAN and selfie uploads."
+                  : "Verify your identity on the dedicated KYC page to unlock all platform features."}
+              </p>
+              <button
+                type="button"
+                onClick={() => navigate(isWorker ? '/worker/kyc' : '/me/kyc')}
+                className="mt-3 inline-flex items-center gap-2 rounded-full bg-ink px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-paper hover:opacity-90"
+              >
+                Open KYC page →
+              </button>
+            </div>
 
             {error && <ErrorBanner>{error}</ErrorBanner>}
 
@@ -275,7 +274,7 @@ export default function ProfileEdit() {
               <button
                 type="button"
                 onClick={() => navigate(-1)}
-                className="rounded-full border-2 border-ink/15 px-5 py-2.5 text-sm font-medium text-ink transition-colors hover:border-ink dark:border-paper/15 dark:text-paper dark:hover:border-paper"
+                className="rounded-full border-2 border-ink/15 px-5 py-2.5 text-sm font-medium text-ink transition-colors hover:border-ink:border-paper"
               >
                 Cancel
               </button>
@@ -293,7 +292,7 @@ export default function ProfileEdit() {
 function Section({ title, children }) {
   return (
     <section className="space-y-4">
-      <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-ink/70 dark:text-paper/65">
+      <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-ink/70">
         {title}
       </h2>
       {children}

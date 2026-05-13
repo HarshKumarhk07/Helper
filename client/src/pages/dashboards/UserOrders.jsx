@@ -20,7 +20,7 @@ export default function UserOrders() {
 
   return (
     <section className="container-velora py-12 md:py-16">
-      <div className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+      <div className="text-xs uppercase tracking-widest text-ink/60">
         (My orders)
       </div>
       <h1 className="heading-display mt-3 text-4xl md:text-6xl">ORDER HISTORY.</h1>
@@ -29,7 +29,7 @@ export default function UserOrders() {
         {loading ? (
           <div className="skeleton h-32 w-full" />
         ) : orders.length === 0 ? (
-          <div className="rounded-card border border-ink/10 bg-sand/40 p-10 text-center text-sm dark:border-paper/10">
+          <div className="rounded-card border border-ink/10 bg-sand/40 p-10 text-center text-sm">
             No orders found.
           </div>
         ) : (
@@ -37,27 +37,27 @@ export default function UserOrders() {
             <FadeUp key={order._id} delay={i * 0.05}>
               <div className="card-rounded p-5 flex flex-col md:flex-row justify-between gap-4">
                 <div>
-                  <div className="text-[10px] uppercase tracking-widest text-ink/60 dark:text-paper/50 mb-2">
+                  <div className="text-[10px] uppercase tracking-widest text-ink/60 mb-2">
                     {order.orderId}
                   </div>
                   <div className="font-bold text-lg">Total: {formatPrice(order.totalAmount)}</div>
-                  <div className="text-xs text-ink/70 dark:text-paper/60 mt-1">Status: {order.status.toUpperCase()}</div>
-                  <div className="text-xs text-ink/70 dark:text-paper/60 mt-1">Payment: {order.paymentMode?.toUpperCase()} · {order.paymentStatus?.toUpperCase()}</div>
+                  <div className="text-xs text-ink/70 mt-1">Status: {order.status.toUpperCase()}</div>
+                  <div className="text-xs text-ink/70 mt-1">Payment: {order.paymentMode?.toUpperCase()} · {order.paymentStatus?.toUpperCase()}</div>
                   {order.couponCode && (
-                    <div className="text-xs text-green-700 dark:text-green-400 mt-1">Coupon: {order.couponCode} • Saved ₹{order.discountAmount || 0}</div>
+                    <div className="text-xs text-green-700 mt-1">Coupon: {order.couponCode} • Saved ₹{order.discountAmount || 0}</div>
                   )}
-                  <div className="text-xs text-ink/70 dark:text-paper/60 mt-1">Placed: {formatDateTime(order.createdAt)}</div>
+                  <div className="text-xs text-ink/70 mt-1">Placed: {formatDateTime(order.createdAt)}</div>
                   <div className="mt-4 flex flex-wrap gap-3">
                     <Link
                       to={`/me/orders/${order._id}`}
-                      className="inline-flex items-center gap-2 rounded-full bg-ink px-4 py-1.5 text-xs uppercase tracking-widest text-paper transition hover:opacity-90 dark:bg-paper dark:text-ink"
+                      className="inline-flex items-center gap-2 rounded-full bg-ink px-4 py-1.5 text-xs uppercase tracking-widest text-paper transition hover:opacity-90"
                     >
                       Open order →
                     </Link>
                     <button
                       type="button"
                       onClick={() => setExpandedOrderId(expandedOrderId === order._id ? null : order._id)}
-                      className="text-xs uppercase tracking-widest text-ink/70 hover:text-ink transition dark:text-paper/70 dark:hover:text-paper"
+                      className="text-xs uppercase tracking-widest text-ink/70 hover:text-ink transition:text-paper"
                     >
                       {expandedOrderId === order._id ? 'Hide timeline' : 'Quick timeline'}
                     </button>
@@ -70,17 +70,17 @@ export default function UserOrders() {
                       <span className="text-ink/60 text-xs">x{item.quantity}</span>
                     </div>
                   ))}
-                  <div className="flex justify-between items-center mt-4 border-t border-ink/10 dark:border-paper/10 pt-3">
+                  <div className="flex justify-between items-center mt-4 border-t border-ink/10 pt-3">
                     <button 
                       onClick={() => downloadInvoice('order', order._id, `Invoice_ORDER_${order.orderId}.pdf`)}
-                      className="text-xs uppercase tracking-widest text-ink/70 hover:text-ink transition dark:text-paper/70 dark:hover:text-paper"
+                      className="text-xs uppercase tracking-widest text-ink/70 hover:text-ink transition:text-paper"
                     >
                       Download PDF Invoice
                     </button>
                   </div>
                   {expandedOrderId === order._id && order.history?.length > 0 && (
-                    <div className="mt-4 rounded-card border border-ink/10 p-4 text-xs dark:border-paper/10">
-                      <div className="mb-3 text-[10px] uppercase tracking-widest text-ink/50 dark:text-paper/50">
+                    <div className="mt-4 rounded-card border border-ink/10 p-4 text-xs">
+                      <div className="mb-3 text-[10px] uppercase tracking-widest text-ink/50">
                         Status timeline
                       </div>
                       <div className="space-y-2">
@@ -88,9 +88,9 @@ export default function UserOrders() {
                           <div key={`${step.to}-${idx}`} className="flex items-start justify-between gap-4">
                             <div>
                               <div className="font-semibold uppercase tracking-widest text-[10px]">{step.to}</div>
-                              <div className="text-ink/60 dark:text-paper/60">{step.note || 'Status update'}</div>
+                              <div className="text-ink/60">{step.note || 'Status update'}</div>
                             </div>
-                            <div className="text-ink/50 dark:text-paper/50">{formatDateTime(step.at)}</div>
+                            <div className="text-ink/50">{formatDateTime(step.at)}</div>
                           </div>
                         ))}
                       </div>

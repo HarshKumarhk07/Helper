@@ -11,12 +11,12 @@ import {
 import { useAuth } from '../../context/AuthContext.jsx';
 
 const STATUS_BADGE = {
-  open: 'bg-amber-100 text-amber-800 dark:bg-amber-400/10 dark:text-amber-200',
-  awaiting_user: 'bg-blue-100 text-blue-700 dark:bg-blue-400/10 dark:text-blue-200',
+  open: 'bg-amber-100 text-amber-800',
+  awaiting_user: 'bg-blue-100 text-blue-700',
   awaiting_agent:
-    'bg-amber-100 text-amber-800 dark:bg-amber-400/10 dark:text-amber-200',
-  resolved: 'bg-green-100 text-green-700 dark:bg-green-400/10 dark:text-green-300',
-  closed: 'bg-ink/10 text-ink/60 dark:bg-paper/10 dark:text-paper/60',
+    'bg-amber-100 text-amber-800',
+  resolved: 'bg-green-100 text-green-700',
+  closed: 'bg-ink/10 text-ink/60',
 };
 
 const STATUS_LABEL = {
@@ -111,12 +111,12 @@ export default function SupportThread({ adminMode = false }) {
         <div>
           <button
             onClick={() => navigate(adminMode ? '/admin/support' : '/me/support')}
-            className="inline-flex items-center gap-2 text-xs uppercase tracking-widest text-ink/60 hover:text-ink dark:text-paper/60 dark:hover:text-paper"
+            className="inline-flex items-center gap-2 text-xs uppercase tracking-widest text-ink/60 hover:text-ink:text-paper"
           >
             <ArrowLeft size={12} /> Back to tickets
           </button>
           <div className="mt-2 flex flex-wrap items-center gap-3 text-xs">
-            <span className="font-mono uppercase tracking-widest text-ink/60 dark:text-paper/50">
+            <span className="font-mono uppercase tracking-widest text-ink/60">
               {ticket.code}
             </span>
             <span
@@ -126,11 +126,11 @@ export default function SupportThread({ adminMode = false }) {
             >
               {STATUS_LABEL[ticket.status] || ticket.status}
             </span>
-            <span className="text-ink/50 dark:text-paper/40">
+            <span className="text-ink/50">
               · {ticket.category} · {ticket.priority}
             </span>
             {adminMode && ticket.user && (
-              <span className="text-ink/60 dark:text-paper/50">
+              <span className="text-ink/60">
                 · From <strong>{ticket.user.name}</strong> ({ticket.user.email})
               </span>
             )}
@@ -142,7 +142,7 @@ export default function SupportThread({ adminMode = false }) {
               <button
                 onClick={() => handleStatus('resolved')}
                 disabled={statusUpdating}
-                className="rounded-full border border-green-400 px-4 py-1.5 text-xs uppercase tracking-widest text-green-700 hover:bg-green-50 disabled:opacity-50 dark:border-green-400/30 dark:text-green-300 dark:hover:bg-green-400/10"
+                className="rounded-full border border-green-400 px-4 py-1.5 text-xs uppercase tracking-widest text-green-700 hover:bg-green-50 disabled:opacity-50:bg-green-400/10"
               >
                 Mark resolved
               </button>
@@ -151,7 +151,7 @@ export default function SupportThread({ adminMode = false }) {
               <button
                 onClick={() => handleStatus('closed')}
                 disabled={statusUpdating}
-                className="rounded-full border border-ink/30 px-4 py-1.5 text-xs uppercase tracking-widest hover:bg-ink hover:text-paper disabled:opacity-50 dark:border-paper/30"
+                className="rounded-full border border-ink/30 px-4 py-1.5 text-xs uppercase tracking-widest hover:bg-ink hover:text-paper disabled:opacity-50"
               >
                 Close
               </button>
@@ -160,7 +160,7 @@ export default function SupportThread({ adminMode = false }) {
               <button
                 onClick={() => handleStatus('open')}
                 disabled={statusUpdating}
-                className="rounded-full border border-ink/30 px-4 py-1.5 text-xs uppercase tracking-widest hover:bg-ink hover:text-paper disabled:opacity-50 dark:border-paper/30"
+                className="rounded-full border border-ink/30 px-4 py-1.5 text-xs uppercase tracking-widest hover:bg-ink hover:text-paper disabled:opacity-50"
               >
                 Reopen
               </button>
@@ -171,24 +171,24 @@ export default function SupportThread({ adminMode = false }) {
 
       {(ticket.booking || ticket.order) && (
         <div className="card-rounded mb-5 p-4 text-sm">
-          <div className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+          <div className="text-xs uppercase tracking-widest text-ink/60">
             Linked
           </div>
           <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
             {ticket.booking && (
               <div>
-                <span className="text-ink/60 dark:text-paper/50">Booking</span>{' '}
+                <span className="text-ink/60">Booking</span>{' '}
                 <span className="font-mono">{ticket.booking.code}</span>{' '}
-                <span className="text-ink/60 dark:text-paper/50">
+                <span className="text-ink/60">
                   · {ticket.booking.status} · ₹{ticket.booking.amount}
                 </span>
               </div>
             )}
             {ticket.order && (
               <div>
-                <span className="text-ink/60 dark:text-paper/50">Order</span>{' '}
+                <span className="text-ink/60">Order</span>{' '}
                 <span className="font-mono">{ticket.order.orderId}</span>{' '}
-                <span className="text-ink/60 dark:text-paper/50">
+                <span className="text-ink/60">
                   · {ticket.order.status} · ₹{ticket.order.totalAmount}
                 </span>
               </div>
@@ -211,13 +211,13 @@ export default function SupportThread({ adminMode = false }) {
                 <div
                   className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm shadow-sm ${
                     mine
-                      ? 'bg-ink text-paper dark:bg-paper dark:text-ink'
-                      : 'border border-ink/10 bg-sand/40 text-ink dark:border-paper/10 dark:bg-paper/5 dark:text-paper'
+                      ? 'bg-ink text-paper'
+                      : 'border border-ink/10 bg-sand/40 text-ink'
                   }`}
                 >
                   <div
                     className={`mb-1 flex items-center gap-1 text-[10px] uppercase tracking-widest ${
-                      mine ? 'opacity-70' : 'text-ink/50 dark:text-paper/40'
+                      mine ? 'opacity-70' : 'text-ink/50'
                     }`}
                   >
                     {isAgent && <ShieldCheck size={10} />}
@@ -235,29 +235,29 @@ export default function SupportThread({ adminMode = false }) {
         </div>
 
         {!closed ? (
-          <form onSubmit={handleSend} className="mt-5 border-t border-ink/10 pt-4 dark:border-paper/10">
+          <form onSubmit={handleSend} className="mt-5 border-t border-ink/10 pt-4">
             <textarea
               rows={3}
               value={reply}
               onChange={(e) => setReply(e.target.value)}
               placeholder={isPrivileged ? 'Reply to the customer…' : 'Type your reply…'}
-              className="w-full rounded-xl border border-ink/15 bg-transparent p-3 text-sm focus:border-ink focus:outline-none dark:border-paper/15 dark:focus:border-paper/60"
+              className="w-full rounded-xl border border-ink/15 bg-transparent p-3 text-sm focus:border-ink focus:outline-none:border-paper/60"
             />
             <div className="mt-2 flex items-center justify-between">
-              <span className="text-xs text-ink/50 dark:text-paper/40">
+              <span className="text-xs text-ink/50">
                 {reply.length}/4000
               </span>
               <button
                 type="submit"
                 disabled={sending || !reply.trim()}
-                className="inline-flex items-center gap-2 rounded-full bg-ink px-5 py-2 text-xs uppercase tracking-widest text-paper transition hover:opacity-90 disabled:opacity-50 dark:bg-paper dark:text-ink"
+                className="inline-flex items-center gap-2 rounded-full bg-ink px-5 py-2 text-xs uppercase tracking-widest text-paper transition hover:opacity-90 disabled:opacity-50"
               >
                 {sending ? 'Sending…' : <><SendIcon size={12} /> Send</>}
               </button>
             </div>
           </form>
         ) : (
-          <div className="mt-5 rounded-xl border border-ink/10 bg-sand/40 p-4 text-center text-sm text-ink/60 dark:border-paper/10 dark:bg-paper/5 dark:text-paper/50">
+          <div className="mt-5 rounded-xl border border-ink/10 bg-sand/40 p-4 text-center text-sm text-ink/60">
             This ticket is closed. {isPrivileged ? 'Reopen it to keep replying.' : 'Please create a new ticket if you need more help.'}
           </div>
         )}

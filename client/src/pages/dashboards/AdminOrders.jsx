@@ -51,15 +51,15 @@ export default function AdminOrders() {
             <div key={order._id} className="card-rounded p-5">
               <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                 <div>
-                  <div className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+                  <div className="text-xs uppercase tracking-widest text-ink/60">
                     {order.orderId || order._id}
                   </div>
                   <div className="mt-1 text-lg font-semibold">{order.user?.name || 'Customer'}</div>
-                  <div className="mt-1 text-sm text-ink/70 dark:text-paper/60">
+                  <div className="mt-1 text-sm text-ink/70">
                     {order.items?.length || 0} items · {order.status}
                   </div>
                   {order.items?.length > 0 && (
-                    <div className="mt-2 space-y-1 text-xs text-ink/60 dark:text-paper/50">
+                    <div className="mt-2 space-y-1 text-xs text-ink/60">
                       {order.items.map((item, idx) => (
                         <div key={idx}>
                           {item.name} × {item.quantity}
@@ -70,14 +70,14 @@ export default function AdminOrders() {
                 </div>
                 <div className="text-right">
                   <div className="text-lg font-semibold">{formatPrice(order.totalAmount)}</div>
-                  <div className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+                  <div className="text-xs uppercase tracking-widest text-ink/60">
                     {order.paymentMode} ·{' '}
                     <span
                       className={
                         order.paymentStatus === 'paid'
-                          ? 'text-green-600 dark:text-green-300'
+                          ? 'text-green-600'
                           : order.paymentStatus === 'refunded'
-                          ? 'text-red-600 dark:text-red-300'
+                          ? 'text-blue-600'
                           : ''
                       }
                     >
@@ -87,13 +87,13 @@ export default function AdminOrders() {
                   {isAdmin && order.paymentStatus !== 'refunded' && (
                     <button
                       onClick={() => setRefundTarget(order)}
-                      className="mt-2 inline-flex items-center gap-1 rounded-full border border-red-300 px-3 py-1 text-xs uppercase tracking-widest text-red-600 hover:bg-red-50 dark:border-red-400/30 dark:text-red-300 dark:hover:bg-red-400/10"
+                      className="mt-2 inline-flex items-center gap-1 rounded-full border border-red-300 px-3 py-1 text-xs uppercase tracking-widest text-red-600 hover:bg-red-50:bg-red-400/10"
                     >
-                      Refund
+                      Issue Refund
                     </button>
                   )}
                   {order.paymentStatus === 'refunded' && order.refundAmount > 0 && (
-                    <div className="mt-2 text-xs text-red-600 dark:text-red-300">
+                    <div className="mt-2 text-xs text-red-600">
                       −{formatPrice(order.refundAmount)} refunded
                     </div>
                   )}
@@ -106,7 +106,7 @@ export default function AdminOrders() {
                   value={notes[order._id] || ''}
                   onChange={(e) => setNotes((current) => ({ ...current, [order._id]: e.target.value }))}
                   placeholder="Add an internal admin note for this order"
-                  className="w-full rounded-2xl border border-ink/15 bg-transparent px-4 py-3 text-sm outline-none focus:border-ink dark:border-paper/20 dark:focus:border-paper/60"
+                  className="w-full rounded-2xl border border-ink/15 bg-transparent px-4 py-3 text-sm outline-none focus:border-ink:border-paper/60"
                 />
                 <button
                   type="button"
@@ -118,8 +118,8 @@ export default function AdminOrders() {
               </div>
 
               {order.adminNote && (
-                <div className="mt-3 rounded-2xl border border-ink/10 bg-sand/30 p-4 text-sm text-ink/75 dark:border-paper/10 dark:text-paper/70">
-                  <span className="block text-xs uppercase tracking-widest text-ink/50 dark:text-paper/45">
+                <div className="mt-3 rounded-2xl border border-ink/10 bg-sand/30 p-4 text-sm text-ink/75">
+                  <span className="block text-xs uppercase tracking-widest text-ink/50">
                     Saved note
                   </span>
                   {order.adminNote}

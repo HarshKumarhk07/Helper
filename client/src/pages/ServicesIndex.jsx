@@ -15,7 +15,13 @@ const CAT_IMAGES = {
   'home-services': 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80',
   'cleaning-services': 'https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80',
   'beauty-wellness': 'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80',
-  'appliance-services': 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80'
+  'appliance-services': 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80',
+  'pest-control': '/assets/categories/pest_control.png',
+  'painting-renovation': '/assets/categories/painting.png',
+  'car-wash-detailing': '/assets/categories/car_wash.png',
+  'smart-home-cctv': '/assets/categories/cctv.png',
+  'packers-movers': '/assets/categories/packers.png',
+  'pet-care-grooming': '/assets/categories/pet_care.png'
 };
 
 export default function ServicesIndex() {

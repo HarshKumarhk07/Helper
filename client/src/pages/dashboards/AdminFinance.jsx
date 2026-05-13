@@ -40,33 +40,33 @@ export default function AdminFinance() {
         <div className="space-y-6">
           <div className="grid gap-4 md:grid-cols-3">
             <div className="card-rounded p-5">
-              <div className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">Total revenue</div>
+              <div className="text-xs uppercase tracking-widest text-ink/60">Total revenue</div>
               <div className="mt-2 text-3xl font-semibold">{formatPrice(revenue)}</div>
             </div>
             <div className="card-rounded p-5">
-              <div className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">Commission rate</div>
+              <div className="text-xs uppercase tracking-widest text-ink/60">Commission rate</div>
               <input
                 type="number"
                 min="0"
                 max="100"
                 value={commissionRate}
                 onChange={(e) => setCommissionRate(Number(e.target.value))}
-                className="mt-2 w-full rounded-2xl border border-ink/15 bg-transparent px-4 py-3 text-2xl font-semibold outline-none focus:border-ink dark:border-paper/20 dark:focus:border-paper/60"
+                className="mt-2 w-full rounded-2xl border border-ink/15 bg-transparent px-4 py-3 text-2xl font-semibold outline-none focus:border-ink:border-paper/60"
               />
             </div>
             <div className="card-rounded p-5">
-              <div className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">Payout reserve</div>
+              <div className="text-xs uppercase tracking-widest text-ink/60">Payout reserve</div>
               <div className="mt-2 text-3xl font-semibold">{formatPrice(payoutReserve)}</div>
             </div>
           </div>
 
           <div className="card-rounded p-6">
-            <div className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">Settlement note</div>
+            <div className="text-xs uppercase tracking-widest text-ink/60">Settlement note</div>
             <textarea
               rows={4}
               value={settlementNote}
               onChange={(e) => setSettlementNote(e.target.value)}
-              className="mt-3 w-full rounded-2xl border border-ink/15 bg-transparent px-4 py-3 text-sm outline-none focus:border-ink dark:border-paper/20 dark:focus:border-paper/60"
+              className="mt-3 w-full rounded-2xl border border-ink/15 bg-transparent px-4 py-3 text-sm outline-none focus:border-ink:border-paper/60"
             />
           </div>
         </div>

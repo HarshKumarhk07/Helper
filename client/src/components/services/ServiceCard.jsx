@@ -87,7 +87,16 @@ export default function ServiceCard({ service, index = 0 }) {
         <h3 className="text-base font-bold text-ink line-clamp-2">
           {service.name}
         </h3>
-        <p className="mt-2 text-sm font-bold text-ink">{formatPrice(service.price)}</p>
+        <div className="mt-2 flex items-center justify-between">
+          <span className="text-sm font-bold text-ink">{formatPrice(service.price)}</span>
+          <Link
+            to={`/book/${service._id}`}
+            onClick={(e) => e.stopPropagation()}
+            className="text-[10px] font-bold uppercase tracking-widest text-white bg-ink rounded-full px-3 py-1.5 hover:bg-ink/80 transition"
+          >
+            Book Service
+          </Link>
+        </div>
       </div>
     </Link>
   );

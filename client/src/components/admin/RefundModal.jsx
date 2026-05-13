@@ -80,16 +80,16 @@ export default function RefundModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/70 px-4 py-6 backdrop-blur-sm">
-      <div className="card-rounded w-full max-w-lg border border-paper/10 bg-paper p-6 text-ink shadow-[0_30px_90px_rgba(0,0,0,0.35)] dark:border-paper/20 dark:bg-[#14151A] dark:text-paper">
+      <div className="card-rounded w-full max-w-lg border border-paper/10 bg-paper p-6 text-ink shadow-[0_30px_90px_rgba(0,0,0,0.35)]">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <div className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+            <div className="text-xs uppercase tracking-widest text-ink/60">
               Issue refund
             </div>
             <h3 className="heading-display mt-2 text-2xl">
               {type === 'booking' ? reference?.code : reference?.orderId || reference?._id}
             </h3>
-            <p className="mt-1 text-sm text-ink/70 dark:text-paper/60">
+            <p className="mt-1 text-sm text-ink/70">
               Original total: {inr(grossAmount)} ·{' '}
               <span className="uppercase tracking-widest">
                 {reference?.paymentStatus || '—'}
@@ -108,7 +108,7 @@ export default function RefundModal({
         </div>
 
         {/* Channel selector */}
-        <div className="mt-5 grid grid-cols-2 gap-2 rounded-pill border border-ink/15 p-1 dark:border-paper/15">
+        <div className="mt-5 grid grid-cols-2 gap-2 rounded-pill border border-ink/15 p-1">
           <button
             type="button"
             onClick={() => setChannel('razorpay')}
@@ -116,8 +116,8 @@ export default function RefundModal({
             title={!razorpayEligible ? 'Needs an online Razorpay payment' : undefined}
             className={`inline-flex items-center justify-center gap-2 rounded-pill px-3 py-1.5 text-xs uppercase tracking-widest transition disabled:cursor-not-allowed disabled:opacity-50 ${
               channel === 'razorpay'
-                ? 'bg-ink text-paper dark:bg-paper dark:text-ink'
-                : 'text-ink/70 hover:text-ink dark:text-paper/60 dark:hover:text-paper'
+                ? 'bg-ink text-paper'
+                : 'text-ink/70 hover:text-ink:text-paper'
             }`}
           >
             <CreditCard size={12} /> Razorpay refund
@@ -127,22 +127,22 @@ export default function RefundModal({
             onClick={() => setChannel('wallet')}
             className={`inline-flex items-center justify-center gap-2 rounded-pill px-3 py-1.5 text-xs uppercase tracking-widest transition ${
               channel === 'wallet'
-                ? 'bg-ink text-paper dark:bg-paper dark:text-ink'
-                : 'text-ink/70 hover:text-ink dark:text-paper/60 dark:hover:text-paper'
+                ? 'bg-ink text-paper'
+                : 'text-ink/70 hover:text-ink:text-paper'
             }`}
           >
             <Wallet size={12} /> Credit to wallet
           </button>
         </div>
 
-        <div className="mt-3 text-xs text-ink/60 dark:text-paper/55">
+        <div className="mt-3 text-xs text-ink/60">
           {channel === 'razorpay'
             ? 'Funds go back to the original payment method (typically 5–7 business days).'
             : "Funds appear in the customer's Velora wallet immediately. Works on COD too."}
         </div>
 
         {!eligibility.ok ? (
-          <div className="mt-5 rounded-xl border border-amber-300 bg-amber-50/60 p-4 text-sm text-amber-800 dark:border-amber-400/20 dark:bg-amber-400/5 dark:text-amber-200">
+          <div className="mt-5 rounded-xl border border-amber-300 bg-amber-50/60 p-4 text-sm text-amber-800">
             <div className="flex items-start gap-2">
               <AlertTriangle size={14} className="mt-0.5 shrink-0" />
               <div>{eligibility.message}</div>
@@ -152,7 +152,7 @@ export default function RefundModal({
           <>
             <div className="mt-5 space-y-4">
               <div>
-                <label className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+                <label className="text-xs uppercase tracking-widest text-ink/60">
                   Amount
                 </label>
                 <div className="mt-2 flex items-center gap-2">
@@ -164,21 +164,21 @@ export default function RefundModal({
                     step={1}
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
-                    className="w-full rounded-xl border border-ink/15 bg-transparent p-3 text-base tabular-nums focus:border-ink focus:outline-none dark:border-paper/15 dark:focus:border-paper/60"
+                    className="w-full rounded-xl border border-ink/15 bg-transparent p-3 text-base tabular-nums focus:border-ink focus:outline-none:border-paper/60"
                   />
                 </div>
                 <div className="mt-2 flex flex-wrap gap-2">
                   <button
                     onClick={() => setAmount(grossAmount)}
                     type="button"
-                    className="rounded-pill border border-ink/15 px-3 py-1 text-xs hover:border-ink/40 dark:border-paper/15 dark:hover:border-paper/40"
+                    className="rounded-pill border border-ink/15 px-3 py-1 text-xs hover:border-ink/40:border-paper/40"
                   >
                     Full {inr(grossAmount)}
                   </button>
                   <button
                     onClick={() => setAmount(Math.round(grossAmount / 2))}
                     type="button"
-                    className="rounded-pill border border-ink/15 px-3 py-1 text-xs hover:border-ink/40 dark:border-paper/15 dark:hover:border-paper/40"
+                    className="rounded-pill border border-ink/15 px-3 py-1 text-xs hover:border-ink/40:border-paper/40"
                   >
                     Half
                   </button>
@@ -186,7 +186,7 @@ export default function RefundModal({
               </div>
 
               <div>
-                <label className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+                <label className="text-xs uppercase tracking-widest text-ink/60">
                   Reason
                 </label>
                 <textarea
@@ -194,7 +194,7 @@ export default function RefundModal({
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                   placeholder="Customer-visible reason (optional but recommended)"
-                  className="mt-2 w-full rounded-xl border border-ink/15 bg-transparent p-3 text-sm focus:border-ink focus:outline-none dark:border-paper/15 dark:focus:border-paper/60"
+                  className="mt-2 w-full rounded-xl border border-ink/15 bg-transparent p-3 text-sm focus:border-ink focus:outline-none:border-paper/60"
                 />
               </div>
             </div>

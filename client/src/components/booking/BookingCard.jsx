@@ -23,17 +23,17 @@ export default function BookingCard({ booking, footer }) {
 
         <div className="flex-1">
           <div className="flex items-center justify-between gap-3">
-            <div className="text-[10px] uppercase tracking-widest text-ink/60 dark:text-paper/50">
+            <div className="text-[10px] uppercase tracking-widest text-ink/60">
               {booking.code}
             </div>
             <StatusBadge status={booking.status} />
           </div>
           <div className="mt-1 text-base">{svc.name || 'Service'}</div>
-          <div className="mt-1 text-xs text-ink/60 dark:text-paper/50">
+          <div className="mt-1 text-xs text-ink/60">
             {formatPrice(booking.amount)} · {booking.type}
           </div>
 
-          <div className="mt-3 flex flex-col gap-1 text-xs text-ink/70 dark:text-paper/60">
+          <div className="mt-3 flex flex-col gap-1 text-xs text-ink/70">
             {booking.scheduledAt && (
               <span className="inline-flex items-center gap-2">
                 <Clock size={12} /> {formatDateTime(booking.scheduledAt)}
@@ -48,15 +48,9 @@ export default function BookingCard({ booking, footer }) {
           </div>
         </div>
 
-        <Link
-          to={`/me/bookings/${booking._id}`}
-          className="hidden text-ink/70 transition hover:text-ink md:block dark:text-paper/60 dark:hover:text-paper"
-        >
-          <ArrowUpRight size={18} />
-        </Link>
       </div>
 
-      {footer && <div className="border-t border-ink/10 px-5 py-3 dark:border-paper/10">{footer}</div>}
+      {footer && <div className="border-t border-ink/10 px-5 py-3">{footer}</div>}
     </div>
   );
 }

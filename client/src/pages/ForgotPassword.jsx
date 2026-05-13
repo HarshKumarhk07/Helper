@@ -55,11 +55,11 @@ export default function ForgotPassword() {
       {/* Layered, premium background */}
       <div
         aria-hidden
-        className="pointer-events-none fixed inset-0 -z-10 bg-paper dark:bg-[#0E0E10]"
+        className="pointer-events-none fixed inset-0 -z-10 bg-paper"
       />
       <div
         aria-hidden
-        className="pointer-events-none fixed inset-0 -z-10 opacity-70 dark:opacity-50"
+        className="pointer-events-none fixed inset-0 -z-10 opacity-70"
         style={{
           backgroundImage:
             'radial-gradient(60rem 60rem at 12% 0%, rgba(26,26,26,0.06), transparent 60%), radial-gradient(50rem 50rem at 100% 100%, rgba(26,26,26,0.05), transparent 55%)',
@@ -67,7 +67,7 @@ export default function ForgotPassword() {
       />
       <div
         aria-hidden
-        className="pointer-events-none fixed inset-x-0 top-0 -z-10 h-[40vh] bg-gradient-to-b from-sand/60 to-transparent dark:from-paper/[0.03]"
+        className="pointer-events-none fixed inset-x-0 top-0 -z-10 h-[40vh] bg-gradient-to-b from-sand/60 to-transparent.03]"
       />
 
       <section
@@ -84,7 +84,7 @@ export default function ForgotPassword() {
             transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
             className="space-y-6 lg:space-y-9"
           >
-            <span className="inline-flex items-center gap-2 rounded-full border border-ink/15 bg-paper/70 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-ink/70 backdrop-blur dark:border-paper/15 dark:bg-paper/[0.04] dark:text-paper/70">
+            <span className="inline-flex items-center gap-2 rounded-full border border-ink/15 bg-paper/70 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-ink/70 backdrop-blur.04]">
               <MailQuestion size={12} className="opacity-70" /> Account recovery
             </span>
 
@@ -93,8 +93,8 @@ export default function ForgotPassword() {
                 Reset your
                 <span className="mt-1 block font-semibold">password.</span>
               </h1>
-              <div className="h-px w-16 bg-gradient-to-r from-ink/40 to-transparent dark:from-paper/40" />
-              <p className="max-w-md text-base leading-relaxed text-ink/70 dark:text-paper/65">
+              <div className="h-px w-16 bg-gradient-to-r from-ink/40 to-transparent" />
+              <p className="max-w-md text-base leading-relaxed text-ink/70">
                 Enter the email tied to your UrbanEase account and we'll send a secure link
                 to set a new password. The link expires after 30 minutes.
               </p>
@@ -111,15 +111,15 @@ export default function ForgotPassword() {
             <div className="relative">
               <div
                 aria-hidden
-                className="absolute -inset-4 -z-10 rounded-[32px] bg-gradient-to-br from-ink/5 via-transparent to-ink/[0.02] blur-2xl dark:from-paper/[0.04] dark:to-paper/[0.02]"
+                className="absolute -inset-4 -z-10 rounded-[32px] bg-gradient-to-br from-ink/5 via-transparent to-ink/[0.02] blur-2xl.04].02]"
               />
 
-              <div className="overflow-hidden rounded-[28px] border border-ink/10 bg-paper/95 shadow-card backdrop-blur-xl dark:border-paper/10 dark:bg-[#141417]/85">
+              <div className="overflow-hidden rounded-[28px] border border-ink/10 bg-paper/95 shadow-card backdrop-blur-xl">
                 <div className="px-6 pt-6 pb-1 sm:px-8 sm:pt-8">
-                  <h2 className="text-[26px] font-semibold leading-tight tracking-tight text-ink dark:text-paper">
+                  <h2 className="text-[26px] font-semibold leading-tight tracking-tight text-ink">
                     {sent ? 'Check your inbox' : 'Forgot password'}
                   </h2>
-                  <p className="mt-1 text-sm text-ink/60 dark:text-paper/55">
+                  <p className="mt-1 text-sm text-ink/60">
                     {sent
                       ? 'We just sent you a reset link if the account exists.'
                       : 'We\'ll email you a secure link to choose a new password.'}
@@ -129,7 +129,7 @@ export default function ForgotPassword() {
                 <div className="space-y-4 px-6 pb-6 pt-5 sm:px-8 sm:pb-8">
                   {sent ? (
                     <>
-                      <div className="flex items-start gap-2 rounded-xl border border-emerald-300 bg-emerald-50/70 px-3 py-2.5 text-sm text-emerald-900 dark:border-emerald-400/30 dark:bg-emerald-400/[0.06] dark:text-emerald-200">
+                      <div className="flex items-start gap-2 rounded-xl border border-emerald-300 bg-emerald-50/70 px-3 py-2.5 text-sm text-emerald-900.06]">
                         <CheckCircle2 size={14} className="mt-0.5 shrink-0" />
                         <div>
                           If an account exists for{' '}
@@ -137,12 +137,12 @@ export default function ForgotPassword() {
                           its way. It expires in 30 minutes.
                         </div>
                       </div>
-                      <p className="text-xs text-ink/55 dark:text-paper/45">
+                      <p className="text-xs text-ink/55">
                         Didn't get anything within a few minutes? Check spam, or{' '}
                         <button
                           type="button"
                           onClick={() => setSent(false)}
-                          className="font-medium text-ink underline-offset-4 hover:underline dark:text-paper"
+                          className="font-medium text-ink underline-offset-4 hover:underline"
                         >
                           try a different email
                         </button>
@@ -176,11 +176,11 @@ export default function ForgotPassword() {
                     </form>
                   )}
 
-                  <div className="border-t border-ink/10 pt-5 text-center text-sm text-ink/65 dark:border-paper/10 dark:text-paper/60">
+                  <div className="border-t border-ink/10 pt-5 text-center text-sm text-ink/65">
                     Remembered it?{' '}
                     <Link
                       to="/login"
-                      className="font-semibold text-ink underline-offset-4 hover:underline dark:text-paper"
+                      className="font-semibold text-ink underline-offset-4 hover:underline"
                     >
                       Back to sign in
                     </Link>
@@ -188,7 +188,7 @@ export default function ForgotPassword() {
                 </div>
               </div>
 
-              <p className="mt-4 text-center text-[11px] uppercase tracking-[0.18em] text-ink/40 dark:text-paper/40">
+              <p className="mt-4 text-center text-[11px] uppercase tracking-[0.18em] text-ink/40">
                 Protected by enterprise-grade encryption
               </p>
             </div>

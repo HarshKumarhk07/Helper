@@ -2,33 +2,21 @@ import FadeUp from '../components/ui/FadeUp.jsx';
 import { ArrowUpRight, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useState } from 'react';
-
-const CATEGORIES = [
-  { 
-    label: 'Home Essentials', 
-    slug: 'home-services', 
-    image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-  },
-  { 
-    label: 'Deep Cleaning', 
-    slug: 'cleaning-services', 
-    image: 'https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', // Replaced image
-  },
-  { 
-    label: 'Beauty | Wellness', 
-    slug: 'beauty-wellness', 
-    image: 'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-  },
-  { 
-    label: 'Appliance Repair', 
-    slug: 'appliance-services', 
-    image: 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-  },
-];
+import { useEffect, useState } from 'react';
+import { listCategories } from '../api/categories.js';
 
 export default function Categories() {
+  const [categories, setCategories] = useState([]);
   const [hoveredIdx, setHoveredIdx] = useState(0);
+
+  useEffect(() => {
+    listCategories({ active: 'true' })
+      .then(setCategories)
+      .catch(console.error);
+  }, []);
+
+  const displayCategories = categories.slice(0, 10); // Show up to 10
+
 
 
   return (
@@ -53,7 +41,7 @@ export default function Categories() {
           
           {/* Typography Links */}
           <div className="flex flex-col gap-8 md:gap-10 relative z-10">
-            {CATEGORIES.map((c, i) => (
+            {displayCategories.map((c, i) => (
               <FadeUp key={c.slug} delay={i * 0.1}>
                 <Link
                   to={`/services?cat=${c.slug}`}
@@ -63,7 +51,7 @@ export default function Categories() {
                   <span className={`heading-display text-4xl sm:text-5xl lg:text-6xl transition-all duration-500 transform group-hover:translate-x-4 ${
                     hoveredIdx === i ? 'text-ink' : 'text-ink/30'
                   }`}>
-                    {c.label}
+                    {c.name}
                   </span>
                   <div className="flex items-center gap-4 mt-2 md:mt-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
                     <span className="text-sm font-medium text-ink/60 uppercase tracking-widest">
@@ -81,7 +69,7 @@ export default function Categories() {
             {/* Increased Size and Elegant Curved Rectangle */}
             <div className="w-[450px] h-[600px] relative rounded-[3rem] overflow-hidden bg-ink/5 shadow-2xl">
               
-              {CATEGORIES.map((c, i) => (
+              {displayCategories.map((c, i) => (
                 <div 
                   key={c.slug}
                   className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
@@ -89,8 +77,8 @@ export default function Categories() {
                   }`}
                 >
                   <img
-                    src={c.image}
-                    alt={c.label}
+                    src={c.image || 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
+                    alt={c.name}
                     className={`w-full h-full object-cover transition-transform duration-[2s] ease-out ${
                       hoveredIdx === i ? 'scale-100' : 'scale-110'
                     }`}

@@ -25,8 +25,8 @@ export default function CartPage() {
   if (cart.length === 0) {
     return (
       <section className="container-velora py-20 text-center">
-        <h1 className="heading-display text-4xl mb-4 text-ink dark:text-paper">YOUR CART IS EMPTY</h1>
-        <p className="text-ink/70 dark:text-paper/60 mb-8">Looks like you haven't added any products to your cart yet.</p>
+        <h1 className="heading-display text-4xl mb-4 text-ink">YOUR CART IS EMPTY</h1>
+        <p className="text-ink/70 mb-8">Looks like you haven't added any products to your cart yet.</p>
         <PillButton to="/services">Continue Shopping</PillButton>
       </section>
     );
@@ -34,7 +34,7 @@ export default function CartPage() {
 
   return (
     <section className="container-velora py-16">
-      <div className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50 mb-3">
+      <div className="text-xs uppercase tracking-widest text-ink/60 mb-3">
         (Your Cart)
       </div>
       <h1 className="heading-display text-4xl md:text-5xl mb-8">SHOPPING BAG</h1>
@@ -53,29 +53,29 @@ export default function CartPage() {
                 </div>
                 <div className="flex-1">
                   {item.kind === 'service' && (
-                    <div className="mb-1 text-[10px] uppercase tracking-[0.35em] text-ink/50 dark:text-paper/45">
+                    <div className="mb-1 text-[10px] uppercase tracking-[0.35em] text-ink/50">
                       Service booking
                     </div>
                   )}
                   <h3 className="text-sm font-bold">{item.name}</h3>
-                  <div className="text-xs text-ink/60 dark:text-paper/60 mt-1">₹{item.price}</div>
+                  <div className="text-xs text-ink/60 mt-1">₹{item.price}</div>
                   {item.kind === 'service' ? (
                     <div className="mt-3">
                       <button
                         type="button"
                         onClick={() => navigate(`/book/${item.product}`)}
-                        className="rounded-pill border border-ink/20 px-3 py-2 text-xs font-medium transition hover:bg-ink hover:text-paper dark:border-paper/20"
+                        className="rounded-pill border border-ink/20 px-3 py-2 text-xs font-medium transition hover:bg-ink hover:text-paper"
                       >
                         Book service
                       </button>
                     </div>
                   ) : (
                     <div className="flex items-center gap-3 mt-3">
-                      <button onClick={() => updateQuantity(item.product, item.quantity - 1)} className="p-1 border border-ink/20 rounded hover:bg-ink hover:text-paper dark:border-paper/20">
+                      <button onClick={() => updateQuantity(item.product, item.quantity - 1)} className="p-1 border border-ink/20 rounded hover:bg-ink hover:text-paper">
                         <Minus size={12} />
                       </button>
                       <span className="text-xs w-4 text-center">{item.quantity}</span>
-                      <button onClick={() => updateQuantity(item.product, item.quantity + 1)} className="p-1 border border-ink/20 rounded hover:bg-ink hover:text-paper dark:border-paper/20">
+                      <button onClick={() => updateQuantity(item.product, item.quantity + 1)} className="p-1 border border-ink/20 rounded hover:bg-ink hover:text-paper">
                         <Plus size={12} />
                       </button>
                     </div>
@@ -93,36 +93,36 @@ export default function CartPage() {
         </div>
         
         <div>
-          <div className="card-rounded p-6 sticky top-24 text-ink dark:text-paper">
-            <h2 className="heading-display text-xl mb-6 text-ink dark:text-paper">ORDER SUMMARY</h2>
-            <div className="space-y-3 text-sm mb-6 border-b border-ink/10 dark:border-paper/10 pb-6">
+          <div className="card-rounded p-6 sticky top-24 text-ink">
+            <h2 className="heading-display text-xl mb-6 text-ink">ORDER SUMMARY</h2>
+            <div className="space-y-3 text-sm mb-6 border-b border-ink/10 pb-6">
               {hasProducts && (
                 <div className="flex justify-between">
-                  <span className="text-ink/70 dark:text-paper/60">Products subtotal</span>
-                  <span className="text-ink dark:text-paper tabular-nums">₹{productSubtotal}</span>
+                  <span className="text-ink/70">Products subtotal</span>
+                  <span className="text-ink tabular-nums">₹{productSubtotal}</span>
                 </div>
               )}
               {serviceCart.length > 0 && (
                 <div className="flex justify-between">
-                  <span className="text-ink/70 dark:text-paper/60">
+                  <span className="text-ink/70">
                     Services <span className="text-[10px] uppercase tracking-widest opacity-60">({serviceCart.length})</span>
                   </span>
-                  <span className="text-ink dark:text-paper tabular-nums">₹{serviceSubtotal}</span>
+                  <span className="text-ink tabular-nums">₹{serviceSubtotal}</span>
                 </div>
               )}
               {hasProducts && (
                 <div className="flex justify-between">
-                  <span className="text-ink/70 dark:text-paper/60">Shipping</span>
-                  <span className="text-ink dark:text-paper">Free</span>
+                  <span className="text-ink/70">Shipping</span>
+                  <span className="text-ink">Free</span>
                 </div>
               )}
             </div>
-            <div className="flex justify-between font-bold text-lg mb-2 text-ink dark:text-paper">
+            <div className="flex justify-between font-bold text-lg mb-2 text-ink">
               <span>Total</span>
               <span className="tabular-nums">₹{grandTotal}</span>
             </div>
             {serviceCart.length > 0 && (
-              <p className="mb-6 text-xs text-ink/60 dark:text-paper/50">
+              <p className="mb-6 text-xs text-ink/60">
                 Services are paid when you confirm each booking. Tap a service below to schedule it.
               </p>
             )}
@@ -130,7 +130,7 @@ export default function CartPage() {
             {hasProducts ? (
               <button
                 onClick={() => navigate('/checkout')}
-                className="w-full rounded-pill bg-ink py-3 text-sm font-semibold tracking-tightish text-paper transition hover:opacity-90 dark:bg-paper dark:text-ink"
+                className="w-full rounded-pill bg-ink py-3 text-sm font-semibold tracking-tightish text-paper transition hover:opacity-90"
               >
                 Proceed to Checkout · ₹{productSubtotal}
               </button>
@@ -140,13 +140,13 @@ export default function CartPage() {
                   <button
                     key={s.product}
                     onClick={() => navigate(`/book/${s.product}`)}
-                    className="flex w-full items-center justify-between gap-2 rounded-pill bg-ink px-4 py-2.5 text-sm font-semibold text-paper transition hover:opacity-90 dark:bg-paper dark:text-ink"
+                    className="flex w-full items-center justify-between gap-2 rounded-pill bg-ink px-4 py-2.5 text-sm font-semibold text-paper transition hover:opacity-90"
                   >
                     <span className="truncate">Book {s.name}</span>
                     <span className="shrink-0 tabular-nums opacity-80">₹{s.price}</span>
                   </button>
                 ))}
-                <p className="pt-2 text-center text-[11px] uppercase tracking-widest text-ink/50 dark:text-paper/45">
+                <p className="pt-2 text-center text-[11px] uppercase tracking-widest text-ink/50">
                   Services are checked out via the booking flow
                 </p>
               </div>

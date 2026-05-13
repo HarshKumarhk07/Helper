@@ -59,14 +59,14 @@ export default function AdminAuditLogs() {
       title="AUDIT LOGS."
       slices={[]}
     >
-      <div className="mb-4 flex flex-col gap-3 rounded-xl border border-ink/10 bg-white/40 p-4 md:flex-row md:items-center md:justify-between dark:border-paper/15 dark:bg-paper/5">
-        <div className="text-xs uppercase tracking-widest text-ink/65 dark:text-paper/60">
+      <div className="mb-4 flex flex-col gap-3 rounded-xl border border-ink/10 bg-white/40 p-4 md:flex-row md:items-center md:justify-between">
+        <div className="text-xs uppercase tracking-widest text-ink/65">
           Feed:
-          <span className={`ml-2 rounded-full px-3 py-1 ${demoMode ? 'bg-amber-100 text-amber-800 dark:bg-amber-300/15 dark:text-amber-200' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-300/15 dark:text-emerald-200'}`}>
+          <span className={`ml-2 rounded-full px-3 py-1 ${demoMode ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}`}>
             {demoMode ? 'Demo live data' : 'Persisted live data'}
           </span>
           {lastUpdated && (
-            <span className="ml-3 normal-case tracking-normal text-ink/55 dark:text-paper/55">
+            <span className="ml-3 normal-case tracking-normal text-ink/55">
               Updated {lastUpdated.toLocaleTimeString()}
             </span>
           )}
@@ -75,14 +75,14 @@ export default function AdminAuditLogs() {
           <button
             type="button"
             onClick={() => setIsLive((value) => !value)}
-            className={`rounded-full px-4 py-2 text-xs uppercase tracking-widest transition ${isLive ? 'bg-ink text-paper dark:bg-paper dark:text-ink' : 'border border-ink/20 text-ink/70 hover:bg-ink/5 dark:border-paper/20 dark:text-paper/70 dark:hover:bg-paper/10'}`}
+            className={`rounded-full px-4 py-2 text-xs uppercase tracking-widest transition ${isLive ? 'bg-ink text-paper' : 'border border-ink/20 text-ink/70 hover:bg-ink/5:bg-paper/10'}`}
           >
             {isLive ? 'Live on' : 'Live off'}
           </button>
           <button
             type="button"
             onClick={load}
-            className="rounded-full border border-ink/20 px-4 py-2 text-xs uppercase tracking-widest text-ink/75 transition hover:bg-ink/5 dark:border-paper/20 dark:text-paper/75 dark:hover:bg-paper/10"
+            className="rounded-full border border-ink/20 px-4 py-2 text-xs uppercase tracking-widest text-ink/75 transition hover:bg-ink/5:bg-paper/10"
           >
             Refresh now
           </button>
@@ -138,7 +138,7 @@ export default function AdminAuditLogs() {
                   <td className="p-4 text-sm font-mono">
                     <div>{log.action}</div>
                     {log.errorMessage && (
-                      <div className="mt-1 text-xs text-red-600 dark:text-red-300">{log.errorMessage}</div>
+                      <div className="mt-1 text-xs text-red-600">{log.errorMessage}</div>
                     )}
                   </td>
                   <td className="p-4 text-sm">{log.resource}</td>

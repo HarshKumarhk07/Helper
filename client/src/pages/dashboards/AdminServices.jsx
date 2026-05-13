@@ -153,21 +153,21 @@ export default function AdminServices() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
                 <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Service Name</label>
-                <input required placeholder="e.g., TV Installation" className="w-full p-3 border rounded-xl bg-white dark:bg-paper/10" value={newService.name} onChange={(e) => setNewService({ ...newService, name: e.target.value })} />
+                <input required placeholder="e.g., TV Installation" className="w-full p-3 border rounded-xl bg-white" value={newService.name} onChange={(e) => setNewService({ ...newService, name: e.target.value })} />
               </div>
               <div>
                 <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Price (₹)</label>
-                <input required type="number" placeholder="499" className="w-full p-3 border rounded-xl bg-white dark:bg-paper/10" value={newService.price} onChange={(e) => setNewService({...newService, price: e.target.value})} />
+                <input required type="number" placeholder="499" className="w-full p-3 border rounded-xl bg-white" value={newService.price} onChange={(e) => setNewService({...newService, price: e.target.value})} />
               </div>
               <div>
                 <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Duration (minutes)</label>
-                <input required type="number" placeholder="e.g., 120" min="5" max="600" className="w-full p-3 border rounded-xl bg-white dark:bg-paper/10" value={newService.durationMinutes} onChange={(e) => setNewService({...newService, durationMinutes: e.target.value})} />
+                <input required type="number" placeholder="e.g., 120" min="5" max="600" className="w-full p-3 border rounded-xl bg-white" value={newService.durationMinutes} onChange={(e) => setNewService({...newService, durationMinutes: e.target.value})} />
               </div>
               <div className="md:col-span-2">
                 <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Category</label>
                 <select
                   required
-                  className="w-full p-3 border rounded-xl bg-white dark:bg-paper/10"
+                  className="w-full p-3 border rounded-xl bg-white"
                   value={newService.category}
                   onChange={(e) => setNewService({ ...newService, category: e.target.value })}
                 >
@@ -183,13 +183,13 @@ export default function AdminServices() {
             
             <div className="mb-4">
               <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Description</label>
-              <textarea required placeholder="Describe what's included in this service..." className="w-full p-3 border rounded-xl bg-white dark:bg-paper/10 h-24" value={newService.description} onChange={(e) => setNewService({...newService, description: e.target.value})} />
+              <textarea required placeholder="Describe what's included in this service..." className="w-full p-3 border rounded-xl bg-white h-24" value={newService.description} onChange={(e) => setNewService({...newService, description: e.target.value})} />
             </div>
             
             <div className="mb-6">
               <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Service Image (Cloudinary)</label>
               <div className="flex items-center gap-4">
-                <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading} className="p-2 border rounded-xl flex-1 bg-white dark:bg-paper/10" />
+                <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading} className="p-2 border rounded-xl flex-1 bg-white" />
                 {uploading && <span className="text-sm">Uploading...</span>}
                 {newService.image && <img src={newService.image} alt="Preview" className="h-16 w-16 object-cover rounded-xl" />}
               </div>
@@ -202,7 +202,7 @@ export default function AdminServices() {
 
       <div className="card-rounded overflow-x-auto">
         <table className="w-full text-left text-sm">
-          <thead className="bg-sand/50 text-xs uppercase tracking-widest text-ink/60 dark:bg-[#18181A] dark:text-paper/60">
+          <thead className="bg-sand/50 text-xs uppercase tracking-widest text-ink/60">
             <tr>
               <th className="p-4">Image</th>
               <th className="p-4">Category</th>
@@ -212,7 +212,7 @@ export default function AdminServices() {
               <th className="p-4">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-ink/10 dark:divide-paper/10">
+          <tbody className="divide-y divide-ink/10">
             {loading ? (
               <tr><td colSpan="6" className="p-4 text-center">Loading...</td></tr>
             ) : services.length === 0 ? (
@@ -223,7 +223,7 @@ export default function AdminServices() {
                   <td className="p-4">
                     {s.image ? <img src={s.image} className="w-12 h-12 rounded object-cover" alt="" /> : <div className="w-12 h-12 bg-sand rounded"></div>}
                   </td>
-                  <td className="p-4 text-sm text-ink/70 dark:text-paper/70">
+                  <td className="p-4 text-sm text-ink/70">
                     {s.category?.name || s.category?.slug || 'Uncategorized'}
                   </td>
                   <td className="p-4 font-medium">{s.name}</td>
@@ -249,10 +249,10 @@ export default function AdminServices() {
       {/* Edit Service Modal */}
       {editingService && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/70 px-4 backdrop-blur-sm overflow-hidden">
-          <div className="card-rounded w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-paper/10 bg-paper p-6 text-ink shadow-[0_30px_90px_rgba(0,0,0,0.35)] dark:border-paper/20 dark:bg-[#14151A] dark:text-paper">
+          <div className="card-rounded w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-paper/10 bg-paper p-6 text-ink shadow-[0_30px_90px_rgba(0,0,0,0.35)]">
             <div className="flex items-start justify-between gap-4 mb-4">
               <div>
-                <div className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">Edit Service</div>
+                <div className="text-xs uppercase tracking-widest text-ink/60">Edit Service</div>
                 <h3 className="font-bold text-lg mt-1">{editingService.name}</h3>
               </div>
               <button onClick={closeEditor} className="pill-btn text-xs flex-shrink-0">Close</button>
@@ -260,22 +260,22 @@ export default function AdminServices() {
 
             <form onSubmit={handleUpdateService} className="grid grid-cols-1 gap-3 md:grid-cols-2">
               <div>
-                <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60 dark:text-paper/50">Service Name</label>
-                <input required placeholder="Service name" className="w-full p-2 text-sm border rounded-xl bg-white dark:bg-paper/10 text-ink dark:text-paper border-ink/20 dark:border-paper/20" value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} />
+                <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Service Name</label>
+                <input required placeholder="Service name" className="w-full p-2 text-sm border rounded-xl bg-white text-ink border-ink/20" value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} />
               </div>
               <div>
-                <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60 dark:text-paper/50">Price (₹)</label>
-                <input required type="number" placeholder="499" className="w-full p-2 text-sm border rounded-xl bg-white dark:bg-paper/10 text-ink dark:text-paper border-ink/20 dark:border-paper/20" value={editForm.price} onChange={(e) => setEditForm({ ...editForm, price: e.target.value })} />
+                <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Price (₹)</label>
+                <input required type="number" placeholder="499" className="w-full p-2 text-sm border rounded-xl bg-white text-ink border-ink/20" value={editForm.price} onChange={(e) => setEditForm({ ...editForm, price: e.target.value })} />
               </div>
               <div>
-                <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60 dark:text-paper/50">Duration (minutes)</label>
-                <input required type="number" placeholder="e.g., 120" min="5" max="600" className="w-full p-2 text-sm border rounded-xl bg-white dark:bg-paper/10 text-ink dark:text-paper border-ink/20 dark:border-paper/20" value={editForm.durationMinutes} onChange={(e) => setEditForm({ ...editForm, durationMinutes: e.target.value })} />
+                <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Duration (minutes)</label>
+                <input required type="number" placeholder="e.g., 120" min="5" max="600" className="w-full p-2 text-sm border rounded-xl bg-white text-ink border-ink/20" value={editForm.durationMinutes} onChange={(e) => setEditForm({ ...editForm, durationMinutes: e.target.value })} />
               </div>
               <div className="md:col-span-2">
-                <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60 dark:text-paper/50">Category</label>
+                <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Category</label>
                 <select
                   required
-                  className="w-full p-2 text-sm border rounded-xl bg-white dark:bg-paper/10 text-ink dark:text-paper border-ink/20 dark:border-paper/20"
+                  className="w-full p-2 text-sm border rounded-xl bg-white text-ink border-ink/20"
                   value={editForm.category}
                   onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
                 >
@@ -288,14 +288,14 @@ export default function AdminServices() {
                 </select>
               </div>
               <div className="md:col-span-2">
-                <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60 dark:text-paper/50">Description</label>
-                <textarea required placeholder="Service description..." className="w-full p-2 text-sm border rounded-xl bg-white dark:bg-paper/10 text-ink dark:text-paper border-ink/20 dark:border-paper/20 h-20" value={editForm.description} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })} />
+                <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Description</label>
+                <textarea required placeholder="Service description..." className="w-full p-2 text-sm border rounded-xl bg-white text-ink border-ink/20 h-20" value={editForm.description} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })} />
               </div>
               <div className="md:col-span-2">
-                <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60 dark:text-paper/50">Image</label>
-                <input placeholder="Image URL" className="w-full p-2 text-sm border rounded-xl bg-white dark:bg-paper/10 text-ink dark:text-paper border-ink/20 dark:border-paper/20 mb-2" value={editForm.image} onChange={(e) => setEditForm({ ...editForm, image: e.target.value })} />
-                <div className="border-t border-ink/10 dark:border-paper/10 pt-2">
-                  <div className="text-xs text-ink/60 dark:text-paper/50 mb-2">Or upload new image:</div>
+                <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Image</label>
+                <input placeholder="Image URL" className="w-full p-2 text-sm border rounded-xl bg-white text-ink border-ink/20 mb-2" value={editForm.image} onChange={(e) => setEditForm({ ...editForm, image: e.target.value })} />
+                <div className="border-t border-ink/10 pt-2">
+                  <div className="text-xs text-ink/60 mb-2">Or upload new image:</div>
                   <input type="file" accept="image/*" className="w-full text-xs" onChange={async (e) => {
                     const file = e.target.files?.[0];
                     if (!file) return;
@@ -314,8 +314,8 @@ export default function AdminServices() {
               </div>
 
               <div className="md:col-span-2 flex gap-2 pt-2">
-                <button type="button" onClick={closeEditor} className="flex-1 px-3 py-2 rounded-lg border border-ink/20 dark:border-paper/20 hover:bg-ink/5 dark:hover:bg-paper/5 transition font-medium text-xs uppercase tracking-widest">Cancel</button>
-                <button type="submit" className="flex-1 px-3 py-2 bg-ink text-paper dark:bg-paper dark:text-ink rounded-lg font-medium text-xs uppercase tracking-widest hover:opacity-90 transition">Save</button>
+                <button type="button" onClick={closeEditor} className="flex-1 px-3 py-2 rounded-lg border border-ink/20 hover:bg-ink/5:bg-paper/5 transition font-medium text-xs uppercase tracking-widest">Cancel</button>
+                <button type="submit" className="flex-1 px-3 py-2 bg-ink text-paper rounded-lg font-medium text-xs uppercase tracking-widest hover:opacity-90 transition">Save</button>
               </div>
             </form>
           </div>
@@ -325,25 +325,25 @@ export default function AdminServices() {
       
       {deleteModal.show && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/70 px-4 backdrop-blur-sm">
-          <div className="card-rounded w-full max-w-sm border border-paper/10 bg-paper p-8 text-ink shadow-[0_30px_90px_rgba(0,0,0,0.35)] dark:border-paper/20 dark:bg-[#14151A] dark:text-paper">
+          <div className="card-rounded w-full max-w-sm border border-paper/10 bg-paper p-8 text-ink shadow-[0_30px_90px_rgba(0,0,0,0.35)]">
             {/* Icon */}
             <div className="flex justify-center mb-6">
-              <div className="p-4 rounded-full bg-red-100 dark:bg-red-400/10">
-                <AlertTriangle className="text-red-600 dark:text-red-400" size={28} />
+              <div className="p-4 rounded-full bg-red-100">
+                <AlertTriangle className="text-red-600" size={28} />
               </div>
             </div>
 
             {/* Content */}
             <h3 className="text-xl font-bold text-center mb-2">Delete Service</h3>
-            <p className="text-center text-ink/70 dark:text-paper/70 mb-6">
-              Are you sure you want to delete <strong className="text-red-600 dark:text-red-400">{deleteModal.serviceName}</strong>? This action cannot be undone.
+            <p className="text-center text-ink/70 mb-6">
+              Are you sure you want to delete <strong className="text-red-600">{deleteModal.serviceName}</strong>? This action cannot be undone.
             </p>
 
             {/* Buttons */}
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteModal({ show: false, serviceId: null, serviceName: '' })}
-                className="flex-1 px-4 py-3 rounded-xl border border-ink/20 dark:border-paper/20 hover:bg-ink/5 dark:hover:bg-paper/5 transition font-medium uppercase tracking-widest text-sm"
+                className="flex-1 px-4 py-3 rounded-xl border border-ink/20 hover:bg-ink/5:bg-paper/5 transition font-medium uppercase tracking-widest text-sm"
               >
                 Cancel
               </button>

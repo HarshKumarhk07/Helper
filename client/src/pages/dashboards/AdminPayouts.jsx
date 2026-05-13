@@ -202,8 +202,8 @@ export default function AdminPayouts() {
                 onClick={() => setTab(key)}
                 className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs uppercase tracking-widest transition ${
                   active
-                    ? 'bg-ink text-paper dark:bg-paper dark:text-ink'
-                    : 'border border-ink/15 hover:border-ink/40 dark:border-paper/15 dark:hover:border-paper/40'
+                    ? 'bg-ink text-paper'
+                    : 'border border-ink/15 hover:border-ink/40:border-paper/40'
                 }`}
               >
                 <Icon size={14} />
@@ -217,7 +217,7 @@ export default function AdminPayouts() {
             <button
               onClick={handleBackfill}
               disabled={working}
-              className="inline-flex items-center gap-2 rounded-full border border-ink/15 px-4 py-2 text-xs uppercase tracking-widest hover:border-ink/40 disabled:opacity-50 dark:border-paper/15 dark:hover:border-paper/40"
+              className="inline-flex items-center gap-2 rounded-full border border-ink/15 px-4 py-2 text-xs uppercase tracking-widest hover:border-ink/40 disabled:opacity-50:border-paper/40"
               title="Create earnings for completed bookings that don't have one yet"
             >
               <RefreshCw size={14} />
@@ -227,7 +227,7 @@ export default function AdminPayouts() {
           <button
             onClick={refresh}
             disabled={loading}
-            className="inline-flex items-center gap-2 rounded-full border border-ink/15 px-4 py-2 text-xs uppercase tracking-widest hover:border-ink/40 disabled:opacity-50 dark:border-paper/15 dark:hover:border-paper/40"
+            className="inline-flex items-center gap-2 rounded-full border border-ink/15 px-4 py-2 text-xs uppercase tracking-widest hover:border-ink/40 disabled:opacity-50:border-paper/40"
           >
             <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
             Refresh
@@ -272,17 +272,17 @@ export default function AdminPayouts() {
 
 function SummaryCard({ label, value, sub, tone }) {
   const toneClasses = {
-    amber: 'border-amber-300 bg-amber-50/50 dark:border-amber-400/20 dark:bg-amber-400/5',
-    green: 'border-green-300 bg-green-50/50 dark:border-green-400/20 dark:bg-green-400/5',
-    ink: 'border-ink/10 dark:border-paper/10',
+    amber: 'border-amber-300 bg-amber-50/50',
+    green: 'border-green-300 bg-green-50/50',
+    ink: 'border-ink/10',
   }[tone];
   return (
     <div className={`card-rounded p-4 sm:p-5 border ${toneClasses}`}>
-      <div className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+      <div className="text-xs uppercase tracking-widest text-ink/60">
         {label}
       </div>
       <div className="mt-2 text-2xl font-semibold sm:text-3xl">{value}</div>
-      <div className="mt-1 text-xs text-ink/60 dark:text-paper/50">{sub}</div>
+      <div className="mt-1 text-xs text-ink/60">{sub}</div>
     </div>
   );
 }
@@ -293,7 +293,7 @@ function PendingPanel({ loading, rows, onOpen, isAdmin }) {
   }
   if (!rows.length) {
     return (
-      <div className="card-rounded p-10 text-center text-sm text-ink/60 dark:text-paper/50">
+      <div className="card-rounded p-10 text-center text-sm text-ink/60">
         No pending payouts. Earnings appear here when workers complete jobs.
       </div>
     );
@@ -301,7 +301,7 @@ function PendingPanel({ loading, rows, onOpen, isAdmin }) {
   return (
     <div className="card-rounded overflow-x-auto">
       <table className="w-full text-left text-sm">
-        <thead className="bg-sand/50 text-xs uppercase tracking-widest text-ink/60 dark:bg-[#18181A] dark:text-paper/60">
+        <thead className="bg-sand/50 text-xs uppercase tracking-widest text-ink/60">
           <tr>
             <th className="p-4 font-normal">Worker</th>
             <th className="p-4 font-normal">Jobs</th>
@@ -312,15 +312,15 @@ function PendingPanel({ loading, rows, onOpen, isAdmin }) {
             <th className="p-4 font-normal" />
           </tr>
         </thead>
-        <tbody className="divide-y divide-ink/10 dark:divide-paper/10">
+        <tbody className="divide-y divide-ink/10">
           {rows.map((r) => (
             <tr
               key={r.workerId}
-              className="transition hover:bg-sand/30 dark:hover:bg-[#18181A]/50"
+              className="transition hover:bg-sand/30:bg-[#18181A]/50"
             >
               <td className="p-4">
                 <div className="font-medium">{r.worker?.name || '—'}</div>
-                <div className="text-xs text-ink/60 dark:text-paper/50">
+                <div className="text-xs text-ink/60">
                   {r.worker?.email}
                   {r.worker?.kycStatus && r.worker.kycStatus !== 'verified' && (
                     <span className="ml-2 inline-flex items-center gap-1 text-amber-600">
@@ -331,9 +331,9 @@ function PendingPanel({ loading, rows, onOpen, isAdmin }) {
               </td>
               <td className="p-4">{r.jobs}</td>
               <td className="p-4">{inr(r.gross)}</td>
-              <td className="p-4 text-ink/70 dark:text-paper/70">{inr(r.commission)}</td>
+              <td className="p-4 text-ink/70">{inr(r.commission)}</td>
               <td className="p-4 text-right font-semibold">{inr(r.net)}</td>
-              <td className="p-4 text-xs text-ink/60 dark:text-paper/50">
+              <td className="p-4 text-xs text-ink/60">
                 {fmtDate(r.oldest)}
               </td>
               <td className="p-4 text-right">
@@ -341,7 +341,7 @@ function PendingPanel({ loading, rows, onOpen, isAdmin }) {
                   onClick={() => onOpen(r)}
                   disabled={!isAdmin}
                   title={!isAdmin ? 'Only admins can settle' : undefined}
-                  className="inline-flex items-center gap-2 rounded-full bg-ink px-4 py-2 text-xs uppercase tracking-widest text-paper transition hover:opacity-90 disabled:opacity-40 dark:bg-paper dark:text-ink"
+                  className="inline-flex items-center gap-2 rounded-full bg-ink px-4 py-2 text-xs uppercase tracking-widest text-paper transition hover:opacity-90 disabled:opacity-40"
                 >
                   <Banknote size={14} />
                   {isAdmin ? 'Settle' : 'View'}
@@ -361,7 +361,7 @@ function HistoryPanel({ loading, batches }) {
   }
   if (!batches.length) {
     return (
-      <div className="card-rounded p-10 text-center text-sm text-ink/60 dark:text-paper/50">
+      <div className="card-rounded p-10 text-center text-sm text-ink/60">
         No settlement history yet.
       </div>
     );
@@ -369,7 +369,7 @@ function HistoryPanel({ loading, batches }) {
   return (
     <div className="card-rounded overflow-x-auto">
       <table className="w-full text-left text-sm">
-        <thead className="bg-sand/50 text-xs uppercase tracking-widest text-ink/60 dark:bg-[#18181A] dark:text-paper/60">
+        <thead className="bg-sand/50 text-xs uppercase tracking-widest text-ink/60">
           <tr>
             <th className="p-4 font-normal">Code</th>
             <th className="p-4 font-normal">Worker</th>
@@ -381,13 +381,13 @@ function HistoryPanel({ loading, batches }) {
             <th className="p-4 font-normal">By</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-ink/10 dark:divide-paper/10">
+        <tbody className="divide-y divide-ink/10">
           {batches.map((b) => (
-            <tr key={b._id} className="transition hover:bg-sand/30 dark:hover:bg-[#18181A]/50">
+            <tr key={b._id} className="transition hover:bg-sand/30:bg-[#18181A]/50">
               <td className="p-4 font-mono text-xs">{b.code}</td>
               <td className="p-4">
                 <div className="font-medium">{b.worker?.name || '—'}</div>
-                <div className="text-xs text-ink/60 dark:text-paper/50">{b.worker?.email}</div>
+                <div className="text-xs text-ink/60">{b.worker?.email}</div>
               </td>
               <td className="p-4">{b.earningsCount}</td>
               <td className="p-4 font-semibold">{inr(b.totalNet)}</td>
@@ -425,14 +425,14 @@ function SettleModal({
 }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/70 px-4 py-6 backdrop-blur-sm">
-      <div className="card-rounded flex max-h-[90vh] w-full max-w-4xl flex-col border border-paper/10 bg-paper text-ink shadow-[0_30px_90px_rgba(0,0,0,0.35)] dark:border-paper/20 dark:bg-[#14151A] dark:text-paper">
-        <div className="flex items-start justify-between gap-4 border-b border-ink/10 p-6 dark:border-paper/10">
+      <div className="card-rounded flex max-h-[90vh] w-full max-w-4xl flex-col border border-paper/10 bg-paper text-ink shadow-[0_30px_90px_rgba(0,0,0,0.35)]">
+        <div className="flex items-start justify-between gap-4 border-b border-ink/10 p-6">
           <div>
-            <div className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+            <div className="text-xs uppercase tracking-widest text-ink/60">
               Settle payout
             </div>
             <h3 className="heading-display mt-2 text-2xl">{worker.worker?.name}</h3>
-            <p className="mt-1 text-sm text-ink/70 dark:text-paper/60">
+            <p className="mt-1 text-sm text-ink/70">
               {worker.worker?.email} · {worker.jobs} pending job{worker.jobs === 1 ? '' : 's'}
             </p>
           </div>
@@ -442,9 +442,9 @@ function SettleModal({
         </div>
 
         <div className="flex-1 overflow-y-auto p-6">
-          <div className="overflow-x-auto rounded-2xl border border-ink/10 dark:border-paper/10">
+          <div className="overflow-x-auto rounded-2xl border border-ink/10">
             <table className="w-full text-left text-sm">
-              <thead className="bg-sand/50 text-xs uppercase tracking-widest text-ink/60 dark:bg-[#18181A] dark:text-paper/60">
+              <thead className="bg-sand/50 text-xs uppercase tracking-widest text-ink/60">
                 <tr>
                   <th className="p-3 font-normal">
                     <input
@@ -469,7 +469,7 @@ function SettleModal({
                   <th className="p-3 font-normal text-right">Net</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-ink/10 dark:divide-paper/10">
+              <tbody className="divide-y divide-ink/10">
                 {entries.map((e) => (
                   <tr key={e._id} className="text-sm">
                     <td className="p-3">
@@ -481,11 +481,11 @@ function SettleModal({
                     </td>
                     <td className="p-3 font-mono text-xs">{e.booking?.code || e.booking}</td>
                     <td className="p-3">{e.booking?.service?.name || '—'}</td>
-                    <td className="p-3 text-xs text-ink/70 dark:text-paper/70">
+                    <td className="p-3 text-xs text-ink/70">
                       {fmtDateTime(e.completedAt)}
                     </td>
                     <td className="p-3 text-right">{inr(e.grossAmount)}</td>
-                    <td className="p-3 text-right text-ink/70 dark:text-paper/70">
+                    <td className="p-3 text-right text-ink/70">
                       {inr(e.commissionAmount)}
                     </td>
                     <td className="p-3 text-right font-semibold">{inr(e.netAmount)}</td>
@@ -493,7 +493,7 @@ function SettleModal({
                 ))}
                 {entries.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="p-6 text-center text-ink/60 dark:text-paper/50">
+                    <td colSpan={7} className="p-6 text-center text-ink/60">
                       No pending earnings
                     </td>
                   </tr>
@@ -504,14 +504,14 @@ function SettleModal({
 
           <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
             <div>
-              <label className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+              <label className="text-xs uppercase tracking-widest text-ink/60">
                 Payout method
               </label>
               <select
                 value={method}
                 onChange={(e) => setMethod(e.target.value)}
                 disabled={!isAdmin}
-                className="mt-2 w-full rounded-xl border border-ink/15 bg-transparent p-3 text-sm focus:border-ink focus:outline-none disabled:opacity-50 dark:border-paper/20 dark:focus:border-paper/60"
+                className="mt-2 w-full rounded-xl border border-ink/15 bg-transparent p-3 text-sm focus:border-ink focus:outline-none disabled:opacity-50:border-paper/60"
               >
                 <option value="bank_transfer">Bank Transfer</option>
                 <option value="upi">UPI</option>
@@ -520,7 +520,7 @@ function SettleModal({
               </select>
             </div>
             <div className="md:col-span-2">
-              <label className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+              <label className="text-xs uppercase tracking-widest text-ink/60">
                 Reference (txn id, UPI ref, etc.)
               </label>
               <input
@@ -528,11 +528,11 @@ function SettleModal({
                 onChange={(e) => setReference(e.target.value)}
                 disabled={!isAdmin}
                 placeholder="Optional reference for audit trail"
-                className="mt-2 w-full rounded-xl border border-ink/15 bg-transparent p-3 text-sm focus:border-ink focus:outline-none disabled:opacity-50 dark:border-paper/20 dark:focus:border-paper/60"
+                className="mt-2 w-full rounded-xl border border-ink/15 bg-transparent p-3 text-sm focus:border-ink focus:outline-none disabled:opacity-50:border-paper/60"
               />
             </div>
             <div className="md:col-span-3">
-              <label className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+              <label className="text-xs uppercase tracking-widest text-ink/60">
                 Notes
               </label>
               <textarea
@@ -540,21 +540,21 @@ function SettleModal({
                 onChange={(e) => setNotes(e.target.value)}
                 disabled={!isAdmin}
                 rows={2}
-                className="mt-2 w-full rounded-xl border border-ink/15 bg-transparent p-3 text-sm focus:border-ink focus:outline-none disabled:opacity-50 dark:border-paper/20 dark:focus:border-paper/60"
+                className="mt-2 w-full rounded-xl border border-ink/15 bg-transparent p-3 text-sm focus:border-ink focus:outline-none disabled:opacity-50:border-paper/60"
               />
             </div>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-4 border-t border-ink/10 p-6 dark:border-paper/10">
+        <div className="flex flex-wrap items-center justify-between gap-4 border-t border-ink/10 p-6">
           <div className="text-sm">
-            <div className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+            <div className="text-xs uppercase tracking-widest text-ink/60">
               Selected
             </div>
             <div className="mt-1 flex flex-wrap items-center gap-x-5 gap-y-1">
               <span>{selectedTotals.count} job{selectedTotals.count === 1 ? '' : 's'}</span>
-              <span className="text-ink/70 dark:text-paper/70">Gross {inr(selectedTotals.gross)}</span>
-              <span className="text-ink/70 dark:text-paper/70">
+              <span className="text-ink/70">Gross {inr(selectedTotals.gross)}</span>
+              <span className="text-ink/70">
                 Commission {inr(selectedTotals.commission)}
               </span>
               <span className="font-semibold">Net {inr(selectedTotals.net)}</span>

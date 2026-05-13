@@ -66,7 +66,7 @@ export default function WorkerJobs() {
             className={`rounded-pill border px-4 py-2 text-xs uppercase tracking-widest transition ${
               filter === f.key
                 ? 'border-ink bg-ink text-paper'
-                : 'border-ink bg-ink/85 text-paper hover:bg-ink hover:text-paper dark:border-paper/50 '
+                : 'border-ink bg-ink/85 text-paper hover:bg-ink hover:text-paper '
             }`}
           >
             {f.label}
@@ -80,7 +80,7 @@ export default function WorkerJobs() {
             <div key={i} className="skeleton h-32 w-full" />
           ))
         ) : jobs.length === 0 ? (
-          <div className="col-span-full rounded-card border border-ink/10 bg-sand/40 p-10 text-center text-sm text-ink/70 dark:border-paper/10 ">
+          <div className="col-span-full rounded-card border border-ink/10 bg-sand/40 p-10 text-center text-sm text-ink/70 ">
             No jobs in this view.
           </div>
         ) : (

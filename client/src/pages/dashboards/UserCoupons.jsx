@@ -78,8 +78,8 @@ export default function UserCoupons() {
                   onClick={() => setFilter(tab.key)}
                   className={`rounded-full px-4 py-2 text-xs uppercase tracking-widest transition ${
                     active
-                      ? 'bg-ink text-paper dark:bg-paper dark:text-ink'
-                      : 'border border-ink/15 hover:border-ink/40 dark:border-paper/15 dark:hover:border-paper/40'
+                      ? 'bg-ink text-paper'
+                      : 'border border-ink/15 hover:border-ink/40:border-paper/40'
                   }`}
                 >
                   {tab.label}
@@ -87,7 +87,7 @@ export default function UserCoupons() {
               );
             })}
           </div>
-          <div className="text-xs text-ink/60 dark:text-paper/50">
+          <div className="text-xs text-ink/60">
             {coupons.filter((c) => c.eligible).length} eligible · {coupons.length} active
           </div>
         </div>
@@ -100,7 +100,7 @@ export default function UserCoupons() {
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="card-rounded p-10 text-center text-sm text-ink/60 dark:text-paper/50">
+        <div className="card-rounded p-10 text-center text-sm text-ink/60">
           {filter === 'eligible'
             ? 'No coupons available for your account right now. Check back soon.'
             : 'Nothing in this list.'}
@@ -147,32 +147,32 @@ function CouponCard({ coupon, onCopy, copied, onUse }) {
           size={42}
           className={
             coupon.eligible
-              ? 'text-ink/15 dark:text-paper/15'
-              : 'text-ink/10 dark:text-paper/10'
+              ? 'text-ink/15'
+              : 'text-ink/10'
           }
         />
       </div>
 
       <div className="flex items-start justify-between gap-3">
         <div>
-          <div className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+          <div className="text-xs uppercase tracking-widest text-ink/60">
             {describeDiscount(coupon)}
           </div>
           <div className="mt-2 flex items-center gap-3">
-            <div className="rounded-xl border border-dashed border-ink/30 bg-sand/40 px-4 py-2 font-mono text-lg font-semibold tracking-widest dark:border-paper/30 dark:bg-paper/5">
+            <div className="rounded-xl border border-dashed border-ink/30 bg-sand/40 px-4 py-2 font-mono text-lg font-semibold tracking-widest">
               {coupon.code}
             </div>
             <button
               onClick={() => onCopy(coupon.code)}
               disabled={!coupon.eligible}
-              className="inline-flex items-center gap-1 rounded-full border border-ink/15 px-3 py-1.5 text-xs uppercase tracking-widest hover:border-ink/40 disabled:opacity-50 dark:border-paper/15 dark:hover:border-paper/40"
+              className="inline-flex items-center gap-1 rounded-full border border-ink/15 px-3 py-1.5 text-xs uppercase tracking-widest hover:border-ink/40 disabled:opacity-50:border-paper/40"
             >
               {copied ? <CheckCircle2 size={12} /> : <Copy size={12} />}
               {copied ? 'Copied' : 'Copy'}
             </button>
           </div>
           {coupon.description && (
-            <div className="mt-3 text-sm text-ink/70 dark:text-paper/65">
+            <div className="mt-3 text-sm text-ink/70">
               {coupon.description}
             </div>
           )}
@@ -180,7 +180,7 @@ function CouponCard({ coupon, onCopy, copied, onUse }) {
       </div>
 
       {restrictions.length > 0 && (
-        <ul className="mt-4 space-y-1 text-xs text-ink/60 dark:text-paper/50">
+        <ul className="mt-4 space-y-1 text-xs text-ink/60">
           {restrictions.map((r, i) => (
             <li key={i}>· {r}</li>
           ))}
@@ -188,19 +188,19 @@ function CouponCard({ coupon, onCopy, copied, onUse }) {
       )}
 
       <div className="mt-4 flex items-center justify-between gap-3">
-        <span className="text-xs text-ink/55 dark:text-paper/45">
+        <span className="text-xs text-ink/55">
           Expires {fmtDate(coupon.expiryDate)}
         </span>
         <div className="flex items-center gap-2">
           {!coupon.eligible && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-1 text-xs text-amber-800 dark:bg-amber-400/10 dark:text-amber-200">
+            <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-1 text-xs text-amber-800">
               <AlertTriangle size={12} /> {coupon.reason || 'Not yet eligible'}
             </span>
           )}
           {coupon.eligible && (
             <button
               onClick={() => onUse(coupon.code)}
-              className="inline-flex items-center gap-1 rounded-full bg-ink px-3 py-1.5 text-xs font-semibold text-paper transition hover:opacity-90 dark:bg-paper dark:text-ink"
+              className="inline-flex items-center gap-1 rounded-full bg-ink px-3 py-1.5 text-xs font-semibold text-paper transition hover:opacity-90"
             >
               Use
               <ArrowRight size={12} />

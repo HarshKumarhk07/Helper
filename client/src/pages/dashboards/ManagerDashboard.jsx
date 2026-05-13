@@ -51,23 +51,23 @@ export default function ManagerDashboard() {
       </FadeUp>
 
       {!loading && cats.length === 0 && (
-        <div className="card-rounded mb-6 border border-amber-300 bg-amber-50/60 p-5 text-sm text-amber-800 dark:border-amber-400/20 dark:bg-amber-400/5 dark:text-amber-200">
+        <div className="card-rounded mb-6 border border-amber-300 bg-amber-50/60 p-5 text-sm text-amber-800">
           You don't have any categories assigned yet. Ask an admin to assign you in
-          <code className="mx-1 rounded bg-black/10 px-1 dark:bg-white/10">/admin/categories</code>.
+          <code className="mx-1 rounded bg-black/10 px-1">/admin/categories</code>.
         </div>
       )}
 
       {cats.length > 0 && (
         <FadeUp>
           <div className="card-rounded mb-6 p-5">
-            <div className="mb-3 text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+            <div className="mb-3 text-xs uppercase tracking-widest text-ink/60">
               Your categories
             </div>
             <div className="flex flex-wrap gap-2">
               {cats.map((c) => (
                 <span
                   key={c._id}
-                  className="inline-flex items-center gap-2 rounded-full border border-ink/15 px-3 py-1.5 text-sm dark:border-paper/15"
+                  className="inline-flex items-center gap-2 rounded-full border border-ink/15 px-3 py-1.5 text-sm"
                   style={{ background: `${c.color || '#18181A'}10` }}
                 >
                   <span
@@ -118,13 +118,13 @@ export default function ManagerDashboard() {
 function Stat({ label, value, sub, Icon }) {
   return (
     <div className="card-rounded p-4 sm:p-5">
-      <div className="flex items-center gap-2 text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+      <div className="flex items-center gap-2 text-xs uppercase tracking-widest text-ink/60">
         {Icon ? <Icon size={14} /> : null}
         {label}
       </div>
       <div className="mt-2 text-2xl font-bold sm:text-3xl">{value}</div>
       {sub && (
-        <div className="mt-1 text-xs text-ink/60 dark:text-paper/50">{sub}</div>
+        <div className="mt-1 text-xs text-ink/60">{sub}</div>
       )}
     </div>
   );

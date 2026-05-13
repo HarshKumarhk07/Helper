@@ -112,11 +112,11 @@ export default function Signup() {
       {/* Layered, premium background — matches Login */}
       <div
         aria-hidden
-        className="pointer-events-none fixed inset-0 -z-10 bg-paper dark:bg-[#0E0E10]"
+        className="pointer-events-none fixed inset-0 -z-10 bg-paper"
       />
       <div
         aria-hidden
-        className="pointer-events-none fixed inset-0 -z-10 opacity-70 dark:opacity-50"
+        className="pointer-events-none fixed inset-0 -z-10 opacity-70"
         style={{
           backgroundImage:
             'radial-gradient(60rem 60rem at 12% 0%, rgba(26,26,26,0.06), transparent 60%), radial-gradient(50rem 50rem at 100% 100%, rgba(26,26,26,0.05), transparent 55%)',
@@ -124,11 +124,11 @@ export default function Signup() {
       />
       <div
         aria-hidden
-        className="pointer-events-none fixed inset-x-0 top-0 -z-10 h-[40vh] bg-gradient-to-b from-sand/60 to-transparent dark:from-paper/[0.03]"
+        className="pointer-events-none fixed inset-x-0 top-0 -z-10 h-[40vh] bg-gradient-to-b from-sand/60 to-transparent.03]"
       />
 
       <section
-        className="relative flex min-h-[100dvh] items-start justify-center px-4 sm:px-6"
+        className="relative flex min-h-[100dvh] items-center justify-center px-4 sm:px-6"
         style={{
           paddingTop: 'calc(1rem + env(safe-area-inset-top))',
           paddingBottom: 'calc(2.5rem + env(safe-area-inset-bottom))',
@@ -141,7 +141,7 @@ export default function Signup() {
             transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
             className="space-y-7 lg:space-y-9"
           >
-            <span className="inline-flex items-center gap-2 rounded-full border border-ink/15 bg-paper/80 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-ink/90 backdrop-blur dark:border-paper/15 dark:bg-paper/[0.04] ">
+            <span className="inline-flex items-center gap-2 rounded-full border border-ink/15 bg-paper/80 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-ink/90 backdrop-blur.04] ">
               Create your account
             </span>
 
@@ -150,8 +150,8 @@ export default function Signup() {
                 Join
                 <span className="mt-1 block font-semibold">UrbanEase.</span>
               </h1>
-              <div className="h-px w-20 bg-gradient-to-r from-ink/40 to-transparent dark:from-paper/40" />
-              <p className="max-w-lg text-lg font-medium leading-relaxed text-ink/90 dark:text-paper/75">
+              <div className="h-px w-20 bg-gradient-to-r from-ink/40 to-transparent" />
+              <p className="max-w-lg text-lg font-medium leading-relaxed text-ink/90">
                 Book vetted urban services and shop the heritage collection from one elegant
                 account. Workers and managers are invited by an admin.
               </p>
@@ -160,16 +160,16 @@ export default function Signup() {
             {/* Benefits — only on desktop, kept tight */}
             <ul className="hidden space-y-4 text-sm lg:block">
               <li className="flex flex-col gap-1">
-                <span className="font-semibold text-ink dark:text-paper">Verified professionals</span>
-                <span className="text-ink/70 dark:text-paper/65">for every booking — KYC-checked, rated, on schedule.</span>
+                <span className="font-semibold text-ink">Verified professionals</span>
+                <span className="text-ink/70">for every booking — KYC-checked, rated, on schedule.</span>
               </li>
               <li className="flex flex-col gap-1">
-                <span className="font-semibold text-ink dark:text-paper">First-order welcome offers</span>
-                <span className="text-ink/70 dark:text-paper/65">unlocked the moment your account is created.</span>
+                <span className="font-semibold text-ink">First-order welcome offers</span>
+                <span className="text-ink/70">unlocked the moment your account is created.</span>
               </li>
               <li className="flex flex-col gap-1">
-                <span className="font-semibold text-ink dark:text-paper">Curated for you</span>
-                <span className="text-ink/70 dark:text-paper/65">— bookings, orders, wallet, support, all in one place.</span>
+                <span className="font-semibold text-ink">Curated for you</span>
+                <span className="text-ink/70">— bookings, orders, wallet, support, all in one place.</span>
               </li>
             </ul>
           </motion.div>
@@ -184,15 +184,15 @@ export default function Signup() {
             <div className="relative">
               <div
                 aria-hidden
-                className="absolute -inset-4 -z-10 rounded-[32px] bg-gradient-to-br from-ink/5 via-transparent to-ink/[0.02] blur-2xl dark:from-paper/[0.04] dark:to-paper/[0.02]"
+                className="absolute -inset-4 -z-10 rounded-[32px] bg-gradient-to-br from-ink/5 via-transparent to-ink/[0.02] blur-2xl.04].02]"
               />
 
-              <div className="overflow-hidden rounded-[28px] border border-ink/10 bg-paper/95 shadow-card backdrop-blur-xl dark:border-paper/10 dark:bg-[#141417]/85">
+              <div className="overflow-hidden rounded-[28px] border border-ink/10 bg-paper/95 shadow-card backdrop-blur-xl">
                 <div className="px-6 pt-6 pb-1 sm:px-8 sm:pt-8">
-                  <h2 className="text-[26px] font-semibold leading-tight tracking-tight text-ink dark:text-paper">
+                  <h2 className="text-[26px] font-semibold leading-tight tracking-tight text-ink">
                     Create your account
                   </h2>
-                  <p className="mt-1 text-sm text-ink/60 dark:text-paper/55">
+                  <p className="mt-1 text-sm text-ink/60">
                     A few quick details and you're in. Less than 30 seconds.
                   </p>
                 </div>
@@ -200,11 +200,11 @@ export default function Signup() {
                 <div className="space-y-4 px-6 pb-2 pt-5 sm:px-8">
                   <GoogleAuthButton label="Sign up with Google" />
                   <div className="relative flex items-center gap-3 py-1">
-                    <div className="h-px flex-1 bg-ink/10 dark:bg-paper/10" />
-                    <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-ink/45 dark:text-paper/40">
+                    <div className="h-px flex-1 bg-ink/10" />
+                    <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-ink/45">
                       or with email
                     </span>
-                    <div className="h-px flex-1 bg-ink/10 dark:bg-paper/10" />
+                    <div className="h-px flex-1 bg-ink/10" />
                   </div>
                 </div>
 
@@ -263,7 +263,7 @@ export default function Signup() {
                         <button
                           type="button"
                           onClick={() => setShowPassword((v) => !v)}
-                          className="text-ink/45 transition-colors hover:text-ink dark:text-paper/45 dark:hover:text-paper"
+                          className="text-ink/45 transition-colors hover:text-ink:text-paper"
                           aria-label={
                             showPassword ? 'Hide password' : 'Show password'
                           }
@@ -284,12 +284,12 @@ export default function Signup() {
                               className={`rounded-full transition-colors duration-300 ${
                                 strength.score > i
                                   ? strengthBar[Math.min(strength.score, strengthBar.length - 1)]
-                                  : 'bg-ink/10 dark:bg-paper/10'
+                                  : 'bg-ink/10'
                               }`}
                             />
                           ))}
                         </div>
-                        <span className="w-16 text-right text-[10px] font-medium uppercase tracking-[0.16em] text-ink/55 dark:text-paper/55">
+                        <span className="w-16 text-right text-[10px] font-medium uppercase tracking-[0.16em] text-ink/55">
                           {strength.label}
                         </span>
                       </div>
@@ -305,10 +305,10 @@ export default function Signup() {
                         onChange={(e) => setAgreed(e.target.checked)}
                         className="peer sr-only"
                       />
-                      <span className="absolute inset-0 rounded-[5px] border border-ink/25 bg-paper transition-all duration-200 peer-checked:border-ink peer-checked:bg-ink peer-focus-visible:ring-2 peer-focus-visible:ring-ink/30 dark:border-paper/30 dark:bg-paper/[0.06] dark:peer-checked:border-paper dark:peer-checked:bg-paper" />
+                      <span className="absolute inset-0 rounded-[5px] border border-ink/25 bg-paper transition-all duration-200 peer-checked:border-ink peer-checked:bg-ink peer-focus-visible:ring-2 peer-focus-visible:ring-ink/30.06]:border-paper:bg-paper" />
                       <svg
                         viewBox="0 0 16 16"
-                        className="relative h-2.5 w-2.5 scale-0 stroke-paper opacity-0 transition-all duration-150 peer-checked:scale-100 peer-checked:opacity-100 dark:stroke-ink"
+                        className="relative h-2.5 w-2.5 scale-0 stroke-paper opacity-0 transition-all duration-150 peer-checked:scale-100 peer-checked:opacity-100"
                         fill="none"
                         strokeWidth="3"
                         strokeLinecap="round"
@@ -317,18 +317,18 @@ export default function Signup() {
                         <polyline points="3 8.5 6.5 12 13 4" />
                       </svg>
                     </span>
-                    <span className="text-xs leading-relaxed text-ink/65 transition-colors group-hover:text-ink dark:text-paper/65 dark:group-hover:text-paper">
+                    <span className="text-xs leading-relaxed text-ink/65 transition-colors group-hover:text-ink:text-paper">
                       I agree to the{' '}
                       <Link
                         to="/terms"
-                        className="font-medium text-ink underline-offset-4 hover:underline dark:text-paper"
+                        className="font-medium text-ink underline-offset-4 hover:underline"
                       >
                         Terms
                       </Link>{' '}
                       and{' '}
                       <Link
                         to="/privacy"
-                        className="font-medium text-ink underline-offset-4 hover:underline dark:text-paper"
+                        className="font-medium text-ink underline-offset-4 hover:underline"
                       >
                         Privacy Policy
                       </Link>
@@ -344,11 +344,11 @@ export default function Signup() {
                     disabled={!canSubmit}
                   />
 
-                  <div className="border-t border-ink/10 pt-5 text-center text-sm text-ink/75 dark:border-paper/10 dark:text-paper/65">
+                  <div className="border-t border-ink/10 pt-5 text-center text-sm text-ink/75">
                     Already have an account?{' '}
                     <Link
                       to="/login"
-                      className="font-semibold text-ink underline-offset-4 hover:underline dark:text-paper"
+                      className="font-semibold text-ink underline-offset-4 hover:underline"
                     >
                       Sign in
                     </Link>
@@ -356,7 +356,7 @@ export default function Signup() {
                 </form>
               </div>
 
-              <p className="mt-4 text-center text-[11px] uppercase tracking-[0.18em] text-ink/50 dark:text-paper/45">
+              <p className="mt-4 text-center text-[11px] uppercase tracking-[0.18em] text-ink/50">
                 Protected by enterprise-grade encryption
               </p>
             </div>

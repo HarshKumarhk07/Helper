@@ -87,7 +87,7 @@ export default function UserWallet() {
     <DashboardShell eyebrow="Customer" title="Wallet">
       <FadeUp>
         <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
-          <div className="card-rounded p-5 bg-ink text-paper dark:bg-paper dark:text-ink">
+          <div className="card-rounded p-5 bg-ink text-paper">
             <div className="flex items-center gap-2 text-xs uppercase tracking-widest opacity-70">
               <Wallet size={14} /> Balance
             </div>
@@ -101,16 +101,16 @@ export default function UserWallet() {
               </div>
             )}
           </div>
-          <div className="card-rounded border border-green-300 bg-green-50/50 p-5 dark:border-green-400/20 dark:bg-green-400/5">
-            <div className="flex items-center gap-2 text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+          <div className="card-rounded border border-green-300 bg-green-50/50 p-5">
+            <div className="flex items-center gap-2 text-xs uppercase tracking-widest text-ink/60">
               <ArrowDownCircle size={14} /> Credits (this view)
             </div>
             <div className="mt-2 text-2xl font-semibold sm:text-3xl">
               {inr(stats.credits)}
             </div>
           </div>
-          <div className="card-rounded border border-red-300 bg-red-50/50 p-5 dark:border-red-400/20 dark:bg-red-400/5">
-            <div className="flex items-center gap-2 text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+          <div className="card-rounded border border-red-300 bg-red-50/50 p-5">
+            <div className="flex items-center gap-2 text-xs uppercase tracking-widest text-ink/60">
               <ArrowUpCircle size={14} /> Debits (this view)
             </div>
             <div className="mt-2 text-2xl font-semibold sm:text-3xl">
@@ -130,8 +130,8 @@ export default function UserWallet() {
                 onClick={() => setFilter(f.key)}
                 className={`rounded-full px-4 py-2 text-xs uppercase tracking-widest transition ${
                   active
-                    ? 'bg-ink text-paper dark:bg-paper dark:text-ink'
-                    : 'border border-ink/15 hover:border-ink/40 dark:border-paper/15 dark:hover:border-paper/40'
+                    ? 'bg-ink text-paper'
+                    : 'border border-ink/15 hover:border-ink/40:border-paper/40'
                 }`}
               >
                 {f.label}
@@ -145,7 +145,7 @@ export default function UserWallet() {
             loadWallet();
             loadTransactions(0);
           }}
-          className="inline-flex items-center gap-2 rounded-full border border-ink/15 px-3 py-1.5 text-xs uppercase tracking-widest hover:border-ink/40 dark:border-paper/15 dark:hover:border-paper/40"
+          className="inline-flex items-center gap-2 rounded-full border border-ink/15 px-3 py-1.5 text-xs uppercase tracking-widest hover:border-ink/40:border-paper/40"
         >
           <RefreshCw size={12} /> Refresh
         </button>
@@ -153,7 +153,7 @@ export default function UserWallet() {
 
       <div className="card-rounded overflow-x-auto">
         <table className="w-full text-left text-sm">
-          <thead className="bg-sand/50 text-xs uppercase tracking-widest text-ink/60 dark:bg-[#18181A] dark:text-paper/60">
+          <thead className="bg-sand/50 text-xs uppercase tracking-widest text-ink/60">
             <tr>
               <th className="p-4 font-normal">When</th>
               <th className="p-4 font-normal">Type</th>
@@ -163,16 +163,16 @@ export default function UserWallet() {
               <th className="p-4 font-normal">Note</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-ink/10 dark:divide-paper/10">
+          <tbody className="divide-y divide-ink/10">
             {loading ? (
               <tr>
-                <td colSpan={6} className="p-6 text-center text-ink/60 dark:text-paper/50">
+                <td colSpan={6} className="p-6 text-center text-ink/60">
                   Loading…
                 </td>
               </tr>
             ) : transactions.length === 0 ? (
               <tr>
-                <td colSpan={6} className="p-6 text-center text-ink/60 dark:text-paper/50">
+                <td colSpan={6} className="p-6 text-center text-ink/60">
                   No wallet activity yet.
                 </td>
               </tr>
@@ -180,18 +180,18 @@ export default function UserWallet() {
               transactions.map((t) => (
                 <tr
                   key={t._id}
-                  className="transition hover:bg-sand/30 dark:hover:bg-[#18181A]/50"
+                  className="transition hover:bg-sand/30:bg-[#18181A]/50"
                 >
-                  <td className="p-4 text-xs text-ink/70 dark:text-paper/70">
+                  <td className="p-4 text-xs text-ink/70">
                     {fmt(t.createdAt)}
                   </td>
                   <td className="p-4">
                     {t.type === 'credit' ? (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-medium uppercase tracking-widest text-green-700 dark:bg-green-400/10 dark:text-green-300">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-medium uppercase tracking-widest text-green-700">
                         <ArrowDownCircle size={11} /> Credit
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-3 py-1 text-xs font-medium uppercase tracking-widest text-red-700 dark:bg-red-400/10 dark:text-red-300">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-3 py-1 text-xs font-medium uppercase tracking-widest text-red-700">
                         <ArrowUpCircle size={11} /> Debit
                       </span>
                     )}
@@ -202,8 +202,8 @@ export default function UserWallet() {
                   <td
                     className={`p-4 text-right font-semibold tabular-nums ${
                       t.type === 'credit'
-                        ? 'text-green-700 dark:text-green-300'
-                        : 'text-red-700 dark:text-red-300'
+                        ? 'text-green-700'
+                        : 'text-red-700'
                     }`}
                   >
                     {t.type === 'credit' ? '+' : '−'}
@@ -212,7 +212,7 @@ export default function UserWallet() {
                   <td className="p-4 text-right tabular-nums">
                     {inr(t.balanceAfter)}
                   </td>
-                  <td className="p-4 text-xs text-ink/65 dark:text-paper/55">
+                  <td className="p-4 text-xs text-ink/65">
                     {t.note || <span className="opacity-50">—</span>}
                   </td>
                 </tr>
@@ -226,7 +226,7 @@ export default function UserWallet() {
         <div className="mt-4 flex justify-center">
           <button
             onClick={handleLoadMore}
-            className="rounded-full border border-ink/15 px-5 py-2 text-xs uppercase tracking-widest hover:border-ink/40 dark:border-paper/15 dark:hover:border-paper/40"
+            className="rounded-full border border-ink/15 px-5 py-2 text-xs uppercase tracking-widest hover:border-ink/40:border-paper/40"
           >
             Load more ({total - transactions.length} more)
           </button>

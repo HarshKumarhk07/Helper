@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { ensureSocket, socket } from '../../lib/socket.js';
 
-const EMIT_INTERVAL_MS = 10_000;
+const EMIT_INTERVAL_MS = 1_000;
 
 export default function WorkerLocationEmitter({ workerId, activeJobs }) {
   const lastEmitRef = useRef(0);

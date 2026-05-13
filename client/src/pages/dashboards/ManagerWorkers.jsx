@@ -6,10 +6,10 @@ import { listScopedWorkers } from '../../api/manager.js';
 import { formatPrice } from '../../lib/booking.js';
 
 const KYC_BADGE = {
-  pending: 'bg-ink/10 text-ink/70 dark:bg-paper/10 dark:text-paper/60',
-  submitted: 'bg-amber-100 text-amber-800 dark:bg-amber-400/10 dark:text-amber-200',
-  verified: 'bg-green-100 text-green-700 dark:bg-green-400/10 dark:text-green-300',
-  rejected: 'bg-red-100 text-red-700 dark:bg-red-400/10 dark:text-red-300',
+  pending: 'bg-ink/10 text-ink/70',
+  submitted: 'bg-amber-100 text-amber-800',
+  verified: 'bg-green-100 text-green-700',
+  rejected: 'bg-red-100 text-red-700',
 };
 
 const KYC_ICON = {
@@ -35,7 +35,7 @@ export default function ManagerWorkers() {
     <DashboardShell eyebrow="Manager" title="Workers in your categories">
       <div className="card-rounded overflow-x-auto">
         <table className="w-full text-left text-sm">
-          <thead className="bg-sand/50 text-xs uppercase tracking-widest text-ink/60 dark:bg-[#18181A] dark:text-paper/60">
+          <thead className="bg-sand/50 text-xs uppercase tracking-widest text-ink/60">
             <tr>
               <th className="p-4 font-normal">Worker</th>
               <th className="p-4 font-normal">KYC</th>
@@ -46,16 +46,16 @@ export default function ManagerWorkers() {
               <th className="p-4 font-normal">Status</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-ink/10 dark:divide-paper/10">
+          <tbody className="divide-y divide-ink/10">
             {loading ? (
               <tr>
-                <td colSpan={7} className="p-6 text-center text-ink/60 dark:text-paper/50">
+                <td colSpan={7} className="p-6 text-center text-ink/60">
                   Loading…
                 </td>
               </tr>
             ) : workers.length === 0 ? (
               <tr>
-                <td colSpan={7} className="p-6 text-center text-ink/60 dark:text-paper/50">
+                <td colSpan={7} className="p-6 text-center text-ink/60">
                   No workers have taken bookings in your categories yet.
                 </td>
               </tr>
@@ -63,10 +63,10 @@ export default function ManagerWorkers() {
               workers.map((w) => {
                 const Icon = KYC_ICON[w.kycStatus] || ShieldAlert;
                 return (
-                  <tr key={w._id} className="transition hover:bg-sand/30 dark:hover:bg-[#18181A]/50">
+                  <tr key={w._id} className="transition hover:bg-sand/30:bg-[#18181A]/50">
                     <td className="p-4">
                       <div className="font-medium">{w.name}</div>
-                      <div className="text-xs text-ink/60 dark:text-paper/50">
+                      <div className="text-xs text-ink/60">
                         {w.email}
                         {w.phone ? ` · ${w.phone}` : ''}
                       </div>
@@ -88,9 +88,9 @@ export default function ManagerWorkers() {
                     </td>
                     <td className="p-4 text-xs">
                       {w.isActive ? (
-                        <span className="text-green-700 dark:text-green-300">Active</span>
+                        <span className="text-green-700">Active</span>
                       ) : (
-                        <span className="text-red-600 dark:text-red-300">Suspended</span>
+                        <span className="text-red-600">Suspended</span>
                       )}
                     </td>
                   </tr>

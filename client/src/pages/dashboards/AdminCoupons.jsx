@@ -165,7 +165,7 @@ export default function AdminCoupons() {
               <input
                 required
                 placeholder="e.g., SUMMER2026"
-                className="w-full p-3 border border-ink/20 rounded-xl bg-white dark:bg-paper/10 focus:border-ink outline-none"
+                className="w-full p-3 border border-ink/20 rounded-xl bg-white focus:border-ink outline-none"
                 value={form.code}
                 onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })}
               />
@@ -177,7 +177,7 @@ export default function AdminCoupons() {
               <select
                 value={form.discountType}
                 onChange={(e) => setForm({ ...form, discountType: e.target.value })}
-                className="w-full p-3 border border-ink/20 rounded-xl bg-white dark:bg-paper/10 focus:border-ink outline-none"
+                className="w-full p-3 border border-ink/20 rounded-xl bg-white focus:border-ink outline-none"
               >
                 <option value="percentage">Percentage (%)</option>
                 <option value="fixed">Fixed (₹)</option>
@@ -193,7 +193,7 @@ export default function AdminCoupons() {
                 placeholder={form.discountType === 'percentage' ? "e.g., 10" : "e.g., 500"}
                 min="0"
                 step="0.01"
-                className="w-full p-3 border border-ink/20 rounded-xl bg-white dark:bg-paper/10 focus:border-ink outline-none"
+                className="w-full p-3 border border-ink/20 rounded-xl bg-white focus:border-ink outline-none"
                 value={form.discountValue}
                 onChange={(e) => setForm({ ...form, discountValue: e.target.value })}
               />
@@ -208,7 +208,7 @@ export default function AdminCoupons() {
                   placeholder="e.g., 500 (max discount cap)"
                   min="0"
                   step="0.01"
-                  className="w-full p-3 border border-ink/20 rounded-xl bg-white dark:bg-paper/10 focus:border-ink outline-none"
+                  className="w-full p-3 border border-ink/20 rounded-xl bg-white focus:border-ink outline-none"
                   value={form.maxDiscount || ''}
                   onChange={(e) => setForm({ ...form, maxDiscount: e.target.value ? Number(e.target.value) : null })}
                 />
@@ -224,7 +224,7 @@ export default function AdminCoupons() {
                 placeholder="e.g., 500"
                 min="0"
                 step="0.01"
-                className="w-full p-3 border border-ink/20 rounded-xl bg-white dark:bg-paper/10 focus:border-ink outline-none"
+                className="w-full p-3 border border-ink/20 rounded-xl bg-white focus:border-ink outline-none"
                 value={form.minOrderValue}
                 onChange={(e) => setForm({ ...form, minOrderValue: e.target.value })}
               />
@@ -239,7 +239,7 @@ export default function AdminCoupons() {
                   placeholder="e.g., 100"
                   min="1"
                   disabled={!form.usageLimit}
-                  className="flex-1 p-3 border border-ink/20 rounded-xl bg-white dark:bg-paper/10 focus:border-ink outline-none disabled:opacity-50"
+                  className="flex-1 p-3 border border-ink/20 rounded-xl bg-white focus:border-ink outline-none disabled:opacity-50"
                   value={form.usageLimit || ''}
                   onChange={(e) => setForm({ ...form, usageLimit: e.target.value ? Number(e.target.value) : null })}
                 />
@@ -260,7 +260,7 @@ export default function AdminCoupons() {
               <input
                 required
                 type="datetime-local"
-                className="w-full p-3 border border-ink/20 rounded-xl bg-white dark:bg-paper/10 focus:border-ink outline-none"
+                className="w-full p-3 border border-ink/20 rounded-xl bg-white focus:border-ink outline-none"
                 value={form.expiryDate}
                 onChange={(e) => setForm({ ...form, expiryDate: e.target.value })}
               />
@@ -268,7 +268,7 @@ export default function AdminCoupons() {
 
             {/* Active Status */}
             <div className="flex items-end">
-              <label className="flex items-center gap-2 p-3 bg-white dark:bg-paper/10 rounded-xl border border-ink/20 w-full">
+              <label className="flex items-center gap-2 p-3 bg-white rounded-xl border border-ink/20 w-full">
                 <input
                   type="checkbox"
                   checked={form.isActive}
@@ -279,8 +279,8 @@ export default function AdminCoupons() {
               </label>
             </div>
 
-            <div className="col-span-full mt-2 border-t border-ink/10 pt-4 dark:border-paper/10">
-              <div className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/55">Eligibility & limits</div>
+            <div className="col-span-full mt-2 border-t border-ink/10 pt-4">
+              <div className="text-xs uppercase tracking-widest text-ink/60">Eligibility & limits</div>
             </div>
 
             <div>
@@ -291,7 +291,7 @@ export default function AdminCoupons() {
                   min="1"
                   placeholder="e.g., 1"
                   disabled={!form.perUserLimit}
-                  className="flex-1 p-3 border border-ink/20 rounded-xl bg-white dark:bg-paper/10 focus:border-ink outline-none disabled:opacity-50"
+                  className="flex-1 p-3 border border-ink/20 rounded-xl bg-white focus:border-ink outline-none disabled:opacity-50"
                   value={form.perUserLimit || ''}
                   onChange={(e) => setForm({ ...form, perUserLimit: e.target.value ? Number(e.target.value) : null })}
                 />
@@ -310,7 +310,7 @@ export default function AdminCoupons() {
               <select
                 value={form.category}
                 onChange={(e) => setForm({ ...form, category: e.target.value })}
-                className="w-full p-3 border border-ink/20 rounded-xl bg-white dark:bg-paper/10 focus:border-ink outline-none"
+                className="w-full p-3 border border-ink/20 rounded-xl bg-white focus:border-ink outline-none"
               >
                 <option value="">— Any category —</option>
                 {categories.map((c) => (
@@ -324,7 +324,7 @@ export default function AdminCoupons() {
               <select
                 value={form.appliesTo}
                 onChange={(e) => setForm({ ...form, appliesTo: e.target.value })}
-                className="w-full p-3 border border-ink/20 rounded-xl bg-white dark:bg-paper/10 focus:border-ink outline-none"
+                className="w-full p-3 border border-ink/20 rounded-xl bg-white focus:border-ink outline-none"
               >
                 <option value="both">Services & products</option>
                 <option value="services">Services only</option>
@@ -333,7 +333,7 @@ export default function AdminCoupons() {
             </div>
 
             <div className="flex items-end">
-              <label className="flex items-center gap-2 p-3 bg-white dark:bg-paper/10 rounded-xl border border-ink/20 w-full">
+              <label className="flex items-center gap-2 p-3 bg-white rounded-xl border border-ink/20 w-full">
                 <input
                   type="checkbox"
                   checked={form.firstOrderOnly}
@@ -349,7 +349,7 @@ export default function AdminCoupons() {
               <textarea
                 rows={2}
                 placeholder="e.g., Welcome offer — flat 20% off your first booking"
-                className="w-full p-3 border border-ink/20 rounded-xl bg-white dark:bg-paper/10 focus:border-ink outline-none"
+                className="w-full p-3 border border-ink/20 rounded-xl bg-white focus:border-ink outline-none"
                 value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
               />
@@ -394,8 +394,8 @@ export default function AdminCoupons() {
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-bold ${
                         coupon.isActive
-                          ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                          : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-red-100 text-red-700'
                       }`}
                     >
                       {coupon.isActive ? 'Active' : 'Inactive'}
@@ -404,14 +404,14 @@ export default function AdminCoupons() {
                   <div className="flex justify-end gap-2">
                     <button
                       onClick={() => openEditor(coupon)}
-                      className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition"
+                      className="p-2 text-blue-600 hover:bg-blue-50:bg-blue-900/20 rounded-lg transition"
                       title="Edit coupon"
                     >
                       <Edit2 size={18} />
                     </button>
                     <button
                       onClick={() => handleDelete(coupon._id, coupon.code)}
-                      className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition"
+                      className="p-2 text-red-600 hover:bg-red-50:bg-red-900/20 rounded-lg transition"
                       title="Delete coupon"
                     >
                       <Trash2 size={18} />
@@ -427,7 +427,7 @@ export default function AdminCoupons() {
       {/* Edit Modal */}
       {editingCoupon && (
         <div className="fixed inset-0 bg-ink/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-paper/20 rounded-2xl shadow-[0_30px_90px_rgba(0,0,0,0.35)] max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-[0_30px_90px_rgba(0,0,0,0.35)] max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-ink/10">
               <h2 className="text-xl font-bold">EDIT COUPON: {editingCoupon.code}</h2>
             </div>
@@ -440,7 +440,7 @@ export default function AdminCoupons() {
                   placeholder={editingCoupon.discountType === 'percentage' ? "e.g., 10" : "e.g., 500"}
                   min="0"
                   step="0.01"
-                  className="w-full p-3 border border-ink/20 rounded-xl bg-white dark:bg-paper/10 focus:border-ink outline-none"
+                  className="w-full p-3 border border-ink/20 rounded-xl bg-white focus:border-ink outline-none"
                   value={editForm.discountValue}
                   onChange={(e) => setEditForm({ ...editForm, discountValue: e.target.value })}
                 />
@@ -455,7 +455,7 @@ export default function AdminCoupons() {
                     placeholder="e.g., 500"
                     min="0"
                     step="0.01"
-                    className="w-full p-3 border border-ink/20 rounded-xl bg-white dark:bg-paper/10 focus:border-ink outline-none"
+                    className="w-full p-3 border border-ink/20 rounded-xl bg-white focus:border-ink outline-none"
                     value={editForm.maxDiscount || ''}
                     onChange={(e) => setEditForm({ ...editForm, maxDiscount: e.target.value ? Number(e.target.value) : null })}
                   />
@@ -470,7 +470,7 @@ export default function AdminCoupons() {
                   placeholder="e.g., 500"
                   min="0"
                   step="0.01"
-                  className="w-full p-3 border border-ink/20 rounded-xl bg-white dark:bg-paper/10 focus:border-ink outline-none"
+                  className="w-full p-3 border border-ink/20 rounded-xl bg-white focus:border-ink outline-none"
                   value={editForm.minOrderValue}
                   onChange={(e) => setEditForm({ ...editForm, minOrderValue: e.target.value })}
                 />
@@ -485,7 +485,7 @@ export default function AdminCoupons() {
                     placeholder="e.g., 100"
                     min="1"
                     disabled={!editForm.usageLimit}
-                    className="flex-1 p-3 border border-ink/20 rounded-xl bg-white dark:bg-paper/10 focus:border-ink outline-none disabled:opacity-50"
+                    className="flex-1 p-3 border border-ink/20 rounded-xl bg-white focus:border-ink outline-none disabled:opacity-50"
                     value={editForm.usageLimit || ''}
                     onChange={(e) => setEditForm({ ...editForm, usageLimit: e.target.value ? Number(e.target.value) : null })}
                   />
@@ -504,7 +504,7 @@ export default function AdminCoupons() {
                 <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Expiry Date & Time</label>
                 <input
                   type="datetime-local"
-                  className="w-full p-3 border border-ink/20 rounded-xl bg-white dark:bg-paper/10 focus:border-ink outline-none"
+                  className="w-full p-3 border border-ink/20 rounded-xl bg-white focus:border-ink outline-none"
                   value={editForm.expiryDate}
                   onChange={(e) => setEditForm({ ...editForm, expiryDate: e.target.value })}
                 />
@@ -512,7 +512,7 @@ export default function AdminCoupons() {
 
               {/* Active Status */}
               <div className="flex items-end">
-                <label className="flex items-center gap-2 p-3 bg-white dark:bg-paper/10 rounded-xl border border-ink/20 w-full">
+                <label className="flex items-center gap-2 p-3 bg-white rounded-xl border border-ink/20 w-full">
                   <input
                     type="checkbox"
                     checked={editForm.isActive}
@@ -523,8 +523,8 @@ export default function AdminCoupons() {
                 </label>
               </div>
 
-              <div className="col-span-full mt-2 border-t border-ink/10 pt-4 dark:border-paper/10">
-                <div className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/55">Eligibility & limits</div>
+              <div className="col-span-full mt-2 border-t border-ink/10 pt-4">
+                <div className="text-xs uppercase tracking-widest text-ink/60">Eligibility & limits</div>
               </div>
 
               <div>
@@ -535,7 +535,7 @@ export default function AdminCoupons() {
                     min="1"
                     placeholder="e.g., 1"
                     disabled={!editForm.perUserLimit}
-                    className="flex-1 p-3 border border-ink/20 rounded-xl bg-white dark:bg-paper/10 focus:border-ink outline-none disabled:opacity-50"
+                    className="flex-1 p-3 border border-ink/20 rounded-xl bg-white focus:border-ink outline-none disabled:opacity-50"
                     value={editForm.perUserLimit || ''}
                     onChange={(e) => setEditForm({ ...editForm, perUserLimit: e.target.value ? Number(e.target.value) : null })}
                   />
@@ -554,7 +554,7 @@ export default function AdminCoupons() {
                 <select
                   value={editForm.category}
                   onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
-                  className="w-full p-3 border border-ink/20 rounded-xl bg-white dark:bg-paper/10 focus:border-ink outline-none"
+                  className="w-full p-3 border border-ink/20 rounded-xl bg-white focus:border-ink outline-none"
                 >
                   <option value="">— Any category —</option>
                   {categories.map((c) => (
@@ -568,7 +568,7 @@ export default function AdminCoupons() {
                 <select
                   value={editForm.appliesTo}
                   onChange={(e) => setEditForm({ ...editForm, appliesTo: e.target.value })}
-                  className="w-full p-3 border border-ink/20 rounded-xl bg-white dark:bg-paper/10 focus:border-ink outline-none"
+                  className="w-full p-3 border border-ink/20 rounded-xl bg-white focus:border-ink outline-none"
                 >
                   <option value="both">Services & products</option>
                   <option value="services">Services only</option>
@@ -577,7 +577,7 @@ export default function AdminCoupons() {
               </div>
 
               <div className="flex items-end">
-                <label className="flex items-center gap-2 p-3 bg-white dark:bg-paper/10 rounded-xl border border-ink/20 w-full">
+                <label className="flex items-center gap-2 p-3 bg-white rounded-xl border border-ink/20 w-full">
                   <input
                     type="checkbox"
                     checked={editForm.firstOrderOnly}
@@ -593,7 +593,7 @@ export default function AdminCoupons() {
                 <textarea
                   rows={2}
                   placeholder="e.g., Welcome offer — flat 20% off your first booking"
-                  className="w-full p-3 border border-ink/20 rounded-xl bg-white dark:bg-paper/10 focus:border-ink outline-none"
+                  className="w-full p-3 border border-ink/20 rounded-xl bg-white focus:border-ink outline-none"
                   value={editForm.description}
                   onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
                 />
@@ -619,10 +619,10 @@ export default function AdminCoupons() {
       {/* Delete Confirmation Modal */}
       {deleteModal.show && (
         <div className="fixed inset-0 bg-ink/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-paper/20 rounded-2xl shadow-[0_30px_90px_rgba(0,0,0,0.35)] max-w-md w-full p-6">
+          <div className="bg-white rounded-2xl shadow-[0_30px_90px_rgba(0,0,0,0.35)] max-w-md w-full p-6">
             <div className="flex flex-col items-center text-center">
-              <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mb-4">
-                <AlertTriangle className="text-red-600 dark:text-red-400" size={24} />
+              <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-4">
+                <AlertTriangle className="text-red-600" size={24} />
               </div>
               <h3 className="font-bold text-lg mb-2">Delete Coupon?</h3>
               <p className="text-ink/60 text-sm mb-4">

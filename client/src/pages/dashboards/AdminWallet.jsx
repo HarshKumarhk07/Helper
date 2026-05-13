@@ -117,22 +117,22 @@ export default function AdminWallet() {
     <DashboardShell eyebrow="Operations" title="User wallets">
       <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
         <aside className="card-rounded flex flex-col p-4">
-          <div className="mb-3 flex items-center gap-2 rounded-full border border-ink/15 bg-paper px-3 py-2 dark:border-paper/15 dark:bg-paper/5">
-            <Search size={14} className="text-ink/50 dark:text-paper/40" />
+          <div className="mb-3 flex items-center gap-2 rounded-full border border-ink/15 bg-paper px-3 py-2">
+            <Search size={14} className="text-ink/50" />
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Search name, email, phone…"
-              className="w-full bg-transparent text-sm outline-none placeholder:text-ink/40 dark:text-paper dark:placeholder:text-paper/40"
+              className="w-full bg-transparent text-sm outline-none placeholder:text-ink/40:text-paper/40"
             />
           </div>
           <div className="max-h-[60vh] overflow-y-auto pr-1">
             {loadingUsers ? (
-              <div className="p-4 text-center text-sm text-ink/60 dark:text-paper/50">
+              <div className="p-4 text-center text-sm text-ink/60">
                 Loading…
               </div>
             ) : filteredUsers.length === 0 ? (
-              <div className="p-4 text-center text-sm text-ink/60 dark:text-paper/50">
+              <div className="p-4 text-center text-sm text-ink/60">
                 No users found.
               </div>
             ) : (
@@ -144,14 +144,14 @@ export default function AdminWallet() {
                     onClick={() => handleSelect(u)}
                     className={`w-full rounded-xl px-3 py-2 text-left text-sm transition ${
                       active
-                        ? 'bg-ink text-paper dark:bg-paper dark:text-ink'
-                        : 'hover:bg-sand/40 dark:hover:bg-paper/5'
+                        ? 'bg-ink text-paper'
+                        : 'hover:bg-sand/40:bg-paper/5'
                     }`}
                   >
                     <div className="font-medium">{u.name}</div>
                     <div
                       className={`text-xs ${
-                        active ? 'opacity-70' : 'text-ink/55 dark:text-paper/45'
+                        active ? 'opacity-70' : 'text-ink/55'
                       }`}
                     >
                       {u.email}
@@ -159,7 +159,7 @@ export default function AdminWallet() {
                     </div>
                     <div
                       className={`mt-1 text-[10px] uppercase tracking-widest ${
-                        active ? 'opacity-70' : 'text-ink/45 dark:text-paper/40'
+                        active ? 'opacity-70' : 'text-ink/45'
                       }`}
                     >
                       {u.role}
@@ -173,7 +173,7 @@ export default function AdminWallet() {
 
         <div>
           {!selectedUserId ? (
-            <div className="card-rounded p-12 text-center text-sm text-ink/60 dark:text-paper/50">
+            <div className="card-rounded p-12 text-center text-sm text-ink/60">
               <Wallet size={32} className="mx-auto mb-3 opacity-40" />
               Select a user from the left to view and manage their wallet.
             </div>
@@ -184,25 +184,25 @@ export default function AdminWallet() {
               <div className="card-rounded p-5">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
-                    <div className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+                    <div className="text-xs uppercase tracking-widest text-ink/60">
                       Wallet for
                     </div>
                     <div className="mt-1 text-lg font-semibold">
                       {walletData.user.name}
                     </div>
-                    <div className="text-xs text-ink/60 dark:text-paper/50">
+                    <div className="text-xs text-ink/60">
                       {walletData.user.email} · {walletData.user.phone || 'no phone'}
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+                    <div className="text-xs uppercase tracking-widest text-ink/60">
                       Balance
                     </div>
                     <div className="mt-1 text-3xl font-bold sm:text-4xl">
                       {inr(walletData.wallet.balance)}
                     </div>
                     {walletData.wallet.isFrozen && (
-                      <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-red-100 px-3 py-1 text-xs uppercase tracking-widest text-red-700 dark:bg-red-400/10 dark:text-red-300">
+                      <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-red-100 px-3 py-1 text-xs uppercase tracking-widest text-red-700">
                         <Snowflake size={11} /> Frozen
                       </div>
                     )}
@@ -234,7 +234,7 @@ export default function AdminWallet() {
                   <button
                     onClick={handleFreezeToggle}
                     disabled={working}
-                    className="inline-flex items-center gap-2 rounded-full border border-ink/15 px-4 py-2 text-xs uppercase tracking-widest hover:border-ink/40 dark:border-paper/15 dark:hover:border-paper/40"
+                    className="inline-flex items-center gap-2 rounded-full border border-ink/15 px-4 py-2 text-xs uppercase tracking-widest hover:border-ink/40:border-paper/40"
                   >
                     {walletData.wallet.isFrozen ? (
                       <>
@@ -249,8 +249,8 @@ export default function AdminWallet() {
                 </div>
 
                 {(showCredit || showDebit) && (
-                  <div className="mt-5 rounded-2xl border border-ink/10 p-4 dark:border-paper/10">
-                    <div className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+                  <div className="mt-5 rounded-2xl border border-ink/10 p-4">
+                    <div className="text-xs uppercase tracking-widest text-ink/60">
                       {showCredit ? 'Credit wallet' : 'Debit wallet'}
                     </div>
                     <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -261,13 +261,13 @@ export default function AdminWallet() {
                         value={form.amount}
                         onChange={(e) => setForm({ ...form, amount: e.target.value })}
                         placeholder="Amount in ₹"
-                        className="rounded-xl border border-ink/15 bg-transparent p-3 text-sm focus:border-ink focus:outline-none dark:border-paper/15 dark:focus:border-paper/60"
+                        className="rounded-xl border border-ink/15 bg-transparent p-3 text-sm focus:border-ink focus:outline-none:border-paper/60"
                       />
                       <input
                         value={form.note}
                         onChange={(e) => setForm({ ...form, note: e.target.value })}
                         placeholder="Note (visible to user)"
-                        className="rounded-xl border border-ink/15 bg-transparent p-3 text-sm focus:border-ink focus:outline-none dark:border-paper/15 dark:focus:border-paper/60"
+                        className="rounded-xl border border-ink/15 bg-transparent p-3 text-sm focus:border-ink focus:outline-none:border-paper/60"
                       />
                     </div>
                     <div className="mt-3 flex justify-end gap-2">
@@ -276,7 +276,7 @@ export default function AdminWallet() {
                           setShowCredit(false);
                           setShowDebit(false);
                         }}
-                        className="rounded-full border border-ink/15 px-4 py-2 text-xs uppercase tracking-widest hover:border-ink/40 dark:border-paper/15 dark:hover:border-paper/40"
+                        className="rounded-full border border-ink/15 px-4 py-2 text-xs uppercase tracking-widest hover:border-ink/40:border-paper/40"
                       >
                         Cancel
                       </button>
@@ -301,7 +301,7 @@ export default function AdminWallet() {
 
               <div className="card-rounded overflow-x-auto">
                 <table className="w-full text-left text-sm">
-                  <thead className="bg-sand/50 text-xs uppercase tracking-widest text-ink/60 dark:bg-[#18181A] dark:text-paper/60">
+                  <thead className="bg-sand/50 text-xs uppercase tracking-widest text-ink/60">
                     <tr>
                       <th className="p-4 font-normal">When</th>
                       <th className="p-4 font-normal">Type</th>
@@ -312,12 +312,12 @@ export default function AdminWallet() {
                       <th className="p-4 font-normal">Note</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-ink/10 dark:divide-paper/10">
+                  <tbody className="divide-y divide-ink/10">
                     {walletData.transactions.length === 0 ? (
                       <tr>
                         <td
                           colSpan={7}
-                          className="p-6 text-center text-ink/60 dark:text-paper/50"
+                          className="p-6 text-center text-ink/60"
                         >
                           No transactions yet.
                         </td>
@@ -326,9 +326,9 @@ export default function AdminWallet() {
                       walletData.transactions.map((t) => (
                         <tr
                           key={t._id}
-                          className="transition hover:bg-sand/30 dark:hover:bg-[#18181A]/50"
+                          className="transition hover:bg-sand/30:bg-[#18181A]/50"
                         >
-                          <td className="p-4 text-xs text-ink/70 dark:text-paper/70">
+                          <td className="p-4 text-xs text-ink/70">
                             {fmt(t.createdAt)}
                           </td>
                           <td className="p-4 text-xs uppercase tracking-widest">
@@ -340,8 +340,8 @@ export default function AdminWallet() {
                           <td
                             className={`p-4 text-right font-semibold tabular-nums ${
                               t.type === 'credit'
-                                ? 'text-green-700 dark:text-green-300'
-                                : 'text-red-700 dark:text-red-300'
+                                ? 'text-green-700'
+                                : 'text-red-700'
                             }`}
                           >
                             {t.type === 'credit' ? '+' : '−'}
@@ -353,7 +353,7 @@ export default function AdminWallet() {
                           <td className="p-4 text-xs">
                             {t.performedBy?.name || '—'}
                           </td>
-                          <td className="p-4 text-xs text-ink/65 dark:text-paper/55">
+                          <td className="p-4 text-xs text-ink/65">
                             {t.note || <span className="opacity-50">—</span>}
                           </td>
                         </tr>

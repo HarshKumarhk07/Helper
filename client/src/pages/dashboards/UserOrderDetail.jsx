@@ -24,10 +24,10 @@ const STATUS_FLOW = [
 ];
 
 const PAYMENT_STATUS_BADGE = {
-  paid: 'bg-green-100 text-green-700 dark:bg-green-400/10 dark:text-green-300',
-  pending: 'bg-amber-100 text-amber-800 dark:bg-amber-400/10 dark:text-amber-200',
-  failed: 'bg-red-100 text-red-700 dark:bg-red-400/10 dark:text-red-300',
-  refunded: 'bg-red-100 text-red-700 dark:bg-red-400/10 dark:text-red-300',
+  paid: 'bg-green-100 text-green-700',
+  pending: 'bg-amber-100 text-amber-800',
+  failed: 'bg-red-100 text-red-700',
+  refunded: 'bg-blue-100 text-blue-700',
 };
 
 export default function UserOrderDetail() {

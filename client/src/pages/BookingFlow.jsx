@@ -5,6 +5,7 @@ import { Calendar, Zap, MapPin, CreditCard, Banknote, Plus, FileText, Check } fr
 import { getService } from '../api/services.js';
 import { listMyAddresses, createAddress } from '../api/addresses.js';
 import { createBooking } from '../api/bookings.js';
+import { validateCoupon } from '../api/coupons.js';
 import { formatPrice } from '../lib/booking.js';
 import PillButton from '../components/ui/PillButton.jsx';
 import FadeUp from '../components/ui/FadeUp.jsx';
@@ -22,6 +23,9 @@ export default function BookingFlow() {
   const [paymentMode, setPaymentMode] = useState('cod');
   const [autoAssign, setAutoAssign] = useState(true);
   const [notes, setNotes] = useState('');
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [discount, setDiscount] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [newAddress, setNewAddress] = useState({
@@ -67,6 +71,20 @@ export default function BookingFlow() {
     }
   };
 
+  const handleApplyCoupon = async () => {
+    if (!couponCode || !service) return;
+    try {
+      const res = await validateCoupon({ code: couponCode, orderValue: service.price, serviceId: service._id });
+      setDiscount(res.discount);
+      setAppliedCoupon({ code: couponCode.trim().toUpperCase(), discount: res.discount });
+      toast.success('Coupon applied!');
+    } catch (err) {
+      toast.error(err?.response?.data?.error || 'Invalid coupon');
+      setDiscount(0);
+      setAppliedCoupon(null);
+    }
+  };
+
   const onConfirm = async () => {
     if (!service) return;
     if (!selectedAddressId && !showAddressForm) {
@@ -88,6 +106,7 @@ export default function BookingFlow() {
       if (bookingType === 'scheduled' && scheduledAt) payload.scheduledAt = scheduledAt;
       if (selectedAddressId) payload.addressId = selectedAddressId;
       if (notes.trim()) payload.notes = notes.trim();
+      if (appliedCoupon?.code) payload.couponCode = appliedCoupon.code;
       const booking = await createBooking(payload);
       toast.success(`Booked — ${booking.code}`);
       navigate('/me/bookings');
@@ -384,13 +403,32 @@ export default function BookingFlow() {
                   <Row label="Payment" value={paymentMode === 'cod' ? 'COD' : 'Online'} />
                 </div>
 
+                <div className="border-t border-black/10 bg-white p-5">
+                  <div className="text-[10px] uppercase tracking-widest text-black/60 mb-3">Coupon Code</div>
+                  <div className="flex gap-2">
+                    <Input 
+                      value={couponCode} 
+                      onChange={setCouponCode} 
+                      placeholder="Enter code" 
+                      className="!py-2 !px-3"
+                    />
+                    <PillButton variant="solid" onClick={handleApplyCoupon} className="!py-2 !px-4">Apply</PillButton>
+                  </div>
+                  {appliedCoupon && (
+                    <div className="mt-3 text-xs font-medium text-green-600 bg-green-50 px-3 py-2 rounded-xl flex items-center justify-between">
+                      <span>{appliedCoupon.code} applied</span>
+                      <span>-₹{appliedCoupon.discount}</span>
+                    </div>
+                  )}
+                </div>
+
                 <div className="border-t border-black/10 bg-sand/20 p-5">
                   <div className="flex items-baseline justify-between">
                     <span className="text-[10px] uppercase tracking-widest text-black/60">
                       Total
                     </span>
                     <span className="heading-display text-2xl text-black md:text-3xl">
-                      {formatPrice(service.price)}
+                      {formatPrice(service.price - discount)}
                     </span>
                   </div>
 

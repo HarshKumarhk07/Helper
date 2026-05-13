@@ -14,6 +14,7 @@ export default function AdminProducts() {
   const [uploading, setUploading] = useState(false);
   const [deleteModal, setDeleteModal] = useState({ show: false, productId: null, productName: '' });
   const [editingProduct, setEditingProduct] = useState(null);
+  const [stockFilter, setStockFilter] = useState('all');
   const lowStockThreshold = 5;
   
   const [newProduct, setNewProduct] = useState({
@@ -109,6 +110,16 @@ export default function AdminProducts() {
     setEditForm({ name: '', slug: '', description: '', price: '', stock: '', category: 'all', image: '' });
   };
 
+  const getFilteredProducts = () => {
+    if (stockFilter === 'all') return products;
+    if (stockFilter === 'outOfStock') return products.filter(p => p.stock <= 0);
+    if (stockFilter === 'lowStock') return products.filter(p => p.stock > 0 && p.stock <= lowStockThreshold);
+    if (stockFilter === 'inStock') return products.filter(p => p.stock > lowStockThreshold);
+    return products;
+  };
+
+  const filteredProducts = getFilteredProducts();
+
   const handleUpdateProduct = async (e) => {
     e.preventDefault();
     try {
@@ -135,8 +146,32 @@ export default function AdminProducts() {
         </button>
       </div>
 
+      <div className="mb-6 flex flex-wrap gap-2">
+        {[
+          { key: 'all', label: 'All Products' },
+          { key: 'inStock', label: 'In Stock' },
+          { key: 'lowStock', label: 'Low Stock' },
+          { key: 'outOfStock', label: 'Out of Stock' },
+        ].map((tab) => {
+          const active = stockFilter === tab.key;
+          return (
+            <button
+              key={tab.key}
+              onClick={() => setStockFilter(tab.key)}
+              className={`rounded-full px-4 py-2 text-xs uppercase tracking-widest transition ${
+                active
+                  ? 'bg-ink text-paper'
+                  : 'border border-ink/15 hover:border-ink/40:border-paper/40'
+              }`}
+            >
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+
       {lowStockProducts.length > 0 && (
-        <div className="mb-6 rounded-card border border-red-900 bg-red-900/5 p-4 text-sm text-red-900 dark:border-red-800/30 dark:bg-red-900/10 dark:text-red-200">
+        <div className="mb-6 rounded-card border border-red-900 bg-red-900/5 p-4 text-sm text-red-900">
           <div className="font-bold uppercase tracking-widest text-xs mb-1">
             Low Stock Alert
           </div>
@@ -151,35 +186,35 @@ export default function AdminProducts() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
                 <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Product Name</label>
-                <input required placeholder="e.g., Tool Kit" className="w-full p-3 border rounded-xl bg-white dark:bg-paper/10" value={newProduct.name} onChange={(e) => setNewProduct({...newProduct, name: e.target.value, slug: e.target.value.toLowerCase().replace(/ /g, '-')})} />
+                <input required placeholder="e.g., Tool Kit" className="w-full p-3 border rounded-xl bg-white" value={newProduct.name} onChange={(e) => setNewProduct({...newProduct, name: e.target.value, slug: e.target.value.toLowerCase().replace(/ /g, '-')})} />
               </div>
               <div>
                 <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Slug (URL-friendly)</label>
-                <input required placeholder="e.g., tool-kit" className="w-full p-3 border rounded-xl bg-white dark:bg-paper/10" value={newProduct.slug} onChange={(e) => setNewProduct({...newProduct, slug: e.target.value})} />
+                <input required placeholder="e.g., tool-kit" className="w-full p-3 border rounded-xl bg-white" value={newProduct.slug} onChange={(e) => setNewProduct({...newProduct, slug: e.target.value})} />
               </div>
               <div>
                 <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Price (₹)</label>
-                <input required type="number" placeholder="1499" className="w-full p-3 border rounded-xl bg-white dark:bg-paper/10" value={newProduct.price} onChange={(e) => setNewProduct({...newProduct, price: e.target.value})} />
+                <input required type="number" placeholder="1499" className="w-full p-3 border rounded-xl bg-white" value={newProduct.price} onChange={(e) => setNewProduct({...newProduct, price: e.target.value})} />
               </div>
               <div>
                 <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Stock Quantity</label>
-                <input required type="number" placeholder="100" className="w-full p-3 border rounded-xl bg-white dark:bg-paper/10" value={newProduct.stock} onChange={(e) => setNewProduct({...newProduct, stock: e.target.value})} />
+                <input required type="number" placeholder="100" className="w-full p-3 border rounded-xl bg-white" value={newProduct.stock} onChange={(e) => setNewProduct({...newProduct, stock: e.target.value})} />
               </div>
               <div>
                 <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Category</label>
-                <input required placeholder="e.g., Electronics" className="w-full p-3 border rounded-xl bg-white dark:bg-paper/10" value={newProduct.category} onChange={(e) => setNewProduct({...newProduct, category: e.target.value})} />
+                <input required placeholder="e.g., Electronics" className="w-full p-3 border rounded-xl bg-white" value={newProduct.category} onChange={(e) => setNewProduct({...newProduct, category: e.target.value})} />
               </div>
             </div>
             
             <div className="mb-4">
               <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Description</label>
-              <textarea required placeholder="Describe the product features and benefits..." className="w-full p-3 border rounded-xl bg-white dark:bg-paper/10 h-24" value={newProduct.description} onChange={(e) => setNewProduct({...newProduct, description: e.target.value})} />
+              <textarea required placeholder="Describe the product features and benefits..." className="w-full p-3 border rounded-xl bg-white h-24" value={newProduct.description} onChange={(e) => setNewProduct({...newProduct, description: e.target.value})} />
             </div>
             
             <div className="mb-6">
               <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Product Image</label>
               <div className="flex items-center gap-4">
-                <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading} className="p-2 border rounded-xl flex-1 bg-white dark:bg-paper/10" />
+                <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading} className="p-2 border rounded-xl flex-1 bg-white" />
                 {uploading && <span className="text-sm">Uploading...</span>}
                 {newProduct.image && <img src={newProduct.image} alt="Preview" className="h-16 w-16 object-cover rounded-xl" />}
               </div>
@@ -192,7 +227,7 @@ export default function AdminProducts() {
 
       <div className="card-rounded overflow-x-auto">
         <table className="w-full text-left text-sm">
-          <thead className="bg-sand/50 text-xs uppercase tracking-widest text-ink/60 dark:bg-[#18181A] dark:text-paper/60">
+          <thead className="bg-sand/50 text-xs uppercase tracking-widest text-ink/60">
             <tr>
               <th className="p-4">Image</th>
               <th className="p-4">Name</th>
@@ -201,13 +236,13 @@ export default function AdminProducts() {
               <th className="p-4">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-ink/10 dark:divide-paper/10">
+          <tbody className="divide-y divide-ink/10">
             {loading ? (
               <tr><td colSpan="5" className="p-4 text-center">Loading...</td></tr>
-            ) : products.length === 0 ? (
+            ) : filteredProducts.length === 0 ? (
               <tr><td colSpan="5" className="p-4 text-center">No products found.</td></tr>
             ) : (
-              products.map(p => (
+              filteredProducts.map(p => (
                 <tr key={p._id}>
                   <td className="p-4">
                     {p.image ? <img src={p.image} className="w-12 h-12 rounded object-cover" alt="" /> : <div className="w-12 h-12 bg-sand rounded"></div>}
@@ -243,10 +278,10 @@ export default function AdminProducts() {
       {/* Edit Product Modal */}
       {editingProduct && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/70 px-4 backdrop-blur-sm overflow-y-auto">
-          <div className="card-rounded w-full max-w-2xl border border-paper/10 bg-paper p-6 text-ink shadow-[0_30px_90px_rgba(0,0,0,0.35)] dark:border-paper/20 dark:bg-[#14151A] dark:text-paper my-8">
+          <div className="card-rounded w-full max-w-2xl border border-paper/10 bg-paper p-6 text-ink shadow-[0_30px_90px_rgba(0,0,0,0.35)] my-8">
             <div className="flex items-start justify-between gap-4 mb-6">
               <div>
-                <div className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">Edit Product</div>
+                <div className="text-xs uppercase tracking-widest text-ink/60">Edit Product</div>
                 <h3 className="heading-display mt-2 text-2xl">{editingProduct.name}</h3>
               </div>
               <button onClick={closeEditor} className="pill-btn text-xs">Close</button>
@@ -254,34 +289,34 @@ export default function AdminProducts() {
 
             <form onSubmit={handleUpdateProduct} className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>
-                <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60 dark:text-paper/50">Product Name</label>
-                <input required placeholder="Product name" className="w-full p-3 border rounded-xl bg-white dark:bg-paper/10 text-ink dark:text-paper border-ink/20 dark:border-paper/20" value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} />
+                <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Product Name</label>
+                <input required placeholder="Product name" className="w-full p-3 border rounded-xl bg-white text-ink border-ink/20" value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} />
               </div>
               <div>
-                <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60 dark:text-paper/50">Slug</label>
-                <input required placeholder="URL-friendly slug" className="w-full p-3 border rounded-xl bg-white dark:bg-paper/10 text-ink dark:text-paper border-ink/20 dark:border-paper/20" value={editForm.slug} onChange={(e) => setEditForm({ ...editForm, slug: e.target.value })} />
+                <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Slug</label>
+                <input required placeholder="URL-friendly slug" className="w-full p-3 border rounded-xl bg-white text-ink border-ink/20" value={editForm.slug} onChange={(e) => setEditForm({ ...editForm, slug: e.target.value })} />
               </div>
               <div>
-                <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60 dark:text-paper/50">Price (₹)</label>
-                <input required type="number" placeholder="1499" className="w-full p-3 border rounded-xl bg-white dark:bg-paper/10 text-ink dark:text-paper border-ink/20 dark:border-paper/20" value={editForm.price} onChange={(e) => setEditForm({ ...editForm, price: e.target.value })} />
+                <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Price (₹)</label>
+                <input required type="number" placeholder="1499" className="w-full p-3 border rounded-xl bg-white text-ink border-ink/20" value={editForm.price} onChange={(e) => setEditForm({ ...editForm, price: e.target.value })} />
               </div>
               <div>
-                <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60 dark:text-paper/50">Stock Quantity</label>
-                <input required type="number" placeholder="100" className="w-full p-3 border rounded-xl bg-white dark:bg-paper/10 text-ink dark:text-paper border-ink/20 dark:border-paper/20" value={editForm.stock} onChange={(e) => setEditForm({ ...editForm, stock: e.target.value })} />
+                <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Stock Quantity</label>
+                <input required type="number" placeholder="100" className="w-full p-3 border rounded-xl bg-white text-ink border-ink/20" value={editForm.stock} onChange={(e) => setEditForm({ ...editForm, stock: e.target.value })} />
               </div>
               <div className="md:col-span-2">
-                <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60 dark:text-paper/50">Category</label>
-                <input required placeholder="e.g., Electronics" className="w-full p-3 border rounded-xl bg-white dark:bg-paper/10 text-ink dark:text-paper border-ink/20 dark:border-paper/20" value={editForm.category} onChange={(e) => setEditForm({ ...editForm, category: e.target.value })} />
+                <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Category</label>
+                <input required placeholder="e.g., Electronics" className="w-full p-3 border rounded-xl bg-white text-ink border-ink/20" value={editForm.category} onChange={(e) => setEditForm({ ...editForm, category: e.target.value })} />
               </div>
               <div className="md:col-span-2">
-                <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60 dark:text-paper/50">Description</label>
-                <textarea required placeholder="Product description..." className="w-full p-3 border rounded-xl bg-white dark:bg-paper/10 text-ink dark:text-paper border-ink/20 dark:border-paper/20 h-24" value={editForm.description} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })} />
+                <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Description</label>
+                <textarea required placeholder="Product description..." className="w-full p-3 border rounded-xl bg-white text-ink border-ink/20 h-24" value={editForm.description} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })} />
               </div>
               <div className="md:col-span-2">
-                <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60 dark:text-paper/50">Image URL or Upload</label>
-                <input placeholder="Image URL" className="w-full p-3 border rounded-xl bg-white dark:bg-paper/10 text-ink dark:text-paper border-ink/20 dark:border-paper/20 mb-2" value={editForm.image} onChange={(e) => setEditForm({ ...editForm, image: e.target.value })} />
-                <div className="border-t border-ink/10 dark:border-paper/10 pt-3">
-                  <div className="text-xs text-ink/60 dark:text-paper/50 mb-2">Or upload new image:</div>
+                <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Image URL or Upload</label>
+                <input placeholder="Image URL" className="w-full p-3 border rounded-xl bg-white text-ink border-ink/20 mb-2" value={editForm.image} onChange={(e) => setEditForm({ ...editForm, image: e.target.value })} />
+                <div className="border-t border-ink/10 pt-3">
+                  <div className="text-xs text-ink/60 mb-2">Or upload new image:</div>
                   <input type="file" accept="image/*" className="w-full text-sm" onChange={async (e) => {
                     const file = e.target.files?.[0];
                     if (!file) return;
@@ -300,8 +335,8 @@ export default function AdminProducts() {
               </div>
 
               <div className="md:col-span-2 flex gap-3 pt-4">
-                <button type="button" onClick={closeEditor} className="flex-1 px-4 py-3 rounded-xl border border-ink/20 dark:border-paper/20 hover:bg-ink/5 dark:hover:bg-paper/5 transition font-medium uppercase tracking-widest text-sm">Cancel</button>
-                <button type="submit" className="flex-1 px-4 py-3 bg-ink text-paper dark:bg-paper dark:text-ink rounded-xl font-medium uppercase tracking-widest text-sm hover:opacity-90 transition">Save Changes</button>
+                <button type="button" onClick={closeEditor} className="flex-1 px-4 py-3 rounded-xl border border-ink/20 hover:bg-ink/5:bg-paper/5 transition font-medium uppercase tracking-widest text-sm">Cancel</button>
+                <button type="submit" className="flex-1 px-4 py-3 bg-ink text-paper rounded-xl font-medium uppercase tracking-widest text-sm hover:opacity-90 transition">Save Changes</button>
               </div>
             </form>
           </div>
@@ -311,25 +346,25 @@ export default function AdminProducts() {
       
       {deleteModal.show && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/70 px-4 backdrop-blur-sm">
-          <div className="card-rounded w-full max-w-sm border border-paper/10 bg-paper p-8 text-ink shadow-[0_30px_90px_rgba(0,0,0,0.35)] dark:border-paper/20 dark:bg-[#14151A] dark:text-paper">
+          <div className="card-rounded w-full max-w-sm border border-paper/10 bg-paper p-8 text-ink shadow-[0_30px_90px_rgba(0,0,0,0.35)]">
             {/* Icon */}
             <div className="flex justify-center mb-6">
-              <div className="p-4 rounded-full bg-red-100 dark:bg-red-400/10">
-                <AlertTriangle className="text-red-600 dark:text-red-400" size={28} />
+              <div className="p-4 rounded-full bg-red-100">
+                <AlertTriangle className="text-red-600" size={28} />
               </div>
             </div>
 
             {/* Content */}
             <h3 className="text-xl font-bold text-center mb-2">Delete Product</h3>
-            <p className="text-center text-ink/70 dark:text-paper/70 mb-6">
-              Are you sure you want to delete <strong className="text-red-600 dark:text-red-400">{deleteModal.productName}</strong>? This action cannot be undone.
+            <p className="text-center text-ink/70 mb-6">
+              Are you sure you want to delete <strong className="text-red-600">{deleteModal.productName}</strong>? This action cannot be undone.
             </p>
 
             {/* Buttons */}
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteModal({ show: false, productId: null, productName: '' })}
-                className="flex-1 px-4 py-3 rounded-xl border border-ink/20 dark:border-paper/20 hover:bg-ink/5 dark:hover:bg-paper/5 transition font-medium uppercase tracking-widest text-sm"
+                className="flex-1 px-4 py-3 rounded-xl border border-ink/20 hover:bg-ink/5:bg-paper/5 transition font-medium uppercase tracking-widest text-sm"
               >
                 Cancel
               </button>

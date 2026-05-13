@@ -109,8 +109,8 @@ export default function WorkerAvailability() {
             <div
               className={`flex h-12 w-12 items-center justify-center rounded-full ${
                 online
-                  ? 'bg-green-100 text-green-700 dark:bg-green-400/15 dark:text-green-300'
-                  : 'bg-ink/5 text-ink/60 dark:bg-paper/5 dark:text-paper/60'
+                  ? 'bg-green-100 text-green-700'
+                  : 'bg-ink/5 text-ink/60'
               }`}
             >
               {online ? <Wifi size={22} /> : <WifiOff size={22} />}
@@ -119,12 +119,12 @@ export default function WorkerAvailability() {
               <div className="text-sm font-semibold uppercase tracking-widest">
                 {online ? 'Online' : 'Offline'}
               </div>
-              <div className="text-xs text-ink/60 dark:text-paper/50">
+              <div className="text-xs text-ink/60">
                 {online
                   ? 'Dispatch may assign you new jobs.'
                   : 'You will not receive auto-assignments.'}
               </div>
-              <div className="text-xs text-ink/50 dark:text-paper/40">
+              <div className="text-xs text-ink/50">
                 Last seen: {fmt(lastSeenAt)}
               </div>
             </div>
@@ -134,8 +134,8 @@ export default function WorkerAvailability() {
             disabled={loading}
             className={`inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-xs uppercase tracking-widest transition ${
               online
-                ? 'border border-ink/15 hover:border-ink/40 dark:border-paper/15 dark:hover:border-paper/40'
-                : 'bg-ink text-paper hover:opacity-90 dark:bg-paper dark:text-ink'
+                ? 'border border-ink/15 hover:border-ink/40:border-paper/40'
+                : 'bg-ink text-paper hover:opacity-90'
             }`}
           >
             {online ? 'Go offline' : 'Go online'}
@@ -145,7 +145,7 @@ export default function WorkerAvailability() {
 
       <FadeUp>
         <div className="card-rounded p-5">
-          <div className="mb-4 flex items-center gap-2 text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+          <div className="mb-4 flex items-center gap-2 text-xs uppercase tracking-widest text-ink/60">
             <CalendarIcon size={14} />
             Weekly schedule
           </div>
@@ -162,8 +162,8 @@ export default function WorkerAvailability() {
                     key={d.dow}
                     className={`grid grid-cols-1 items-center gap-3 rounded-xl border p-3 transition sm:grid-cols-[120px_auto_auto_auto] ${
                       row.active
-                        ? 'border-ink/15 dark:border-paper/15'
-                        : 'border-ink/5 bg-ink/[0.02] opacity-60 dark:border-paper/5 dark:bg-paper/[0.02]'
+                        ? 'border-ink/15'
+                        : 'border-ink/5 bg-ink/[0.02] opacity-60.02]'
                     }`}
                   >
                     <label className="flex items-center gap-2 text-sm font-medium">
@@ -179,9 +179,9 @@ export default function WorkerAvailability() {
                       value={row.start}
                       onChange={(e) => updateRow(d.dow, { start: e.target.value })}
                       disabled={!row.active}
-                      className="rounded-lg border border-ink/15 bg-transparent p-2 text-sm focus:border-ink focus:outline-none disabled:opacity-50 dark:border-paper/15 dark:focus:border-paper/60"
+                      className="rounded-lg border border-ink/15 bg-transparent p-2 text-sm focus:border-ink focus:outline-none disabled:opacity-50:border-paper/60"
                     />
-                    <span className="text-xs uppercase tracking-widest text-ink/50 dark:text-paper/40">
+                    <span className="text-xs uppercase tracking-widest text-ink/50">
                       to
                     </span>
                     <input
@@ -189,7 +189,7 @@ export default function WorkerAvailability() {
                       value={row.end}
                       onChange={(e) => updateRow(d.dow, { end: e.target.value })}
                       disabled={!row.active}
-                      className="rounded-lg border border-ink/15 bg-transparent p-2 text-sm focus:border-ink focus:outline-none disabled:opacity-50 dark:border-paper/15 dark:focus:border-paper/60"
+                      className="rounded-lg border border-ink/15 bg-transparent p-2 text-sm focus:border-ink focus:outline-none disabled:opacity-50:border-paper/60"
                     />
                   </div>
                 );
@@ -201,7 +201,7 @@ export default function WorkerAvailability() {
             <button
               onClick={handleSave}
               disabled={saving || loading}
-              className="inline-flex items-center gap-2 rounded-full bg-ink px-5 py-2.5 text-xs uppercase tracking-widest text-paper transition hover:opacity-90 disabled:opacity-50 dark:bg-paper dark:text-ink"
+              className="inline-flex items-center gap-2 rounded-full bg-ink px-5 py-2.5 text-xs uppercase tracking-widest text-paper transition hover:opacity-90 disabled:opacity-50"
             >
               <Save size={14} />
               {saving ? 'Saving…' : 'Save schedule'}

@@ -128,14 +128,14 @@ export default function AdminCategories() {
   return (
     <DashboardShell eyebrow="Catalog" title="Service categories">
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <div className="text-sm text-ink/60 dark:text-paper/50">
+        <div className="text-sm text-ink/60">
           {categories.length} categor{categories.length === 1 ? 'y' : 'ies'} ·{' '}
           {managers.length} manager{managers.length === 1 ? '' : 's'} available
         </div>
         <button
           onClick={startNew}
           disabled={editing === 'new'}
-          className="inline-flex items-center gap-2 rounded-full bg-ink px-4 py-2 text-xs uppercase tracking-widest text-paper transition hover:opacity-90 disabled:opacity-50 dark:bg-paper dark:text-ink"
+          className="inline-flex items-center gap-2 rounded-full bg-ink px-4 py-2 text-xs uppercase tracking-widest text-paper transition hover:opacity-90 disabled:opacity-50"
         >
           <Plus size={14} /> New category
         </button>
@@ -214,8 +214,8 @@ export default function AdminCategories() {
                     onClick={() => setForm((f) => ({ ...f, icon: ic }))}
                     className={`rounded-full border px-3 py-1.5 text-xs transition ${
                       form.icon === ic
-                        ? 'border-ink bg-ink text-paper dark:border-paper dark:bg-paper dark:text-ink'
-                        : 'border-ink/20 hover:border-ink/40 dark:border-paper/20'
+                        ? 'border-ink bg-ink text-paper'
+                        : 'border-ink/20 hover:border-ink/40'
                     }`}
                   >
                     {ic}
@@ -232,7 +232,7 @@ export default function AdminCategories() {
                     type="button"
                     onClick={() => setForm((f) => ({ ...f, color: c }))}
                     className={`h-8 w-8 rounded-full ring-2 transition ${
-                      form.color === c ? 'ring-ink dark:ring-paper' : 'ring-transparent'
+                      form.color === c ? 'ring-ink' : 'ring-transparent'
                     }`}
                     style={{ background: c }}
                     aria-label={c}
@@ -242,7 +242,7 @@ export default function AdminCategories() {
                   type="color"
                   value={form.color}
                   onChange={(e) => setForm((f) => ({ ...f, color: e.target.value }))}
-                  className="h-8 w-12 cursor-pointer rounded border border-ink/15 dark:border-paper/15"
+                  className="h-8 w-12 cursor-pointer rounded border border-ink/15"
                 />
               </div>
             </div>
@@ -258,7 +258,7 @@ export default function AdminCategories() {
                 <img
                   src={form.image}
                   alt="preview"
-                  className="mt-2 h-24 w-24 rounded-xl border border-ink/10 object-cover dark:border-paper/10"
+                  className="mt-2 h-24 w-24 rounded-xl border border-ink/10 object-cover"
                 />
               )}
             </div>
@@ -277,7 +277,7 @@ export default function AdminCategories() {
               <button
                 type="submit"
                 disabled={saving}
-                className="inline-flex items-center gap-2 rounded-full bg-ink px-5 py-2 text-xs uppercase tracking-widest text-paper transition hover:opacity-90 disabled:opacity-50 dark:bg-paper dark:text-ink"
+                className="inline-flex items-center gap-2 rounded-full bg-ink px-5 py-2 text-xs uppercase tracking-widest text-paper transition hover:opacity-90 disabled:opacity-50"
               >
                 <Save size={14} />
                 {saving ? 'Saving…' : editing === 'new' ? 'Create' : 'Save changes'}
@@ -289,7 +289,7 @@ export default function AdminCategories() {
 
       <div className="card-rounded overflow-x-auto">
         <table className="w-full text-left text-sm">
-          <thead className="bg-sand/50 text-xs uppercase tracking-widest text-ink/60 dark:bg-[#18181A] dark:text-paper/60">
+          <thead className="bg-sand/50 text-xs uppercase tracking-widest text-ink/60">
             <tr>
               <th className="p-4 font-normal">Category</th>
               <th className="p-4 font-normal">Slug</th>
@@ -299,16 +299,16 @@ export default function AdminCategories() {
               <th className="p-4 font-normal" />
             </tr>
           </thead>
-          <tbody className="divide-y divide-ink/10 dark:divide-paper/10">
+          <tbody className="divide-y divide-ink/10">
             {loading ? (
               <tr>
-                <td colSpan={6} className="p-6 text-center text-ink/60 dark:text-paper/50">
+                <td colSpan={6} className="p-6 text-center text-ink/60">
                   Loading…
                 </td>
               </tr>
             ) : categories.length === 0 ? (
               <tr>
-                <td colSpan={6} className="p-6 text-center text-ink/60 dark:text-paper/50">
+                <td colSpan={6} className="p-6 text-center text-ink/60">
                   No categories. Click "New category" to get started.
                 </td>
               </tr>
@@ -319,7 +319,7 @@ export default function AdminCategories() {
                 return (
                   <tr
                     key={c._id}
-                    className="transition hover:bg-sand/30 dark:hover:bg-[#18181A]/50"
+                    className="transition hover:bg-sand/30:bg-[#18181A]/50"
                   >
                     <td className="p-4">
                       <div className="flex items-center gap-3">
@@ -332,7 +332,7 @@ export default function AdminCategories() {
                         <div>
                           <div className="font-medium">{c.name}</div>
                           {c.description && (
-                            <div className="text-xs text-ink/60 dark:text-paper/50">
+                            <div className="text-xs text-ink/60">
                               {c.description.slice(0, 80)}
                               {c.description.length > 80 && '…'}
                             </div>
@@ -347,7 +347,7 @@ export default function AdminCategories() {
                           <UserCog size={12} /> {mgr}
                         </span>
                       ) : (
-                        <span className="text-ink/50 dark:text-paper/40">Unassigned</span>
+                        <span className="text-ink/50">Unassigned</span>
                       )}
                     </td>
                     <td className="p-4 tabular-nums">{c.sortOrder ?? 0}</td>
@@ -355,8 +355,8 @@ export default function AdminCategories() {
                       <span
                         className={`rounded-full px-3 py-1 text-xs uppercase tracking-widest ${
                           c.isActive
-                            ? 'bg-green-100 text-green-700 dark:bg-green-400/10 dark:text-green-300'
-                            : 'bg-ink/5 text-ink/60 dark:bg-paper/10 dark:text-paper/60'
+                            ? 'bg-green-100 text-green-700'
+                            : 'bg-ink/5 text-ink/60'
                         }`}
                       >
                         {c.isActive ? 'Active' : 'Hidden'}
@@ -372,7 +372,7 @@ export default function AdminCategories() {
                         </button>
                         <button
                           onClick={() => handleDelete(c)}
-                          className="inline-flex items-center gap-1 text-xs uppercase tracking-widest text-red-600 hover:underline dark:text-red-300"
+                          className="inline-flex items-center gap-1 text-xs uppercase tracking-widest text-red-600 hover:underline"
                         >
                           <Trash2 size={12} /> Delete
                         </button>
@@ -391,11 +391,11 @@ export default function AdminCategories() {
 
 function Label({ children }) {
   return (
-    <label className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+    <label className="text-xs uppercase tracking-widest text-ink/60">
       {children}
     </label>
   );
 }
 
 const inputClass =
-  'mt-2 w-full rounded-xl border border-ink/15 bg-transparent p-3 text-sm focus:border-ink focus:outline-none disabled:opacity-50 dark:border-paper/15 dark:focus:border-paper/60';
+  'mt-2 w-full rounded-xl border border-ink/15 bg-transparent p-3 text-sm focus:border-ink focus:outline-none disabled:opacity-50:border-paper/60';

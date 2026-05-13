@@ -71,11 +71,11 @@ export default function Login() {
     <>
       <div
         aria-hidden
-        className="pointer-events-none fixed inset-0 -z-10 bg-paper dark:bg-[#0E0E10]"
+        className="pointer-events-none fixed inset-0 -z-10 bg-paper"
       />
       <div
         aria-hidden
-        className="pointer-events-none fixed inset-0 -z-10 opacity-70 dark:opacity-50"
+        className="pointer-events-none fixed inset-0 -z-10 opacity-70"
         style={{
           backgroundImage:
             'radial-gradient(60rem 60rem at 12% 0%, rgba(26,26,26,0.06), transparent 60%), radial-gradient(50rem 50rem at 100% 100%, rgba(26,26,26,0.05), transparent 55%)',
@@ -83,11 +83,11 @@ export default function Login() {
       />
       <div
         aria-hidden
-        className="pointer-events-none fixed inset-x-0 top-0 -z-10 h-[40vh] bg-gradient-to-b from-sand/60 to-transparent dark:from-paper/[0.03]"
+        className="pointer-events-none fixed inset-x-0 top-0 -z-10 h-[40vh] bg-gradient-to-b from-sand/60 to-transparent.03]"
       />
 
       <section
-        className="relative flex min-h-[100dvh] items-start justify-center px-4 sm:px-6"
+        className="relative flex min-h-[100dvh] items-center justify-center px-4 sm:px-6"
         style={{
           paddingTop: 'calc(1rem + env(safe-area-inset-top))',
           paddingBottom: 'calc(2.5rem + env(safe-area-inset-bottom))',
@@ -100,7 +100,7 @@ export default function Login() {
             transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
             className="space-y-7 lg:space-y-9"
           >
-            <span className="inline-flex items-center rounded-full border px-3 py-1 text-ink/90 font-semibold backdrop-blur dark:border-paper/15 dark:bg-paper/[0.04]">
+            <span className="inline-flex items-center rounded-full border px-3 py-1 text-ink/90 font-semibold backdrop-blur.04]">
               Members area
             </span>
 
@@ -109,7 +109,7 @@ export default function Login() {
                 Sign in to
                 <span className="mt-1 block font-semibold">UrbanEase.</span>
               </h1>
-              <div className="h-px w-16 bg-gradient-to-r from-ink/40 to-transparent dark:from-paper/40" />
+              <div className="h-px w-16 bg-gradient-to-r from-ink/40 to-transparent" />
               <p className="max-w-md text-base font-semibold leading-relaxed text-ink/85">
                 Your bookings, orders, and saved looks live in one elegant place. Sign in to
                 pick up where you left off.
@@ -117,13 +117,13 @@ export default function Login() {
             </div>
 
             <ul className="hidden flex-wrap items-center gap-x-3 gap-y-2 text-xs uppercase tracking-[0.18em] text-ink/70 lg:flex">
-              <li className="inline-flex items-center rounded-full border border-ink/10 px-3 py-1 font-semibold dark:border-paper/10 dark:bg-paper/[0.03]">
+              <li className="inline-flex items-center rounded-full border border-ink/10 px-3 py-1 font-semibold.03]">
                 Secure auth
               </li>
-              <li className="inline-flex items-center rounded-full border border-ink/10 px-3 py-1 font-semibold dark:border-paper/10 dark:bg-paper/[0.03]">
+              <li className="inline-flex items-center rounded-full border border-ink/10 px-3 py-1 font-semibold.03]">
                 Google sign-in
               </li>
-              <li className="inline-flex items-center rounded-full border border-ink/10 px-3 py-1 font-semibold dark:border-paper/10 dark:bg-paper/[0.03]">
+              <li className="inline-flex items-center rounded-full border border-ink/10 px-3 py-1 font-semibold.03]">
                 Curated for you
               </li>
             </ul>
@@ -139,15 +139,15 @@ export default function Login() {
             <div className="relative">
               <div
                 aria-hidden
-                className="absolute -inset-4 -z-10 rounded-[32px] bg-gradient-to-br from-ink/5 via-transparent to-ink/[0.02] blur-2xl dark:from-paper/[0.04] dark:to-paper/[0.02]"
+                className="absolute -inset-4 -z-10 rounded-[32px] bg-gradient-to-br from-ink/5 via-transparent to-ink/[0.02] blur-2xl.04].02]"
               />
 
-              <div className="overflow-hidden rounded-[28px] border border-ink/10 bg-paper/95 shadow-card backdrop-blur-xl dark:border-paper/10 dark:bg-[#141417]/85">
+              <div className="overflow-hidden rounded-[28px] border border-ink/10 bg-paper/95 shadow-card backdrop-blur-xl">
                 <div className="px-6 pt-6 pb-1 sm:px-8 sm:pt-8">
-                  <h2 className="text-[26px] font-semibold leading-tight tracking-tight text-ink dark:text-paper">
+                  <h2 className="text-[26px] font-semibold leading-tight tracking-tight text-ink">
                     Welcome back
                   </h2>
-                  <p className="mt-1 text-sm text-ink/60 dark:text-paper/55">
+                  <p className="mt-1 text-sm text-ink/60">
                     Sign in with your email or continue with Google.
                   </p>
                 </div>
@@ -157,11 +157,11 @@ export default function Login() {
 
                   {/* Divider */}
                   <div className="relative flex items-center gap-3 py-1">
-                    <div className="h-px flex-1 bg-ink/10 dark:bg-paper/10" />
-                    <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-ink/45 dark:text-paper/40">
+                    <div className="h-px flex-1 bg-ink/10" />
+                    <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-ink/45">
                       or with email
                     </span>
-                    <div className="h-px flex-1 bg-ink/10 dark:bg-paper/10" />
+                    <div className="h-px flex-1 bg-ink/10" />
                   </div>
 
                   <form onSubmit={onSubmit} className="space-y-4">
@@ -188,7 +188,7 @@ export default function Login() {
                         <button
                           type="button"
                           onClick={() => setShowPassword((v) => !v)}
-                          className="text-ink/45 transition-colors hover:text-ink dark:text-paper/45 dark:hover:text-paper"
+                          className="text-ink/45 transition-colors hover:text-ink:text-paper"
                           aria-label={showPassword ? 'Hide password' : 'Show password'}
                           tabIndex={-1}
                         >
@@ -206,10 +206,10 @@ export default function Login() {
                             onChange={(e) => setRememberMe(e.target.checked)}
                             className="peer sr-only"
                           />
-                          <span className="absolute inset-0 rounded-[5px] border border-ink/30 bg-paper transition-all duration-200 peer-checked:border-ink peer-checked:bg-ink peer-focus-visible:ring-2 peer-focus-visible:ring-ink/30 dark:border-paper/30 dark:bg-paper/[0.06] dark:peer-checked:border-paper dark:peer-checked:bg-paper" />
+                          <span className="absolute inset-0 rounded-[5px] border border-ink/30 bg-paper transition-all duration-200 peer-checked:border-ink peer-checked:bg-ink peer-focus-visible:ring-2 peer-focus-visible:ring-ink/30.06]:border-paper:bg-paper" />
                           <svg
                             viewBox="0 0 16 16"
-                            className="relative h-2.5 w-2.5 scale-0 stroke-paper opacity-0 transition-all duration-150 peer-checked:scale-100 peer-checked:opacity-100 dark:stroke-ink"
+                            className="relative h-2.5 w-2.5 scale-0 stroke-paper opacity-0 transition-all duration-150 peer-checked:scale-100 peer-checked:opacity-100"
                             fill="none"
                             strokeWidth="3"
                             strokeLinecap="round"
@@ -218,13 +218,13 @@ export default function Login() {
                             <polyline points="3 8.5 6.5 12 13 4" />
                           </svg>
                         </span>
-                        <span className="text-xs text-ink/65 transition-colors group-hover:text-ink dark:text-paper/65 dark:group-hover:text-paper">
+                        <span className="text-xs text-ink/65 transition-colors group-hover:text-ink:text-paper">
                           Remember me
                         </span>
                       </label>
                       <Link
                         to="/forgot-password"
-                        className="text-xs font-medium text-ink/65 underline-offset-4 transition-colors hover:text-ink hover:underline dark:text-paper/65 dark:hover:text-paper"
+                        className="text-xs font-medium text-ink/65 underline-offset-4 transition-colors hover:text-ink hover:underline:text-paper"
                       >
                         Forgot password?
                       </Link>
@@ -235,11 +235,11 @@ export default function Login() {
                     <PrimaryCTA loading={submitting} label="Sign in" />
                   </form>
 
-                  <div className="border-t border-ink/10 pt-5 text-center text-sm text-ink/75 dark:border-paper/10 dark:text-paper/65">
+                  <div className="border-t border-ink/10 pt-5 text-center text-sm text-ink/75">
                     New to UrbanEase?{' '}
                     <Link
                       to="/signup"
-                      className="font-semibold text-ink underline-offset-4 hover:underline dark:text-paper"
+                      className="font-semibold text-ink underline-offset-4 hover:underline"
                     >
                       Create an account
                     </Link>
@@ -247,7 +247,7 @@ export default function Login() {
                 </div>
               </div>
 
-              <p className="mt-4 text-center text-[11px] uppercase tracking-[0.18em] text-ink/50 dark:text-paper/45">
+              <p className="mt-4 text-center text-[11px] uppercase tracking-[0.18em] text-ink/50">
                 Protected by enterprise-grade encryption
               </p>
             </div>
@@ -269,29 +269,29 @@ export default function Login() {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.96, opacity: 0, y: 8 }}
               transition={{ duration: 0.2 }}
-              className="w-full max-w-md space-y-5 rounded-[24px] border border-ink/10 bg-paper p-7 shadow-card dark:border-paper/10 dark:bg-[#141417]"
+              className="w-full max-w-md space-y-5 rounded-[24px] border border-ink/10 bg-paper p-7 shadow-card"
             >
               <div className="space-y-2">
-                <div className="text-[11px] font-medium uppercase tracking-[0.18em] text-ink/55 dark:text-paper/55">
+                <div className="text-[11px] font-medium uppercase tracking-[0.18em] text-ink/55">
                   Account notice
                 </div>
-                <h3 className="text-xl font-semibold text-ink dark:text-paper">
+                <h3 className="text-xl font-semibold text-ink">
                   Account suspended
                 </h3>
-                <p className="text-sm leading-relaxed text-ink/70 dark:text-paper/65">
+                <p className="text-sm leading-relaxed text-ink/70">
                   {suspensionNotice}
                 </p>
               </div>
-              <div className="rounded-xl border border-ink/10 bg-ink/[0.02] px-3 py-2 text-xs text-ink/65 dark:border-paper/10 dark:bg-paper/[0.04] dark:text-paper/60">
+              <div className="rounded-xl border border-ink/10 bg-ink/[0.02] px-3 py-2 text-xs text-ink/65.04]">
                 For assistance, contact{' '}
-                <span className="font-mono text-ink dark:text-paper">
+                <span className="font-mono text-ink">
                   adminvelorahouse@gmail.com
                 </span>
                 .
               </div>
               <button
                 onClick={() => setSuspensionNotice('')}
-                className="w-full rounded-full bg-ink py-2.5 text-sm font-semibold text-paper transition-transform duration-150 hover:opacity-95 active:scale-[0.99] dark:bg-paper dark:text-ink"
+                className="w-full rounded-full bg-ink py-2.5 text-sm font-semibold text-paper transition-transform duration-150 hover:opacity-95 active:scale-[0.99]"
               >
                 Understood
               </button>

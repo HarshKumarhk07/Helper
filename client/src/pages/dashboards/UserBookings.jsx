@@ -93,7 +93,7 @@ export default function UserBookings() {
             className={`rounded-pill border px-4 py-2 text-xs uppercase tracking-widest transition ${
               filter === f.key
                 ? 'border-ink bg-ink text-paper'
-                : 'border-ink bg-ink/85 text-paper hover:bg-ink hover:text-paper dark:border-paper/50 dark:text-paper'
+                : 'border-ink bg-ink/85 text-paper hover:bg-ink hover:text-paper'
             }`}
           >
             {f.label}
@@ -135,7 +135,7 @@ export default function UserBookings() {
                           </span>
                           <button
                             onClick={() => setTrackingBooking(b)}
-                            className="rounded border border-ink/30 px-3 py-1 text-xs uppercase tracking-widest text-ink transition hover:bg-ink hover:text-paper dark:border-paper/30 dark:text-paper dark:hover:bg-paper dark:hover:text-ink"
+                            className="rounded border border-ink/30 px-3 py-1 text-xs uppercase tracking-widest text-ink transition hover:bg-ink hover:text-paper:bg-paper:text-ink"
                           >
                             Track & PINs
                           </button>
@@ -161,13 +161,13 @@ export default function UserBookings() {
                     <div className="flex justify-end gap-4 items-center">
                       <button
                         onClick={() => downloadInvoice('booking', b._id, `Invoice_BOOKING_${b.code}.pdf`)}
-                        className="text-xs uppercase tracking-widest text-ink/70 hover:text-ink transition dark:text-paper/70 dark:hover:text-paper"
+                        className="text-xs uppercase tracking-widest text-ink/70 hover:text-ink transition:text-paper"
                       >
                         Download PDF
                       </button>
                       <button
                         onClick={() => setReviewBooking(b)}
-                        className="rounded border border-ink/30 px-3 py-1 text-xs uppercase tracking-widest text-ink transition hover:bg-ink hover:text-paper dark:border-paper/30 dark:text-paper dark:hover:bg-paper dark:hover:text-ink"
+                        className="rounded border border-ink/30 px-3 py-1 text-xs uppercase tracking-widest text-ink transition hover:bg-ink hover:text-paper:bg-paper:text-ink"
                       >
                         Leave a Review
                       </button>

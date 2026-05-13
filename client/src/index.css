@@ -21,6 +21,8 @@
   }
   button, input, textarea, select {
     font: inherit;
+    color: inherit;
+    @apply text-ink;
   }
   ::selection {
     @apply bg-ink text-paper;

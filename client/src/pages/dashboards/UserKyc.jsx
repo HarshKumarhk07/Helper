@@ -22,25 +22,25 @@ const FIELDS = [
 const STATUS_BANNER = {
   pending: {
     Icon: Hourglass,
-    tone: 'bg-ink/5 text-ink/80 dark:bg-paper/5 dark:text-paper/70',
+    tone: 'bg-ink/5 text-ink/80',
     title: 'KYC not submitted',
     body: 'Upload your documents to verify your identity.',
   },
   submitted: {
     Icon: Hourglass,
-    tone: 'bg-amber-100 text-amber-800 dark:bg-amber-400/10 dark:text-amber-200',
+    tone: 'bg-amber-100 text-amber-800',
     title: 'Under review',
     body: 'Our team is reviewing your documents. You\'ll be notified once a decision is made.',
   },
   verified: {
     Icon: ShieldCheck,
-    tone: 'bg-green-100 text-green-700 dark:bg-green-400/10 dark:text-green-300',
+    tone: 'bg-green-100 text-green-700',
     title: 'KYC verified',
     body: 'Your identity has been verified.',
   },
   rejected: {
     Icon: ShieldAlert,
-    tone: 'bg-red-100 text-red-700 dark:bg-red-400/10 dark:text-red-300',
+    tone: 'bg-red-100 text-red-700',
     title: 'KYC rejected',
     body: 'Please review the reason below and re-upload the requested documents.',
   },
@@ -138,7 +138,7 @@ export default function UserKyc() {
   if (loading) {
     return (
       <DashboardShell eyebrow="Profile" title="KYC verification">
-        <div className="text-sm text-ink/60 dark:text-paper/50">Loading…</div>
+        <div className="text-sm text-ink/60">Loading…</div>
       </DashboardShell>
     );
   }
@@ -156,7 +156,7 @@ export default function UserKyc() {
             <div className="text-sm font-semibold uppercase tracking-widest">{banner.title}</div>
             <div className="mt-1 text-sm">{banner.body}</div>
             {data?.kycStatus === 'rejected' && data?.rejectionReason && (
-              <div className="mt-3 rounded-xl bg-white/60 p-3 text-sm text-red-700 dark:bg-black/20 dark:text-red-200">
+              <div className="mt-3 rounded-xl bg-white/60 p-3 text-sm text-red-700">
                 <div className="text-xs uppercase tracking-widest opacity-80">Reason</div>
                 <div className="mt-1">{data.rejectionReason}</div>
               </div>
@@ -168,7 +168,7 @@ export default function UserKyc() {
           </div>
           <button
             onClick={refresh}
-            className="hidden rounded-full p-2 transition hover:bg-black/10 md:inline-flex dark:hover:bg-white/10"
+            className="hidden rounded-full p-2 transition hover:bg-black/10 md:inline-flex:bg-white/10"
             title="Refresh"
           >
             <RefreshCw size={16} />
@@ -183,7 +183,7 @@ export default function UserKyc() {
         >
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
-              <label className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+              <label className="text-xs uppercase tracking-widest text-ink/60">
                 Aadhaar number
               </label>
               <input
@@ -195,11 +195,11 @@ export default function UserKyc() {
                 }
                 placeholder="12-digit Aadhaar"
                 disabled={isVerified}
-                className="mt-2 w-full rounded-xl border border-ink/15 bg-transparent p-3 text-base focus:border-ink focus:outline-none disabled:opacity-50 dark:border-paper/20 dark:focus:border-paper/60"
+                className="mt-2 w-full rounded-xl border border-ink/15 bg-transparent p-3 text-base focus:border-ink focus:outline-none disabled:opacity-50:border-paper/60"
               />
             </div>
             <div>
-              <label className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+              <label className="text-xs uppercase tracking-widest text-ink/60">
                 PAN number
               </label>
               <input
@@ -210,7 +210,7 @@ export default function UserKyc() {
                 }
                 placeholder="ABCDE1234F"
                 disabled={isVerified}
-                className="mt-2 w-full rounded-xl border border-ink/15 bg-transparent p-3 text-base uppercase focus:border-ink focus:outline-none disabled:opacity-50 dark:border-paper/20 dark:focus:border-paper/60"
+                className="mt-2 w-full rounded-xl border border-ink/15 bg-transparent p-3 text-base uppercase focus:border-ink focus:outline-none disabled:opacity-50:border-paper/60"
               />
             </div>
           </div>
@@ -226,11 +226,11 @@ export default function UserKyc() {
                   key={key}
                   className={`group relative flex flex-col rounded-2xl border-2 border-dashed p-4 transition cursor-pointer ${
                     isVerified
-                      ? 'border-ink/10 opacity-60 cursor-not-allowed dark:border-paper/10'
-                      : 'border-ink/20 hover:border-ink/50 dark:border-paper/20 dark:hover:border-paper/50'
+                      ? 'border-ink/10 opacity-60 cursor-not-allowed'
+                      : 'border-ink/20 hover:border-ink/50:border-paper/50'
                   }`}
                 >
-                  <div className="mb-3 flex items-center justify-between text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+                  <div className="mb-3 flex items-center justify-between text-xs uppercase tracking-widest text-ink/60">
                     <span>
                       {label} {required && <span className="text-red-500">*</span>}
                     </span>
@@ -239,8 +239,8 @@ export default function UserKyc() {
 
                   {showPreview ? (
                     isPdfPreview ? (
-                      <div className="flex h-40 items-center justify-center rounded-xl bg-ink/5 dark:bg-paper/5">
-                        <FileText size={36} className="text-ink/40 dark:text-paper/40" />
+                      <div className="flex h-40 items-center justify-center rounded-xl bg-ink/5">
+                        <FileText size={36} className="text-ink/40" />
                       </div>
                     ) : (
                       <img
@@ -250,7 +250,7 @@ export default function UserKyc() {
                       />
                     )
                   ) : (
-                    <div className="flex h-40 flex-col items-center justify-center rounded-xl bg-ink/5 text-xs text-ink/50 dark:bg-paper/5 dark:text-paper/40">
+                    <div className="flex h-40 flex-col items-center justify-center rounded-xl bg-ink/5 text-xs text-ink/50">
                       <Upload size={24} className="mb-2" />
                       Tap to upload
                     </div>
@@ -262,13 +262,13 @@ export default function UserKyc() {
                       target="_blank"
                       rel="noreferrer"
                       onClick={(e) => e.stopPropagation()}
-                      className="mt-2 text-center text-xs text-ink/60 underline dark:text-paper/50"
+                      className="mt-2 text-center text-xs text-ink/60 underline"
                     >
                       View current
                     </a>
                   )}
                   {files[key] && (
-                    <div className="mt-2 truncate text-center text-xs text-ink/70 dark:text-paper/60">
+                    <div className="mt-2 truncate text-center text-xs text-ink/70">
                       {files[key].name}
                     </div>
                   )}

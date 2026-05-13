@@ -64,7 +64,7 @@ export default function UserAddresses() {
     <section className="container-velora py-12 md:py-16">
       <div className="flex justify-between items-end mb-8">
         <div>
-          <div className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50 mb-3">
+          <div className="text-xs uppercase tracking-widest text-ink/60 mb-3">
             (My addresses)
           </div>
           <h1 className="heading-display text-4xl md:text-6xl">SAVED PLACES.</h1>
@@ -110,7 +110,7 @@ export default function UserAddresses() {
         {loading ? (
           [1, 2, 3].map(i => <div key={i} className="skeleton h-40 w-full" />)
         ) : addresses.length === 0 ? (
-          <div className="col-span-full rounded-card border border-ink/10 bg-sand/40 p-10 text-center text-sm dark:border-paper/10">
+          <div className="col-span-full rounded-card border border-ink/10 bg-sand/40 p-10 text-center text-sm">
             No saved addresses found.
           </div>
         ) : (
@@ -122,14 +122,14 @@ export default function UserAddresses() {
                     Default
                   </span>
                 )}
-                <div className="flex items-center gap-2 mb-3 text-ink/50 dark:text-paper/50 uppercase tracking-widest text-xs">
+                <div className="flex items-center gap-2 mb-3 text-ink/50 uppercase tracking-widest text-xs">
                   {addr.label}
                 </div>
                 <div className="font-bold mb-1">{addr.line1}</div>
-                {addr.line2 && <div className="text-sm text-ink/80 dark:text-paper/80 mb-1">{addr.line2}</div>}
-                <div className="text-sm text-ink/80 dark:text-paper/80">{addr.city}, {addr.state} {addr.pincode}</div>
+                {addr.line2 && <div className="text-sm text-ink/80 mb-1">{addr.line2}</div>}
+                <div className="text-sm text-ink/80">{addr.city}, {addr.state} {addr.pincode}</div>
                 
-                <div className="mt-6 pt-4 border-t border-ink/10 dark:border-paper/10 flex justify-end">
+                <div className="mt-6 pt-4 border-t border-ink/10 flex justify-end">
                   <button onClick={() => handleDelete(addr._id, addr.label)} className="text-red-500 hover:text-red-700 transition">
                     <Trash2 size={16} />
                   </button>
@@ -143,25 +143,25 @@ export default function UserAddresses() {
       {/* Delete Confirmation Modal */}
       {deleteModal.show && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/70 px-4 backdrop-blur-sm">
-          <div className="card-rounded w-full max-w-sm border border-paper/10 bg-paper p-8 text-ink shadow-[0_30px_90px_rgba(0,0,0,0.35)] dark:border-paper/20 dark:bg-[#14151A] dark:text-paper">
+          <div className="card-rounded w-full max-w-sm border border-paper/10 bg-paper p-8 text-ink shadow-[0_30px_90px_rgba(0,0,0,0.35)]">
             {/* Icon */}
             <div className="flex justify-center mb-6">
-              <div className="p-4 rounded-full bg-red-100 dark:bg-red-400/10">
-                <AlertTriangle className="text-red-600 dark:text-red-400" size={28} />
+              <div className="p-4 rounded-full bg-red-100">
+                <AlertTriangle className="text-red-600" size={28} />
               </div>
             </div>
 
             {/* Content */}
             <h3 className="text-xl font-bold text-center mb-2">Delete Address</h3>
-            <p className="text-center text-ink/70 dark:text-paper/70 mb-6">
-              Are you sure you want to delete your <strong className="text-red-600 dark:text-red-400 capitalize">{deleteModal.addressLabel}</strong> address? This action cannot be undone.
+            <p className="text-center text-ink/70 mb-6">
+              Are you sure you want to delete your <strong className="text-red-600 capitalize">{deleteModal.addressLabel}</strong> address? This action cannot be undone.
             </p>
 
             {/* Buttons */}
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteModal({ show: false, addressId: null, addressLabel: '' })}
-                className="flex-1 px-4 py-3 rounded-xl border border-ink/20 dark:border-paper/20 hover:bg-ink/5 dark:hover:bg-paper/5 transition font-medium uppercase tracking-widest text-sm"
+                className="flex-1 px-4 py-3 rounded-xl border border-ink/20 hover:bg-ink/5:bg-paper/5 transition font-medium uppercase tracking-widest text-sm"
               >
                 Cancel
               </button>

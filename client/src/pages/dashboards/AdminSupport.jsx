@@ -6,19 +6,19 @@ import DashboardShell from './DashboardShell.jsx';
 import { listAllTickets } from '../../api/support.js';
 
 const STATUS_BADGE = {
-  open: 'bg-amber-100 text-amber-800 dark:bg-amber-400/10 dark:text-amber-200',
-  awaiting_user: 'bg-blue-100 text-blue-700 dark:bg-blue-400/10 dark:text-blue-200',
+  open: 'bg-amber-100 text-amber-800',
+  awaiting_user: 'bg-blue-100 text-blue-700',
   awaiting_agent:
-    'bg-amber-100 text-amber-800 dark:bg-amber-400/10 dark:text-amber-200',
-  resolved: 'bg-green-100 text-green-700 dark:bg-green-400/10 dark:text-green-300',
-  closed: 'bg-ink/10 text-ink/60 dark:bg-paper/10 dark:text-paper/60',
+    'bg-amber-100 text-amber-800',
+  resolved: 'bg-green-100 text-green-700',
+  closed: 'bg-ink/10 text-ink/60',
 };
 
 const PRIORITY_DOT = {
   urgent: 'bg-red-500',
   high: 'bg-amber-500',
-  normal: 'bg-ink/30 dark:bg-paper/30',
-  low: 'bg-ink/15 dark:bg-paper/15',
+  normal: 'bg-ink/30',
+  low: 'bg-ink/15',
 };
 
 const FILTERS = [
@@ -92,8 +92,8 @@ export default function AdminSupport() {
                 onClick={() => setFilter(f.key)}
                 className={`rounded-full px-4 py-2 text-xs uppercase tracking-widest transition ${
                   active
-                    ? 'bg-ink text-paper dark:bg-paper dark:text-ink'
-                    : 'border border-ink/15 hover:border-ink/40 dark:border-paper/15 dark:hover:border-paper/40'
+                    ? 'bg-ink text-paper'
+                    : 'border border-ink/15 hover:border-ink/40:border-paper/40'
                 }`}
               >
                 {f.label}
@@ -104,20 +104,20 @@ export default function AdminSupport() {
             );
           })}
         </div>
-        <div className="flex items-center gap-2 rounded-full border border-ink/15 bg-paper px-3 py-2 text-sm dark:border-paper/15 dark:bg-paper/5">
-          <Search size={14} className="text-ink/50 dark:text-paper/40" />
+        <div className="flex items-center gap-2 rounded-full border border-ink/15 bg-paper px-3 py-2 text-sm">
+          <Search size={14} className="text-ink/50" />
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search code, subject, user…"
-            className="bg-transparent text-sm outline-none placeholder:text-ink/40 dark:text-paper dark:placeholder:text-paper/40"
+            className="bg-transparent text-sm outline-none placeholder:text-ink/40:text-paper/40"
           />
         </div>
       </div>
 
       <div className="card-rounded overflow-x-auto">
         <table className="w-full text-left text-sm">
-          <thead className="bg-sand/50 text-xs uppercase tracking-widest text-ink/60 dark:bg-[#18181A] dark:text-paper/60">
+          <thead className="bg-sand/50 text-xs uppercase tracking-widest text-ink/60">
             <tr>
               <th className="p-4 font-normal">Ticket</th>
               <th className="p-4 font-normal">Customer</th>
@@ -127,16 +127,16 @@ export default function AdminSupport() {
               <th className="p-4 font-normal" />
             </tr>
           </thead>
-          <tbody className="divide-y divide-ink/10 dark:divide-paper/10">
+          <tbody className="divide-y divide-ink/10">
             {loading ? (
               <tr>
-                <td colSpan={6} className="p-6 text-center text-ink/60 dark:text-paper/50">
+                <td colSpan={6} className="p-6 text-center text-ink/60">
                   Loading…
                 </td>
               </tr>
             ) : filtered.length === 0 ? (
               <tr>
-                <td colSpan={6} className="p-6 text-center text-ink/60 dark:text-paper/50">
+                <td colSpan={6} className="p-6 text-center text-ink/60">
                   No tickets in this view.
                 </td>
               </tr>
@@ -144,7 +144,7 @@ export default function AdminSupport() {
               filtered.map((t) => (
                 <tr
                   key={t._id}
-                  className="transition hover:bg-sand/30 dark:hover:bg-[#18181A]/50"
+                  className="transition hover:bg-sand/30:bg-[#18181A]/50"
                 >
                   <td className="p-4">
                     <div className="flex items-start gap-2">
@@ -156,18 +156,18 @@ export default function AdminSupport() {
                       />
                       <div>
                         <div className="flex items-center gap-2 text-xs">
-                          <span className="font-mono uppercase tracking-widest text-ink/60 dark:text-paper/50">
+                          <span className="font-mono uppercase tracking-widest text-ink/60">
                             {t.code}
                           </span>
                           {t.priority === 'urgent' && (
-                            <span className="inline-flex items-center gap-1 text-red-600 dark:text-red-300">
+                            <span className="inline-flex items-center gap-1 text-red-600">
                               <AlertOctagon size={11} /> urgent
                             </span>
                           )}
                         </div>
                         <div className="mt-1 line-clamp-1 font-medium">{t.subject}</div>
                         {t.lastMessagePreview && (
-                          <div className="mt-1 line-clamp-1 text-xs text-ink/60 dark:text-paper/50">
+                          <div className="mt-1 line-clamp-1 text-xs text-ink/60">
                             {t.lastMessagePreview.text}
                           </div>
                         )}
@@ -176,7 +176,7 @@ export default function AdminSupport() {
                   </td>
                   <td className="p-4">
                     <div className="font-medium">{t.user?.name || '—'}</div>
-                    <div className="text-xs text-ink/60 dark:text-paper/50">
+                    <div className="text-xs text-ink/60">
                       {t.user?.email}
                     </div>
                   </td>
@@ -192,7 +192,7 @@ export default function AdminSupport() {
                       {t.status.replace('_', ' ')}
                     </span>
                   </td>
-                  <td className="p-4 text-xs text-ink/60 dark:text-paper/50">
+                  <td className="p-4 text-xs text-ink/60">
                     <div className="inline-flex items-center gap-1">
                       <Clock size={11} /> {fmtRelative(t.lastActivityAt)}
                     </div>

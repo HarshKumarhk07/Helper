@@ -21,18 +21,18 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import { formatPrice, formatDateTime } from '../../lib/booking.js';
 
 const KYC_BADGE = {
-  pending: 'bg-ink/10 text-ink/70 dark:bg-paper/10 dark:text-paper/60',
-  submitted: 'bg-amber-100 text-amber-800 dark:bg-amber-400/10 dark:text-amber-200',
-  verified: 'bg-green-100 text-green-700 dark:bg-green-400/10 dark:text-green-300',
-  rejected: 'bg-red-100 text-red-700 dark:bg-red-400/10 dark:text-red-300',
+  pending: 'bg-ink/10 text-ink/70',
+  submitted: 'bg-amber-100 text-amber-800',
+  verified: 'bg-green-100 text-green-700',
+  rejected: 'bg-red-100 text-red-700',
 };
 
 const STATUS_BADGE = {
-  placed: 'bg-ink/10 text-ink/70 dark:bg-paper/10 dark:text-paper/60',
-  assigned: 'bg-blue-100 text-blue-700 dark:bg-blue-400/10 dark:text-blue-200',
-  in_progress: 'bg-amber-100 text-amber-800 dark:bg-amber-400/10 dark:text-amber-200',
-  completed: 'bg-green-100 text-green-700 dark:bg-green-400/10 dark:text-green-300',
-  cancelled: 'bg-red-100 text-red-700 dark:bg-red-400/10 dark:text-red-300',
+  placed: 'bg-ink/10 text-ink/70',
+  assigned: 'bg-blue-100 text-blue-700',
+  in_progress: 'bg-amber-100 text-amber-800',
+  completed: 'bg-green-100 text-green-700',
+  cancelled: 'bg-red-100 text-red-700',
 };
 
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -116,7 +116,7 @@ export default function AdminWorkerDetail() {
             <img
               src={worker.passportPhoto || worker.avatar}
               alt={worker.name}
-              className="h-16 w-16 rounded-full object-cover border-2 border-ink/10 dark:border-paper/10"
+              className="h-16 w-16 rounded-full object-cover border-2 border-ink/10"
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
               }}
@@ -124,7 +124,7 @@ export default function AdminWorkerDetail() {
           )}
           <Link
             to="/admin/workers"
-            className="inline-flex items-center gap-2 text-xs uppercase tracking-widest text-ink/60 hover:text-ink dark:text-paper/60 dark:hover:text-paper"
+            className="inline-flex items-center gap-2 text-xs uppercase tracking-widest text-ink/60 hover:text-ink:text-paper"
           >
             <ArrowLeft size={12} /> Back to KYC queue
           </Link>
@@ -141,15 +141,15 @@ export default function AdminWorkerDetail() {
             <span
               className={`inline-flex items-center gap-1 rounded-full px-3 py-1 font-medium uppercase tracking-widest ${
                 availability.online
-                  ? 'bg-green-100 text-green-700 dark:bg-green-400/10 dark:text-green-300'
-                  : 'bg-ink/10 text-ink/60 dark:bg-paper/10 dark:text-paper/60'
+                  ? 'bg-green-100 text-green-700'
+                  : 'bg-ink/10 text-ink/60'
               }`}
             >
               {availability.online ? <Wifi size={11} /> : <WifiOff size={11} />}
               {availability.online ? 'Online' : 'Offline'}
             </span>
           )}
-          <span className="text-ink/55 dark:text-paper/45">
+          <span className="text-ink/55">
             {worker.email} {worker.phone ? `· ${worker.phone}` : ''}
           </span>
         </div>
@@ -157,7 +157,7 @@ export default function AdminWorkerDetail() {
 
       {worker.kycStatus === 'rejected' && worker.kycRejectionReason && (
         <FadeUp>
-          <div className="mb-5 rounded-2xl border border-red-300 bg-red-50/60 p-4 text-sm text-red-700 dark:border-red-400/20 dark:bg-red-400/5 dark:text-red-200">
+          <div className="mb-5 rounded-2xl border border-red-300 bg-red-50/60 p-4 text-sm text-red-700">
             <div className="text-xs uppercase tracking-widest opacity-80">
               Last rejection
             </div>
@@ -207,10 +207,10 @@ export default function AdminWorkerDetail() {
           {/* KYC documents */}
           <div className="card-rounded p-5">
             <div className="mb-4 flex items-center justify-between">
-              <div className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+              <div className="text-xs uppercase tracking-widest text-ink/60">
                 KYC documents
               </div>
-              <div className="text-xs text-ink/55 dark:text-paper/45">
+              <div className="text-xs text-ink/55">
                 Submitted {fmtDate(worker.kycSubmittedAt)}
                 {worker.kycReviewedAt && ` · Reviewed ${fmtDate(worker.kycReviewedAt)}`}
               </div>
@@ -223,13 +223,13 @@ export default function AdminWorkerDetail() {
             </div>
             <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
               <div>
-                <div className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+                <div className="text-xs uppercase tracking-widest text-ink/60">
                   Aadhaar number
                 </div>
                 <div className="mt-1 font-mono">{worker.aadhaarNumber || '—'}</div>
               </div>
               <div>
-                <div className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+                <div className="text-xs uppercase tracking-widest text-ink/60">
                   PAN number
                 </div>
                 <div className="mt-1 font-mono">{worker.panNumber || '—'}</div>
@@ -237,10 +237,10 @@ export default function AdminWorkerDetail() {
             </div>
 
             {isAdmin && worker.kycStatus !== 'verified' && (
-              <div className="mt-5 border-t border-ink/10 pt-4 dark:border-paper/10">
+              <div className="mt-5 border-t border-ink/10 pt-4">
                 {rejectMode ? (
                   <div>
-                    <label className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+                    <label className="text-xs uppercase tracking-widest text-ink/60">
                       Rejection reason
                     </label>
                     <textarea
@@ -248,7 +248,7 @@ export default function AdminWorkerDetail() {
                       value={rejectReason}
                       onChange={(e) => setRejectReason(e.target.value)}
                       placeholder="Visible to the worker via email/SMS."
-                      className="mt-2 w-full rounded-xl border border-ink/15 bg-transparent p-3 text-sm focus:border-ink focus:outline-none dark:border-paper/15 dark:focus:border-paper/60"
+                      className="mt-2 w-full rounded-xl border border-ink/15 bg-transparent p-3 text-sm focus:border-ink focus:outline-none:border-paper/60"
                     />
                     <div className="mt-3 flex flex-wrap justify-end gap-2">
                       <button
@@ -275,7 +275,7 @@ export default function AdminWorkerDetail() {
                     <button
                       onClick={() => setRejectMode(true)}
                       disabled={working}
-                      className="inline-flex items-center gap-2 rounded-full border border-red-400 px-5 py-2 text-xs uppercase tracking-widest text-red-600 hover:bg-red-50 disabled:opacity-50 dark:border-red-400/30 dark:text-red-300 dark:hover:bg-red-400/10"
+                      className="inline-flex items-center gap-2 rounded-full border border-red-400 px-5 py-2 text-xs uppercase tracking-widest text-red-600 hover:bg-red-50 disabled:opacity-50:bg-red-400/10"
                     >
                       <ShieldAlert size={13} /> Reject
                     </button>
@@ -294,11 +294,11 @@ export default function AdminWorkerDetail() {
 
           {/* Recent jobs */}
           <div className="card-rounded p-5">
-            <div className="mb-3 text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+            <div className="mb-3 text-xs uppercase tracking-widest text-ink/60">
               Recent jobs
             </div>
             {bookings.recent.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-ink/15 p-6 text-center text-sm text-ink/55 dark:border-paper/15 dark:text-paper/45">
+              <div className="rounded-xl border border-dashed border-ink/15 p-6 text-center text-sm text-ink/55">
                 No jobs assigned yet.
               </div>
             ) : (
@@ -306,7 +306,7 @@ export default function AdminWorkerDetail() {
                 {bookings.recent.map((b) => (
                   <div
                     key={b._id}
-                    className="grid grid-cols-1 items-center gap-3 rounded-xl border border-ink/10 p-3 sm:grid-cols-[auto_1fr_auto] dark:border-paper/10"
+                    className="grid grid-cols-1 items-center gap-3 rounded-xl border border-ink/10 p-3 sm:grid-cols-[auto_1fr_auto]"
                   >
                     <span
                       className={`shrink-0 rounded-full px-3 py-1 text-[10px] font-medium uppercase tracking-widest ${
@@ -316,13 +316,13 @@ export default function AdminWorkerDetail() {
                       {b.status.replace('_', ' ')}
                     </span>
                     <div>
-                      <div className="font-mono text-xs text-ink/55 dark:text-paper/45">
+                      <div className="font-mono text-xs text-ink/55">
                         {b.code}
                       </div>
                       <div className="text-sm">
                         {b.service?.name || 'Service'} · {b.user?.name || 'Customer'}
                       </div>
-                      <div className="text-xs text-ink/55 dark:text-paper/45">
+                      <div className="text-xs text-ink/55">
                         {b.scheduledAt
                           ? `Scheduled ${formatDateTime(b.scheduledAt)}`
                           : `Created ${formatDateTime(b.createdAt)}`}
@@ -340,21 +340,21 @@ export default function AdminWorkerDetail() {
           {/* Recent reviews */}
           <div className="card-rounded p-5">
             <div className="mb-3 flex items-center justify-between">
-              <div className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+              <div className="text-xs uppercase tracking-widest text-ink/60">
                 Recent reviews
               </div>
               {reviews.count > 0 && (
                 <div className="inline-flex items-center gap-1 text-sm">
                   <Star size={14} className="fill-amber-400 text-amber-400" />
                   <span className="font-semibold">{reviews.average.toFixed(1)}</span>
-                  <span className="text-ink/55 dark:text-paper/45">
+                  <span className="text-ink/55">
                     · {reviews.count}
                   </span>
                 </div>
               )}
             </div>
             {reviews.recent.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-ink/15 p-6 text-center text-sm text-ink/55 dark:border-paper/15 dark:text-paper/45">
+              <div className="rounded-xl border border-dashed border-ink/15 p-6 text-center text-sm text-ink/55">
                 No reviews yet.
               </div>
             ) : (
@@ -362,14 +362,14 @@ export default function AdminWorkerDetail() {
                 {reviews.recent.map((r) => (
                   <li
                     key={r._id}
-                    className="rounded-xl border border-ink/10 p-3 dark:border-paper/10"
+                    className="rounded-xl border border-ink/10 p-3"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <div className="text-sm font-medium">
                           {r.user?.name || 'Anonymous'}
                         </div>
-                        <div className="text-xs text-ink/55 dark:text-paper/45">
+                        <div className="text-xs text-ink/55">
                           {r.booking?.service?.name || '—'} · {r.booking?.code || ''}
                         </div>
                       </div>
@@ -379,11 +379,11 @@ export default function AdminWorkerDetail() {
                       </div>
                     </div>
                     {r.comment && (
-                      <p className="mt-2 text-sm text-ink/75 dark:text-paper/65">
+                      <p className="mt-2 text-sm text-ink/75">
                         {r.comment}
                       </p>
                     )}
-                    <div className="mt-1 text-xs text-ink/45 dark:text-paper/35">
+                    <div className="mt-1 text-xs text-ink/45">
                       {fmtDate(r.createdAt)}
                     </div>
                   </li>
@@ -397,12 +397,12 @@ export default function AdminWorkerDetail() {
         <div className="space-y-6">
           {/* Earnings breakdown */}
           <div className="card-rounded p-5">
-            <div className="mb-3 flex items-center gap-2 text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+            <div className="mb-3 flex items-center gap-2 text-xs uppercase tracking-widest text-ink/60">
               <Wallet size={14} /> Earnings
             </div>
             <Row label="Gross" value={formatPrice(earnings.gross)} />
             <Row label="Commission" value={`− ${formatPrice(earnings.commission)}`} />
-            <div className="my-2 border-t border-ink/10 dark:border-paper/10" />
+            <div className="my-2 border-t border-ink/10" />
             <Row label="Net total" value={formatPrice(earnings.net)} bold />
             <Row label="Settled" value={formatPrice(earnings.settled)} positive />
             <Row label="Pending" value={formatPrice(earnings.pending)} amber />
@@ -418,7 +418,7 @@ export default function AdminWorkerDetail() {
 
           {/* Booking funnel */}
           <div className="card-rounded p-5">
-            <div className="mb-3 flex items-center gap-2 text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+            <div className="mb-3 flex items-center gap-2 text-xs uppercase tracking-widest text-ink/60">
               <FileText size={14} /> Booking funnel
             </div>
             <Row label="Total" value={bookings.stats.total} />
@@ -431,7 +431,7 @@ export default function AdminWorkerDetail() {
           {/* Schedule */}
           {availability && (
             <div className="card-rounded p-5">
-              <div className="mb-3 flex items-center gap-2 text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+              <div className="mb-3 flex items-center gap-2 text-xs uppercase tracking-widest text-ink/60">
                 <Calendar size={14} /> Weekly schedule
               </div>
               <ul className="space-y-1 text-sm">
@@ -447,7 +447,7 @@ export default function AdminWorkerDetail() {
                         active ? '' : 'opacity-50'
                       }`}
                     >
-                      <span className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+                      <span className="text-xs uppercase tracking-widest text-ink/60">
                         {DAY_LABELS[dow]}
                       </span>
                       <span className="tabular-nums">
@@ -457,7 +457,7 @@ export default function AdminWorkerDetail() {
                   );
                 })}
               </ul>
-              <div className="mt-3 text-xs text-ink/55 dark:text-paper/45">
+              <div className="mt-3 text-xs text-ink/55">
                 Last seen{' '}
                 {availability.lastSeenAt
                   ? new Date(availability.lastSeenAt).toLocaleString()
@@ -474,15 +474,15 @@ export default function AdminWorkerDetail() {
 function Stat({ label, value, sub, tone }) {
   const toneClass =
     tone === 'amber'
-      ? 'border-amber-300 bg-amber-50/50 dark:border-amber-400/20 dark:bg-amber-400/5'
-      : 'border-ink/10 dark:border-paper/10';
+      ? 'border-amber-300 bg-amber-50/50'
+      : 'border-ink/10';
   return (
     <div className={`card-rounded p-4 sm:p-5 border ${toneClass}`}>
-      <div className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+      <div className="text-xs uppercase tracking-widest text-ink/60">
         {label}
       </div>
       <div className="mt-2 text-2xl font-semibold sm:text-3xl">{value}</div>
-      <div className="mt-1 text-xs text-ink/60 dark:text-paper/50">{sub}</div>
+      <div className="mt-1 text-xs text-ink/60">{sub}</div>
     </div>
   );
 }
@@ -490,13 +490,13 @@ function Stat({ label, value, sub, tone }) {
 function Row({ label, value, bold, positive, amber }) {
   return (
     <div className="flex items-center justify-between py-1 text-sm">
-      <span className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+      <span className="text-xs uppercase tracking-widest text-ink/60">
         {label}
       </span>
       <span
         className={`tabular-nums ${bold ? 'font-semibold' : ''} ${
-          positive ? 'text-green-700 dark:text-green-300' : ''
-        } ${amber ? 'text-amber-700 dark:text-amber-300' : ''}`}
+          positive ? 'text-green-700' : ''
+        } ${amber ? 'text-amber-700' : ''}`}
       >
         {value}
       </span>
@@ -507,7 +507,7 @@ function Row({ label, value, bold, positive, amber }) {
 function DocPreview({ label, url }) {
   if (!url) {
     return (
-      <div className="rounded-xl border border-dashed border-ink/15 p-3 text-xs text-ink/60 dark:border-paper/15 dark:text-paper/50">
+      <div className="rounded-xl border border-dashed border-ink/15 p-3 text-xs text-ink/60">
         <div className="mb-1 uppercase tracking-widest">{label}</div>
         Not uploaded
       </div>
@@ -519,15 +519,15 @@ function DocPreview({ label, url }) {
       href={url}
       target="_blank"
       rel="noreferrer"
-      className="group flex flex-col rounded-xl border border-ink/15 p-3 transition hover:border-ink/40 dark:border-paper/15 dark:hover:border-paper/40"
+      className="group flex flex-col rounded-xl border border-ink/15 p-3 transition hover:border-ink/40:border-paper/40"
     >
-      <div className="mb-2 flex items-center justify-between text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+      <div className="mb-2 flex items-center justify-between text-xs uppercase tracking-widest text-ink/60">
         <span>{label}</span>
         <Eye size={14} className="opacity-60 group-hover:opacity-100" />
       </div>
       {isPdf ? (
-        <div className="flex h-32 items-center justify-center rounded-lg bg-ink/5 dark:bg-paper/5">
-          <FileText size={32} className="text-ink/40 dark:text-paper/40" />
+        <div className="flex h-32 items-center justify-center rounded-lg bg-ink/5">
+          <FileText size={32} className="text-ink/40" />
         </div>
       ) : (
         <img

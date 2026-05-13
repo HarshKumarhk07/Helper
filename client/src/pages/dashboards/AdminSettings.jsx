@@ -150,7 +150,7 @@ export default function AdminSettings() {
                     value={form.address}
                     onChange={(e) => setField('address', e.target.value)}
                     disabled={!isAdmin}
-                    className="mt-2 w-full rounded-xl border border-ink/15 bg-transparent p-3 text-sm focus:border-ink focus:outline-none disabled:opacity-50 dark:border-paper/15 dark:focus:border-paper/60"
+                    className="mt-2 w-full rounded-xl border border-ink/15 bg-transparent p-3 text-sm focus:border-ink focus:outline-none disabled:opacity-50:border-paper/60"
                   />
                 </div>
               </div>
@@ -189,7 +189,7 @@ export default function AdminSettings() {
                   />
                   <div>
                     <div className="text-sm">Auto-assign new bookings by default</div>
-                    <div className="text-xs text-ink/60 dark:text-paper/50">
+                    <div className="text-xs text-ink/60">
                       Customers can still toggle this per booking.
                     </div>
                   </div>
@@ -203,7 +203,7 @@ export default function AdminSettings() {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="inline-flex items-center gap-2 rounded-full bg-ink px-5 py-2.5 text-xs uppercase tracking-widest text-paper transition hover:opacity-90 disabled:opacity-50 dark:bg-paper dark:text-ink"
+                className="inline-flex items-center gap-2 rounded-full bg-ink px-5 py-2.5 text-xs uppercase tracking-widest text-paper transition hover:opacity-90 disabled:opacity-50"
               >
                 <Save size={14} />
                 {saving ? 'Saving…' : 'Save settings'}
@@ -219,7 +219,7 @@ export default function AdminSettings() {
 function Card({ title, children }) {
   return (
     <div className="card-rounded p-5">
-      <div className="mb-4 text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+      <div className="mb-4 text-xs uppercase tracking-widest text-ink/60">
         {title}
       </div>
       {children}
@@ -229,7 +229,7 @@ function Card({ title, children }) {
 
 function Label({ children }) {
   return (
-    <label className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+    <label className="text-xs uppercase tracking-widest text-ink/60">
       {children}
     </label>
   );
@@ -244,10 +244,10 @@ function TextField({ label, value, onChange, type = 'text', disabled, hint }) {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
-        className="mt-2 w-full rounded-xl border border-ink/15 bg-transparent p-3 text-sm focus:border-ink focus:outline-none disabled:opacity-50 dark:border-paper/15 dark:focus:border-paper/60"
+        className="mt-2 w-full rounded-xl border border-ink/15 bg-transparent p-3 text-sm focus:border-ink focus:outline-none disabled:opacity-50:border-paper/60"
       />
       {hint && (
-        <div className="mt-1 text-xs text-ink/50 dark:text-paper/40">{hint}</div>
+        <div className="mt-1 text-xs text-ink/50">{hint}</div>
       )}
     </div>
   );
@@ -265,10 +265,10 @@ function NumberField({ label, value, onChange, hint, disabled, step, min, max })
         min={min}
         max={max}
         disabled={disabled}
-        className="mt-2 w-full rounded-xl border border-ink/15 bg-transparent p-3 text-sm tabular-nums focus:border-ink focus:outline-none disabled:opacity-50 dark:border-paper/15 dark:focus:border-paper/60"
+        className="mt-2 w-full rounded-xl border border-ink/15 bg-transparent p-3 text-sm tabular-nums focus:border-ink focus:outline-none disabled:opacity-50:border-paper/60"
       />
       {hint && (
-        <div className="mt-1 text-xs text-ink/50 dark:text-paper/40">{hint}</div>
+        <div className="mt-1 text-xs text-ink/50">{hint}</div>
       )}
     </div>
   );

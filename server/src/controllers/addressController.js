@@ -1,5 +1,6 @@
 import Address from '../models/Address.js';
 import { ApiError, asyncHandler } from '../utils/asyncHandler.js';
+import { geocodeAddress } from '../utils/geocoding.js';
 
 export const listMine = asyncHandler(async (req, res) => {
   const addresses = await Address.find({ user: req.user._id }).sort({
@@ -14,6 +15,17 @@ export const createAddress = asyncHandler(async (req, res) => {
   if (payload.isDefault) {
     await Address.updateMany({ user: req.user._id }, { isDefault: false });
   }
+
+  // Geocode address if lat/lng are missing
+  if (!payload.lat || !payload.lng) {
+    const addressStr = `${payload.line1}, ${payload.line2 || ''}, ${payload.city}, ${payload.state || ''}, ${payload.pincode}`.replace(/,\s*,/g, ',');
+    const coords = await geocodeAddress(addressStr);
+    if (coords) {
+      payload.lat = coords.lat;
+      payload.lng = coords.lng;
+    }
+  }
+
   const addr = await Address.create(payload);
   res.status(201).json({ address: addr });
 });
@@ -24,6 +36,23 @@ export const updateAddress = asyncHandler(async (req, res) => {
   if (req.body.isDefault) {
     await Address.updateMany({ user: req.user._id }, { isDefault: false });
   }
+
+  // If address changed and lat/lng not explicitly provided, re-geocode
+  if ((req.body.line1 || req.body.city || req.body.pincode) && (!req.body.lat || !req.body.lng)) {
+    const pLine1 = req.body.line1 || owned.line1;
+    const pLine2 = req.body.line2 || owned.line2 || '';
+    const pCity = req.body.city || owned.city;
+    const pState = req.body.state || owned.state || '';
+    const pPincode = req.body.pincode || owned.pincode;
+    
+    const addressStr = `${pLine1}, ${pLine2}, ${pCity}, ${pState}, ${pPincode}`.replace(/,\s*,/g, ',');
+    const coords = await geocodeAddress(addressStr);
+    if (coords) {
+      req.body.lat = coords.lat;
+      req.body.lng = coords.lng;
+    }
+  }
+
   Object.assign(owned, req.body);
   await owned.save();
   res.json({ address: owned });

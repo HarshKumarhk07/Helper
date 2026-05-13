@@ -14,8 +14,8 @@ const BOOKING_DEST_TTL_MS = 60 * 60 * 1000; // 1 hour
 
 // Latest computed route per booking — used to dedupe and to replay on late-joiners.
 const bookingRoutes = new Map(); // bookingId -> { route, eta, workerLocation, at }
-const ROUTE_REFRESH_MS = 30_000;
-const ROUTE_REFRESH_DISTANCE_M = 50;
+const ROUTE_REFRESH_MS = 5_000;
+const ROUTE_REFRESH_DISTANCE_M = 15;
 
 const getBookingDestination = async (bookingId) => {
   const cached = bookingDestCache.get(bookingId);

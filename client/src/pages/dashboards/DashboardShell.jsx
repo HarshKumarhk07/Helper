@@ -8,10 +8,19 @@ export default function DashboardShell({ eyebrow, title, children, slices }) {
         {eyebrow}
       </div>
       <h1 className="heading-display mt-3 text-4xl md:text-6xl">{title}</h1>
-      <p className="mt-4 max-w-2xl text-sm text-ink">
-        Signed in as <span className="text-ink">{user?.name}</span> ·{' '}
-        <span className="uppercase tracking-widest">{user?.role}</span>
-      </p>
+      <div className="flex items-center gap-4 mt-4">
+        {(user?.passportPhoto || user?.avatar) && (
+          <img
+            src={user.passportPhoto || user.avatar}
+            alt={user.name}
+            className="h-14 w-14 rounded-full object-cover border border-ink/20"
+          />
+        )}
+        <p className="max-w-2xl text-sm text-ink">
+          Signed in as <span className="font-semibold text-ink">{user?.name}</span> ·{' '}
+          <span className="uppercase tracking-widest">{user?.role}</span>
+        </p>
+      </div>
 
       <div className="mt-10 grid grid-cols-2 gap-4 md:grid-cols-3">
         {(slices || []).map((s) => (

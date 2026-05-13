@@ -7,9 +7,9 @@ import DashboardShell from './DashboardShell.jsx';
 import { formatPrice } from '../../lib/booking.js';
 
 const STATUS_BADGE = {
-  pending: 'bg-amber-100 text-amber-800 dark:bg-amber-400/10 dark:text-amber-200',
-  settled: 'bg-green-100 text-green-700 dark:bg-green-400/10 dark:text-green-300',
-  voided: 'bg-red-100 text-red-700 dark:bg-red-400/10 dark:text-red-300',
+  pending: 'bg-amber-100 text-amber-800',
+  settled: 'bg-green-100 text-green-700',
+  voided: 'bg-red-100 text-red-700',
 };
 
 const fmtDate = (d) => (d ? new Date(d).toLocaleDateString() : '—');
@@ -46,7 +46,7 @@ export default function WorkerEarnings() {
         <div className="space-y-8">
           <FadeUp>
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-              <div className="card-rounded p-4 sm:p-5 bg-ink text-paper dark:bg-paper dark:text-ink">
+              <div className="card-rounded p-4 sm:p-5 bg-ink text-paper">
                 <div className="flex items-center gap-2 text-xs uppercase tracking-widest opacity-70">
                   <Wallet size={14} /> Net earnings
                 </div>
@@ -55,32 +55,32 @@ export default function WorkerEarnings() {
                 </div>
                 <div className="mt-1 text-xs opacity-70">all-time</div>
               </div>
-              <div className="card-rounded border border-amber-300 bg-amber-50/50 p-4 sm:p-5 dark:border-amber-400/20 dark:bg-amber-400/5">
-                <div className="flex items-center gap-2 text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+              <div className="card-rounded border border-amber-300 bg-amber-50/50 p-4 sm:p-5">
+                <div className="flex items-center gap-2 text-xs uppercase tracking-widest text-ink/60">
                   <Hourglass size={14} /> Pending
                 </div>
                 <div className="mt-2 text-2xl font-bold sm:text-3xl">
                   {formatPrice(data.totals.pending)}
                 </div>
-                <div className="mt-1 text-xs text-ink/60 dark:text-paper/50">
+                <div className="mt-1 text-xs text-ink/60">
                   awaiting payout
                 </div>
               </div>
-              <div className="card-rounded border border-green-300 bg-green-50/50 p-4 sm:p-5 dark:border-green-400/20 dark:bg-green-400/5">
-                <div className="flex items-center gap-2 text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+              <div className="card-rounded border border-green-300 bg-green-50/50 p-4 sm:p-5">
+                <div className="flex items-center gap-2 text-xs uppercase tracking-widest text-ink/60">
                   <CheckCircle2 size={14} /> Settled
                 </div>
                 <div className="mt-2 text-2xl font-bold sm:text-3xl">
                   {formatPrice(data.totals.settled)}
                 </div>
-                <div className="mt-1 text-xs text-ink/60 dark:text-paper/50">paid out</div>
+                <div className="mt-1 text-xs text-ink/60">paid out</div>
               </div>
               <div className="card-rounded p-4 sm:p-5">
-                <div className="flex items-center gap-2 text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+                <div className="flex items-center gap-2 text-xs uppercase tracking-widest text-ink/60">
                   <TrendingUp size={14} /> Jobs done
                 </div>
                 <div className="mt-2 text-2xl font-bold sm:text-3xl">{data.totals.jobs}</div>
-                <div className="mt-1 text-xs text-ink/60 dark:text-paper/50">
+                <div className="mt-1 text-xs text-ink/60">
                   {commissionPct}% platform fee
                 </div>
               </div>
@@ -106,7 +106,7 @@ export default function WorkerEarnings() {
             </div>
             <div className="card-rounded overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="bg-sand/50 text-xs uppercase tracking-widest text-ink/60 dark:bg-[#18181A] dark:text-paper/60">
+                <thead className="bg-sand/50 text-xs uppercase tracking-widest text-ink/60">
                   <tr>
                     <th className="p-4 font-normal">Date</th>
                     <th className="p-4 font-normal text-right">Jobs</th>
@@ -115,10 +115,10 @@ export default function WorkerEarnings() {
                     <th className="p-4 font-normal text-right">Net</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-ink/10 dark:divide-paper/10">
+                <tbody className="divide-y divide-ink/10">
                   {data.dailyBreakdown.length === 0 ? (
                     <tr>
-                      <td colSpan="5" className="p-6 text-center text-ink/60 dark:text-paper/50">
+                      <td colSpan="5" className="p-6 text-center text-ink/60">
                         No earnings yet — complete a booking to see it here.
                       </td>
                     </tr>
@@ -126,14 +126,14 @@ export default function WorkerEarnings() {
                     data.dailyBreakdown.map((e, i) => (
                       <tr
                         key={i}
-                        className="transition hover:bg-sand/30 dark:hover:bg-[#18181A]/50"
+                        className="transition hover:bg-sand/30:bg-[#18181A]/50"
                       >
                         <td className="p-4 font-medium">{e.date}</td>
                         <td className="p-4 text-right">{e.jobs}</td>
-                        <td className="p-4 text-right text-ink/70 dark:text-paper/70">
+                        <td className="p-4 text-right text-ink/70">
                           {formatPrice(e.gross)}
                         </td>
-                        <td className="p-4 text-right text-ink/70 dark:text-paper/70">
+                        <td className="p-4 text-right text-ink/70">
                           {formatPrice(e.commission)}
                         </td>
                         <td className="p-4 text-right font-bold">{formatPrice(e.net)}</td>
@@ -155,8 +155,8 @@ export default function WorkerEarnings() {
                     onClick={() => setStatusFilter(s)}
                     className={`rounded-full px-3 py-1.5 text-xs uppercase tracking-widest transition ${
                       statusFilter === s
-                        ? 'bg-ink text-paper dark:bg-paper dark:text-ink'
-                        : 'border border-ink/15 hover:border-ink/40 dark:border-paper/15 dark:hover:border-paper/40'
+                        ? 'bg-ink text-paper'
+                        : 'border border-ink/15 hover:border-ink/40:border-paper/40'
                     }`}
                   >
                     {s}
@@ -166,7 +166,7 @@ export default function WorkerEarnings() {
             </div>
             <div className="card-rounded overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="bg-sand/50 text-xs uppercase tracking-widest text-ink/60 dark:bg-[#18181A] dark:text-paper/60">
+                <thead className="bg-sand/50 text-xs uppercase tracking-widest text-ink/60">
                   <tr>
                     <th className="p-4 font-normal">Booking</th>
                     <th className="p-4 font-normal">Service</th>
@@ -175,10 +175,10 @@ export default function WorkerEarnings() {
                     <th className="p-4 font-normal">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-ink/10 dark:divide-paper/10">
+                <tbody className="divide-y divide-ink/10">
                   {filteredEntries.length === 0 ? (
                     <tr>
-                      <td colSpan="5" className="p-6 text-center text-ink/60 dark:text-paper/50">
+                      <td colSpan="5" className="p-6 text-center text-ink/60">
                         No entries.
                       </td>
                     </tr>
@@ -186,13 +186,13 @@ export default function WorkerEarnings() {
                     filteredEntries.map((e) => (
                       <tr
                         key={e._id}
-                        className="transition hover:bg-sand/30 dark:hover:bg-[#18181A]/50"
+                        className="transition hover:bg-sand/30:bg-[#18181A]/50"
                       >
                         <td className="p-4 font-mono text-xs">
                           {e.booking?.code || '—'}
                         </td>
                         <td className="p-4">{e.booking?.service?.name || '—'}</td>
-                        <td className="p-4 text-xs text-ink/70 dark:text-paper/70">
+                        <td className="p-4 text-xs text-ink/70">
                           {fmtDate(e.completedAt)}
                         </td>
                         <td className="p-4 text-right font-semibold">
@@ -223,7 +223,7 @@ export default function WorkerEarnings() {
 function SmallStat({ label, value }) {
   return (
     <div className="card-rounded p-4">
-      <div className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+      <div className="text-xs uppercase tracking-widest text-ink/60">
         {label}
       </div>
       <div className="mt-1 text-xl font-semibold">{value}</div>

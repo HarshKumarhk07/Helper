@@ -162,7 +162,7 @@ export default function AdminUsers() {
             <button
               key={role}
               onClick={() => setRoleFilter(role)}
-              className={`px-3 py-1 text-xs uppercase tracking-widest rounded border transition ${roleFilter === role ? 'bg-ink text-paper border-ink dark:bg-paper dark:text-ink' : 'border-ink/20 text-ink hover:bg-ink/5 dark:border-paper/20 dark:text-ink'}`}
+              className={`px-3 py-1 text-xs uppercase tracking-widest rounded border transition ${roleFilter === role ? 'bg-ink text-paper border-ink' : 'border-ink/20 text-ink hover:bg-ink/5'}`}
             >
               {role}
             </button>
@@ -178,20 +178,20 @@ export default function AdminUsers() {
           <form onSubmit={handleCreate} className="card-rounded p-6 mb-8 bg-sand/30">
             <h3 className="text-xl font-bold mb-4 text-ink">CREATE NEW PERSONNEL</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              <input required placeholder="Full Name" className="p-3 border rounded-xl bg-white text-ink placeholder-ink/40 border-ink/20 dark:bg-paper/10 dark:text-paper dark:placeholder-paper/50 dark:border-paper/30 focus:outline-none focus:border-ink dark:focus:border-paper/60" value={newUser.name} onChange={(e) => setNewUser({...newUser, name: e.target.value})} />
-              <input required type="email" placeholder="Email Address" className="p-3 border rounded-xl bg-white text-ink placeholder-ink/40 border-ink/20 dark:bg-paper/10 dark:text-paper dark:placeholder-paper/50 dark:border-paper/30 focus:outline-none focus:border-ink dark:focus:border-paper/60" value={newUser.email} onChange={(e) => setNewUser({...newUser, email: e.target.value})} />
-              <input required placeholder="Phone Number" className="p-3 border rounded-xl bg-white text-ink placeholder-ink/40 border-ink/20 dark:bg-paper/10 dark:text-paper dark:placeholder-paper/50 dark:border-paper/30 focus:outline-none focus:border-ink dark:focus:border-paper/60" value={newUser.phone} onChange={(e) => setNewUser({...newUser, phone: e.target.value})} />
-              <input required type="password" placeholder="Password" className="p-3 border rounded-xl bg-white text-ink placeholder-ink/40 border-ink/20 dark:bg-paper/10 dark:text-paper dark:placeholder-paper/50 dark:border-paper/30 focus:outline-none focus:border-ink dark:focus:border-paper/60" value={newUser.password} onChange={(e) => setNewUser({...newUser, password: e.target.value})} />
-              <input placeholder="Aadhaar Number" inputMode="numeric" maxLength={12} className="p-3 border rounded-xl bg-white text-ink placeholder-ink/40 border-ink/20 dark:bg-paper/10 dark:text-paper dark:placeholder-paper/50 dark:border-paper/30 focus:outline-none focus:border-ink dark:focus:border-paper/60" value={newUser.aadhaarNumber} onChange={(e) => setNewUser({...newUser, aadhaarNumber: e.target.value.replace(/\D/g, '').slice(0, 12)})} />
-              <input placeholder="PAN Number" maxLength={10} className="p-3 border rounded-xl bg-white text-ink placeholder-ink/40 border-ink/20 dark:bg-paper/10 dark:text-paper dark:placeholder-paper/50 dark:border-paper/30 focus:outline-none focus:border-ink dark:focus:border-paper/60 uppercase" value={newUser.panNumber} onChange={(e) => setNewUser({...newUser, panNumber: e.target.value.toUpperCase().slice(0, 10)})} />
-              <input placeholder="Passport Photo URL" type="url" className="p-3 border rounded-xl bg-white text-ink placeholder-ink/40 border-ink/20 dark:bg-paper/10 dark:text-paper dark:placeholder-paper/50 dark:border-paper/30 focus:outline-none focus:border-ink dark:focus:border-paper/60" value={newUser.passportPhoto} onChange={(e) => setNewUser({...newUser, passportPhoto: e.target.value})} />
-              <div className="md:col-span-2 rounded-xl border border-dashed border-ink/20 bg-white p-4 dark:border-paper/20 dark:bg-paper/10">
+              <input required placeholder="Full Name" className="p-3 border rounded-xl bg-white text-ink placeholder-ink/40 border-ink/20 focus:outline-none focus:border-ink:border-paper/60" value={newUser.name} onChange={(e) => setNewUser({...newUser, name: e.target.value})} />
+              <input required type="email" placeholder="Email Address" className="p-3 border rounded-xl bg-white text-ink placeholder-ink/40 border-ink/20 focus:outline-none focus:border-ink:border-paper/60" value={newUser.email} onChange={(e) => setNewUser({...newUser, email: e.target.value})} />
+              <input required placeholder="Phone Number" className="p-3 border rounded-xl bg-white text-ink placeholder-ink/40 border-ink/20 focus:outline-none focus:border-ink:border-paper/60" value={newUser.phone} onChange={(e) => setNewUser({...newUser, phone: e.target.value})} />
+              <input required type="password" placeholder="Password" className="p-3 border rounded-xl bg-white text-ink placeholder-ink/40 border-ink/20 focus:outline-none focus:border-ink:border-paper/60" value={newUser.password} onChange={(e) => setNewUser({...newUser, password: e.target.value})} />
+              <input placeholder="Aadhaar Number" inputMode="numeric" maxLength={12} className="p-3 border rounded-xl bg-white text-ink placeholder-ink/40 border-ink/20 focus:outline-none focus:border-ink:border-paper/60" value={newUser.aadhaarNumber} onChange={(e) => setNewUser({...newUser, aadhaarNumber: e.target.value.replace(/\D/g, '').slice(0, 12)})} />
+              <input placeholder="PAN Number" maxLength={10} className="p-3 border rounded-xl bg-white text-ink placeholder-ink/40 border-ink/20 focus:outline-none focus:border-ink:border-paper/60 uppercase" value={newUser.panNumber} onChange={(e) => setNewUser({...newUser, panNumber: e.target.value.toUpperCase().slice(0, 10)})} />
+              <input placeholder="Passport Photo URL" type="url" className="p-3 border rounded-xl bg-white text-ink placeholder-ink/40 border-ink/20 focus:outline-none focus:border-ink:border-paper/60" value={newUser.passportPhoto} onChange={(e) => setNewUser({...newUser, passportPhoto: e.target.value})} />
+              <div className="md:col-span-2 rounded-xl border border-dashed border-ink/20 bg-white p-4">
                 <div className="mb-2 text-xs uppercase tracking-widest text-ink">Passport size photo - or choose from computer</div>
                 <div className="flex flex-col gap-3 md:flex-row md:items-center">
                   <input
                     type="file"
                     accept="image/*"
-                    className="w-full text-sm text-ink file:mr-4 file:rounded-pill file:border-0 file:bg-ink file:px-4 file:py-2 file:text-paper dark:file:bg-paper dark:file:text-ink"
+                    className="w-full text-sm text-ink file:mr-4 file:rounded-pill file:border-0 file:bg-ink file:px-4 file:py-2 file:text-paper:bg-paper:text-ink"
                     onChange={async (e) => {
                       const file = e.target.files?.[0];
                       if (!file) return;
@@ -209,12 +209,12 @@ export default function AdminUsers() {
                   )}
                 </div>
               </div>
-              <select className="p-3 border rounded-xl bg-white text-ink border-ink/20 dark:bg-paper/10 dark:text-paper dark:border-paper/30 focus:outline-none focus:border-ink dark:focus:border-paper/60" value={newUser.kycStatus} onChange={(e) => setNewUser({...newUser, kycStatus: e.target.value})}>
+              <select className="p-3 border rounded-xl bg-white text-ink border-ink/20 focus:outline-none focus:border-ink:border-paper/60" value={newUser.kycStatus} onChange={(e) => setNewUser({...newUser, kycStatus: e.target.value})}>
                 <option value="pending">KYC Pending</option>
                 <option value="verified">KYC Verified</option>
                 <option value="rejected">KYC Rejected</option>
               </select>
-              <select className="p-3 border rounded-xl bg-white text-ink border-ink/20 dark:bg-paper/10 dark:text-paper dark:border-paper/30 focus:outline-none focus:border-ink dark:focus:border-paper/60" value={newUser.role} onChange={(e) => setNewUser({...newUser, role: e.target.value})}>
+              <select className="p-3 border rounded-xl bg-white text-ink border-ink/20 focus:outline-none focus:border-ink:border-paper/60" value={newUser.role} onChange={(e) => setNewUser({...newUser, role: e.target.value})}>
                 <option value="worker">Worker</option>
                 <option value="manager">Manager</option>
                 <option value="admin">Admin</option>
@@ -227,7 +227,7 @@ export default function AdminUsers() {
 
       <div className="card-rounded overflow-x-auto">
         <table className="w-full text-left text-sm text-ink">
-          <thead className="bg-sand/50 text-xs uppercase tracking-widest text-ink dark:bg-[#18181A]">
+          <thead className="bg-sand/50 text-xs uppercase tracking-widest text-ink">
             <tr>
               <th className="p-4 font-normal">Name</th>
               <th className="p-4 font-normal">Email</th>
@@ -238,23 +238,23 @@ export default function AdminUsers() {
               <th className="p-4 font-normal">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-ink/10 dark:divide-paper/10">
+          <tbody className="divide-y divide-ink/10">
             {loading ? (
               <tr><td colSpan="7" className="p-4 text-center text-ink">Loading...</td></tr>
             ) : users.length === 0 ? (
               <tr><td colSpan="7" className="p-4 text-center text-ink">No users found.</td></tr>
             ) : (
               users.map(u => (
-                <tr key={u._id} className="transition hover:bg-sand/30 dark:hover:bg-[#18181A]/50">
+                <tr key={u._id} className="transition hover:bg-sand/30:bg-[#18181A]/50">
                   <td className="p-4 font-medium text-ink">{u.name}</td>
                   <td className="p-4 text-ink">{u.email}</td>
                   <td className="p-4">
-                    <span className="px-2 py-1 bg-ink/5 dark:bg-paper/5 rounded text-xs tracking-widest uppercase text-ink">
+                    <span className="px-2 py-1 bg-ink/5 rounded text-xs tracking-widest uppercase text-ink">
                       {u.role}
                     </span>
                   </td>
                   <td className="p-4">
-                    <span className={`inline-flex rounded-full px-3 py-1 text-xs font-medium uppercase tracking-widest ${u.kycStatus === 'verified' ? 'bg-green-100 text-green-700 dark:bg-green-400/10 dark:text-green-300' : u.kycStatus === 'rejected' ? 'bg-red-100 text-red-700 dark:bg-red-400/10 dark:text-red-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-400/10 dark:text-amber-200'}`}>
+                    <span className={`inline-flex rounded-full px-3 py-1 text-xs font-medium uppercase tracking-widest ${u.kycStatus === 'verified' ? 'bg-green-100 text-green-700' : u.kycStatus === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-800'}`}>
                       {u.kycStatus || 'pending'}
                     </span>
                   </td>
@@ -303,30 +303,30 @@ export default function AdminUsers() {
 
       {editingUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/70 px-4 backdrop-blur-sm">
-          <div className="card-rounded w-full max-w-3xl border border-paper/10 bg-paper p-6 text-ink shadow-[0_30px_90px_rgba(0,0,0,0.35)] dark:border-paper/20 dark:bg-[#14151A] dark:text-paper">
+          <div className="card-rounded w-full max-w-3xl border border-paper/10 bg-paper p-6 text-ink shadow-[0_30px_90px_rgba(0,0,0,0.35)]">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <div className="text-xs uppercase tracking-widest text-ink dark:text-paper/50">Edit user</div>
-                <h3 className="heading-display mt-2 text-2xl text-ink dark:text-paper">{editingUser.name}</h3>
-                <p className="mt-1 text-sm text-ink dark:text-paper/60">Update worker, user, or manager details and KYC information.</p>
+                <div className="text-xs uppercase tracking-widest text-ink">Edit user</div>
+                <h3 className="heading-display mt-2 text-2xl text-ink">{editingUser.name}</h3>
+                <p className="mt-1 text-sm text-ink">Update worker, user, or manager details and KYC information.</p>
               </div>
               <button onClick={closeEditor} className="pill-btn text-xs">Close</button>
             </div>
 
             <form onSubmit={handleUpdateUser} className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
-              <input required placeholder="Full Name" className="p-3 border rounded-xl bg-transparent border-ink/20 text-ink placeholder-ink/45 dark:border-paper/20 dark:text-paper dark:placeholder-paper/45" value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} />
-              <input required type="email" placeholder="Email Address" className="p-3 border rounded-xl bg-transparent border-ink/20 text-ink placeholder-ink/45 dark:border-paper/20 dark:text-paper dark:placeholder-paper/45" value={editForm.email} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} />
-              <input placeholder="Phone Number" className="p-3 border rounded-xl bg-transparent border-ink/20 text-ink placeholder-ink/45 dark:border-paper/20 dark:text-paper dark:placeholder-paper/45" value={editForm.phone} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} />
-              <input placeholder="Passport Photo URL" className="p-3 border rounded-xl bg-transparent border-ink/20 text-ink placeholder-ink/45 dark:border-paper/20 dark:text-paper dark:placeholder-paper/45" value={editForm.passportPhoto} onChange={(e) => setEditForm({ ...editForm, passportPhoto: e.target.value })} />
-              <input placeholder="Aadhaar Number" inputMode="numeric" maxLength={12} className="p-3 border rounded-xl bg-transparent border-ink/20 text-ink placeholder-ink/45 dark:border-paper/20 dark:text-paper dark:placeholder-paper/45" value={editForm.aadhaarNumber} onChange={(e) => setEditForm({ ...editForm, aadhaarNumber: e.target.value.replace(/\D/g, '').slice(0, 12) })} />
-              <input placeholder="PAN Number" maxLength={10} className="p-3 border rounded-xl bg-transparent border-ink/20 text-ink placeholder-ink/45 dark:border-paper/20 dark:text-paper dark:placeholder-paper/45 uppercase" value={editForm.panNumber} onChange={(e) => setEditForm({ ...editForm, panNumber: e.target.value.toUpperCase().slice(0, 10) })} />
-              <div className="md:col-span-2 rounded-xl border border-dashed border-ink/20 bg-transparent p-4 dark:border-paper/20">
-                <div className="mb-2 text-xs uppercase tracking-widest text-ink dark:text-paper/50">Or choose from computer</div>
+              <input required placeholder="Full Name" className="p-3 border rounded-xl bg-transparent border-ink/20 text-ink placeholder-ink/45" value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} />
+              <input required type="email" placeholder="Email Address" className="p-3 border rounded-xl bg-transparent border-ink/20 text-ink placeholder-ink/45" value={editForm.email} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} />
+              <input placeholder="Phone Number" className="p-3 border rounded-xl bg-transparent border-ink/20 text-ink placeholder-ink/45" value={editForm.phone} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} />
+              <input placeholder="Passport Photo URL" className="p-3 border rounded-xl bg-transparent border-ink/20 text-ink placeholder-ink/45" value={editForm.passportPhoto} onChange={(e) => setEditForm({ ...editForm, passportPhoto: e.target.value })} />
+              <input placeholder="Aadhaar Number" inputMode="numeric" maxLength={12} className="p-3 border rounded-xl bg-transparent border-ink/20 text-ink placeholder-ink/45" value={editForm.aadhaarNumber} onChange={(e) => setEditForm({ ...editForm, aadhaarNumber: e.target.value.replace(/\D/g, '').slice(0, 12) })} />
+              <input placeholder="PAN Number" maxLength={10} className="p-3 border rounded-xl bg-transparent border-ink/20 text-ink placeholder-ink/45 uppercase" value={editForm.panNumber} onChange={(e) => setEditForm({ ...editForm, panNumber: e.target.value.toUpperCase().slice(0, 10) })} />
+              <div className="md:col-span-2 rounded-xl border border-dashed border-ink/20 bg-transparent p-4">
+                <div className="mb-2 text-xs uppercase tracking-widest text-ink">Or choose from computer</div>
                 <div className="flex flex-col gap-3 md:flex-row md:items-center">
                   <input
                     type="file"
                     accept="image/*"
-                    className="w-full text-sm text-ink dark:text-paper file:mr-4 file:rounded-pill file:border-0 file:bg-ink file:px-4 file:py-2 file:text-paper dark:file:bg-paper dark:file:text-ink"
+                    className="w-full text-sm text-ink file:mr-4 file:rounded-pill file:border-0 file:bg-ink file:px-4 file:py-2 file:text-paper:bg-paper:text-ink"
                     onChange={async (e) => {
                       const file = e.target.files?.[0];
                       if (!file) return;
@@ -344,19 +344,19 @@ export default function AdminUsers() {
                   )}
                 </div>
               </div>
-              <select className="p-3 border rounded-xl bg-transparent border-ink/20 text-ink dark:border-paper/20 dark:text-paper" value={editForm.kycStatus} onChange={(e) => setEditForm({ ...editForm, kycStatus: e.target.value })}>
+              <select className="p-3 border rounded-xl bg-transparent border-ink/20 text-ink" value={editForm.kycStatus} onChange={(e) => setEditForm({ ...editForm, kycStatus: e.target.value })}>
                 <option value="pending">KYC Pending</option>
                 <option value="verified">KYC Verified</option>
                 <option value="rejected">KYC Rejected</option>
               </select>
-              <select className="p-3 border rounded-xl bg-transparent border-ink/20 text-ink dark:border-paper/20 dark:text-paper" value={editForm.role} onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}>
+              <select className="p-3 border rounded-xl bg-transparent border-ink/20 text-ink" value={editForm.role} onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}>
                 <option value="worker">Worker</option>
                 <option value="manager">Manager</option>
                 <option value="user">User</option>
                 <option value="admin">Admin</option>
               </select>
-              <input type="password" placeholder="New Password (optional)" className="p-3 border rounded-xl bg-transparent border-ink/20 text-ink placeholder-ink/45 dark:border-paper/20 dark:text-paper dark:placeholder-paper/45 md:col-span-2" value={editForm.password} onChange={(e) => setEditForm({ ...editForm, password: e.target.value })} />
-              <label className="flex items-center gap-2 text-sm text-ink dark:text-paper md:col-span-2">
+              <input type="password" placeholder="New Password (optional)" className="p-3 border rounded-xl bg-transparent border-ink/20 text-ink placeholder-ink/45 md:col-span-2" value={editForm.password} onChange={(e) => setEditForm({ ...editForm, password: e.target.value })} />
+              <label className="flex items-center gap-2 text-sm text-ink md:col-span-2">
                 <input type="checkbox" checked={editForm.isActive} onChange={(e) => setEditForm({ ...editForm, isActive: e.target.checked })} />
                 Active account
               </label>

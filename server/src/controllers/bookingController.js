@@ -2,6 +2,7 @@ import Booking from '../models/Booking.js';
 import Service from '../models/Service.js';
 import Address from '../models/Address.js';
 import User from '../models/User.js';
+import Coupon from '../models/Coupon.js';
 import { ApiError, asyncHandler } from '../utils/asyncHandler.js';
 import { ROLES } from '../config/roles.js';
 import {
@@ -15,6 +16,7 @@ import { assertBookingTransition } from '../utils/bookingTransitionGuard.js';
 import { logAudit } from '../utils/auditLogger.js';
 import { createEarningForBooking } from '../utils/earnings.js';
 import { checkBookingConflict } from '../utils/slots.js';
+import { evaluateCoupon, recordCouponUsage } from './couponController.js';
 import {
   notifyBookingPlaced,
   notifyWorkerAssigned,
@@ -69,6 +71,30 @@ export const createBooking = asyncHandler(async (req, res) => {
 
   const addressSnapshot = await resolveAddress(req);
 
+  let discountAmount = 0;
+  let appliedCouponCode = null;
+  let finalAmount = service.price;
+
+  if (req.body.couponCode) {
+    const coupon = await Coupon.findOne({ code: String(req.body.couponCode).toUpperCase() });
+    if (!coupon) throw new ApiError(400, 'Invalid coupon');
+    
+    const ev = await evaluateCoupon({
+      coupon,
+      userId: req.user._id,
+      orderValue: service.price,
+      target: { kind: 'service', categoryId: service.category },
+    });
+    
+    if (!ev.eligible) {
+      throw new ApiError(400, ev.reason || 'Coupon not applicable');
+    }
+    
+    discountAmount = ev.discount;
+    finalAmount = ev.finalAmount;
+    appliedCouponCode = coupon.code;
+  }
+
   const booking = await Booking.create({
     user: req.user._id,
     service: service._id,
@@ -76,7 +102,9 @@ export const createBooking = asyncHandler(async (req, res) => {
     type,
     scheduledAt: type === BOOKING_TYPE.SCHEDULED ? new Date(scheduledAt) : null,
     address: addressSnapshot,
-    amount: service.price,
+    amount: finalAmount,
+    couponCode: appliedCouponCode,
+    discountAmount: discountAmount,
     paymentMode: paymentMode || PAYMENT_MODE.COD,
     notes: notes || '',
     startPin: generatePin(6),
@@ -136,6 +164,10 @@ export const createBooking = asyncHandler(async (req, res) => {
     });
   }
 
+  if (appliedCouponCode) {
+    await recordCouponUsage({ couponCode: appliedCouponCode, userId: req.user._id });
+  }
+
   res.status(201).json({ booking: await populateBooking(Booking.findById(booking._id)) });
 });
 
@@ -144,7 +176,7 @@ export const listMyBookings = asyncHandler(async (req, res) => {
   const filter = { user: req.user._id };
   if (status) filter.status = status;
   const bookings = await populateBooking(
-    Booking.find(filter).sort({ createdAt: -1 }).limit(200)
+    Booking.find(filter).select('+startPin +endPin').sort({ createdAt: -1 }).limit(200)
   );
   res.json({ bookings });
 });
@@ -157,7 +189,7 @@ export const listAllBookings = asyncHandler(async (req, res) => {
   if (user) filter.user = user;
   if (category) filter.category = category;
   const bookings = await populateBooking(
-    Booking.find(filter).sort({ createdAt: -1 }).limit(500)
+    Booking.find(filter).select('+startPin +endPin').sort({ createdAt: -1 }).limit(500)
   );
   res.json({ bookings });
 });
@@ -188,7 +220,7 @@ export const getBooking = asyncHandler(async (req, res) => {
 
   // Hide PINs from non-owners
   const bObj = booking.toObject();
-  if (!isOwner) {
+  if (!isOwner && !isPrivileged) {
     delete bObj.startPin;
     delete bObj.endPin;
   }

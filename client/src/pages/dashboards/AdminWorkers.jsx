@@ -19,10 +19,10 @@ const STATUS_TABS = [
 ];
 
 const KYC_BADGE = {
-  pending: 'bg-ink/10 text-ink/70 dark:bg-paper/10 dark:text-paper/60',
-  submitted: 'bg-amber-100 text-amber-800 dark:bg-amber-400/10 dark:text-amber-200',
-  verified: 'bg-green-100 text-green-700 dark:bg-green-400/10 dark:text-green-300',
-  rejected: 'bg-red-100 text-red-700 dark:bg-red-400/10 dark:text-red-300',
+  pending: 'bg-ink/10 text-ink/70',
+  submitted: 'bg-amber-100 text-amber-800',
+  verified: 'bg-green-100 text-green-700',
+  rejected: 'bg-red-100 text-red-700',
 };
 
 const fmtDate = (d) => (d ? new Date(d).toLocaleString() : '—');
@@ -30,7 +30,7 @@ const fmtDate = (d) => (d ? new Date(d).toLocaleString() : '—');
 const DocPreview = ({ label, url }) => {
   if (!url) {
     return (
-      <div className="rounded-xl border border-dashed border-ink/15 p-3 text-xs text-ink/60 dark:border-paper/15 dark:text-paper/50">
+      <div className="rounded-xl border border-dashed border-ink/15 p-3 text-xs text-ink/60">
         <div className="mb-1 uppercase tracking-widest">{label}</div>
         Not uploaded
       </div>
@@ -42,15 +42,15 @@ const DocPreview = ({ label, url }) => {
       href={url}
       target="_blank"
       rel="noreferrer"
-      className="group flex flex-col rounded-xl border border-ink/15 p-3 transition hover:border-ink/40 dark:border-paper/15 dark:hover:border-paper/40"
+      className="group flex flex-col rounded-xl border border-ink/15 p-3 transition hover:border-ink/40:border-paper/40"
     >
-      <div className="mb-2 flex items-center justify-between text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+      <div className="mb-2 flex items-center justify-between text-xs uppercase tracking-widest text-ink/60">
         <span>{label}</span>
         <Eye size={14} className="opacity-60 group-hover:opacity-100" />
       </div>
       {isPdf ? (
-        <div className="flex h-32 items-center justify-center rounded-lg bg-ink/5 dark:bg-paper/5">
-          <FileText size={32} className="text-ink/40 dark:text-paper/40" />
+        <div className="flex h-32 items-center justify-center rounded-lg bg-ink/5">
+          <FileText size={32} className="text-ink/40" />
         </div>
       ) : (
         <img
@@ -159,8 +159,8 @@ export default function AdminWorkers() {
                   onClick={() => setStatus(tab.key)}
                   className={`rounded-full px-4 py-2 text-xs uppercase tracking-widest transition ${
                     active
-                      ? 'bg-ink text-paper dark:bg-paper dark:text-ink'
-                      : 'border border-ink/15 hover:border-ink/40 dark:border-paper/15 dark:hover:border-paper/40'
+                      ? 'bg-ink text-paper'
+                      : 'border border-ink/15 hover:border-ink/40:border-paper/40'
                   }`}
                 >
                   {tab.label}
@@ -175,14 +175,14 @@ export default function AdminWorkers() {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search by name, email, phone…"
-            className="rounded-xl border border-ink/15 bg-transparent p-3 text-sm focus:border-ink focus:outline-none dark:border-paper/20 dark:focus:border-paper/60 md:w-72"
+            className="rounded-xl border border-ink/15 bg-transparent p-3 text-sm focus:border-ink focus:outline-none:border-paper/60 md:w-72"
           />
         </div>
       </FadeUp>
 
       <div className="card-rounded overflow-x-auto">
         <table className="w-full text-left text-sm text-ink">
-          <thead className="bg-sand/50 text-xs uppercase tracking-widest text-ink/60 dark:bg-[#18181A] dark:text-paper/60">
+          <thead className="bg-sand/50 text-xs uppercase tracking-widest text-ink/60">
             <tr>
               <th className="p-4 font-normal">Worker</th>
               <th className="p-4 font-normal">KYC</th>
@@ -191,16 +191,16 @@ export default function AdminWorkers() {
               <th className="p-4 font-normal">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-ink/10 dark:divide-paper/10">
+          <tbody className="divide-y divide-ink/10">
             {loading ? (
               <tr>
-                <td colSpan="5" className="p-6 text-center text-ink/60 dark:text-paper/50">
+                <td colSpan="5" className="p-6 text-center text-ink/60">
                   Loading…
                 </td>
               </tr>
             ) : filtered.length === 0 ? (
               <tr>
-                <td colSpan="5" className="p-6 text-center text-ink/60 dark:text-paper/50">
+                <td colSpan="5" className="p-6 text-center text-ink/60">
                   No workers in this state.
                 </td>
               </tr>
@@ -208,7 +208,7 @@ export default function AdminWorkers() {
               filtered.map((w) => (
                 <tr
                   key={w._id}
-                  className="transition hover:bg-sand/30 dark:hover:bg-[#18181A]/50"
+                  className="transition hover:bg-sand/30:bg-[#18181A]/50"
                 >
                   <td className="p-4 text-ink">
                     <div className="font-medium text-ink">{w.name}</div>
@@ -224,7 +224,7 @@ export default function AdminWorkers() {
                       {w.kycStatus || 'pending'}
                     </span>
                     {w.kycStatus === 'rejected' && w.kycRejectionReason && (
-                      <div className="mt-2 text-xs text-red-600 dark:text-red-300">
+                      <div className="mt-2 text-xs text-red-600">
                         {w.kycRejectionReason}
                       </div>
                     )}
@@ -269,14 +269,14 @@ export default function AdminWorkers() {
 
       {selected && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/70 px-4 backdrop-blur-sm">
-          <div className="card-rounded w-full max-w-3xl border border-paper/10 bg-paper p-6 text-ink shadow-[0_30px_90px_rgba(0,0,0,0.35)] dark:border-paper/20 dark:bg-[#14151A] dark:text-paper">
+          <div className="card-rounded w-full max-w-3xl border border-paper/10 bg-paper p-6 text-ink shadow-[0_30px_90px_rgba(0,0,0,0.35)]">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <div className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+                <div className="text-xs uppercase tracking-widest text-ink/60">
                   KYC Review
                 </div>
                 <h3 className="heading-display mt-2 text-2xl">{selected.name}</h3>
-                <p className="mt-1 text-sm text-ink/70 dark:text-paper/60">
+                <p className="mt-1 text-sm text-ink/70">
                   {selected.email} · {selected.phone || 'no phone'}
                 </p>
               </div>
@@ -294,7 +294,7 @@ export default function AdminWorkers() {
 
             <div className="mt-5 grid grid-cols-2 gap-3 text-sm md:grid-cols-3">
               <div>
-                <div className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+                <div className="text-xs uppercase tracking-widest text-ink/60">
                   Status
                 </div>
                 <div className="mt-1">
@@ -308,13 +308,13 @@ export default function AdminWorkers() {
                 </div>
               </div>
               <div>
-                <div className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+                <div className="text-xs uppercase tracking-widest text-ink/60">
                   Aadhaar
                 </div>
                 <div className="mt-1 font-mono">{selected.aadhaarNumber || '—'}</div>
               </div>
               <div>
-                <div className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+                <div className="text-xs uppercase tracking-widest text-ink/60">
                   PAN
                 </div>
                 <div className="mt-1 font-mono">{selected.panNumber || '—'}</div>
@@ -329,7 +329,7 @@ export default function AdminWorkers() {
             </div>
 
             {selected.kycStatus === 'rejected' && selected.kycRejectionReason && (
-              <div className="mt-4 rounded-xl border border-red-300 bg-red-50 p-3 text-sm text-red-700 dark:border-red-400/30 dark:bg-red-400/5 dark:text-red-200">
+              <div className="mt-4 rounded-xl border border-red-300 bg-red-50 p-3 text-sm text-red-700">
                 <div className="text-xs uppercase tracking-widest opacity-80">
                   Previous rejection
                 </div>
@@ -339,14 +339,14 @@ export default function AdminWorkers() {
 
             {rejectMode ? (
               <div className="mt-5">
-                <label className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+                <label className="text-xs uppercase tracking-widest text-ink/60">
                   Rejection reason
                 </label>
                 <textarea
                   value={rejectReason}
                   onChange={(e) => setRejectReason(e.target.value)}
                   rows={3}
-                  className="mt-2 w-full rounded-xl border border-ink/15 bg-transparent p-3 text-sm focus:border-ink focus:outline-none dark:border-paper/20 dark:focus:border-paper/60"
+                  className="mt-2 w-full rounded-xl border border-ink/15 bg-transparent p-3 text-sm focus:border-ink focus:outline-none:border-paper/60"
                   placeholder="Explain what needs fixing — the worker sees this in email/SMS."
                 />
                 <div className="mt-4 flex flex-wrap justify-end gap-3">
@@ -376,7 +376,7 @@ export default function AdminWorkers() {
                   <button
                     onClick={() => setRejectMode(true)}
                     disabled={submitting}
-                    className="inline-flex items-center gap-2 rounded-full border border-red-400 px-5 py-2 text-xs uppercase tracking-widest text-red-600 transition hover:bg-red-50 disabled:opacity-50 dark:hover:bg-red-400/10"
+                    className="inline-flex items-center gap-2 rounded-full border border-red-400 px-5 py-2 text-xs uppercase tracking-widest text-red-600 transition hover:bg-red-50 disabled:opacity-50:bg-red-400/10"
                   >
                     <ShieldAlert size={14} />
                     Reject

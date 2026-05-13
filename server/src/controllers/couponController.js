@@ -13,7 +13,7 @@ const isObjectId = (v) =>
 
 // Returns { eligible: boolean, reason?: string, discount, finalAmount, coupon }
 // Does NOT throw — used both by /validate (which throws) and by the eligible-list view.
-const evaluateCoupon = async ({ coupon, userId, orderValue, target }) => {
+export const evaluateCoupon = async ({ coupon, userId, orderValue, target }) => {
   if (!coupon || !coupon.isActive) {
     return { eligible: false, reason: 'Coupon not active' };
   }

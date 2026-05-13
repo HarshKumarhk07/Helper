@@ -53,7 +53,15 @@ export default function ProductCard({ product, onFavoriteChange }) {
         <Link to={`/products/${product._id}`} className="block text-sm line-clamp-2 font-medium text-ink hover:text-ink/70 transition">
           {product.name}
         </Link>
-        <div className="text-sm font-bold text-ink">₹{product.price}</div>
+        <div className="flex items-center justify-between">
+          <div className="text-sm font-bold text-ink">₹{product.price}</div>
+          <Link
+            to={`/products/${product._id}`}
+            className="text-[10px] font-bold uppercase tracking-widest text-white bg-ink rounded-full px-3 py-1.5 hover:bg-ink/80 transition"
+          >
+            Book Product
+          </Link>
+        </div>
       </div>
     </div>
   );

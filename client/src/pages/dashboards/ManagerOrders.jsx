@@ -77,8 +77,8 @@ export default function ManagerOrders() {
             onClick={() => setFilter(f.key)}
             className={`rounded-pill border px-4 py-2 text-xs uppercase tracking-widest transition ${
               filter === f.key
-                ? 'border-ink bg-ink text-paper dark:border-paper dark:bg-paper dark:text-ink'
-                : 'border-ink/20 hover:border-ink/40 dark:border-paper/20 dark:hover:border-paper/40'
+                ? 'border-ink bg-ink text-paper'
+                : 'border-ink/20 hover:border-ink/40:border-paper/40'
             }`}
           >
             {f.label}
@@ -88,7 +88,7 @@ export default function ManagerOrders() {
 
       <div className="card-rounded overflow-x-auto">
         <table className="w-full text-left text-sm">
-          <thead className="bg-sand/50 text-xs uppercase tracking-widest text-ink/60 dark:bg-[#18181A] dark:text-paper/60">
+          <thead className="bg-sand/50 text-xs uppercase tracking-widest text-ink/60">
             <tr>
               <th className="p-4 font-normal">Code</th>
               <th className="p-4 font-normal">Service</th>
@@ -100,34 +100,34 @@ export default function ManagerOrders() {
               <th className="p-4 font-normal">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-ink/10 dark:divide-paper/10">
+          <tbody className="divide-y divide-ink/10">
             {loading ? (
               <tr>
-                <td colSpan={8} className="p-6 text-center text-ink/60 dark:text-paper/50">
+                <td colSpan={8} className="p-6 text-center text-ink/60">
                   Loading…
                 </td>
               </tr>
             ) : bookings.length === 0 ? (
               <tr>
-                <td colSpan={8} className="p-6 text-center text-ink/60 dark:text-paper/50">
+                <td colSpan={8} className="p-6 text-center text-ink/60">
                   No bookings in your categories yet.
                 </td>
               </tr>
             ) : (
               bookings.map((b) => (
-                <tr key={b._id} className="transition hover:bg-sand/30 dark:hover:bg-[#18181A]/50">
+                <tr key={b._id} className="transition hover:bg-sand/30:bg-[#18181A]/50">
                   <td className="p-4 font-mono text-xs">{b.code}</td>
                   <td className="p-4">
                     <div>{b.service?.name}</div>
                     {b.category?.name && (
-                      <div className="text-xs text-ink/60 dark:text-paper/50">
+                      <div className="text-xs text-ink/60">
                         {b.category.name}
                       </div>
                     )}
                   </td>
                   <td className="p-4">
                     <div>{b.user?.name}</div>
-                    <div className="text-xs text-ink/60 dark:text-paper/50">{b.user?.email}</div>
+                    <div className="text-xs text-ink/60">{b.user?.email}</div>
                   </td>
                   <td className="p-4"><StatusBadge status={b.status} /></td>
                   <td className="p-4 text-xs">
@@ -135,7 +135,7 @@ export default function ManagerOrders() {
                       <>
                         <div>{b.worker.name}</div>
                         {b.worker.kycStatus !== 'verified' && (
-                          <div className="text-amber-600 dark:text-amber-300">
+                          <div className="text-amber-600">
                             KYC {b.worker.kycStatus}
                           </div>
                         )}
@@ -144,7 +144,7 @@ export default function ManagerOrders() {
                       <select
                         defaultValue=""
                         onChange={(e) => onAssign(b, e.target.value)}
-                        className="rounded-pill border border-ink/20 bg-paper px-3 py-1 text-xs dark:border-paper/20 dark:bg-transparent dark:text-paper"
+                        className="rounded-pill border border-ink/20 bg-paper px-3 py-1 text-xs"
                       >
                         <option value="">Assign…</option>
                         {workers.map((w) => (
