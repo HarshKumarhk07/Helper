@@ -92,17 +92,40 @@ export const listKycSubmissions = asyncHandler(async (req, res) => {
   const { status = 'submitted', q } = req.query;
   const filter = { role: ROLES.WORKER };
   if (status && status !== 'all') filter.kycStatus = status;
-  if (q) filter.$or = [
-    { name: { $regex: q, $options: 'i' } },
-    { email: { $regex: q, $options: 'i' } },
-    { phone: { $regex: q, $options: 'i' } },
-  ];
-  const workers = await User.find(filter)
-    .populate('kycReviewedBy', 'name email')
-    .sort({ kycSubmittedAt: -1, createdAt: -1 })
-    .limit(200);
-  res.json({ workers: workers.map(safeUser) });
+  if (q) {
+    filter.$or = [
+      { name: { $regex: q, $options: 'i' } },
+      { email: { $regex: q, $options: 'i' } },
+      { phone: { $regex: q, $options: 'i' } },
+    ];
+  }
+
+  const [workers, countsAgg] = await Promise.all([
+    User.find(filter)
+      .populate('kycReviewedBy', 'name email')
+      .sort({ kycSubmittedAt: -1, createdAt: -1 })
+      .limit(200),
+    User.aggregate([
+      { $match: { role: ROLES.WORKER } },
+      {
+        $group: {
+          _id: { $ifNull: ['$kycStatus', 'pending'] },
+          count: { $sum: 1 },
+        },
+      },
+    ]),
+  ]);
+
+  const counts = { all: 0 };
+  countsAgg.forEach(({ _id, count }) => {
+    const key = _id || 'pending';
+    counts[key] = count;
+    counts.all += count;
+  });
+
+  res.json({ workers: workers.map(safeUser), counts });
 });
+
 
 export const getKycSubmission = asyncHandler(async (req, res) => {
   const worker = await User.findOne({ _id: req.params.id, role: ROLES.WORKER })

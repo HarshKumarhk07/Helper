@@ -8,7 +8,7 @@ export const submitKyc = (formData) =>
     .then((r) => r.data.user);
 
 export const listKycSubmissions = (params = {}) =>
-  api.get('/kyc/submissions', { params }).then((r) => r.data.workers);
+  api.get('/kyc/submissions', { params }).then((r) => r.data);
 
 export const getKycSubmission = (id) =>
   api.get(`/kyc/submissions/${id}`).then((r) => r.data.worker);

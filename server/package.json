@@ -8,6 +8,8 @@
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
     "seed": "node src/seed/seed.js",
+    "add:categories": "node src/seed/add-new-categories.js",
+    "add:services": "node src/seed/add-services.js",
     "cleanup:catalog": "node src/seed/cleanup-catalog.js",
     "test:slice-c": "node scripts/sliceC-socket.integration.mjs",
     "test:slice-c:pin": "node scripts/sliceC-pin.validation.mjs",

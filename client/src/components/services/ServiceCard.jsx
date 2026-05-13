@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Star, Clock, ArrowUpRight, Heart, Zap } from 'lucide-react';
+import { Star, Clock, ArrowUpRight, Heart, Zap, Flame, BadgeCheck } from 'lucide-react';
 import { formatPrice } from '../../lib/booking.js';
 import { useFavorites } from '../../context/FavoritesContext.jsx';
 
@@ -15,6 +15,8 @@ export default function ServiceCard({ service, index = 0 }) {
   const { favorites, toggleFavorite } = useFavorites();
   
   const isFavorited = favorites.some(fav => fav._id === service._id);
+  const isPopular = (service.ratingCount || 0) >= 50;
+  const isFeatured = service.isFeatured;
 
   const handleFavorite = (e) => {
     e.preventDefault();
@@ -32,12 +34,27 @@ export default function ServiceCard({ service, index = 0 }) {
           src={image}
           alt={service.name}
           loading="lazy"
+          onError={(e) => { e.currentTarget.src = FALLBACK_IMAGES[index % 4]; }}
           className="h-full w-full object-cover transition-transform duration-1000 group-hover:scale-[1.03]"
         />
         
         {/* Dark gradient for text/icon readability */}
         <div className="absolute inset-0 bg-gradient-to-t from-ink/60 via-ink/10 to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-500"></div>
         
+        {/* Top-left Badges */}
+        <div className="absolute top-4 left-4 flex flex-col gap-1.5" style={{ zIndex: 100 }}>
+          {isFeatured && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-amber-500 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-white shadow-lg">
+              <BadgeCheck size={10} /> Featured
+            </span>
+          )}
+          {isPopular && !isFeatured && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-rose-500 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-white shadow-lg">
+              <Flame size={10} /> Popular
+            </span>
+          )}
+        </div>
+
         {/* Heart Button */}
         <button
           type="button"
@@ -101,3 +118,4 @@ export default function ServiceCard({ service, index = 0 }) {
     </Link>
   );
 }
+

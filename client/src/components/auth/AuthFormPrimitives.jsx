@@ -33,12 +33,12 @@ export function Field({
         )}
       </span>
       <span
-        className={`group flex items-center gap-2 rounded-xl border-2 bg-paper px-3.5 py-2.5 transition-all duration-200.04] ${
+        className={`group flex items-center gap-2 rounded-xl border-2 bg-paper px-3.5 py-2.5 transition-all duration-200 ${
           error
             ? 'border-rose-500 shadow-[0_0_0_3px_rgba(244,63,94,0.15)]'
             : focused
-            ? 'border-ink shadow-[0_0_0_3px_rgba(26,26,26,0.10)]_0_0_3px_rgba(255,255,255,0.10)]'
-            : 'border-ink/30 hover:border-ink/55:border-paper/45'
+            ? 'border-ink shadow-[0_0_0_3px_rgba(26,26,26,0.10)]'
+            : 'border-ink/30 hover:border-ink/55'
         }`}
       >
         {leadingIcon && (
@@ -56,7 +56,7 @@ export function Field({
           onChange={(e) => onChange(e.target.value)}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
-          className={`w-full bg-transparent text-sm text-ink placeholder:text-ink/35 focus:outline-none:text-paper/30 ${
+          className={`w-full bg-transparent text-sm text-ink placeholder:text-ink/35 border-none outline-none focus:ring-0 focus:outline-none focus:border-none ${
             mono ? 'font-mono tracking-[0.4em]' : ''
           }`}
           {...rest}
@@ -76,10 +76,8 @@ export function PrimaryCTA({ loading, label, disabled, success, onClick, type = 
       type={type}
       onClick={onClick}
       disabled={loading || disabled}
-      className={`group relative mt-2 flex w-full items-center justify-center gap-2 overflow-hidden rounded-full px-5 py-3 text-sm font-semibold shadow-soft transition-all duration-200 hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/30 disabled:cursor-not-allowed disabled:opacity-60:ring-paper/30 ${
-        success
-          ? 'bg-emerald-600 text-white'
-          : 'bg-ink text-paper'
+      className={`group relative mt-2 flex w-full items-center justify-center gap-2 overflow-hidden rounded-full px-5 py-3 text-sm font-semibold shadow-soft transition-all duration-200 hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/30 disabled:cursor-not-allowed disabled:opacity-60 ${
+        success ? 'bg-emerald-600 text-white' : 'bg-ink text-paper'
       }`}
     >
       {!success && (
@@ -120,7 +118,7 @@ export function ErrorBanner({ children }) {
       initial={{ opacity: 0, y: -4 }}
       animate={{ opacity: 1, y: 0 }}
       role="alert"
-      className="flex items-start gap-2 rounded-xl border border-rose-300/70 bg-rose-50/70 px-3 py-2.5 text-xs text-rose-900.06]"
+      className="flex items-start gap-2 rounded-xl border border-rose-300/70 bg-rose-50/70 px-3 py-2.5 text-xs text-rose-900"
     >
       <AlertTriangle size={14} className="mt-0.5 shrink-0" />
       <div>{children}</div>

@@ -10,6 +10,7 @@ import {
   deleteCategory,
 } from '../../api/categories.js';
 import { listUsers } from '../../api/users.js';
+import api from '../../api/axios.js';
 
 const slugify = (s) =>
   String(s || '')
@@ -40,6 +41,7 @@ export default function AdminCategories() {
   const [editing, setEditing] = useState(null); // category id or 'new'
   const [form, setForm] = useState(emptyForm());
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   const load = () => {
     setLoading(true);
@@ -251,14 +253,44 @@ export default function AdminCategories() {
               <input
                 value={form.image}
                 onChange={(e) => setForm((f) => ({ ...f, image: e.target.value }))}
-                placeholder="https://… or upload via /admin/services"
+                placeholder="https://… or upload below"
                 className={inputClass}
               />
+              <div className="mt-3 border-t border-ink/10 pt-3">
+                <div className="text-xs text-ink/60 mb-2">Or upload from computer:</div>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    disabled={uploading}
+                    className="w-full text-xs file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-ink file:text-paper hover:file:opacity-90 cursor-pointer"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setUploading(true);
+                      try {
+                        const formData = new FormData();
+                        formData.append('image', file);
+                        const res = await api.post('/upload', formData, {
+                          headers: { 'Content-Type': 'multipart/form-data' },
+                        });
+                        setForm((f) => ({ ...f, image: res.data.url }));
+                        toast.success('Image uploaded successfully');
+                      } catch {
+                        toast.error('Image upload failed');
+                      } finally {
+                        setUploading(false);
+                      }
+                    }}
+                  />
+                  {uploading && <span className="text-xs animate-pulse text-ink/60">Uploading…</span>}
+                </div>
+              </div>
               {form.image && (
                 <img
                   src={form.image}
                   alt="preview"
-                  className="mt-2 h-24 w-24 rounded-xl border border-ink/10 object-cover"
+                  className="mt-3 h-24 w-24 rounded-xl border border-ink/10 object-cover"
                 />
               )}
             </div>

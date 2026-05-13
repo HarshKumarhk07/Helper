@@ -6,9 +6,10 @@ const slugify = (s) =>
   s.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
 export const listServices = asyncHandler(async (req, res) => {
-  const { category, q, active } = req.query;
+  const { category, q, active, featured } = req.query;
   const filter = {};
   if (active === 'true') filter.isActive = true;
+  if (featured === 'true') filter.isFeatured = true;
   if (q) filter.name = { $regex: q, $options: 'i' };
   if (category) {
     const cat = category.match(/^[a-f0-9]{24}$/)
@@ -20,8 +21,8 @@ export const listServices = asyncHandler(async (req, res) => {
 
   const services = await Service.find(filter)
     .populate('category', 'name slug icon color')
-    .sort({ createdAt: -1 })
-    .limit(200);
+    .sort({ isFeatured: -1, rating: -1, createdAt: -1 })
+    .limit(500);
   res.json({ services });
 });
 

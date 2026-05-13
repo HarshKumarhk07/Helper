@@ -5,7 +5,7 @@ import { listCategories } from '../../api/categories.js';
 import api from '../../api/axios.js';
 import FadeUp from '../../components/ui/FadeUp.jsx';
 import DashboardShell from './DashboardShell.jsx';
-import { Trash2, AlertTriangle, Edit2 } from 'lucide-react';
+import { Trash2, AlertTriangle, Edit2, Star } from 'lucide-react';
 
 export default function AdminServices() {
   const [services, setServices] = useState([]);
@@ -137,6 +137,16 @@ export default function AdminServices() {
     }
   };
 
+  const handleToggleFeatured = async (svc) => {
+    try {
+      const updated = await updateService(svc._id, { isFeatured: !svc.isFeatured });
+      setServices((current) => current.map((s) => (s._id === updated._id ? updated : s)));
+      toast.success(updated.isFeatured ? 'Marked as featured' : 'Removed from featured');
+    } catch {
+      toast.error('Failed to update featured status');
+    }
+  };
+
   return (
     <DashboardShell eyebrow="(Categories & pricing)" title="SERVICES, CATEGORIES & PRICING.">
       <div className="flex justify-between items-center mb-8">
@@ -209,6 +219,7 @@ export default function AdminServices() {
               <th className="p-4">Name</th>
               <th className="p-4">Price</th>
               <th className="p-4">Duration</th>
+              <th className="p-4">Featured</th>
               <th className="p-4">Actions</th>
             </tr>
           </thead>
@@ -229,6 +240,19 @@ export default function AdminServices() {
                   <td className="p-4 font-medium">{s.name}</td>
                   <td className="p-4">₹{s.price}</td>
                   <td className="p-4">{s.durationMinutes} min</td>
+                  <td className="p-4">
+                    <button
+                      onClick={() => handleToggleFeatured(s)}
+                      title={s.isFeatured ? 'Remove from featured' : 'Mark as featured'}
+                      className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-widest transition ${
+                        s.isFeatured
+                          ? 'bg-amber-400 text-white hover:bg-amber-500'
+                          : 'border border-ink/20 text-ink/50 hover:border-ink/60'
+                      }`}
+                    >
+                      {s.isFeatured ? '★ Featured' : 'Feature'}
+                    </button>
+                  </td>
                   <td className="p-4">
                     <div className="flex gap-2">
                       <button onClick={() => openEditor(s)} className="text-blue-500 hover:text-blue-700 transition" title="Edit">

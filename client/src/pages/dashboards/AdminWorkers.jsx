@@ -70,6 +70,7 @@ export default function AdminWorkers() {
   const [status, setStatus] = useState('submitted');
   const [q, setQ] = useState('');
   const [workers, setWorkers] = useState([]);
+  const [counts, setCounts] = useState({ all: 0 });
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
   const [rejectMode, setRejectMode] = useState(false);
@@ -79,7 +80,10 @@ export default function AdminWorkers() {
   const load = () => {
     setLoading(true);
     listKycSubmissions({ status, q })
-      .then(setWorkers)
+      .then((res) => {
+        setWorkers(res.workers || []);
+        if (res.counts) setCounts(res.counts);
+      })
       .catch(() => toast.error('Failed to load workers'))
       .finally(() => setLoading(false));
   };
@@ -99,14 +103,6 @@ export default function AdminWorkers() {
         w.phone?.toLowerCase().includes(needle)
     );
   }, [workers, q]);
-
-  const counts = useMemo(() => {
-    const acc = { all: workers.length };
-    workers.forEach((w) => {
-      acc[w.kycStatus] = (acc[w.kycStatus] || 0) + 1;
-    });
-    return acc;
-  }, [workers]);
 
   const handleApprove = async () => {
     if (!selected) return;
@@ -160,12 +156,14 @@ export default function AdminWorkers() {
                   className={`rounded-full px-4 py-2 text-xs uppercase tracking-widest transition ${
                     active
                       ? 'bg-ink text-paper'
-                      : 'border border-ink/15 hover:border-ink/40:border-paper/40'
+                      : 'border border-ink/15 hover:border-ink/40'
                   }`}
                 >
                   {tab.label}
-                  {tab.key !== 'all' && counts[tab.key] != null && (
-                    <span className="ml-2 opacity-70">{counts[tab.key]}</span>
+                  {counts[tab.key] != null && (
+                    <span className="ml-2 opacity-70">
+                      {counts[tab.key]}
+                    </span>
                   )}
                 </button>
               );
@@ -175,7 +173,7 @@ export default function AdminWorkers() {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search by name, email, phone…"
-            className="rounded-xl border border-ink/15 bg-transparent p-3 text-sm focus:border-ink focus:outline-none:border-paper/60 md:w-72"
+            className="rounded-xl border border-ink/15 bg-transparent p-3 text-sm focus:border-ink focus:outline-none md:w-72"
           />
         </div>
       </FadeUp>

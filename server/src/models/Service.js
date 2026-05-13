@@ -10,7 +10,7 @@ const serviceSchema = new mongoose.Schema(
     },
     name: { type: String, required: true, trim: true, maxlength: 120 },
     slug: { type: String, required: true, lowercase: true, index: true },
-    description: { type: String, default: '', maxlength: 1000 },
+    description: { type: String, default: '', maxlength: 2000 },
     price: { type: Number, required: true, min: 0 },
     durationMinutes: { type: Number, default: 60, min: 5 },
     image: { type: String, default: '' },
@@ -18,6 +18,7 @@ const serviceSchema = new mongoose.Schema(
     ratingCount: { type: Number, default: 0 },
     tags: [{ type: String }],
     isActive: { type: Boolean, default: true, index: true },
+    isFeatured: { type: Boolean, default: false, index: true },
   },
   { timestamps: true }
 );
