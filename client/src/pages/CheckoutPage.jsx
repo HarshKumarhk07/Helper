@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useCart } from '../context/CartContext.jsx';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { createOrder } from '../api/orders.js';
 import { createRazorpayOrder, verifyRazorpayPayment } from '../api/payments.js';
 import { validateCoupon } from '../api/coupons.js';
@@ -12,6 +12,7 @@ import { CreditCard, Truck, Tag, ShieldCheck } from 'lucide-react';
 export default function CheckoutPage() {
   const { cart, removeFromCart } = useCart();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [address, setAddress] = useState({
     line1: '', city: '', state: '', pincode: ''
@@ -21,8 +22,15 @@ export default function CheckoutPage() {
   const [discount, setDiscount] = useState(0);
   const [razorpayReady, setRazorpayReady] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState(null);
-  
+
   const fieldClass = 'w-full rounded-xl border border-ink/10 bg-sand/50 px-5 py-3.5 text-sm font-medium text-ink outline-none transition-all placeholder:text-ink/40 focus:border-ink/30 focus:bg-white focus:ring-4 focus:ring-ink/5';
+
+  useEffect(() => {
+    const urlCoupon = searchParams.get('coupon');
+    if (urlCoupon) {
+      setCouponCode(urlCoupon);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     const scriptId = 'razorpay-checkout-js';

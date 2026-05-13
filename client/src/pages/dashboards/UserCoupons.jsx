@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { Copy, CheckCircle2, AlertTriangle, TicketPercent } from 'lucide-react';
+import { Copy, CheckCircle2, AlertTriangle, TicketPercent, ArrowRight } from 'lucide-react';
 import DashboardShell from './DashboardShell.jsx';
 import FadeUp from '../../components/ui/FadeUp.jsx';
 import { listEligibleCoupons } from '../../api/coupons.js';
@@ -26,6 +27,7 @@ const describeDiscount = (c) => {
 };
 
 export default function UserCoupons() {
+  const navigate = useNavigate();
   const [coupons, setCoupons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('eligible');
@@ -111,6 +113,7 @@ export default function UserCoupons() {
               coupon={c}
               onCopy={handleCopy}
               copied={copiedCode === c.code}
+              onUse={(code) => navigate(`/checkout?coupon=${code}`)}
             />
           ))}
         </div>
@@ -119,7 +122,7 @@ export default function UserCoupons() {
   );
 }
 
-function CouponCard({ coupon, onCopy, copied }) {
+function CouponCard({ coupon, onCopy, copied, onUse }) {
   const restrictions = [];
   if (coupon.firstOrderOnly) restrictions.push('First order only');
   if (coupon.minOrderValue > 0)
@@ -184,15 +187,26 @@ function CouponCard({ coupon, onCopy, copied }) {
         </ul>
       )}
 
-      <div className="mt-4 flex items-center justify-between text-xs">
-        <span className="text-ink/55 dark:text-paper/45">
+      <div className="mt-4 flex items-center justify-between gap-3">
+        <span className="text-xs text-ink/55 dark:text-paper/45">
           Expires {fmtDate(coupon.expiryDate)}
         </span>
-        {!coupon.eligible && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-1 text-amber-800 dark:bg-amber-400/10 dark:text-amber-200">
-            <AlertTriangle size={12} /> {coupon.reason || 'Not yet eligible'}
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {!coupon.eligible && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-1 text-xs text-amber-800 dark:bg-amber-400/10 dark:text-amber-200">
+              <AlertTriangle size={12} /> {coupon.reason || 'Not yet eligible'}
+            </span>
+          )}
+          {coupon.eligible && (
+            <button
+              onClick={() => onUse(coupon.code)}
+              className="inline-flex items-center gap-1 rounded-full bg-ink px-3 py-1.5 text-xs font-semibold text-paper transition hover:opacity-90 dark:bg-paper dark:text-ink"
+            >
+              Use
+              <ArrowRight size={12} />
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
