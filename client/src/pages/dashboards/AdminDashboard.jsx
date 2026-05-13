@@ -276,28 +276,6 @@ export default function AdminDashboard() {
     <DashboardShell
       eyebrow="(Admin console)"
       title="EVERYTHING, IN ONE PANE."
-      slices={[
-        {
-          tag: 'Analytics',
-          title: 'Access analytics dashboard',
-          body: 'Revenue, bookings, orders, and worker performance are available from this console.',
-        },
-        {
-          tag: 'KYC',
-          title: 'Approve worker accounts',
-          body: 'Use the personnel screen to review worker activation, Aadhaar, and PAN details.',
-        },
-        {
-          tag: 'Operations',
-          title: 'Assign workers and managers',
-          body: 'Manage roles, activation, and operational ownership from the user directory.',
-        },
-        {
-          tag: 'Governance',
-          title: 'View and edit all data',
-          body: 'Use the portal buttons to reach bookings, orders, inventory, coupons, finance, and audit logs.',
-        },
-      ]}
     >
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3 mb-8 sm:mb-10">
         <PillButton variant="solid" to="/admin/bookings">

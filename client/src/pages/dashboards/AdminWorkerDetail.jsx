@@ -110,13 +110,25 @@ export default function AdminWorkerDetail() {
 
   return (
     <DashboardShell eyebrow="Worker profile" title={worker.name}>
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <Link
-          to="/admin/workers"
-          className="inline-flex items-center gap-2 text-xs uppercase tracking-widest text-ink/60 hover:text-ink dark:text-paper/60 dark:hover:text-paper"
-        >
-          <ArrowLeft size={12} /> Back to KYC queue
-        </Link>
+      <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
+        <div className="flex items-center gap-4">
+          {(worker.passportPhoto || worker.avatar) && (
+            <img
+              src={worker.passportPhoto || worker.avatar}
+              alt={worker.name}
+              className="h-16 w-16 rounded-full object-cover border-2 border-ink/10 dark:border-paper/10"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+              }}
+            />
+          )}
+          <Link
+            to="/admin/workers"
+            className="inline-flex items-center gap-2 text-xs uppercase tracking-widest text-ink/60 hover:text-ink dark:text-paper/60 dark:hover:text-paper"
+          >
+            <ArrowLeft size={12} /> Back to KYC queue
+          </Link>
+        </div>
         <div className="flex flex-wrap items-center gap-3 text-xs">
           <span
             className={`rounded-full px-3 py-1 font-medium uppercase tracking-widest ${

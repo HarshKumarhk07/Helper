@@ -19,6 +19,7 @@ const FILTERS = [
   { key: BOOKING_STATUS.IN_PROGRESS, label: 'In progress' },
   { key: BOOKING_STATUS.COMPLETED, label: 'Completed' },
   { key: BOOKING_STATUS.CANCELLED, label: 'Cancelled' },
+  { key: BOOKING_STATUS.REFUNDED, label: 'Refunded' },
 ];
 
 export default function UserBookings() {

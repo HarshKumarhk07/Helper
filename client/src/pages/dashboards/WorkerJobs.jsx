@@ -53,7 +53,7 @@ export default function WorkerJobs() {
   return (
     <section className="container-velora py-12">
       <WorkerLocationEmitter workerId={user?._id} activeJobs={jobs.filter(j => j.status === 'assigned' || j.status === 'in_progress')} />
-      <div className="text-xs uppercase tracking-widest text-ink/60 dark:text-paper/50">
+      <div className="text-xs uppercase tracking-widest text-ink/60 ">
         (Worker / Jobs)
       </div>
       <h1 className="heading-display mt-3 text-4xl md:text-5xl">YOUR QUEUE</h1>
@@ -66,7 +66,7 @@ export default function WorkerJobs() {
             className={`rounded-pill border px-4 py-2 text-xs uppercase tracking-widest transition ${
               filter === f.key
                 ? 'border-ink bg-ink text-paper'
-                : 'border-ink bg-ink/85 text-paper hover:bg-ink hover:text-paper dark:border-paper/50 dark:text-paper'
+                : 'border-ink bg-ink/85 text-paper hover:bg-ink hover:text-paper dark:border-paper/50 '
             }`}
           >
             {f.label}
@@ -80,7 +80,7 @@ export default function WorkerJobs() {
             <div key={i} className="skeleton h-32 w-full" />
           ))
         ) : jobs.length === 0 ? (
-          <div className="col-span-full rounded-card border border-ink/10 bg-sand/40 p-10 text-center text-sm text-ink/70 dark:border-paper/10 dark:text-paper/60">
+          <div className="col-span-full rounded-card border border-ink/10 bg-sand/40 p-10 text-center text-sm text-ink/70 dark:border-paper/10 ">
             No jobs in this view.
           </div>
         ) : (
@@ -88,17 +88,17 @@ export default function WorkerJobs() {
             <FadeUp key={b._id} delay={Math.min(i * 0.04, 0.3)}>
               <div className="card-rounded p-5">
                 <div className="flex items-center justify-between">
-                  <div className="text-[10px] uppercase tracking-widest text-ink/60 dark:text-paper/50">
+                  <div className="text-[10px] uppercase tracking-widest text-ink/60 ">
                     {b.code}
                   </div>
                   <StatusBadge status={b.status} />
                 </div>
                 <div className="mt-2 text-base">{b.service?.name}</div>
-                <div className="mt-1 text-xs text-ink/60 dark:text-paper/50">
+                <div className="mt-1 text-xs text-ink/60 ">
                   {formatPrice(b.amount)} · {b.type}
                 </div>
 
-                <div className="mt-3 grid gap-1 text-xs text-ink/70 dark:text-paper/60">
+                <div className="mt-3 grid gap-1 text-xs text-ink ">
                   <div>Customer: {b.user?.name} · {b.user?.phone || b.user?.email}</div>
                   <div>
                     Address: {b.address?.line1}, {b.address?.city} {b.address?.pincode}

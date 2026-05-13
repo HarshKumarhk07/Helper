@@ -4,6 +4,7 @@ export const BOOKING_STATUS = {
   IN_PROGRESS: 'in_progress',
   COMPLETED: 'completed',
   CANCELLED: 'cancelled',
+  REFUNDED: 'refunded',
 };
 
 export const STATUS_LABEL = {
@@ -12,6 +13,7 @@ export const STATUS_LABEL = {
   in_progress: 'In progress',
   completed: 'Completed',
   cancelled: 'Cancelled',
+  refunded: 'Refunded',
 };
 
 export const STATUS_TONE = {
@@ -20,6 +22,7 @@ export const STATUS_TONE = {
   in_progress: 'bg-ink text-paper',
   completed: 'bg-emerald-100 text-emerald-900',
   cancelled: 'bg-red-100 text-red-900',
+  refunded: 'bg-blue-100 text-blue-900',
 };
 
 export const formatPrice = (n) =>

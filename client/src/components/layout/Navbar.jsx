@@ -239,6 +239,16 @@ export default function Navbar() {
 
             {isAuthenticated ? (
               <div className="hidden md:flex items-center gap-4 pl-4 border-l border-ink/10">
+                {(user?.passportPhoto || user?.avatar) && (
+                  <img
+                    src={user.passportPhoto || user.avatar}
+                    alt={user.name}
+                    className="h-8 w-8 rounded-full object-cover border border-ink/20"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                )}
                 <Link
                   to={panelPath}
                   className="text-sm font-medium text-ink/70 hover:text-ink transition-colors"

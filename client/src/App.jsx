@@ -61,6 +61,7 @@ const UserAddresses = lazy(() => import('./pages/dashboards/UserAddresses.jsx'))
 const UserCoupons = lazy(() => import('./pages/dashboards/UserCoupons.jsx'));
 const UserSupport = lazy(() => import('./pages/dashboards/UserSupport.jsx'));
 const UserWallet = lazy(() => import('./pages/dashboards/UserWallet.jsx'));
+const UserKyc = lazy(() => import('./pages/dashboards/UserKyc.jsx'));
 const SupportThread = lazy(() => import('./pages/dashboards/SupportThread.jsx'));
 const TrackBooking = lazy(() => import('./pages/TrackBooking.jsx'));
 const WorkerNav = lazy(() => import('./pages/WorkerNav.jsx'));
@@ -130,6 +131,10 @@ export default function App() {
               <Route path="/admin/workers/:id" element={<AdminWorkerDetail />} />
             </Route>
 
+            <Route element={<ProtectedRoute roles={['admin']} />}>
+              <Route path="/admin/categories" element={<AdminCategories />} />
+            </Route>
+
             <Route element={<ProtectedRoute roles={['admin', 'manager']} />}>
               <Route path="/manager" element={<ManagerDashboard />} />
               <Route path="/admin/bookings" element={<AdminBookings />} />
@@ -139,7 +144,6 @@ export default function App() {
               <Route path="/admin/coupons" element={<AdminCoupons />} />
               <Route path="/admin/finance" element={<AdminFinance />} />
               <Route path="/admin/payouts" element={<AdminPayouts />} />
-              <Route path="/admin/categories" element={<AdminCategories />} />
               <Route path="/admin/settings" element={<AdminSettings />} />
               <Route path="/manager/orders" element={<ManagerOrders />} />
               <Route path="/manager/workers" element={<ManagerWorkers />} />
@@ -168,6 +172,7 @@ export default function App() {
               <Route path="/me/support" element={<UserSupport />} />
               <Route path="/me/support/:id" element={<SupportThread />} />
               <Route path="/me/wallet" element={<UserWallet />} />
+              <Route path="/me/kyc" element={<UserKyc />} />
               <Route path="/me/profile-edit" element={<ProfileEdit />} />
               <Route path="/track/:bookingId" element={<TrackBooking />} />
             </Route>

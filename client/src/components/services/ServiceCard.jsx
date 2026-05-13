@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Star, Clock, ArrowUpRight, Heart } from 'lucide-react';
+import { Star, Clock, ArrowUpRight, Heart, Zap } from 'lucide-react';
 import { formatPrice } from '../../lib/booking.js';
 import { useFavorites } from '../../context/FavoritesContext.jsx';
 
@@ -58,14 +58,23 @@ export default function ServiceCard({ service, index = 0 }) {
           <ArrowUpRight size={18} strokeWidth={2} />
         </div>
 
+        {/* Book Service Button */}
+        <Link
+          to={`/book/${service._id}`}
+          onClick={(e) => e.stopPropagation()}
+          className="absolute bottom-6 left-6 right-6 flex items-center justify-center gap-2 bg-sky-500 hover:bg-sky-400 text-white text-xs font-bold uppercase tracking-widest rounded-full px-4 py-2.5 transition-all hover:shadow-lg opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0"
+        >
+          <Zap size={14} /> Book Service
+        </Link>
+
         {/* Floating details badge */}
-        <div className="absolute bottom-6 left-6 right-6 flex items-center justify-between text-paper text-xs font-medium tracking-wide">
+        <div className="absolute bottom-6 left-6 right-6 flex items-center justify-between text-paper text-xs font-medium tracking-wide group-hover:opacity-0 transition-opacity">
           <div className="flex items-center gap-2 bg-ink/30 backdrop-blur-md px-3 py-1.5 rounded-full border border-paper/10">
-            <Clock size={14} className="text-paper/80" /> 
+            <Clock size={14} className="text-paper/80" />
             {service.durationMinutes}m
           </div>
           <div className="flex items-center gap-1 bg-ink/30 backdrop-blur-md px-3 py-1.5 rounded-full border border-paper/10">
-            <Star size={14} className={service.rating ? "text-yellow-400 fill-yellow-400" : "text-paper/60"} /> 
+            <Star size={14} className={service.rating ? "text-yellow-400 fill-yellow-400" : "text-paper/60"} />
             {service.rating?.toFixed(1) || 'New'}
           </div>
         </div>

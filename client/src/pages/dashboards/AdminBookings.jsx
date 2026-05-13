@@ -14,6 +14,7 @@ const FILTERS = [
   { key: BOOKING_STATUS.IN_PROGRESS, label: 'In progress' },
   { key: BOOKING_STATUS.COMPLETED, label: 'Completed' },
   { key: BOOKING_STATUS.CANCELLED, label: 'Cancelled' },
+  { key: BOOKING_STATUS.REFUNDED, label: 'Refunded' },
 ];
 
 export default function AdminBookings() {
@@ -200,7 +201,7 @@ export default function AdminBookings() {
                         onClick={() => setRefundTarget(b)}
                         className="rounded-pill border border-red-300 px-3 py-1 text-[10px] uppercase tracking-widest text-red-700 hover:bg-red-50 dark:border-red-400/30 dark:text-red-300 dark:hover:bg-red-400/10"
                       >
-                        Refund
+                        Mark refunded
                       </button>
                     )}
                   </div>
