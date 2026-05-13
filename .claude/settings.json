@@ -5,7 +5,8 @@
       "Bash(node --input-type=module -e \"import\\('./src/app.js'\\).then\\(m => { console.log\\('OK app loads'\\); process.exit\\(0\\); }\\).catch\\(e => { console.error\\('LOAD ERROR:', e.message\\); process.exit\\(1\\); }\\);\")",
       "Bash(npm install *)",
       "Bash(node --input-type=module -e \"import\\('./src/app.js'\\).then\\(\\(\\) => { console.log\\('OK'\\); process.exit\\(0\\); }\\).catch\\(e => { console.error\\('LOAD ERROR:', e.message\\); console.error\\(e.stack\\); process.exit\\(1\\); }\\);\")",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(git checkout *)"
     ]
   }
 }
