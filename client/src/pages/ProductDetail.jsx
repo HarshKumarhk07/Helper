@@ -7,10 +7,8 @@ import { formatPrice } from '../lib/booking.js';
 import FadeUp from '../components/ui/FadeUp.jsx';
 import SkeletonCard from '../components/ui/SkeletonCard.jsx';
 import { useCart } from '../context/CartContext.jsx';
+import { resolveCatalogImage } from '../lib/catalogImage.js';
 import { motion } from 'framer-motion';
-
-const FALLBACK_IMG =
-  'https://images.unsplash.com/photo-1584820927498-cafe2c1c6843?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80';
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -45,7 +43,7 @@ export default function ProductDetail() {
       kind: 'product',
       name: product.name,
       price: product.price,
-      image: product.image,
+      image: resolveCatalogImage(product),
     });
     toast.success('Added to cart');
   };
@@ -102,8 +100,10 @@ export default function ProductDetail() {
                 initial={{ scale: 1.05 }}
                 animate={{ scale: 1 }}
                 transition={{ duration: 1.5, ease: "easeOut" }}
-                src={product.image || FALLBACK_IMG}
+                src={resolveCatalogImage(product)}
                 alt={product.name}
+                loading="lazy"
+                decoding="async"
                 className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 border border-ink/10 rounded-[3rem] pointer-events-none"></div>

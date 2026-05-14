@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { listProducts } from '../api/products.js';
 import { listCategories } from '../api/categories.js';
 import toast from 'react-hot-toast';
+import { resolveCatalogImage } from '../lib/catalogImage.js';
 
 export default function Products() {
   const [products, setProducts] = useState([]);
@@ -43,19 +44,11 @@ export default function Products() {
     }
   }, [products, categories]);
 
-  // Default images for categories
-  const CAT_IMAGES = {
-    'home-services': 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    'cleaning-services': 'https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    'beauty-wellness': 'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    'appliance-services': 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-  };
-
   const FEATURED_CATEGORIES = categories.slice(0, 4).map((cat) => ({
     title: cat.name,
     count: `${categoryCounts[cat.slug] || 0} items`,
     slug: cat.slug,
-    image: cat.image || CAT_IMAGES[cat.slug] || 'https://images.unsplash.com/photo-1584820927498-cafe2c1c6843?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    image: resolveCatalogImage(cat),
   }));
 
   return (
@@ -98,8 +91,9 @@ export default function Products() {
                     src={cat.image}
                     alt={cat.title}
                     loading="lazy"
+                    decoding="async"
                     onError={(e) => {
-                      e.target.style.display = 'none';
+                      e.currentTarget.src = resolveCatalogImage(null);
                     }}
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
                   />

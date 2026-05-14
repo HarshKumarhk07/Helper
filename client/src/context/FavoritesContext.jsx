@@ -10,6 +10,7 @@ import {
 import toast from 'react-hot-toast';
 import { useAuth } from './AuthContext.jsx';
 import { getProduct } from '../api/products.js';
+import { getService } from '../api/services.js';
 
 const FavoritesContext = createContext();
 
@@ -31,6 +32,18 @@ const writeKey = (key, value) => {
   } catch {
     /* ignore quota / disabled storage errors */
   }
+};
+
+const inferFavoriteKind = (item) => {
+  if (item?.kind === 'service' || item?.durationMinutes != null) return 'service';
+  return 'product';
+};
+
+const refreshFavorite = async (item) => {
+  const kind = inferFavoriteKind(item);
+  if (!item?._id) return null;
+  const fresh = kind === 'service' ? await getService(item._id) : await getProduct(item._id);
+  return { ...fresh, kind };
 };
 
 export function FavoritesProvider({ children }) {
@@ -64,17 +77,15 @@ export function FavoritesProvider({ children }) {
       return;
     }
     let cancelled = false;
-    const ids = [...new Set(favorites.map((f) => f._id).filter(Boolean))];
-    Promise.allSettled(ids.map((id) => getProduct(id))).then((results) => {
+    Promise.allSettled(favorites.map((item) => refreshFavorite(item))).then((results) => {
       if (cancelled) return;
-      const valid = new Set(
-        results
-          .map((r, i) => (r.status === 'fulfilled' ? ids[i] : null))
-          .filter(Boolean)
-      );
-      if (valid.size !== ids.length) {
-        setFavorites((prev) => prev.filter((f) => valid.has(f._id)));
+      const resolved = results
+        .map((r) => (r.status === 'fulfilled' ? r.value : null))
+        .filter(Boolean);
+      if (resolved.length !== favorites.length) {
+        toast.error('Some favorites were removed because they are no longer available');
       }
+      setFavorites(resolved);
       validatedRef.current.add(currentKey);
     });
     return () => {
@@ -90,14 +101,18 @@ export function FavoritesProvider({ children }) {
 
   const toggleFavorite = useCallback((product) => {
     if (!product?._id) return;
+    const normalized = {
+      ...product,
+      kind: inferFavoriteKind(product),
+    };
     setFavorites((prev) => {
-      const exists = prev.some((item) => item._id === product._id);
+      const exists = prev.some((item) => item._id === normalized._id);
       if (exists) {
         toast.success('Removed from favorites');
-        return prev.filter((item) => item._id !== product._id);
+        return prev.filter((item) => item._id !== normalized._id);
       }
       toast.success('Added to favorites');
-      return [...prev, product];
+      return [...prev, normalized];
     });
   }, []);
 

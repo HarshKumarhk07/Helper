@@ -1,18 +1,14 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Star, Clock, ArrowUpRight, Heart, Zap, Flame, BadgeCheck } from 'lucide-react';
 import { formatPrice } from '../../lib/booking.js';
+import { normalizeCatalogImageUrl, resolveCatalogImage } from '../../lib/catalogImage.js';
 import { useFavorites } from '../../context/FavoritesContext.jsx';
 
-const FALLBACK_IMAGES = [
-  'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
-  'https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
-  'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
-  'https://images.unsplash.com/photo-1581092160562-40aa08e78837?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80'
-];
-
-export default function ServiceCard({ service, index = 0 }) {
-  const image = service.image || FALLBACK_IMAGES[index % 4];
+export default function ServiceCard({ service }) {
+  const image = resolveCatalogImage(service);
+  const hasCatalogImage = Boolean(normalizeCatalogImageUrl(service?.image));
   const { favorites, toggleFavorite } = useFavorites();
+  const navigate = useNavigate();
   
   const isFavorited = favorites.some(fav => fav._id === service._id);
   const isPopular = (service.ratingCount || 0) >= 50;
@@ -21,7 +17,7 @@ export default function ServiceCard({ service, index = 0 }) {
   const handleFavorite = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    toggleFavorite(service);
+    toggleFavorite({ ...service, kind: 'service' });
   };
 
   return (
@@ -34,7 +30,10 @@ export default function ServiceCard({ service, index = 0 }) {
           src={image}
           alt={service.name}
           loading="lazy"
-          onError={(e) => { e.currentTarget.src = FALLBACK_IMAGES[index % 4]; }}
+          decoding="async"
+          onError={(e) => {
+            e.currentTarget.src = resolveCatalogImage(null);
+          }}
           className="h-full w-full object-cover transition-transform duration-1000 group-hover:scale-[1.03]"
         />
         
@@ -51,6 +50,11 @@ export default function ServiceCard({ service, index = 0 }) {
           {isPopular && !isFeatured && (
             <span className="inline-flex items-center gap-1 rounded-full bg-rose-500 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-white shadow-lg">
               <Flame size={10} /> Popular
+            </span>
+          )}
+          {!hasCatalogImage && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-sky-500 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-white shadow-lg">
+              <Zap size={10} /> Fresh Pick
             </span>
           )}
         </div>
@@ -76,13 +80,16 @@ export default function ServiceCard({ service, index = 0 }) {
         </div>
 
         {/* Book Service Button */}
-        <Link
-          to={`/book/${service._id}`}
-          onClick={(e) => e.stopPropagation()}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            navigate(`/book/${service._id}`);
+          }}
           className="absolute bottom-6 left-6 right-6 flex items-center justify-center gap-2 bg-sky-500 hover:bg-sky-400 text-white text-xs font-bold uppercase tracking-widest rounded-full px-4 py-2.5 transition-all hover:shadow-lg opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0"
         >
           <Zap size={14} /> Book Service
-        </Link>
+        </button>
 
         {/* Floating details badge */}
         <div className="absolute bottom-6 left-6 right-6 flex items-center justify-between text-paper text-xs font-medium tracking-wide group-hover:opacity-0 transition-opacity">
@@ -106,13 +113,16 @@ export default function ServiceCard({ service, index = 0 }) {
         </h3>
         <div className="mt-2 flex items-center justify-between">
           <span className="text-sm font-bold text-ink">{formatPrice(service.price)}</span>
-          <Link
-            to={`/book/${service._id}`}
-            onClick={(e) => e.stopPropagation()}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/book/${service._id}`);
+            }}
             className="text-[10px] font-bold uppercase tracking-widest text-white bg-ink rounded-full px-3 py-1.5 hover:bg-ink/80 transition"
           >
             Book Service
-          </Link>
+          </button>
         </div>
       </div>
     </Link>

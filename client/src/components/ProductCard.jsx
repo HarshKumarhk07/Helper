@@ -1,18 +1,18 @@
 import { Link } from 'react-router-dom';
 import { Heart } from 'lucide-react';
 import { useFavorites } from '../context/FavoritesContext.jsx';
-
-const FALLBACK_IMG = 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=60';
+import { resolveCatalogImage } from '../lib/catalogImage.js';
 
 export default function ProductCard({ product, onFavoriteChange }) {
   const { favorites, toggleFavorite } = useFavorites();
+  const image = resolveCatalogImage(product);
   
   const isFavorited = favorites.some(fav => fav._id === product._id);
 
   const handleFavorite = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    toggleFavorite(product);
+    toggleFavorite({ ...product, kind: 'product' });
     if (onFavoriteChange) onFavoriteChange(!isFavorited);
   };
 
@@ -22,11 +22,12 @@ export default function ProductCard({ product, onFavoriteChange }) {
       <div className="card-rounded relative flex-1 overflow-hidden bg-gradient-to-br from-sand to-ash group">
         <Link to={`/products/${product._id}`} className="block w-full h-full">
           <img
-            src={product.image || FALLBACK_IMG}
+            src={image}
             alt={product.name}
             loading="lazy"
+            decoding="async"
             onError={(e) => {
-              e.target.src = FALLBACK_IMG;
+              e.currentTarget.src = resolveCatalogImage(null);
             }}
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
           />

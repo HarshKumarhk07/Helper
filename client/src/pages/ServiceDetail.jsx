@@ -8,10 +8,8 @@ import FadeUp from '../components/ui/FadeUp.jsx';
 import SkeletonCard from '../components/ui/SkeletonCard.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useCart } from '../context/CartContext.jsx';
+import { resolveCatalogImage } from '../lib/catalogImage.js';
 import { motion } from 'framer-motion';
-
-const FALLBACK_IMG =
-  'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80';
 
 export default function ServiceDetail() {
   const { id } = useParams();
@@ -43,7 +41,7 @@ export default function ServiceDetail() {
       kind: 'service',
       name: service.name,
       price: service.price,
-      image: service.image,
+      image: resolveCatalogImage(service),
     });
   };
 
@@ -99,8 +97,10 @@ export default function ServiceDetail() {
                 initial={{ scale: 1.05 }}
                 animate={{ scale: 1 }}
                 transition={{ duration: 1.5, ease: "easeOut" }}
-                src={service.image || FALLBACK_IMG}
+                src={resolveCatalogImage(service)}
                 alt={service.name}
+                loading="lazy"
+                decoding="async"
                 className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 border border-ink/10 rounded-[3rem] pointer-events-none"></div>

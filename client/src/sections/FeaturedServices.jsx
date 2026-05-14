@@ -1,68 +1,22 @@
 import { Link } from 'react-router-dom';
 import { Star, ArrowRight, Clock } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 import FadeUp from '../components/ui/FadeUp.jsx';
-
-const FEATURED = [
-  {
-    title: 'AC Service & Repair',
-    blurb: 'Foam-jet deep clean by certified technicians',
-    image:
-      'https://images.unsplash.com/photo-1581094794329-c8112a89af12?ixlib=rb-4.0.3&auto=format&fit=crop&w=900&q=80',
-    rating: 4.88,
-    reviews: '24.5K',
-    price: 699,
-    mrp: 999,
-    duration: '60–90 min',
-    slug: 'appliance-services',
-    tag: 'Bestseller',
-  },
-  {
-    title: 'Full Home Deep Cleaning',
-    blurb: 'Kitchen, bath, floors, dusting — all in one visit',
-    image:
-      'https://images.unsplash.com/photo-1581578731548-c64695cc6952?ixlib=rb-4.0.3&auto=format&fit=crop&w=900&q=80',
-    rating: 4.9,
-    reviews: '32K',
-    price: 2499,
-    mrp: 3499,
-    duration: '4–5 hrs',
-    slug: 'cleaning-services',
-    tag: 'Most Booked',
-  },
-  {
-    title: 'Haircut & Beard Grooming',
-    blurb: 'Salon-quality styling at your home',
-    image:
-      'https://images.unsplash.com/photo-1599351431202-1e0f0137899a?ixlib=rb-4.0.3&auto=format&fit=crop&w=900&q=80',
-    rating: 4.85,
-    reviews: '18.9K',
-    price: 249,
-    mrp: 349,
-    duration: '30 min',
-    slug: 'beauty-wellness',
-    tag: 'New',
-  },
-  {
-    title: 'Electrician — Switch & Wiring',
-    blurb: 'Trusted pros for repairs, installation & fittings',
-    image:
-      'https://images.unsplash.com/photo-1621905251918-48416bd8575a?ixlib=rb-4.0.3&auto=format&fit=crop&w=900&q=80',
-    rating: 4.82,
-    reviews: '12.4K',
-    price: 199,
-    mrp: 299,
-    duration: '30–45 min',
-    slug: 'home-services',
-    tag: 'Trusted',
-  },
-];
-
-function discountPct(price, mrp) {
-  if (!mrp || mrp <= price) return null;
-  return Math.round(((mrp - price) / mrp) * 100);
-}
+import { listServices } from '../api/services.js';
+import { resolveCatalogImage } from '../lib/catalogImage.js';
 
 export default function FeaturedServices() {
+  const [services, setServices] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    listServices({ active: 'true', featured: 'true' })
+      .then((items) => setServices(items.slice(0, 4)))
+      .catch(() => toast.error('Failed to load featured services'))
+      .finally(() => setLoading(false));
+  }, []);
+
   return (
     <section className="relative bg-sand py-20 md:py-28">
       <div className="container-velora">
@@ -79,8 +33,7 @@ export default function FeaturedServices() {
                 Featured <span className="italic font-serif text-[#6f5cff]">services</span>
               </h2>
               <p className="mt-3 text-ink/55 max-w-lg">
-                Hand-picked services delivered by background-verified
-                professionals near you.
+                Hand-picked services delivered by background-verified professionals near you.
               </p>
             </div>
             <Link
@@ -96,77 +49,57 @@ export default function FeaturedServices() {
           </div>
         </FadeUp>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 md:gap-6">
-          {FEATURED.map((svc, i) => {
-            const disc = discountPct(svc.price, svc.mrp);
-            return (
-              <FadeUp key={svc.title} delay={i * 0.05} className="h-full">
+        {loading ? (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 md:gap-6">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="skeleton h-72 rounded-2xl" />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 md:gap-6">
+            {services.map((svc, i) => (
+              <FadeUp key={svc._id} delay={i * 0.05} className="h-full">
                 <div className="group h-full flex flex-col rounded-2xl bg-paper border border-ink/8 overflow-hidden shadow-soft hover:shadow-[0_24px_60px_-20px_rgba(0,0,0,0.18)] hover:-translate-y-1 transition-all duration-500">
-                  {/* Image */}
                   <div className="relative aspect-[4/3] overflow-hidden bg-ash/40 shrink-0">
                     <img
-                      src={svc.image}
-                      alt={svc.title}
+                      src={resolveCatalogImage(svc)}
+                      alt={svc.name}
                       loading="lazy"
+                      decoding="async"
                       className="h-full w-full object-cover transition-transform duration-[1.2s] group-hover:scale-[1.07]"
                     />
-                    {/* Only one badge on mobile to prevent collision: prefer discount > tag */}
-                    {disc != null ? (
-                      <span className="absolute top-2 left-2 sm:top-3 sm:right-3 sm:left-auto rounded-full bg-emerald-500 text-white px-2 py-0.5 sm:px-2.5 sm:py-1 text-[10px] sm:text-[11px] font-bold shadow-sm">
-                        {disc}% OFF
-                      </span>
-                    ) : (
-                      svc.tag && (
-                        <span className="absolute top-2 left-2 sm:top-3 sm:left-3 rounded-full bg-paper/95 backdrop-blur px-2 py-0.5 sm:px-3 sm:py-1 text-[10px] sm:text-[11px] font-semibold tracking-wide text-ink shadow-sm">
-                          {svc.tag}
-                        </span>
-                      )
-                    )}
-                    {/* Tag also visible on sm+ when there's a discount */}
-                    {disc != null && svc.tag && (
-                      <span className="hidden sm:inline-block absolute top-3 left-3 rounded-full bg-paper/95 backdrop-blur px-3 py-1 text-[11px] font-semibold tracking-wide text-ink shadow-sm">
-                        {svc.tag}
-                      </span>
-                    )}
+                    <span className="absolute top-2 left-2 sm:top-3 sm:left-3 rounded-full bg-paper/95 backdrop-blur px-2.5 py-0.5 sm:px-3 sm:py-1 text-[10px] sm:text-[11px] font-semibold tracking-wide text-ink shadow-sm">
+                      Featured
+                    </span>
                   </div>
 
-                  {/* Body */}
                   <div className="flex flex-col flex-1 p-3 sm:p-5">
-                    {/* Title — fixed 2-line height on mobile so all cards align */}
                     <h3 className="text-[13px] sm:text-base font-semibold text-ink tracking-tight line-clamp-2 leading-snug min-h-[2.4rem] sm:min-h-[1.6rem]">
-                      {svc.title}
+                      {svc.name}
                     </h3>
-                    {/* Blurb — fixed 2-line height */}
                     <p className="mt-1 text-[11px] sm:text-xs text-ink/55 line-clamp-2 leading-relaxed min-h-[2.1rem] sm:min-h-[2.4rem]">
-                      {svc.blurb}
+                      {svc.description || svc.category?.name || 'Premium service'}
                     </p>
 
-                    {/* Rating + duration */}
                     <div className="mt-2.5 sm:mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] sm:text-xs">
                       <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-1.5 py-0.5 sm:px-2 font-semibold text-emerald-700">
                         <Star size={11} className="fill-emerald-600 text-emerald-600" />
-                        {svc.rating}
+                        {svc.rating?.toFixed(1) || 'New'}
                       </span>
-                      <span className="text-ink/45">({svc.reviews})</span>
+                      <span className="text-ink/45">({svc.ratingCount || 0} reviews)</span>
                       <span className="hidden sm:inline-flex items-center gap-1 text-ink/50">
-                        <Clock size={12} /> {svc.duration}
+                        <Clock size={12} /> {svc.durationMinutes} min
                       </span>
                     </div>
 
-                    {/* Price + CTA — pinned to the bottom via mt-auto so cards have symmetric footers */}
                     <div className="mt-auto pt-3 sm:pt-4 border-t border-ink/8 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 sm:gap-3">
                       <div>
                         <div className="text-base sm:text-lg font-semibold text-ink leading-none">
-                          ₹{svc.price.toLocaleString('en-IN')}
+                          ₹{Number(svc.price || 0).toLocaleString('en-IN')}
                         </div>
-                        {svc.mrp > svc.price && (
-                          <div className="mt-0.5 sm:mt-1 text-[11px] sm:text-xs text-ink/40 line-through">
-                            ₹{svc.mrp.toLocaleString('en-IN')}
-                          </div>
-                        )}
                       </div>
                       <Link
-                        to={`/services?cat=${svc.slug}`}
+                        to={`/book/${svc._id}`}
                         className="inline-flex w-full sm:w-auto justify-center items-center gap-1.5 whitespace-nowrap rounded-full bg-ink text-paper text-[11px] sm:text-xs font-semibold px-3 sm:px-4 py-2 sm:py-2.5 hover:bg-[#6f5cff] transition-all duration-300 hover:translate-x-0.5"
                       >
                         Book now <ArrowRight size={12} />
@@ -175,9 +108,9 @@ export default function FeaturedServices() {
                   </div>
                 </div>
               </FadeUp>
-            );
-          })}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { getProduct } from '../api/products.js';
+import { getService } from '../api/services.js';
 import {
   getMyCart,
   mergeCart as mergeServerCart,
@@ -64,6 +65,26 @@ const mergeServerWithLocal = (serverItems, localItems) => {
   return [...(serverItems || []), ...localServices];
 };
 
+const inferCartItemKind = (item) => {
+  if (item?.kind === 'service' || item?.durationMinutes != null) return 'service';
+  return 'product';
+};
+
+const refreshCartItem = async (item) => {
+  if (!item?.product) return null;
+  const kind = inferCartItemKind(item);
+  const fresh = kind === 'service' ? await getService(item.product) : await getProduct(item.product);
+  return {
+    ...item,
+    ...fresh,
+    product: String(fresh._id),
+    kind,
+    name: fresh.name,
+    price: fresh.price,
+    image: fresh.image,
+  };
+};
+
 export function CartProvider({ children }) {
   const { isAuthenticated, user } = useAuth();
   const userId = user?._id || null;
@@ -90,22 +111,16 @@ export function CartProvider({ children }) {
   useEffect(() => {
     let cancelled = false;
     const validate = async () => {
-      const productItems = cart.filter((item) => item.kind !== 'service');
-      if (!productItems.length) return;
-      const ids = [...new Set(productItems.map((it) => it.product).filter(Boolean))];
-      const results = await Promise.allSettled(ids.map((id) => getProduct(id)));
+      if (!cart.length) return;
+      const results = await Promise.allSettled(cart.map((item) => refreshCartItem(item)));
       if (cancelled) return;
-      const valid = new Set(
-        results
-          .map((r, i) => (r.status === 'fulfilled' ? ids[i] : null))
-          .filter(Boolean)
-      );
-      if (valid.size !== ids.length) {
-        setCart((current) =>
-          current.filter((it) => it.kind === 'service' || valid.has(it.product))
-        );
+      const refreshed = results
+        .map((r) => (r.status === 'fulfilled' ? r.value : null))
+        .filter(Boolean);
+      if (refreshed.length !== cart.length) {
         toast.error('Removed unavailable items from your cart');
       }
+      setCart(refreshed);
     };
     validate();
     return () => {
