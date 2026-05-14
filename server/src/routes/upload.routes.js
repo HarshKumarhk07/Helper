@@ -19,7 +19,10 @@ router.post('/', requireAuth, (req, res) => {
     if (!req.file) {
       return res.status(400).json({ error: 'No image uploaded' });
     }
-    res.json({ url: req.file.path });
+    const url = req.file.filename
+      ? `http://localhost:5000/uploads/${req.file.filename}`
+      : req.file.path;
+    res.json({ url });
   });
 });
 

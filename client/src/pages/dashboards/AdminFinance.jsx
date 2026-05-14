@@ -33,7 +33,7 @@ export default function AdminFinance() {
   const payoutReserve = Math.max(0, revenue - commissionAmount);
 
   return (
-    <DashboardShell eyebrow="(Finance control)" title="COMMISSIONS & PAYOUTS.">
+    <DashboardShell eyebrow="(Finance control)" title="COMMISSIONS | PAYOUTS.">
       {loading ? (
         <div className="skeleton h-64 w-full" />
       ) : (

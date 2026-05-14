@@ -37,7 +37,11 @@ const app = express();
 // (304 just means the client's cached copy is still fresh — not an error).
 app.set('etag', false);
 
-app.use(helmet());
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  })
+);
 app.use(
   cors({
     origin: [
@@ -57,6 +61,8 @@ const authLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
+
+app.use('/uploads', express.static('uploads'));
 
 app.get('/', (_req, res) => {
   res.status(200).send('API Running Successfully');

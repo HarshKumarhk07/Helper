@@ -17,7 +17,7 @@ export default function DashboardShell({ eyebrow, title, children, slices }) {
           />
         )}
         <p className="max-w-2xl text-sm text-ink">
-          Signed in as <span className="font-semibold text-ink">{user?.name}</span> ·{' '}
+          Signed in as <span className="font-semibold text-ink">{user?.name}</span> |{' '}
           <span className="uppercase tracking-widest">{user?.role}</span>
         </p>
       </div>
