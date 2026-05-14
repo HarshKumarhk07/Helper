@@ -27,7 +27,7 @@ export const leaveBookingRoom = (bookingId) => {
   socket.emit('booking:leave', bookingId);
 };
 
-export const requestLastLocation = (workerId) => {
+export const requestLastLocation = (workerId, bookingId) => {
   ensureSocket();
-  socket.emit('booking:lastLocation', { workerId });
+  socket.emit('booking:lastLocation', { workerId, ...(bookingId ? { bookingId } : {}) });
 };

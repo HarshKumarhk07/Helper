@@ -12,27 +12,27 @@ export default function CategoryChips({ categories, value, onChange }) {
   };
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex overflow-x-auto scrollbar-hide gap-2 pb-2 md:pb-0 md:flex-wrap w-full snap-x">
       <button
         type="button"
         onClick={() => select('all')}
-        className={`rounded-pill border px-4 py-2 text-xs uppercase tracking-widest font-bold transition ${
+        className={`snap-start rounded-full px-4 py-2 text-[11px] font-semibold tracking-wide transition-all duration-300 whitespace-nowrap border ${
           active === 'all'
-            ? 'border-ink bg-ink text-paper'
-            : 'border-ink bg-ink/85 text-paper hover:bg-ink hover:text-paper'
+            ? 'bg-ink text-paper border-ink shadow-md scale-105'
+            : 'bg-paper/50 text-ink/60 border-ink/10 hover:bg-paper hover:text-ink hover:border-ink/30 hover:shadow-sm'
         }`}
       >
-        All
+        All Services
       </button>
       {categories.map((c) => (
         <button
           key={c._id}
           type="button"
           onClick={() => select(c.slug)}
-          className={`rounded-pill border px-4 py-2 text-xs uppercase tracking-widest font-bold transition ${
+          className={`snap-start rounded-full px-4 py-2 text-[11px] font-semibold tracking-wide transition-all duration-300 whitespace-nowrap border ${
             active === c.slug
-              ? 'border-ink bg-ink text-paper'
-              : 'border-ink bg-ink/85 text-paper hover:bg-ink hover:text-paper'
+              ? 'bg-ink text-paper border-ink shadow-md scale-105'
+              : 'bg-paper/50 text-ink/60 border-ink/10 hover:bg-paper hover:text-ink hover:border-ink/30 hover:shadow-sm'
           }`}
         >
           {c.name}

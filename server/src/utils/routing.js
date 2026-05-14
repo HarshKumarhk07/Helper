@@ -55,6 +55,11 @@ const buildHaversineFallback = ({ from, to }) => {
 const fetchOsrm = async ({ from, to, signal }) => {
   const base = (process.env.OSRM_BASE_URL || DEFAULT_OSRM).replace(/\/$/, '');
   const url = `${base}/route/v1/driving/${from.lng},${from.lat};${to.lng},${to.lat}?overview=full&geometries=geojson&alternatives=false&steps=false`;
+  console.debug('[routing] request', {
+    from,
+    to,
+    osrmUrl: url,
+  });
   const res = await fetch(url, { signal });
   if (!res.ok) throw new Error(`OSRM ${res.status}`);
   const data = await res.json();
@@ -62,6 +67,11 @@ const fetchOsrm = async ({ from, to, signal }) => {
     throw new Error(`OSRM ${data.code || 'no-route'}`);
   }
   const route = data.routes[0];
+  console.debug('[routing] response', {
+    distance: route.distance,
+    duration: route.duration,
+    points: route.geometry?.coordinates?.length || 0,
+  });
   return {
     distance: route.distance, // meters
     duration: route.duration, // seconds
@@ -87,6 +97,7 @@ export const getRoute = async ({ from, to } = {}) => {
   const key = cacheKey({ from, to });
   const cached = cache.get(key);
   if (cached && cached.expiresAt > Date.now()) {
+    console.debug('[routing] cache hit', { key });
     return cached.route;
   }
 
@@ -99,6 +110,7 @@ export const getRoute = async ({ from, to } = {}) => {
     cache.set(key, { route, expiresAt: Date.now() + ROUTE_CACHE_TTL_MS });
     return route;
   } catch (err) {
+    console.debug('[routing] fallback', { error: err.message, from, to });
     // Use a fallback but DON'T cache it long — we want to retry routing soon.
     const fallback = buildHaversineFallback({ from, to });
     if (fallback) {

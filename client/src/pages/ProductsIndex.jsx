@@ -2,42 +2,33 @@ import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { listProducts } from '../api/products.js';
-import { listCategories } from '../api/categories.js';
 import ProductCard from '../components/ProductCard.jsx';
 import SkeletonCard from '../components/ui/SkeletonCard.jsx';
 import FadeUp from '../components/ui/FadeUp.jsx';
 import { Search } from 'lucide-react';
 
-// Map service category slugs to product category names
-const CATEGORY_MAP = {
-  'home-services': 'Repair Accessories',
-  'cleaning-services': 'Cleaning Products',
-  'beauty-wellness': 'Beauty Products',
-  'appliance-services': 'Home Appliances',
-};
+const PRODUCT_CATEGORIES = [
+  'Cleaning Products',
+  'Beauty Products',
+  'Home Appliances',
+  'Home Essentials',
+  'Repair Accessories'
+];
 
 export default function ProductsIndex() {
   const [params, setParams] = useSearchParams();
   const category = params.get('category') || 'all';
   const q = params.get('q') || '';
 
-  const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState(q);
 
   useEffect(() => {
-    listCategories({ active: 'true' })
-      .then(setCategories)
-      .catch(() => toast.error('Failed to load categories'));
-  }, []);
-
-  useEffect(() => {
     setLoading(true);
     const filters = {};
     if (category !== 'all') {
-      const productCat = CATEGORY_MAP[category];
-      if (productCat) filters.category = productCat;
+      filters.category = category;
     }
     if (q) filters.q = q;
     listProducts(filters)
@@ -63,9 +54,8 @@ export default function ProductsIndex() {
 
   const heading = useMemo(() => {
     if (category === 'all') return 'ALL PRODUCTS';
-    const c = categories.find((x) => x.slug === category);
-    return c ? c.name.toUpperCase() : 'PRODUCTS';
-  }, [category, categories]);
+    return category.toUpperCase();
+  }, [category]);
 
   return (
     <section className="bg-sand min-h-screen">
@@ -88,52 +78,54 @@ export default function ProductsIndex() {
         
         {/* Filters Bar */}
         <FadeUp delay={0.2}>
-          <div className="bg-paper/80 backdrop-blur-2xl rounded-[2rem] border border-white/40 shadow-2xl p-4 md:p-6 mb-16 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex-1 overflow-x-auto scrollbar-hide">
-              <div className="flex gap-2 pb-2">
+          <div className="bg-white/80 backdrop-blur-xl rounded-3xl border border-ink/5 shadow-sm p-2 mb-10 flex flex-col lg:flex-row items-center justify-between gap-3 transition-all w-full">
+            <div className="w-full lg:flex-1 overflow-hidden">
+              <div className="flex overflow-x-auto scrollbar-hide gap-2 pb-2 lg:pb-0 lg:flex-wrap w-full snap-x">
                 <button
                   onClick={() => onCategoryChange('all')}
-                  className={`rounded-pill border px-4 py-2 text-xs uppercase tracking-widest transition whitespace-nowrap ${
+                  className={`snap-start rounded-full px-4 py-2 text-[11px] font-semibold tracking-wide transition-all duration-300 whitespace-nowrap border ${
                     category === 'all'
-                      ? 'border-ink bg-ink text-paper'
-                      : 'border-ink bg-ink/85 text-paper hover:bg-ink hover:text-paper'
+                      ? 'bg-ink text-paper border-ink shadow-md scale-105'
+                      : 'bg-paper/50 text-ink/60 border-ink/10 hover:bg-paper hover:text-ink hover:border-ink/30 hover:shadow-sm'
                   }`}
                 >
-                  All
+                  All Products
                 </button>
-                {categories.map((cat) => (
+                {PRODUCT_CATEGORIES.map((cat) => (
                   <button
-                    key={cat.slug}
-                    onClick={() => onCategoryChange(cat.slug)}
-                    className={`rounded-pill border px-4 py-2 text-xs uppercase tracking-widest transition whitespace-nowrap ${
-                      category === cat.slug
-                        ? 'border-ink bg-ink text-paper'
-                        : 'border-ink bg-ink/85 text-paper hover:bg-ink hover:text-paper'
+                    key={cat}
+                    onClick={() => onCategoryChange(cat)}
+                    className={`snap-start rounded-full px-4 py-2 text-[11px] font-semibold tracking-wide transition-all duration-300 whitespace-nowrap border ${
+                      category === cat
+                        ? 'bg-ink text-paper border-ink shadow-md scale-105'
+                        : 'bg-paper/50 text-ink/60 border-ink/10 hover:bg-paper hover:text-ink hover:border-ink/30 hover:shadow-sm'
                     }`}
                   >
-                    {cat.name}
+                    {cat}
                   </button>
                 ))}
               </div>
             </div>
             
-            <form onSubmit={onSearch} className="flex items-center gap-2 relative w-full lg:max-w-xs">
-              <Search size={18} className="absolute left-4 text-ink/40" />
+            <form onSubmit={onSearch} className="relative w-full lg:w-80 flex-shrink-0 group">
+              <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                <Search size={16} className="text-ink/40 group-focus-within:text-[#6f5cff] transition-colors" />
+              </div>
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search products…"
-                className="w-full rounded-full border border-ink/10 bg-sand/50 pl-11 pr-4 py-3 text-sm outline-none transition-all focus:border-ink/40 focus:bg-paper"
+                placeholder="Search products..."
+                className="w-full rounded-full border border-ink/10 bg-sand/30 pl-10 pr-24 py-3 text-sm outline-none transition-all focus:border-ink/30 focus:bg-white focus:ring-4 focus:ring-ink/5"
               />
-              <button type="submit" className="pill-btn !bg-ink !text-paper hover:!bg-ink/80 px-5 py-3 text-xs absolute right-1 top-1 bottom-1">
-                Go
+              <button type="submit" className="absolute right-1.5 top-1.5 bottom-1.5 bg-ink text-paper rounded-full px-5 text-xs font-bold tracking-wide hover:bg-[#6f5cff] hover:shadow-md transition-all">
+                Search
               </button>
             </form>
           </div>
         </FadeUp>
 
         {/* Products Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8">
           {loading ? (
             Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)
           ) : products.length === 0 ? (
@@ -148,7 +140,7 @@ export default function ProductsIndex() {
             </div>
           ) : (
             products.map((product, i) => (
-              <FadeUp key={product._id} delay={Math.min(i * 0.05, 0.4)}>
+              <FadeUp key={product._id} delay={Math.min(i * 0.05, 0.4)} className="h-full">
                 <ProductCard product={product} />
               </FadeUp>
             ))

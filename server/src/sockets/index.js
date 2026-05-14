@@ -14,8 +14,8 @@ const BOOKING_DEST_TTL_MS = 60 * 60 * 1000; // 1 hour
 
 // Latest computed route per booking — used to dedupe and to replay on late-joiners.
 const bookingRoutes = new Map(); // bookingId -> { route, eta, workerLocation, at }
-const ROUTE_REFRESH_MS = 5_000;
-const ROUTE_REFRESH_DISTANCE_M = 15;
+const ROUTE_REFRESH_MS = 4_000;
+const ROUTE_REFRESH_DISTANCE_M = 10; // ~10m movement triggers a re-route
 
 const getBookingDestination = async (bookingId) => {
   const cached = bookingDestCache.get(bookingId);
@@ -77,6 +77,15 @@ async function recomputeBookingRoute({ io, bookingId, workerLocation }) {
   if (!route) return;
 
   const eta = buildEta({ route });
+  console.debug('[route] recompute', {
+    bookingId,
+    worker: { lat: workerLocation.lat, lng: workerLocation.lng },
+    destination: dest,
+    points: route.coordinates?.length || 0,
+    distanceMeters: eta?.distanceMeters,
+    durationSeconds: eta?.durationSeconds,
+    fallback: !!eta?.fallback,
+  });
   const payload = {
     bookingId,
     workerId: workerLocation.workerId,
@@ -158,10 +167,26 @@ export const initSocket = (httpServer) => {
     socket.on('worker:location', async (payload = {}) => {
       if (role !== ROLES.WORKER) return;
       const { lat, lng, accuracy, bookingId, bookingIds } = payload;
-      if (typeof lat !== 'number' || typeof lng !== 'number') return;
+      if (
+        typeof lat !== 'number' ||
+        typeof lng !== 'number' ||
+        !Number.isFinite(lat) ||
+        !Number.isFinite(lng) ||
+        Math.abs(lat) > 90 ||
+        Math.abs(lng) > 180
+      ) {
+        return;
+      }
       const at = new Date().toISOString();
       const data = { workerId: userId, lat, lng, accuracy, at };
       workerLocations.set(userId, data);
+      console.debug('[location] worker update', {
+        workerId: userId,
+        lat,
+        lng,
+        accuracy,
+        bookings: bookingIds || bookingId || null,
+      });
 
       const ids = Array.isArray(bookingIds)
         ? bookingIds
@@ -190,7 +215,18 @@ export const initSocket = (httpServer) => {
           socket._lastAvailUpdate = now;
           await WorkerAvailability.updateOne(
             { worker: userId },
-            { $set: { lastSeenAt: new Date(), online: true } }
+            {
+              $set: {
+                lastSeenAt: new Date(),
+                online: true,
+                lastLocation: {
+                  lat,
+                  lng,
+                  accuracy: typeof accuracy === 'number' ? accuracy : null,
+                  at: new Date(at),
+                },
+              },
+            }
           );
         }
       } catch (err) {
@@ -201,26 +237,46 @@ export const initSocket = (httpServer) => {
     // Anyone with permission to view a booking can subscribe to its location channel.
     // We don't re-validate auth here — joining only adds a listener; emits go through
     // the worker:location handler above which is auth-gated.
-    socket.on('booking:join', (bookingId) => {
+    socket.on('booking:join', async (bookingId) => {
       if (!bookingId) return;
       socket.join(roomFor.booking(bookingId));
-      // Replay the latest route + worker location to the joining client so the
-      // map paints immediately without waiting for the next ping.
+      log(`booking:join bookingId=${bookingId} user=${userId}`);
+
+      // Always fetch the customer destination so the map can show the marker
+      // even before a route has been computed.
+      const dest = await getBookingDestination(bookingId).catch(() => null);
+
+      // Replay cached route + worker location if available
       const cached = bookingRoutes.get(bookingId);
       if (cached) {
+        // Send worker's last known position
         socket.emit('location:update', {
           ...cached.workerLocation,
           bookingId,
         });
+        // Send full route payload including destination
         socket.emit('booking:route', {
           bookingId,
-          workerId: cached.workerLocation.workerId,
+          workerId: cached.workerLocation?.workerId,
           route: cached.route,
           eta: cached.eta,
           workerLocation: cached.workerLocation,
-          destination: cached.destination,
-          at: cached.at && new Date(cached.at).toISOString(),
+          destination: cached.destination ?? dest,
+          at: cached.at ? new Date(cached.at).toISOString() : null,
         });
+        log(`booking:join replay: route=${cached.route?.coordinates?.length || 0}pts eta=${cached.eta?.durationSeconds}s`);
+      } else if (dest) {
+        // No route cached yet — at least send the destination so the customer
+        // marker appears on the map immediately.
+        socket.emit('booking:route', {
+          bookingId,
+          route: null,
+          eta: null,
+          workerLocation: null,
+          destination: dest,
+          at: new Date().toISOString(),
+        });
+        log(`booking:join no-route: sent destination only lat=${dest.lat} lng=${dest.lng}`);
       }
     });
 
@@ -229,10 +285,14 @@ export const initSocket = (httpServer) => {
       socket.leave(roomFor.booking(bookingId));
     });
 
-    socket.on('booking:lastLocation', ({ workerId: wId } = {}) => {
+    socket.on('booking:lastLocation', ({ workerId: wId, bookingId: bId } = {}) => {
       if (!wId) return;
-      const last = workerLocations.get(wId);
-      if (last) socket.emit('location:update', last);
+      const last = workerLocations.get(String(wId));
+      if (last) {
+        const payload = { ...last, ...(bId ? { bookingId: bId } : {}) };
+        socket.emit('location:update', payload);
+        log(`booking:lastLocation replay workerId=${wId} lat=${last.lat} lng=${last.lng}`);
+      }
     });
 
     socket.on('worker:offline', async () => {

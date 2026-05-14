@@ -8,14 +8,42 @@ import { applyOrderStatusTimestamps, recordOrderHistory, resolveCouponForOrder }
 import { logAudit } from '../utils/auditLogger.js';
 import { notifyOrderPlaced, notifyOrderStatus } from '../utils/notificationService.js';
 import { recordCouponUsage } from './couponController.js';
+import { geocodeAddress } from '../utils/geocoding.js';
+
+const hasCoords = (lat, lng) =>
+  typeof lat === 'number' &&
+  Number.isFinite(lat) &&
+  typeof lng === 'number' &&
+  Number.isFinite(lng) &&
+  Math.abs(lat) <= 90 &&
+  Math.abs(lng) <= 180;
+
+const addressToQuery = (address = {}) =>
+  [address.line1, address.line2, address.city, address.state, address.pincode]
+    .filter(Boolean)
+    .join(', ');
 
 const resolveAddress = async (req) => {
   if (req.body.addressId) {
     const addr = await Address.findOne({ _id: req.body.addressId, user: req.user._id });
     if (!addr) throw new ApiError(404, 'Address not found');
-    return addr;
+    if (!hasCoords(addr.lat, addr.lng)) {
+      throw new ApiError(400, 'Selected address does not have valid map coordinates');
+    }
+    return addr.toObject ? addr.toObject() : addr;
   }
-  return req.body.address;
+  const inline = { ...(req.body.address || {}) };
+  if (!hasCoords(inline.lat, inline.lng)) {
+    const geocoded = await geocodeAddress(addressToQuery(inline));
+    if (geocoded) {
+      inline.lat = geocoded.lat;
+      inline.lng = geocoded.lng;
+    }
+  }
+  if (!hasCoords(inline.lat, inline.lng)) {
+    throw new ApiError(400, 'Could not resolve location coordinates for this order address');
+  }
+  return inline;
 };
 
 export const createOrder = asyncHandler(async (req, res) => {

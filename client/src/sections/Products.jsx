@@ -3,52 +3,32 @@ import { Link } from 'react-router-dom';
 import { ArrowUpRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { listProducts } from '../api/products.js';
-import { listCategories } from '../api/categories.js';
 import toast from 'react-hot-toast';
-import { resolveCatalogImage } from '../lib/catalogImage.js';
+
+const PRODUCT_CATEGORIES_INFO = [
+  { name: 'Cleaning Products', image: 'https://images.unsplash.com/photo-1584820927498-cafe2c1c6843?w=800&q=80' },
+  { name: 'Beauty Products', image: 'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=800&q=80' },
+  { name: 'Home Appliances', image: 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=800&q=80' },
+  { name: 'Home Essentials', image: 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=800&q=80' },
+  { name: 'Repair Accessories', image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=800&q=80' },
+];
 
 export default function Products() {
   const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [categoryCounts, setCategoryCounts] = useState({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([
-      listProducts({ limit: 1000 })
-        .then(setProducts)
-        .catch(() => toast.error('Failed to load products')),
-      listCategories({ active: 'true' })
-        .then(setCategories)
-        .catch(() => toast.error('Failed to load categories')),
-    ]).finally(() => setLoading(false));
+    listProducts({ limit: 1000 })
+      .then(setProducts)
+      .catch(() => toast.error('Failed to load products'))
+      .finally(() => setLoading(false));
   }, []);
 
-  // Calculate product counts per category
-  useEffect(() => {
-    if (products.length > 0 && categories.length > 0) {
-      const CATEGORY_MAP = {
-        'home-services': 'Repair Accessories',
-        'cleaning-services': 'Cleaning Products',
-        'beauty-wellness': 'Beauty Products',
-        'appliance-services': 'Home Appliances',
-      };
-      const counts = {};
-      categories.forEach((cat) => {
-        const productCat = CATEGORY_MAP[cat.slug];
-        counts[cat.slug] = productCat 
-          ? products.filter(p => p.category === productCat).length
-          : 0;
-      });
-      setCategoryCounts(counts);
-    }
-  }, [products, categories]);
-
-  const FEATURED_CATEGORIES = categories.slice(0, 4).map((cat) => ({
+  const featuredCategories = PRODUCT_CATEGORIES_INFO.map(cat => ({
     title: cat.name,
-    count: `${categoryCounts[cat.slug] || 0} items`,
-    slug: cat.slug,
-    image: resolveCatalogImage(cat),
+    count: `${products.filter(p => p.category === cat.name).length} items`,
+    slug: cat.name,
+    image: cat.image,
   }));
 
   return (
@@ -81,19 +61,18 @@ export default function Products() {
         </FadeUp>
 
         {/* Product Categories Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
-          {(FEATURED_CATEGORIES.length > 0 ? FEATURED_CATEGORIES : categories.slice(0, 4)).map((cat, i) => (
-            <FadeUp key={cat.title || cat.slug} delay={i * 0.1}>
-              <Link to={`/products?category=${cat.slug}`} className="group block w-full h-full cursor-pointer relative overflow-hidden rounded-[2rem] bg-paper shadow-sm transition-all duration-700 hover:shadow-2xl">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6 lg:gap-8">
+          {featuredCategories.map((cat, i) => (
+            <FadeUp key={cat.slug} delay={i * 0.1} className="h-full">
+              <Link to={`/products?category=${encodeURIComponent(cat.slug)}`} className="group block w-full h-full cursor-pointer relative overflow-hidden rounded-[2rem] bg-paper shadow-sm transition-all duration-700 hover:shadow-2xl">
                 
                 <div className="relative aspect-[4/5] overflow-hidden bg-gradient-to-br from-sand to-ash">
                   <img
                     src={cat.image}
                     alt={cat.title}
                     loading="lazy"
-                    decoding="async"
                     onError={(e) => {
-                      e.currentTarget.src = resolveCatalogImage(null);
+                      e.currentTarget.src = 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=800&q=80';
                     }}
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
                   />
@@ -101,9 +80,9 @@ export default function Products() {
                   <div className="absolute inset-0 bg-gradient-to-t from-ink/80 via-ink/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-500"></div>
                   
                   {/* Category Text overlay */}
-                  <div className="absolute bottom-0 left-0 p-6 w-full transform translate-y-2 group-hover:translate-y-0 transition-transform duration-500">
-                    <p className="text-xs font-bold text-paper/70 uppercase tracking-widest mb-1">{cat.count}</p>
-                    <h3 className="text-xl font-medium text-paper tracking-tight">{cat.title}</h3>
+                  <div className="absolute bottom-0 left-0 p-4 sm:p-6 w-full transform translate-y-2 group-hover:translate-y-0 transition-transform duration-500">
+                    <p className="text-[10px] sm:text-xs font-bold text-paper/70 uppercase tracking-widest mb-1">{cat.count}</p>
+                    <h3 className="text-base sm:text-xl font-medium text-paper tracking-tight leading-tight">{cat.title}</h3>
                   </div>
                 </div>
 

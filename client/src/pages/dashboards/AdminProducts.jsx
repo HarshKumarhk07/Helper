@@ -4,7 +4,8 @@ import { listProducts, createProduct, deleteProduct, updateProduct } from '../..
 import api from '../../api/axios.js';
 import FadeUp from '../../components/ui/FadeUp.jsx';
 import DashboardShell from './DashboardShell.jsx';
-import { Trash2, AlertTriangle, Edit2 } from 'lucide-react';
+import { Trash2, AlertTriangle, Edit2, Star } from 'lucide-react';
+import { resolveCatalogImage } from '../../lib/catalogImage.js';
 
 export default function AdminProducts() {
   const [products, setProducts] = useState([]);
@@ -18,11 +19,11 @@ export default function AdminProducts() {
   const lowStockThreshold = 5;
   
   const [newProduct, setNewProduct] = useState({
-    name: '', slug: '', description: '', price: '', stock: '', category: 'all', image: ''
+    name: '', slug: '', description: '', price: '', stock: '', category: 'all', image: '', isFeatured: false
   });
 
   const [editForm, setEditForm] = useState({
-    name: '', slug: '', description: '', price: '', stock: '', category: 'all', image: ''
+    name: '', slug: '', description: '', price: '', stock: '', category: 'all', image: '', isFeatured: false
   });
 
   const load = () => {
@@ -70,7 +71,7 @@ export default function AdminProducts() {
       await createProduct({ ...newProduct, price: Number(newProduct.price), stock: Number(newProduct.stock) });
       toast.success('Product created');
       setShowForm(false);
-      setNewProduct({ name: '', slug: '', description: '', price: '', stock: '', category: 'all', image: '' });
+      setNewProduct({ name: '', slug: '', description: '', price: '', stock: '', category: 'all', image: '', isFeatured: false });
       load();
     } catch (err) {
       toast.error(err?.response?.data?.error || 'Failed to create product');
@@ -102,12 +103,13 @@ export default function AdminProducts() {
       stock: product.stock || '',
       category: product.category || 'all',
       image: product.image || '',
+      isFeatured: Boolean(product.isFeatured),
     });
   };
 
   const closeEditor = () => {
     setEditingProduct(null);
-    setEditForm({ name: '', slug: '', description: '', price: '', stock: '', category: 'all', image: '' });
+    setEditForm({ name: '', slug: '', description: '', price: '', stock: '', category: 'all', image: '', isFeatured: false });
   };
 
   const getFilteredProducts = () => {
@@ -134,6 +136,17 @@ export default function AdminProducts() {
       closeEditor();
     } catch (err) {
       toast.error(err?.response?.data?.error || 'Failed to update product');
+    }
+  };
+
+  const handleToggleFeatured = async (product) => {
+    try {
+      const updated = await updateProduct(product._id, { isFeatured: !product.isFeatured });
+      setProducts((current) => current.map((p) => (p._id === updated._id ? updated : p)));
+      setLowStockProducts((current) => current.map((p) => (p._id === updated._id ? updated : p)));
+      toast.success(updated.isFeatured ? 'Marked as featured' : 'Removed from featured');
+    } catch {
+      toast.error('Failed to update featured status');
     }
   };
 
@@ -220,6 +233,15 @@ export default function AdminProducts() {
               </div>
             </div>
 
+            <label className="mb-6 inline-flex items-center gap-2 text-xs uppercase tracking-widest text-ink/70">
+              <input
+                type="checkbox"
+                checked={newProduct.isFeatured}
+                onChange={(e) => setNewProduct({ ...newProduct, isFeatured: e.target.checked })}
+              />
+              Mark as featured product
+            </label>
+
             <button type="submit" className="pill-btn-solid" disabled={uploading}>Save Product</button>
           </form>
         </FadeUp>
@@ -233,19 +255,20 @@ export default function AdminProducts() {
               <th className="p-4">Name</th>
               <th className="p-4">Price</th>
               <th className="p-4">Stock</th>
+              <th className="p-4">Featured</th>
               <th className="p-4">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-ink/10">
             {loading ? (
-              <tr><td colSpan="5" className="p-4 text-center">Loading...</td></tr>
+              <tr><td colSpan="6" className="p-4 text-center">Loading...</td></tr>
             ) : filteredProducts.length === 0 ? (
-              <tr><td colSpan="5" className="p-4 text-center">No products found.</td></tr>
+              <tr><td colSpan="6" className="p-4 text-center">No products found.</td></tr>
             ) : (
               filteredProducts.map(p => (
                 <tr key={p._id}>
                   <td className="p-4">
-                    {p.image ? <img src={p.image} className="w-12 h-12 rounded object-cover" alt="" /> : <div className="w-12 h-12 bg-sand rounded"></div>}
+                    <img src={resolveCatalogImage(p)} className="w-12 h-12 rounded object-cover" alt={p.name} />
                   </td>
                   <td className="p-4 font-medium">{p.name}</td>
                   <td className="p-4">₹{p.price}</td>
@@ -257,6 +280,19 @@ export default function AdminProducts() {
                     ) : (
                       <span>{p.stock}</span>
                     )}
+                  </td>
+                  <td className="p-4">
+                    <button
+                      onClick={() => handleToggleFeatured(p)}
+                      title={p.isFeatured ? 'Remove from featured' : 'Mark as featured'}
+                      className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-widest transition ${
+                        p.isFeatured
+                          ? 'bg-amber-400 text-white hover:bg-amber-500'
+                          : 'border border-ink/20 text-ink/50 hover:border-ink/60'
+                      }`}
+                    >
+                      {p.isFeatured ? '★ Featured' : 'Feature'}
+                    </button>
                   </td>
                   <td className="p-4">
                     <div className="flex gap-2">
@@ -333,6 +369,15 @@ export default function AdminProducts() {
                 </div>
                 {editForm.image && <img src={editForm.image} alt="Preview" className="h-16 w-16 object-cover rounded-xl mt-3" />}
               </div>
+
+              <label className="md:col-span-2 inline-flex items-center gap-2 text-xs uppercase tracking-widest text-ink/70">
+                <input
+                  type="checkbox"
+                  checked={editForm.isFeatured}
+                  onChange={(e) => setEditForm({ ...editForm, isFeatured: e.target.checked })}
+                />
+                Featured product
+              </label>
 
               <div className="md:col-span-2 flex gap-3 pt-4">
                 <button type="button" onClick={closeEditor} className="flex-1 px-4 py-3 rounded-xl border border-ink/20 hover:bg-ink/5:bg-paper/5 transition font-medium uppercase tracking-widest text-sm">Cancel</button>

@@ -4,15 +4,16 @@ import mongoose from 'mongoose';
 import { ROLES } from '../config/roles.js';
 
 export const listProducts = asyncHandler(async (req, res) => {
-  const { category, search, q, lowStock, stockThreshold = 5 } = req.query;
+  const { category, search, q, lowStock, stockThreshold = 5, featured } = req.query;
   const filter = { isActive: true }; // Only show active products by default
   if (category) filter.category = category;
   if (search || q) filter.name = { $regex: search || q, $options: 'i' };
+  if (featured === 'true') filter.isFeatured = true;
   if (lowStock === 'true') {
     filter.stock = { $lte: Number(stockThreshold) };
   }
 
-  const products = await Product.find(filter).sort({ createdAt: -1 });
+  const products = await Product.find(filter).sort({ isFeatured: -1, createdAt: -1 });
   res.json({ products });
 });
 

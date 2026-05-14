@@ -16,12 +16,12 @@ const CAT_IMAGES = {
   'cleaning-services': 'https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80',
   'beauty-wellness': 'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80',
   'appliance-services': 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80',
-  'pest-control': '/assets/categories/pest_control.png',
-  'painting-renovation': '/assets/categories/painting.png',
-  'car-wash-detailing': '/assets/categories/car_wash.png',
-  'smart-home-cctv': '/assets/categories/cctv.png',
-  'packers-movers': '/assets/categories/packers.png',
-  'pet-care-grooming': '/assets/categories/pet_care.png'
+  'pest-control': 'https://images.unsplash.com/photo-1563453392212-326f5e854473?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80',
+  'painting-renovation': 'https://images.unsplash.com/photo-1562259929-b7e181d8d007?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80',
+  'car-wash-detailing': 'https://images.unsplash.com/photo-1601362840469-51e4d8d58785?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80',
+  'smart-home-cctv': 'https://images.unsplash.com/photo-1557324232-b8917d3c3dcb?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80',
+  'packers-movers': 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80',
+  'pet-care-grooming': 'https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80'
 };
 
 export default function ServicesIndex() {
@@ -106,28 +106,30 @@ export default function ServicesIndex() {
         
         {/* Advanced Interactive Filters Bar */}
         <FadeUp delay={0.2}>
-          <div className="bg-paper/80 backdrop-blur-2xl rounded-[2rem] border border-white/40 shadow-2xl p-4 md:p-6 mb-16 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex-1 w-full overflow-x-auto scrollbar-hide pb-2 lg:pb-0">
+          <div className="bg-white/80 backdrop-blur-xl rounded-3xl border border-ink/5 shadow-sm p-2 mb-10 flex flex-col lg:flex-row items-center justify-between gap-3 transition-all w-full">
+            <div className="w-full lg:flex-1 overflow-hidden">
               <CategoryChips categories={categories} onChange={onChipChange} />
             </div>
             
-            <form onSubmit={onSearch} className="flex items-center gap-2 relative w-full lg:max-w-xs">
-              <Search size={18} className="absolute left-4 text-ink/40" />
+            <form onSubmit={onSearch} className="relative w-full lg:w-80 flex-shrink-0 group">
+              <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                <Search size={16} className="text-ink/40 group-focus-within:text-[#6f5cff] transition-colors" />
+              </div>
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search services…"
-                className="w-full rounded-full border border-ink/10 bg-sand/50 pl-11 pr-4 py-3 text-sm outline-none transition-all focus:border-ink/40 focus:bg-paper"
+                placeholder="Search services..."
+                className="w-full rounded-full border border-ink/10 bg-sand/30 pl-10 pr-24 py-3 text-sm outline-none transition-all focus:border-ink/30 focus:bg-white focus:ring-4 focus:ring-ink/5"
               />
-              <button type="submit" className="pill-btn !bg-ink !text-paper hover:!bg-ink/80 px-5 py-3 text-xs absolute right-1 top-1 bottom-1">
-                Go
+              <button type="submit" className="absolute right-1.5 top-1.5 bottom-1.5 bg-ink text-paper rounded-full px-5 text-xs font-bold tracking-wide hover:bg-[#6f5cff] hover:shadow-md transition-all">
+                Search
               </button>
             </form>
           </div>
         </FadeUp>
 
         {/* Dynamic Service Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8">
           {loading ? (
             Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)
           ) : services.length === 0 ? (
@@ -142,7 +144,7 @@ export default function ServicesIndex() {
             </div>
           ) : (
             services.map((s, i) => (
-              <FadeUp key={s._id} delay={Math.min(i * 0.05, 0.4)}>
+              <FadeUp key={s._id} delay={Math.min(i * 0.05, 0.4)} className="h-full">
                 <ServiceCard service={s} index={i} />
               </FadeUp>
             ))

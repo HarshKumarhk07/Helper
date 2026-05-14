@@ -7,7 +7,9 @@ import { validateCoupon } from '../api/coupons.js';
 import { getProduct } from '../api/products.js';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
-import { CreditCard, Truck, Tag, ShieldCheck } from 'lucide-react';
+import { CreditCard, Truck, Tag, ShieldCheck, Crosshair, Loader2, Navigation } from 'lucide-react';
+import { geocodeAddressText, hasValidCoords, reverseGeocodeCoordinates } from '../lib/geocoding.js';
+import RouteMap from '../components/booking/RouteMap.jsx';
 
 export default function CheckoutPage() {
   const { cart, removeFromCart } = useCart();
@@ -15,8 +17,11 @@ export default function CheckoutPage() {
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [address, setAddress] = useState({
-    line1: '', city: '', state: '', pincode: ''
+    line1: '', line2: '', landmark: '', city: '', state: '', pincode: '', lat: null, lng: null
   });
+  const [addressMode, setAddressMode] = useState('current');
+  const [detectingLocation, setDetectingLocation] = useState(false);
+  const [addressError, setAddressError] = useState('');
   const [paymentMode, setPaymentMode] = useState('online');
   const [couponCode, setCouponCode] = useState('');
   const [discount, setDiscount] = useState(0);
@@ -85,9 +90,40 @@ export default function CheckoutPage() {
     e.preventDefault();
     setLoading(true);
     try {
+      setAddressError('');
       if (paymentMode === 'online' && !razorpayReady) {
         throw new Error('Payment gateway is still loading. Please try again in a moment.');
       }
+
+      let resolvedAddress = { ...address };
+      if (addressMode === 'manual' && !hasValidCoords(resolvedAddress.lat, resolvedAddress.lng)) {
+        const geocoded = await geocodeAddressText([
+          resolvedAddress.line1,
+          resolvedAddress.line2,
+          resolvedAddress.landmark,
+          resolvedAddress.city,
+          resolvedAddress.state,
+          resolvedAddress.pincode,
+        ]);
+        resolvedAddress = {
+          ...resolvedAddress,
+          lat: geocoded.lat,
+          lng: geocoded.lng,
+        };
+      }
+
+      if (!hasValidCoords(resolvedAddress.lat, resolvedAddress.lng)) {
+        throw new Error(
+          addressMode === 'current'
+            ? 'Please detect your current location before checkout'
+            : 'Please enter a valid address that can be located on map'
+        );
+      }
+
+      console.debug('[checkout] user coordinates', {
+        lat: resolvedAddress.lat,
+        lng: resolvedAddress.lng,
+      });
 
       const uniqueProductIds = [...new Set(productCart.map((item) => item.product).filter(Boolean))];
       const validationResults = await Promise.allSettled(uniqueProductIds.map((productId) => getProduct(productId)));
@@ -104,7 +140,7 @@ export default function CheckoutPage() {
       const activeCouponCode = (appliedCoupon?.code || couponCode).trim().toUpperCase();
       const order = await createOrder({
         items,
-        address,
+        address: resolvedAddress,
         paymentMode,
         couponCode: activeCouponCode || undefined,
       });
@@ -152,10 +188,58 @@ export default function CheckoutPage() {
         rzp.open();
       }
     } catch (err) {
-      toast.error(err?.response?.data?.error || 'Checkout failed');
+      const message = err?.response?.data?.error || err?.message || 'Checkout failed';
+      setAddressError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
+  };
+
+  const detectCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      const message = 'Geolocation is not supported on this device';
+      setAddressError(message);
+      toast.error(message);
+      return;
+    }
+    setAddressError('');
+    setDetectingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      async ({ coords }) => {
+        try {
+          const resolved = await reverseGeocodeCoordinates(coords.latitude, coords.longitude);
+          setAddress((prev) => ({
+            ...prev,
+            line1: resolved.line1 || prev.line1,
+            line2: resolved.line2 || prev.line2,
+            city: resolved.city || prev.city,
+            state: resolved.state || prev.state,
+            pincode: resolved.pincode || prev.pincode,
+            landmark: resolved.landmark || prev.landmark,
+            lat: resolved.lat,
+            lng: resolved.lng,
+          }));
+          toast.success('Location detected');
+        } catch {
+          const message = 'Could not detect readable address from your location';
+          setAddressError(message);
+          toast.error(message);
+        } finally {
+          setDetectingLocation(false);
+        }
+      },
+      (err) => {
+        setDetectingLocation(false);
+        const message =
+          err?.code === err.PERMISSION_DENIED
+            ? 'Location permission denied. Please allow location access.'
+            : 'Could not detect your current location';
+        setAddressError(message);
+        toast.error(message);
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+    );
   };
 
   const handleApplyCoupon = async () => {
@@ -199,13 +283,81 @@ export default function CheckoutPage() {
                 <Truck size={20} className="text-ink/60" />
                 Shipping Details
               </h2>
+              <div className="mb-5 rounded-2xl border border-ink/10 bg-[#0b1220] p-3 text-white">
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setAddressMode('current')}
+                    className={`rounded-xl px-3 py-2 text-xs uppercase tracking-widest transition ${
+                      addressMode === 'current'
+                        ? 'bg-emerald-500 text-[#04130c]'
+                        : 'bg-white/10 text-white/80 hover:bg-white/15'
+                    }`}
+                  >
+                    Use Current Location
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAddressMode('manual')}
+                    className={`rounded-xl px-3 py-2 text-xs uppercase tracking-widest transition ${
+                      addressMode === 'manual'
+                        ? 'bg-sky-500 text-white'
+                        : 'bg-white/10 text-white/80 hover:bg-white/15'
+                    }`}
+                  >
+                    Enter Manually
+                  </button>
+                </div>
+              </div>
+
+              {addressMode === 'current' && (
+                <div className="mb-5 rounded-2xl border border-ink/10 bg-sand/40 p-4">
+                  <button
+                    type="button"
+                    onClick={detectCurrentLocation}
+                    disabled={detectingLocation}
+                    className="inline-flex items-center gap-2 rounded-pill bg-ink px-4 py-2 text-xs uppercase tracking-widest text-paper disabled:opacity-60"
+                  >
+                    {detectingLocation ? <Loader2 size={13} className="animate-spin" /> : <Crosshair size={13} />}
+                    {detectingLocation ? 'Detecting Location...' : 'Detect Current Location'}
+                  </button>
+                </div>
+              )}
+
               <div className="grid gap-5">
                 <input required placeholder="Street Address / Line 1" className={fieldClass} value={address.line1} onChange={(e) => setAddress({...address, line1: e.target.value})} />
+                <input placeholder="Street Address / Line 2" className={fieldClass} value={address.line2} onChange={(e) => setAddress({...address, line2: e.target.value})} />
+                <input placeholder="Landmark" className={fieldClass} value={address.landmark} onChange={(e) => setAddress({...address, landmark: e.target.value})} />
                 <input required placeholder="City" className={fieldClass} value={address.city} onChange={(e) => setAddress({...address, city: e.target.value})} />
                 <div className="grid grid-cols-2 gap-5">
                   <input required placeholder="State / Province" className={fieldClass} value={address.state} onChange={(e) => setAddress({...address, state: e.target.value})} />
                   <input required placeholder="PIN Code" className={fieldClass} value={address.pincode} onChange={(e) => setAddress({...address, pincode: e.target.value})} />
                 </div>
+              </div>
+
+              {addressError && (
+                <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+                  {addressError}
+                </div>
+              )}
+
+              <div className="mt-5 rounded-2xl border border-ink/10 bg-white p-3">
+                <div className="mb-2 flex items-center gap-2 text-[10px] uppercase tracking-widest text-ink/50">
+                  <Navigation size={12} /> Address Preview
+                </div>
+                {hasValidCoords(address.lat, address.lng) ? (
+                  <RouteMap
+                    workerLocation={null}
+                    destination={{ lat: address.lat, lng: address.lng }}
+                    route={null}
+                    follow={false}
+                    height={220}
+                  />
+                ) : (
+                  <div className="rounded-xl border border-ink/10 bg-sand/40 p-4 text-xs text-ink/60">
+                    Map preview appears after valid coordinates are available.
+                  </div>
+                )}
               </div>
             </motion.div>
 

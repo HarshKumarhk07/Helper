@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { listCategories } from '../api/categories.js';
-import { resolveCatalogImage } from '../lib/catalogImage.js';
 
 export default function Categories() {
   const [categories, setCategories] = useState([]);
@@ -78,13 +77,8 @@ export default function Categories() {
                   }`}
                 >
                   <img
-                    src={resolveCatalogImage(c)}
+                    src={c.image || 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
                     alt={c.name}
-                    loading="lazy"
-                    decoding="async"
-                    onError={(e) => {
-                      e.currentTarget.src = resolveCatalogImage(null);
-                    }}
                     className={`w-full h-full object-cover transition-transform duration-[2s] ease-out ${
                       hoveredIdx === i ? 'scale-100' : 'scale-110'
                     }`}

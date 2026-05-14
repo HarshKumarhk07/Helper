@@ -2,14 +2,13 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import FadeUp from '../components/ui/FadeUp.jsx';
 import { listCategories } from '../api/categories.js';
-import { resolveCatalogImage } from '../lib/catalogImage.js';
 
 export default function Spotlight() {
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    listCategories({ active: 'true' })
+    listCategories({ isActive: true })
       .then((categories) => {
         const cardData = categories.map((cat) => {
           const bgColor = cat.color || '#1a1a1a';
@@ -22,7 +21,7 @@ export default function Spotlight() {
             cta: 'Book now',
             ctaCls: 'bg-paper text-ink hover:bg-paper/90',
             to: `/services?cat=${cat.slug}`,
-            image: resolveCatalogImage(cat),
+            image: cat.image || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=700&q=80',
             imageAlt: cat.name,
           };
         });
@@ -60,10 +59,6 @@ export default function Spotlight() {
                       src={c.image}
                       alt={c.imageAlt}
                       loading="lazy"
-                      decoding="async"
-                      onError={(e) => {
-                        e.currentTarget.src = resolveCatalogImage(null);
-                      }}
                       className="absolute inset-0 h-full w-full object-cover transition-transform duration-[1.2s] group-hover:scale-110"
                     />
                   </div>
@@ -72,10 +67,6 @@ export default function Spotlight() {
                     src={c.image}
                     alt=""
                     loading="lazy"
-                    decoding="async"
-                    onError={(e) => {
-                      e.currentTarget.src = resolveCatalogImage(null);
-                    }}
                     aria-hidden
                     className="hidden sm:block absolute inset-y-0 right-0 h-full w-[58%] object-cover opacity-90 transition-transform duration-[1.2s] group-hover:scale-110"
                   />

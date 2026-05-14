@@ -1,15 +1,17 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { Calendar, Zap, MapPin, CreditCard, Banknote, Plus, FileText, Check } from 'lucide-react';
+import { Calendar, Zap, MapPin, CreditCard, Banknote, Plus, FileText, Check, Crosshair, Loader2, Navigation } from 'lucide-react';
 import { getService } from '../api/services.js';
 import { listMyAddresses, createAddress } from '../api/addresses.js';
 import { createBooking } from '../api/bookings.js';
 import { validateCoupon } from '../api/coupons.js';
 import { formatPrice } from '../lib/booking.js';
+import { geocodeAddressText, hasValidCoords, reverseGeocodeCoordinates } from '../lib/geocoding.js';
 import PillButton from '../components/ui/PillButton.jsx';
 import FadeUp from '../components/ui/FadeUp.jsx';
 import SlotPicker from '../components/booking/SlotPicker.jsx';
+import RouteMap from '../components/booking/RouteMap.jsx';
 
 export default function BookingFlow() {
   const { serviceId } = useParams();
@@ -28,6 +30,9 @@ export default function BookingFlow() {
   const [discount, setDiscount] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [showAddressForm, setShowAddressForm] = useState(false);
+  const [addressMode, setAddressMode] = useState('current');
+  const [detectingLocation, setDetectingLocation] = useState(false);
+  const [addressError, setAddressError] = useState('');
   const [newAddress, setNewAddress] = useState({
     label: 'Home',
     line1: '',
@@ -36,7 +41,27 @@ export default function BookingFlow() {
     state: '',
     pincode: '',
     landmark: '',
+    lat: null,
+    lng: null,
+    formattedAddress: '',
   });
+
+  const resetAddressForm = () => {
+    setNewAddress({
+      label: 'Home',
+      line1: '',
+      line2: '',
+      city: '',
+      state: '',
+      pincode: '',
+      landmark: '',
+      lat: null,
+      lng: null,
+      formattedAddress: '',
+    });
+    setAddressError('');
+    setAddressMode('current');
+  };
 
   useEffect(() => {
     getService(serviceId)
@@ -61,14 +86,103 @@ export default function BookingFlow() {
   const onSaveAddress = async (e) => {
     e.preventDefault();
     try {
-      const created = await createAddress({ ...newAddress, isDefault: addresses.length === 0 });
+      setAddressError('');
+
+      let payload = { ...newAddress };
+      if (addressMode === 'manual') {
+        const geocoded = await geocodeAddressText([
+          payload.line1,
+          payload.line2,
+          payload.landmark,
+          payload.city,
+          payload.state,
+          payload.pincode,
+        ]);
+        payload = {
+          ...payload,
+          lat: geocoded.lat,
+          lng: geocoded.lng,
+          formattedAddress: geocoded.formattedAddress,
+        };
+      }
+
+      if (!hasValidCoords(payload.lat, payload.lng)) {
+        throw new Error(
+          addressMode === 'current'
+            ? 'Please detect your location first'
+            : 'Could not locate this address on map'
+        );
+      }
+
+      const created = await createAddress({
+        ...payload,
+        isDefault: addresses.length === 0,
+      });
       setAddresses((a) => [created, ...a]);
       setSelectedAddressId(created._id);
       setShowAddressForm(false);
       toast.success('Address saved');
+      resetAddressForm();
     } catch (err) {
-      toast.error(err?.response?.data?.error || 'Failed to save address');
+      const message = err?.response?.data?.error || err?.message || 'Failed to save address';
+      setAddressError(message);
+      toast.error(message);
     }
+  };
+
+  const detectCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      const message = 'Geolocation is not supported on this device';
+      setAddressError(message);
+      toast.error(message);
+      return;
+    }
+
+    setAddressError('');
+    setDetectingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      async ({ coords }) => {
+        try {
+          const resolved = await reverseGeocodeCoordinates(
+            coords.latitude,
+            coords.longitude
+          );
+          console.debug('[booking] user coordinates', {
+            lat: resolved.lat,
+            lng: resolved.lng,
+          });
+          setNewAddress((prev) => ({
+            ...prev,
+            line1: resolved.line1 || prev.line1,
+            line2: resolved.line2 || prev.line2,
+            city: resolved.city || prev.city,
+            state: resolved.state || prev.state,
+            pincode: resolved.pincode || prev.pincode,
+            landmark: resolved.landmark || prev.landmark,
+            lat: resolved.lat,
+            lng: resolved.lng,
+            formattedAddress: resolved.formattedAddress || '',
+          }));
+          toast.success('Location detected');
+        } catch (err) {
+          const message = 'Could not convert current location into address';
+          setAddressError(message);
+          toast.error(message);
+        } finally {
+          setDetectingLocation(false);
+        }
+      },
+      (err) => {
+        setDetectingLocation(false);
+        const message =
+          err?.code === err.PERMISSION_DENIED
+            ? 'Location permission denied. Please allow location access.'
+            : 'Could not detect current location';
+        setAddressError(message);
+        toast.error(message);
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+    );
   };
 
   const handleApplyCoupon = async () => {
@@ -95,6 +209,15 @@ export default function BookingFlow() {
       toast.error('Pick a slot to schedule');
       return;
     }
+
+    if (selectedAddressId) {
+      const selected = addresses.find((a) => a._id === selectedAddressId);
+      if (!hasValidCoords(selected?.lat, selected?.lng)) {
+        toast.error('Selected address has no valid map coordinates. Please update or add another address.');
+        return;
+      }
+    }
+
     setSubmitting(true);
     try {
       const payload = {
@@ -136,6 +259,8 @@ export default function BookingFlow() {
   }
 
   const selectedAddress = addresses.find((a) => a._id === selectedAddressId);
+  const previewAddress = showAddressForm ? newAddress : selectedAddress;
+  const previewHasCoords = hasValidCoords(previewAddress?.lat, previewAddress?.lng);
 
   return (
     <section className="min-h-screen bg-sand/30 py-10 md:py-16">
@@ -241,7 +366,51 @@ export default function BookingFlow() {
                 )}
 
                 {showAddressForm && (
-                  <form onSubmit={onSaveAddress} className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <form onSubmit={onSaveAddress} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div className="sm:col-span-2 rounded-2xl border border-black/10 bg-[#0b1220] p-3 text-white">
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setAddressMode('current')}
+                          className={`rounded-xl px-3 py-2 text-xs uppercase tracking-widest transition ${
+                            addressMode === 'current'
+                              ? 'bg-emerald-500 text-[#04130c]'
+                              : 'bg-white/10 text-white/80 hover:bg-white/15'
+                          }`}
+                        >
+                          Use Current Location
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setAddressMode('manual')}
+                          className={`rounded-xl px-3 py-2 text-xs uppercase tracking-widest transition ${
+                            addressMode === 'manual'
+                              ? 'bg-sky-500 text-white'
+                              : 'bg-white/10 text-white/80 hover:bg-white/15'
+                          }`}
+                        >
+                          Enter Manually
+                        </button>
+                      </div>
+                    </div>
+
+                    {addressMode === 'current' && (
+                      <div className="sm:col-span-2 rounded-2xl border border-black/10 bg-black/[0.03] p-4">
+                        <button
+                          type="button"
+                          onClick={detectCurrentLocation}
+                          disabled={detectingLocation}
+                          className="inline-flex items-center gap-2 rounded-pill bg-black px-4 py-2 text-xs uppercase tracking-widest text-white disabled:opacity-60"
+                        >
+                          {detectingLocation ? <Loader2 size={13} className="animate-spin" /> : <Crosshair size={13} />}
+                          {detectingLocation ? 'Detecting Location...' : 'Detect Current Location'}
+                        </button>
+                        {newAddress.formattedAddress && (
+                          <p className="mt-3 text-xs text-black/70 break-words">{newAddress.formattedAddress}</p>
+                        )}
+                      </div>
+                    )}
+
                     <Field label="Label">
                       <Input
                         value={newAddress.label}
@@ -272,6 +441,13 @@ export default function BookingFlow() {
                         placeholder="Area, locality"
                       />
                     </Field>
+                    <Field label="Landmark" className="sm:col-span-2">
+                      <Input
+                        value={newAddress.landmark}
+                        onChange={(v) => setNewAddress({ ...newAddress, landmark: v })}
+                        placeholder="Near mall, gate no., tower"
+                      />
+                    </Field>
                     <Field label="City">
                       <Input
                         value={newAddress.city}
@@ -285,6 +461,11 @@ export default function BookingFlow() {
                         onChange={(v) => setNewAddress({ ...newAddress, state: v })}
                       />
                     </Field>
+                    {addressError && (
+                      <div className="sm:col-span-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+                        {addressError}
+                      </div>
+                    )}
                     <div className="flex flex-wrap gap-3 sm:col-span-2">
                       <PillButton type="submit" variant="solid">
                         Save address
@@ -292,7 +473,10 @@ export default function BookingFlow() {
                       {addresses.length > 0 && (
                         <button
                           type="button"
-                          onClick={() => setShowAddressForm(false)}
+                          onClick={() => {
+                            setShowAddressForm(false);
+                            resetAddressForm();
+                          }}
                           className="rounded-pill border border-black/15 px-4 py-2 text-xs uppercase tracking-widest text-black hover:border-black/40"
                         >
                           Cancel
@@ -300,6 +484,27 @@ export default function BookingFlow() {
                       )}
                     </div>
                   </form>
+                )}
+
+                {previewAddress && (
+                  <div className="mt-4 rounded-2xl border border-black/10 bg-white p-3">
+                    <div className="mb-2 flex items-center gap-2 text-[10px] uppercase tracking-widest text-black/50">
+                      <Navigation size={12} /> Address Preview
+                    </div>
+                    {previewHasCoords ? (
+                      <RouteMap
+                        workerLocation={null}
+                        destination={{ lat: previewAddress.lat, lng: previewAddress.lng }}
+                        route={null}
+                        follow={false}
+                        height={220}
+                      />
+                    ) : (
+                      <div className="rounded-xl border border-black/10 bg-sand/40 p-4 text-xs text-black/60">
+                        Map preview will appear after valid coordinates are available.
+                      </div>
+                    )}
+                  </div>
                 )}
               </Section>
             </FadeUp>

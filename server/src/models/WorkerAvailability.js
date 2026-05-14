@@ -32,6 +32,12 @@ const workerAvailabilitySchema = new mongoose.Schema(
     weeklySchedule: { type: [dayScheduleSchema], default: [] },
     blackouts: { type: [blackoutSchema], default: [] },
     lastSeenAt: { type: Date, default: null },
+    lastLocation: {
+      lat: { type: Number, default: null },
+      lng: { type: Number, default: null },
+      accuracy: { type: Number, default: null },
+      at: { type: Date, default: null },
+    },
   },
   { timestamps: true }
 );

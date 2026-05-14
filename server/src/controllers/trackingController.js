@@ -2,10 +2,24 @@ import Booking from '../models/Booking.js';
 import { ApiError, asyncHandler } from '../utils/asyncHandler.js';
 import { ROLES } from '../config/roles.js';
 import { getRoute, buildEta } from '../utils/routing.js';
+import { geocodeAddress } from '../utils/geocoding.js';
 import {
   getCachedWorkerLocation,
   getCachedBookingRoute,
 } from '../sockets/index.js';
+
+const hasCoords = (lat, lng) =>
+  typeof lat === 'number' &&
+  Number.isFinite(lat) &&
+  typeof lng === 'number' &&
+  Number.isFinite(lng) &&
+  Math.abs(lat) <= 90 &&
+  Math.abs(lng) <= 180;
+
+const buildAddressString = (address = {}) =>
+  [address.line1, address.line2, address.city, address.state, address.pincode]
+    .filter(Boolean)
+    .join(', ');
 
 const populateBooking = (q) =>
   q
@@ -30,15 +44,35 @@ export const getTrackingState = asyncHandler(async (req, res) => {
     throw new ApiError(403, 'Forbidden');
   }
 
-  const dest =
-    typeof booking.address?.lat === 'number' && typeof booking.address?.lng === 'number'
-      ? { lat: booking.address.lat, lng: booking.address.lng }
-      : null;
+  let dest = hasCoords(booking.address?.lat, booking.address?.lng)
+    ? { lat: booking.address.lat, lng: booking.address.lng }
+    : null;
+
+  if (!dest) {
+    const inferred = await geocodeAddress(buildAddressString(booking.address));
+    if (inferred) {
+      dest = inferred;
+      booking.address.lat = inferred.lat;
+      booking.address.lng = inferred.lng;
+      await booking.save();
+      console.debug('[tracking] destination geocoded', {
+        bookingId: String(booking._id),
+        lat: inferred.lat,
+        lng: inferred.lng,
+      });
+    }
+  }
 
   let workerLocation = null;
   if (booking.worker?._id) {
     workerLocation = getCachedWorkerLocation(booking.worker._id);
   }
+
+  console.debug('[tracking] coordinates', {
+    bookingId: String(booking._id),
+    destination: dest,
+    workerLocation,
+  });
 
   // Prefer cache, otherwise compute fresh if we have both endpoints.
   let routePayload = getCachedBookingRoute(booking._id);
@@ -48,9 +82,17 @@ export const getTrackingState = asyncHandler(async (req, res) => {
       to: dest,
     });
     if (computed) {
+      const eta = buildEta({ route: computed });
+      console.debug('[tracking] route bootstrap', {
+        bookingId: String(booking._id),
+        pointCount: computed.coordinates?.length || 0,
+        distanceMeters: eta?.distanceMeters,
+        durationSeconds: eta?.durationSeconds,
+        fallback: !!eta?.fallback,
+      });
       routePayload = {
         route: { coordinates: computed.coordinates, fallback: !!computed.fallback },
-        eta: buildEta({ route: computed }),
+        eta,
         workerLocation,
         destination: dest,
         at: new Date().toISOString(),

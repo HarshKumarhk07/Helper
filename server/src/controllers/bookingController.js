@@ -29,6 +29,14 @@ const recordHistory = (booking, from, to, by, note) => {
   booking.history.push({ from, to, by: by?._id || by, note: note || '' });
 };
 
+const hasCoords = (lat, lng) =>
+  typeof lat === 'number' &&
+  Number.isFinite(lat) &&
+  typeof lng === 'number' &&
+  Number.isFinite(lng) &&
+  Math.abs(lat) <= 90 &&
+  Math.abs(lng) <= 180;
+
 const populateBooking = (q) =>
   q
     .populate('service', 'name slug price image durationMinutes')
@@ -70,6 +78,9 @@ export const createBooking = asyncHandler(async (req, res) => {
   if (!service || !service.isActive) throw new ApiError(404, 'Service not available');
 
   const addressSnapshot = await resolveAddress(req);
+  if (!hasCoords(addressSnapshot?.lat, addressSnapshot?.lng)) {
+    throw new ApiError(400, 'Selected address does not have valid map coordinates');
+  }
 
   let discountAmount = 0;
   let appliedCouponCode = null;
