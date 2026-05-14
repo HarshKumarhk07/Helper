@@ -91,31 +91,52 @@ export const reverseGeocodeCoordinates = async (lat, lng) => {
       addr.residential ||
       addr.hamlet ||
       '';
-    const line1 = houseNumber && road
+    let line1 = houseNumber && road
       ? `${houseNumber}, ${road}`
       : road || houseNumber || '';
 
-    // Build line2 from neighbourhood/suburb
-    const line2 =
-      addr.neighbourhood ||
-      addr.suburb ||
-      addr.village ||
-      addr.city_district ||
-      '';
+    const formattedAddress = data.display_name || '';
+    const parts = formattedAddress.split(',').map((s) => s.trim()).filter(Boolean);
 
     const city =
       addr.city ||
       addr.town ||
       addr.municipality ||
       addr.county ||
+      parts.find((p) => p.toLowerCase().includes('district') || p.toLowerCase().includes('tahsil') || p.toLowerCase().includes('city')) ||
+      parts[parts.length - 4] ||
       '';
 
     const state = addr.state || addr.state_district || '';
-    const pincode = addr.postcode || '';
+
+    if (!line1) {
+      line1 = parts[0] || '';
+      if (parts.length > 1 && parts[1] !== city && parts[1] !== state) {
+        line1 += `, ${parts[1]}`;
+      }
+      if (!line1) line1 = 'Detected Location';
+    }
+
+    // Build line2 from neighbourhood/suburb
+    let line2 =
+      addr.neighbourhood ||
+      addr.suburb ||
+      addr.village ||
+      addr.city_district ||
+      '';
+    if (!line2 && parts.length > 2) {
+      const candidate = parts[2];
+      if (candidate !== city && candidate !== state) line2 = candidate;
+    }
+
+    let pincode = addr.postcode || '';
+    if (!pincode) {
+      const pinPart = parts.find((p) => /^\d{5,6}$/.test(p));
+      if (pinPart) pincode = pinPart;
+      else pincode = '000000';
+    }
 
     const landmark = addr.amenity || addr.building || addr.leisure || '';
-
-    const formattedAddress = data.display_name || '';
 
     const result = { lat, lng, line1, line2, city, state, pincode, landmark, formattedAddress };
     console.debug('[geocoding] reverse result', result);

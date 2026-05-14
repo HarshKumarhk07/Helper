@@ -95,14 +95,22 @@ export default function CartPage() {
         <div>
           <div className="card-rounded p-6 sticky top-24 text-ink">
             <h2 className="heading-display text-xl mb-6 text-ink">ORDER SUMMARY</h2>
-            <div className="space-y-3 text-sm mb-6 border-b border-ink/10 pb-6">
+            
+            {/* Main Products Summary */}
+            <div className="space-y-3 text-sm mb-4 border-b border-ink/10 pb-4">
               {hasProducts && (
-                <div className="flex justify-between">
-                  <span className="text-ink/70">Products subtotal</span>
-                  <span className="text-ink tabular-nums">₹{productSubtotal}</span>
-                </div>
+                <>
+                  <div className="flex justify-between">
+                    <span className="text-ink/70">Products subtotal</span>
+                    <span className="text-ink tabular-nums">₹{productSubtotal}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-ink/70">Shipping</span>
+                    <span className="text-green-600 font-medium tracking-wide uppercase text-xs">Free</span>
+                  </div>
+                </>
               )}
-              {serviceCart.length > 0 && (
+              {!hasProducts && serviceCart.length > 0 && (
                 <div className="flex justify-between">
                   <span className="text-ink/70">
                     Services <span className="text-[10px] uppercase tracking-widest opacity-60">({serviceCart.length})</span>
@@ -110,47 +118,84 @@ export default function CartPage() {
                   <span className="text-ink tabular-nums">₹{serviceSubtotal}</span>
                 </div>
               )}
-              {hasProducts && (
-                <div className="flex justify-between">
-                  <span className="text-ink/70">Shipping</span>
-                  <span className="text-ink">Free</span>
-                </div>
-              )}
             </div>
-            <div className="flex justify-between font-bold text-lg mb-2 text-ink">
-              <span>Total</span>
-              <span className="tabular-nums">₹{grandTotal}</span>
+
+            <div className="flex justify-between font-bold text-lg mb-4 text-ink items-center">
+              <span>{hasProducts ? 'Total Payable Now' : 'Total Service Value'}</span>
+              <span className="tabular-nums text-xl">₹{hasProducts ? productSubtotal : serviceSubtotal}</span>
             </div>
-            {serviceCart.length > 0 && (
-              <p className="mb-6 text-xs text-ink/60">
-                Services are paid when you confirm each booking. Tap a service below to schedule it.
-              </p>
-            )}
 
             {hasProducts ? (
               <button
                 onClick={() => navigate('/checkout')}
-                className="w-full rounded-pill bg-ink py-3 text-sm font-semibold tracking-tightish text-paper transition hover:opacity-90"
+                className="w-full rounded-pill bg-ink py-3.5 text-sm font-semibold tracking-wide text-paper shadow-md transition hover:bg-[#6f5cff]"
               >
                 Proceed to Checkout · ₹{productSubtotal}
               </button>
             ) : serviceOnlyCart ? (
-              <div className="space-y-2">
-                {serviceCart.map((s) => (
+              <div className="space-y-3">
+                {serviceCart.length === 1 ? (
                   <button
-                    key={s.product}
-                    onClick={() => navigate(`/book/${s.product}`)}
-                    className="flex w-full items-center justify-between gap-2 rounded-pill bg-ink px-4 py-2.5 text-sm font-semibold text-paper transition hover:opacity-90"
+                    onClick={() => navigate(`/book/${serviceCart[0].product}`)}
+                    className="flex w-full items-center justify-between gap-2 rounded-pill bg-ink px-5 py-3.5 text-sm font-semibold text-paper transition hover:bg-[#6f5cff] shadow-md"
                   >
-                    <span className="truncate">Book {s.name}</span>
-                    <span className="shrink-0 tabular-nums opacity-80">₹{s.price}</span>
+                    <span className="truncate pr-2">Book {serviceCart[0].name}</span>
+                    <span className="shrink-0 tabular-nums opacity-90 font-bold">₹{serviceCart[0].price}</span>
                   </button>
-                ))}
-                <p className="pt-2 text-center text-[11px] uppercase tracking-widest text-ink/50">
-                  Services are checked out via the booking flow
+                ) : (
+                  <button
+                    onClick={() => navigate('/book/cart')}
+                    className="w-full rounded-pill bg-ink py-3.5 text-sm font-semibold tracking-wide text-paper shadow-md transition hover:bg-[#6f5cff]"
+                  >
+                    Book All Services · ₹{serviceSubtotal}
+                  </button>
+                )}
+                <p className="pt-1 text-center text-[11px] uppercase tracking-widest text-ink/50">
+                  Services are scheduled via the booking flow
                 </p>
               </div>
             ) : null}
+
+            {/* Separated Services Context Block */}
+            {serviceCart.length > 0 && hasProducts && (
+              <div className="mt-6 rounded-2xl border border-ink/10 bg-sand/30 p-4">
+                <div className="flex justify-between items-center text-xs font-bold uppercase tracking-wider text-ink/60 mb-3 border-b border-ink/5 pb-2">
+                  <span>Services ({serviceCart.length})</span>
+                  <span>₹{serviceSubtotal}</span>
+                </div>
+                {serviceCart.length === 1 ? (
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-ink font-medium truncate pr-2">{serviceCart[0].name}</span>
+                    <button
+                      onClick={() => navigate(`/book/${serviceCart[0].product}`)}
+                      className="text-[10px] bg-ink text-paper px-3 py-1.5 rounded-full font-bold uppercase tracking-wider hover:bg-[#6f5cff] transition-all shrink-0"
+                    >
+                      Schedule · ₹{serviceCart[0].price}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="space-y-1.5 max-h-24 overflow-y-auto pr-1 border-b border-ink/5 pb-2">
+                      {serviceCart.map((s) => (
+                        <div key={s.product} className="flex justify-between text-[11px] text-ink/80 font-medium">
+                          <span className="truncate pr-2">· {s.name}</span>
+                          <span className="tabular-nums font-semibold">₹{s.price}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <button
+                      onClick={() => navigate('/book/cart')}
+                      className="w-full bg-ink text-paper py-2.5 rounded-full text-xs font-bold uppercase tracking-wider hover:bg-[#6f5cff] transition-all shadow-sm"
+                    >
+                      Schedule All Services · ₹{serviceSubtotal}
+                    </button>
+                  </div>
+                )}
+                <p className="mt-3 text-[10px] leading-relaxed text-ink/50 text-center uppercase tracking-wider">
+                  Paid on completion after service
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>

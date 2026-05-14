@@ -244,7 +244,7 @@ export default function RouteMap({
   return (
     <div
       style={{ height: typeof height === 'number' ? `${height}px` : height }}
-      className="overflow-hidden rounded-2xl border border-white/10 bg-[#0f172a]"
+      className="relative z-0 isolate overflow-hidden rounded-2xl border border-white/10 bg-[#0f172a]"
     >
       <MapContainer
         center={initialCenter}

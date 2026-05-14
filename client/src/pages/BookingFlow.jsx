@@ -6,16 +6,19 @@ import { getService } from '../api/services.js';
 import { listMyAddresses, createAddress } from '../api/addresses.js';
 import { createBooking } from '../api/bookings.js';
 import { validateCoupon } from '../api/coupons.js';
+import { createRazorpayOrder, verifyRazorpayPayment } from '../api/payments.js';
 import { formatPrice } from '../lib/booking.js';
 import { geocodeAddressText, hasValidCoords, reverseGeocodeCoordinates } from '../lib/geocoding.js';
 import PillButton from '../components/ui/PillButton.jsx';
 import FadeUp from '../components/ui/FadeUp.jsx';
 import SlotPicker from '../components/booking/SlotPicker.jsx';
 import RouteMap from '../components/booking/RouteMap.jsx';
+import { useCart } from '../context/CartContext.jsx';
 
 export default function BookingFlow() {
   const { serviceId } = useParams();
   const navigate = useNavigate();
+  const { cart, removeFromCart } = useCart();
 
   const [service, setService] = useState(null);
   const [addresses, setAddresses] = useState([]);
@@ -64,13 +67,37 @@ export default function BookingFlow() {
   };
 
   useEffect(() => {
+    if (serviceId === 'cart') {
+      const serviceCartItems = cart.filter((item) => item.kind === 'service');
+      if (serviceCartItems.length === 0) {
+        const timer = setTimeout(() => {
+          toast.error('No services in cart to schedule');
+          navigate('/cart');
+        }, 800);
+        return () => clearTimeout(timer);
+      }
+      const totalPrice = serviceCartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+      const totalDuration = serviceCartItems.reduce((acc, item) => acc + (item.durationMinutes || 60), 0);
+      const names = serviceCartItems.map((item) => item.name).join(', ');
+      setService({
+        _id: 'cart',
+        firstServiceId: serviceCartItems[0].product,
+        name: `${serviceCartItems.length} Services (${names})`,
+        price: totalPrice,
+        durationMinutes: totalDuration,
+        category: { name: 'Combined Booking' },
+      });
+      return;
+    }
+
     getService(serviceId)
       .then(setService)
       .catch(() => {
         toast.error('Service not found');
         navigate('/services');
       });
-  }, [serviceId, navigate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [serviceId, navigate, cart]);
 
   useEffect(() => {
     listMyAddresses()
@@ -81,6 +108,18 @@ export default function BookingFlow() {
         else setShowAddressForm(true);
       })
       .catch(() => setShowAddressForm(true));
+  }, []);
+
+  useEffect(() => {
+    const scriptId = 'razorpay-checkout-js';
+    const existing = document.getElementById(scriptId);
+    if (existing) return;
+    const script = document.createElement('script');
+    script.id = scriptId;
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    script.onerror = () => toast.error('Unable to load Razorpay checkout');
+    document.body.appendChild(script);
   }, []);
 
   const onSaveAddress = async (e) => {
@@ -201,16 +240,60 @@ export default function BookingFlow() {
 
   const onConfirm = async () => {
     if (!service) return;
-    if (!selectedAddressId && !showAddressForm) {
-      toast.error('Select or add an address');
-      return;
-    }
     if (bookingType === 'scheduled' && !scheduledAt) {
       toast.error('Pick a slot to schedule');
       return;
     }
 
-    if (selectedAddressId) {
+    let inlineAddressPayload = null;
+    if (!selectedAddressId) {
+      if (!showAddressForm) {
+        toast.error('Select or add an address');
+        return;
+      }
+      if (!newAddress.line1 || !newAddress.city || !newAddress.pincode) {
+        toast.error('Please complete all required address fields (Line 1, City, Pincode)');
+        return;
+      }
+
+      let resolvedAddr = { ...newAddress };
+      if (addressMode === 'manual' && !hasValidCoords(resolvedAddr.lat, resolvedAddr.lng)) {
+        try {
+          const geocoded = await geocodeAddressText([
+            resolvedAddr.line1,
+            resolvedAddr.line2,
+            resolvedAddr.landmark,
+            resolvedAddr.city,
+            resolvedAddr.state,
+            resolvedAddr.pincode,
+          ]);
+          resolvedAddr = {
+            ...resolvedAddr,
+            lat: geocoded.lat,
+            lng: geocoded.lng,
+          };
+        } catch {
+          // ignore error to let validation handle missing coords
+        }
+      }
+
+      if (!hasValidCoords(resolvedAddr.lat, resolvedAddr.lng)) {
+        toast.error('Please detect your location or provide an address that can be mapped.');
+        return;
+      }
+
+      inlineAddressPayload = {
+        label: resolvedAddr.label || 'Home',
+        line1: resolvedAddr.line1,
+        line2: resolvedAddr.line2 || undefined,
+        city: resolvedAddr.city,
+        state: resolvedAddr.state || undefined,
+        pincode: resolvedAddr.pincode,
+        landmark: resolvedAddr.landmark || undefined,
+        lat: resolvedAddr.lat,
+        lng: resolvedAddr.lng,
+      };
+    } else {
       const selected = addresses.find((a) => a._id === selectedAddressId);
       if (!hasValidCoords(selected?.lat, selected?.lng)) {
         toast.error('Selected address has no valid map coordinates. Please update or add another address.');
@@ -220,6 +303,74 @@ export default function BookingFlow() {
 
     setSubmitting(true);
     try {
+      if (serviceId === 'cart') {
+        const serviceCartItems = cart.filter((item) => item.kind === 'service');
+        const createdBookings = await Promise.all(
+          serviceCartItems.map((item) => {
+            const payload = {
+              service: item.product,
+              type: bookingType,
+              paymentMode,
+              autoAssign,
+            };
+            if (bookingType === 'scheduled' && scheduledAt) payload.scheduledAt = scheduledAt;
+            if (selectedAddressId) payload.addressId = selectedAddressId;
+            else if (inlineAddressPayload) payload.address = inlineAddressPayload;
+            if (notes.trim()) payload.notes = notes.trim();
+            return createBooking(payload);
+          })
+        );
+
+        if (paymentMode === 'online') {
+          const firstBooking = createdBookings[0];
+          const rpOrder = await createRazorpayOrder({
+            amount: service.price,
+            receipt: firstBooking?.code || 'cart_booking',
+            type: 'booking',
+          });
+
+          const options = {
+            key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_xxxx',
+            amount: rpOrder.amount,
+            currency: rpOrder.currency,
+            name: 'UrbanEase',
+            description: 'Premium Service Booking',
+            order_id: rpOrder.id,
+            handler: async function (response) {
+              try {
+                await verifyRazorpayPayment({
+                  ...response,
+                  referenceId: firstBooking._id,
+                  type: 'booking',
+                });
+                toast.success('Payment successful & Services Scheduled!');
+                serviceCartItems.forEach((item) => removeFromCart(item.product));
+                navigate('/me/bookings');
+              } catch {
+                toast.error('Payment verification failed');
+              }
+            },
+            prefill: {
+              name: 'Customer',
+              email: 'customer@velorahouse.com',
+              contact: '9999999999',
+            },
+            theme: { color: '#111111' },
+          };
+          const rzp = new window.Razorpay(options);
+          rzp.on('payment.failed', function () {
+            toast.error('Payment canceled or failed');
+          });
+          rzp.open();
+          return;
+        }
+
+        serviceCartItems.forEach((item) => removeFromCart(item.product));
+        toast.success(`Successfully booked ${serviceCartItems.length} service(s)!`);
+        navigate('/me/bookings');
+        return;
+      }
+
       const payload = {
         service: service._id,
         type: bookingType,
@@ -228,9 +379,53 @@ export default function BookingFlow() {
       };
       if (bookingType === 'scheduled' && scheduledAt) payload.scheduledAt = scheduledAt;
       if (selectedAddressId) payload.addressId = selectedAddressId;
+      else if (inlineAddressPayload) payload.address = inlineAddressPayload;
       if (notes.trim()) payload.notes = notes.trim();
       if (appliedCoupon?.code) payload.couponCode = appliedCoupon.code;
       const booking = await createBooking(payload);
+
+      if (paymentMode === 'online') {
+        const rpOrder = await createRazorpayOrder({
+          amount: booking.amount || service.price,
+          receipt: booking.code,
+          type: 'booking',
+        });
+
+        const options = {
+          key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_xxxx',
+          amount: rpOrder.amount,
+          currency: rpOrder.currency,
+          name: 'UrbanEase',
+          description: `Booking: ${service.name}`,
+          order_id: rpOrder.id,
+          handler: async function (response) {
+            try {
+              await verifyRazorpayPayment({
+                ...response,
+                referenceId: booking._id,
+                type: 'booking',
+              });
+              toast.success('Payment successful & Booking Confirmed!');
+              navigate('/me/bookings');
+            } catch {
+              toast.error('Payment verification failed');
+            }
+          },
+          prefill: {
+            name: 'Customer',
+            email: 'customer@velorahouse.com',
+            contact: '9999999999',
+          },
+          theme: { color: '#111111' },
+        };
+        const rzp = new window.Razorpay(options);
+        rzp.on('payment.failed', function () {
+          toast.error('Payment canceled or failed');
+        });
+        rzp.open();
+        return;
+      }
+
       toast.success(`Booked — ${booking.code}`);
       navigate('/me/bookings');
     } catch (err) {
@@ -300,7 +495,7 @@ export default function BookingFlow() {
                 {bookingType === 'scheduled' && (
                   <div className="mt-5 rounded-2xl border border-black/10 bg-white p-4 sm:p-5">
                     <SlotPicker
-                      serviceId={service._id}
+                      serviceId={service.firstServiceId || service._id}
                       value={scheduledAt}
                       onChange={setScheduledAt}
                     />

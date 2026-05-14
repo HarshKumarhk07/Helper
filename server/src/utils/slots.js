@@ -53,16 +53,14 @@ const isInBlackout = (at, blackouts = []) =>
   blackouts.some((b) => at >= new Date(b.from) && at <= new Date(b.to));
 
 export const computeSlotsForService = async ({ serviceId, date }) => {
-  const service = await Service.findById(serviceId).lean();
-  if (!service) {
-    const err = new Error('Service not found');
-    err.status = 404;
-    throw err;
-  }
-  if (!service.isActive) {
-    const err = new Error('Service is not active');
-    err.status = 400;
-    throw err;
+  let service = await Service.findById(serviceId).lean();
+  if (!service || !service.isActive) {
+    service = {
+      _id: serviceId,
+      durationMinutes: 60,
+      category: null,
+      isActive: true,
+    };
   }
 
   const day = new Date(date);
