@@ -106,7 +106,7 @@ const PHOTOS = [
 
 export default function Hero() {
   return (
-    <section className="relative bg-paper pt-6 pb-16 md:pt-10 md:pb-20">
+    <section className="relative bg-paper pt-0 pb-16 md:pt-0 md:pb-20">
       <div className="container-velora">
         <div className="grid lg:grid-cols-12 gap-10 lg:gap-12 items-start">
           {/* Left — heading + category panel + trust stats */}

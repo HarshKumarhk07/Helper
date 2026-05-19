@@ -47,7 +47,7 @@ export default function ServiceDetail() {
 
   if (loading) {
     return (
-      <section className="container-velora bg-sand pt-28 pb-16 lg:pt-32 lg:pb-20">
+      <section className="container-velora bg-paper pt-6 pb-16 lg:pt-8 lg:pb-20">
         <div className="grid gap-12 lg:grid-cols-2">
           <SkeletonCard />
           <div className="space-y-4">
@@ -63,7 +63,7 @@ export default function ServiceDetail() {
 
   if (!service) {
     return (
-      <section className="container-velora bg-sand pt-32 pb-20 text-center">
+      <section className="container-velora bg-paper pt-8 pb-20 text-center">
         <h1 className="heading-display text-4xl text-ink">Service not found.</h1>
         <p className="mt-3 text-sm text-ink/65">
           It may have been removed or never existed.
@@ -79,7 +79,7 @@ export default function ServiceDetail() {
   }
 
   return (
-    <section className="bg-sand pt-24 pb-16 lg:pt-28 lg:pb-20">
+    <section className="bg-paper pt-4 pb-16 lg:pt-6 lg:pb-20">
       <div className="container-velora">
         
         <FadeUp>
@@ -108,7 +108,7 @@ export default function ServiceDetail() {
               {/* Floating Quality Badge */}
               <div className="absolute bottom-8 left-8 bg-paper/90 backdrop-blur-xl px-4 py-2 rounded-full border border-paper/40 shadow-xl flex items-center gap-2">
                 <ShieldCheck size={16} className="text-green-600" />
-                <span className="text-xs font-bold uppercase tracking-widest text-ink">Velora Certified</span>
+                <span className="text-xs font-bold uppercase tracking-widest text-ink">UrbanEase Certified</span>
               </div>
             </div>
           </FadeUp>
@@ -142,7 +142,7 @@ export default function ServiceDetail() {
                 <h3 className="text-xs font-bold uppercase tracking-widest text-ink/40">The Experience</h3>
                 <p className="text-base leading-relaxed text-ink/80 font-light">
                   {service.description ||
-                    'A premium service delivered by vetted Velora professionals. Transparent pricing, on-time arrival, and a 100% satisfaction guarantee ensuring your home remains a sanctuary.'}
+                    'A premium service delivered by vetted UrbanEase professionals. Transparent pricing, on-time arrival, and a 100% satisfaction guarantee ensuring your home remains a sanctuary.'}
                 </p>
               </div>
 

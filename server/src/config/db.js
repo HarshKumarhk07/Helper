@@ -7,7 +7,7 @@ const connectDB = async () => {
   }
   mongoose.set('strictQuery', true);
   await mongoose.connect(uri);
-  console.log(`[velora] mongo connected: ${mongoose.connection.host}/${mongoose.connection.name}`);
+  console.log(`[urbanease] mongo connected: ${mongoose.connection.host}/${mongoose.connection.name}`);
 };
 
 export default connectDB;

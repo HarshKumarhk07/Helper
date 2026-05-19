@@ -257,7 +257,7 @@ export default function CheckoutPage() {
   };
 
   return (
-    <section className="bg-sand/30 min-h-screen pt-32 pb-24">
+    <section className="bg-sand/30 min-h-screen pt-8 pb-24">
       <div className="container-velora max-w-4xl">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}

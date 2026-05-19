@@ -50,7 +50,7 @@ export default function ProductDetail() {
 
   if (loading) {
     return (
-      <section className="container-velora bg-sand pt-28 pb-16 lg:pt-32 lg:pb-20">
+      <section className="container-velora bg-paper pt-6 pb-16 lg:pt-8 lg:pb-20">
         <div className="grid gap-12 lg:grid-cols-2">
           <SkeletonCard />
           <div className="space-y-4">
@@ -66,7 +66,7 @@ export default function ProductDetail() {
 
   if (!product) {
     return (
-      <section className="container-velora bg-sand pt-32 pb-20 text-center">
+      <section className="container-velora bg-paper pt-8 pb-20 text-center">
         <h1 className="heading-display text-4xl text-ink">Product not found.</h1>
         <p className="mt-3 text-sm text-ink/65">
           It may have been removed or never existed.
@@ -82,7 +82,7 @@ export default function ProductDetail() {
   }
 
   return (
-    <section className="bg-sand pt-24 pb-16 lg:pt-28 lg:pb-20">
+    <section className="bg-paper pt-4 pb-16 lg:pt-6 lg:pb-20">
       <div className="container-velora">
         
         <FadeUp>

@@ -285,7 +285,7 @@ export default function Login() {
               <div className="rounded-xl border border-ink/10 bg-ink/[0.02] px-3 py-2 text-xs text-ink/65.04]">
                 For assistance, contact{' '}
                 <span className="font-mono text-ink">
-                  adminvelorahouse@gmail.com
+                  support@urbanease.com
                 </span>
                 .
               </div>

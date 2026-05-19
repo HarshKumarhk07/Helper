@@ -4,6 +4,7 @@ import { ArrowUpRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { listProducts } from '../api/products.js';
 import toast from 'react-hot-toast';
+import ProductCard from '../components/ProductCard.jsx';
 
 const PRODUCT_CATEGORIES_INFO = [
   { name: 'Cleaning Products', image: 'https://images.unsplash.com/photo-1584820927498-cafe2c1c6843?w=800&q=80' },
@@ -90,6 +91,38 @@ export default function Products() {
             </FadeUp>
           ))}
         </div>
+
+        {/* Featured Products Showcase */}
+        {products.filter(p => p.isFeatured).length > 0 && (
+          <div className="mt-24 md:mt-32">
+            <FadeUp>
+              <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-12">
+                <div>
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-ink/45">
+                      Customer favorites
+                    </span>
+                    <span className="h-px w-10 bg-ink/15" />
+                  </div>
+                  <h3 className="heading-display text-3xl md:text-4xl lg:text-5xl text-ink leading-tight">
+                    Featured <span className="italic font-serif text-[#6f5cff]">products</span>
+                  </h3>
+                  <p className="mt-3 text-ink/55 max-w-lg">
+                    Premium equipment, genuine spares, and trusted daily care retail chosen by our experts.
+                  </p>
+                </div>
+              </div>
+            </FadeUp>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+              {products.filter(p => p.isFeatured).slice(0, 8).map((p, i) => (
+                <FadeUp key={p._id} delay={i * 0.05} className="h-full">
+                  <ProductCard product={p} />
+                </FadeUp>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </section>
   );

@@ -2,9 +2,9 @@ import AuditLog from '../models/AuditLog.js';
 import { ApiError, asyncHandler } from '../utils/asyncHandler.js';
 
 const DEMO_ACTORS = [
-  { _id: 'demo-admin-1', name: 'Velora Admin', email: 'admin@velora.demo', role: 'admin' },
-  { _id: 'demo-manager-1', name: 'Ops Manager', email: 'ops@velora.demo', role: 'manager' },
-  { _id: 'demo-admin-2', name: 'Finance Admin', email: 'finance@velora.demo', role: 'admin' },
+  { _id: 'demo-admin-1', name: 'UrbanEase Admin', email: 'admin@urbanease.demo', role: 'admin' },
+  { _id: 'demo-manager-1', name: 'Ops Manager', email: 'ops@urbanease.demo', role: 'manager' },
+  { _id: 'demo-admin-2', name: 'Finance Admin', email: 'finance@urbanease.demo', role: 'admin' },
 ];
 
 const DEMO_ACTIONS = [

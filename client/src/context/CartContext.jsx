@@ -86,32 +86,45 @@ const refreshCartItem = async (item) => {
 };
 
 export function CartProvider({ children }) {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, bootstrapping } = useAuth();
   const userId = user?._id || null;
   const currentKey = userCartKey(userId);
 
   const [cart, setCart] = useState(loadInitial);
   const syncedForUserRef = useRef(null);
   const lastKeyRef = useRef(currentKey);
+  const hydratedKeyRef = useRef(currentKey);
+  const validatedRef = useRef(new Set());
 
   // When the active user changes, swap to that user's cart bucket so one
   // user's cart never appears in another user's session.
   useEffect(() => {
     if (lastKeyRef.current === currentKey) return;
-    setCart(readKey(currentKey));
     lastKeyRef.current = currentKey;
+    hydratedKeyRef.current = currentKey;
+    setCart(readKey(currentKey));
   }, [currentKey]);
 
-  // Persist locally on every change to the per-user bucket.
+  // Persist locally on every change — gated on the bucket having been
+  // reloaded for the new key, to avoid clobbering a freshly-loaded user
+  // bucket with prior (guest) cart contents during the key-switch window.
   useEffect(() => {
+    if (hydratedKeyRef.current !== currentKey) return;
     writeKey(currentKey, cart);
   }, [cart, currentKey]);
 
-  // Validate the saved cart's product items still exist (drop ghosts).
+  // Validate the saved cart's items still exist on the server (drop ghosts).
+  // Wait for AuthContext to finish bootstrapping so we validate the correct
+  // bucket (user vs. guest), and re-run once per bucket on key change.
   useEffect(() => {
+    if (bootstrapping) return;
+    if (validatedRef.current.has(currentKey)) return;
+    if (!cart.length) {
+      validatedRef.current.add(currentKey);
+      return;
+    }
     let cancelled = false;
     const validate = async () => {
-      if (!cart.length) return;
       const results = await Promise.allSettled(cart.map((item) => refreshCartItem(item)));
       if (cancelled) return;
       const refreshed = results
@@ -121,13 +134,14 @@ export function CartProvider({ children }) {
         toast.error('Removed unavailable items from your cart');
       }
       setCart(refreshed);
+      validatedRef.current.add(currentKey);
     };
     validate();
     return () => {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [currentKey, bootstrapping]);
 
   // On login, push any local product items to the server, then read the merged cart back.
   useEffect(() => {

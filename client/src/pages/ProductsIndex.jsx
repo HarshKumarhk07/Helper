@@ -58,7 +58,7 @@ export default function ProductsIndex() {
   }, [category]);
 
   return (
-    <section className="bg-sand min-h-screen">
+    <section className="bg-paper min-h-screen">
       {/* Hero Banner */}
       <div className="relative bg-gradient-to-b from-ink to-ink/80 py-20">
         <div className="container-velora text-center">

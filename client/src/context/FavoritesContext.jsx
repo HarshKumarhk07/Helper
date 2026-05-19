@@ -47,30 +47,38 @@ const refreshFavorite = async (item) => {
 };
 
 export function FavoritesProvider({ children }) {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, bootstrapping } = useAuth();
   const userId = user?._id || null;
   const currentKey = userKey(userId);
 
   const [favorites, setFavorites] = useState(() => readKey(currentKey));
   const lastKeyRef = useRef(currentKey);
   const validatedRef = useRef(new Set());
+  const hydratedKeyRef = useRef(currentKey);
 
   // When the active user changes, reload favorites from THAT user's bucket so
   // one user's favorites never leak into another's session.
   useEffect(() => {
     if (lastKeyRef.current === currentKey) return;
-    setFavorites(readKey(currentKey));
     lastKeyRef.current = currentKey;
+    hydratedKeyRef.current = currentKey;
+    setFavorites(readKey(currentKey));
   }, [currentKey]);
 
-  // Persist on change to the appropriate per-user bucket.
+  // Persist on change — but only after we've reloaded the new bucket. Without
+  // this guard, the persist effect can clobber the freshly-loaded user bucket
+  // with the prior (guest) favorites during the brief window between currentKey
+  // changing and the reload effect running.
   useEffect(() => {
+    if (hydratedKeyRef.current !== currentKey) return;
     writeKey(currentKey, favorites);
   }, [favorites, currentKey]);
 
-  // Validate favorites against the server once per key change — drop orphans
-  // silently so stale-id navigation never 404s.
+  // Validate favorites against the server — drop orphans silently so stale-id
+  // navigation never 404s. Waits for AuthContext to finish bootstrapping so we
+  // validate the right bucket (user, not guest, when a session exists).
   useEffect(() => {
+    if (bootstrapping) return;
     if (validatedRef.current.has(currentKey)) return;
     if (favorites.length === 0) {
       validatedRef.current.add(currentKey);
@@ -92,7 +100,7 @@ export function FavoritesProvider({ children }) {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentKey]);
+  }, [currentKey, bootstrapping]);
 
   const isFavorite = useCallback(
     (productId) => favorites.some((item) => item._id === productId),

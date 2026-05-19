@@ -318,7 +318,7 @@ export default function Navbar() {
                     {/* Logo in Drawer */}
                     <div className="flex-1 flex items-center justify-center gap-2">
                       <div className="h-7 w-7 rounded-full bg-ink text-paper flex items-center justify-center font-serif text-sm font-bold">U</div>
-                      <span className="text-xs font-semibold tracking-widest uppercase text-ink">Velora</span>
+                      <span className="text-xs font-semibold tracking-widest uppercase text-ink">UrbanEase</span>
                     </div>
 
                     {/* Right Icons - Search and Cart */}

@@ -75,10 +75,11 @@ export default function ProductCard({ product, onFavoriteChange }) {
           
           <Link
             to={`/products/${product._id}`}
-            className="flex items-center gap-1.5 text-[10px] sm:text-xs font-bold uppercase tracking-widest text-white bg-ink rounded-full px-4 sm:px-5 py-2.5 sm:py-3 hover:bg-[#6f5cff] transition-all duration-300 hover:shadow-lg hover:shadow-[#6f5cff]/20"
+            aria-label="View"
+            className="flex items-center justify-center sm:gap-1.5 text-[10px] sm:text-xs font-bold uppercase tracking-widest text-white bg-ink rounded-full h-10 w-10 sm:h-auto sm:w-auto sm:px-5 sm:py-3 hover:bg-[#6f5cff] transition-all duration-300 hover:shadow-lg hover:shadow-[#6f5cff]/20"
           >
-            View
-            <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" />
+            <span className="hidden sm:inline">View</span>
+            <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" />
           </Link>
         </div>
       </div>

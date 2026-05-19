@@ -31,7 +31,7 @@ export default function Spotlight() {
   }, []);
 
   return (
-    <section className="bg-paper pt-6 pb-20 md:pt-10 md:pb-24">
+    <section className="bg-paper pt-0 pb-20 md:pt-0 md:pb-24">
       <div className="container-velora">
         <FadeUp>
           <h2 className="heading-display text-2xl md:text-3xl lg:text-4xl text-ink mb-8">

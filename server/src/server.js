@@ -24,20 +24,20 @@ const start = async () => {
   }
 
   server.listen(PORT, () => {
-    console.log(`[velora] api ready on http://localhost:${PORT}`);
+    console.log(`[urbanease] api ready on http://localhost:${PORT}`);
   });
 };
 
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('[velora] unhandled rejection at:', promise, 'reason:', reason);
+  console.error('[urbanease] unhandled rejection at:', promise, 'reason:', reason);
 });
 
 process.on('uncaughtException', (err) => {
-  console.error('[velora] uncaught exception:', err);
+  console.error('[urbanease] uncaught exception:', err);
   process.exit(1);
 });
 
 start().catch((err) => {
-  console.error('[velora] fatal startup error:', err);
+  console.error('[urbanease] fatal startup error:', err);
   process.exit(1);
 });

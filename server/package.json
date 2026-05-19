@@ -11,6 +11,7 @@
     "add:categories": "node src/seed/add-new-categories.js",
     "add:services": "node src/seed/add-services.js",
     "cleanup:catalog": "node src/seed/cleanup-catalog.js",
+    "rename:brand": "node src/seed/rename-brand.js",
     "test:slice-c": "node scripts/sliceC-socket.integration.mjs",
     "test:slice-c:pin": "node scripts/sliceC-pin.validation.mjs",
     "test:slice-d": "node scripts/sliceD-ecommerce.validation.mjs",

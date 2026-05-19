@@ -1,7 +1,15 @@
-import { lazy, Suspense } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { lazy, Suspense, useEffect } from 'react';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Navbar from './components/layout/Navbar.jsx';
 import Footer from './components/layout/Footer.jsx';
+
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, [pathname]);
+  return null;
+}
 
 // Eager — needed for first paint or auth flows
 import Home from './pages/Home.jsx';
@@ -80,9 +88,10 @@ function PageFallback() {
 
 export default function App() {
   return (
-    <div className="flex min-h-screen flex-col bg-sand text-ink">
+    <div className="flex min-h-screen flex-col bg-paper text-ink">
+      <ScrollToTop />
       <Navbar />
-      <main className="flex-1 pt-28">
+      <main className="flex-1 pt-16">
         <Suspense fallback={<PageFallback />}>
           <Routes>
             <Route path="/" element={<Home />} />

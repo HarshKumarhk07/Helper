@@ -70,7 +70,7 @@ export default function ServicesIndex() {
   const currentHeroImage = CAT_IMAGES[cat] || CAT_IMAGES['all'];
 
   return (
-    <section className="bg-sand min-h-screen">
+    <section className="bg-paper min-h-screen">
       {/* Cinematic Hero Banner */}
       <div className="relative h-[60vh] min-h-[400px] w-full flex items-center justify-center overflow-hidden bg-ink">
         <AnimatePresence mode="wait">

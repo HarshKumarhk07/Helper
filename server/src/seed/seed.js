@@ -194,9 +194,9 @@ const PRODUCT_IMAGE = {
 const run = async () => {
   await connectDB();
 
-  const adminEmail = process.env.ADMIN_SEED_EMAIL || 'admin@velora.house';
+  const adminEmail = process.env.ADMIN_SEED_EMAIL || 'admin@urbanease.com';
   const adminPassword = process.env.ADMIN_SEED_PASSWORD;
-  const adminName = process.env.ADMIN_SEED_NAME || 'Velora Admin';
+  const adminName = process.env.ADMIN_SEED_NAME || 'UrbanEase Admin';
 
   if (!adminPassword) {
     console.error('[seed] ADMIN_SEED_PASSWORD is required in .env');
@@ -221,7 +221,7 @@ const run = async () => {
     console.log(`[seed] admin refreshed: ${admin.email} (active=true, password reset)`);
   }
 
-  const sampleWorkerEmail = 'worker.demo@velora.house';
+  const sampleWorkerEmail = 'worker.demo@urbanease.com';
   let worker = await User.findOne({ email: sampleWorkerEmail });
   if (!worker) {
     worker = await User.create({
@@ -234,7 +234,7 @@ const run = async () => {
     console.log(`[seed] worker created: ${worker.email} (password = admin seed password)`);
   }
 
-  const sampleManagerEmail = 'manager.demo@velora.house';
+  const sampleManagerEmail = 'manager.demo@urbanease.com';
   let manager = await User.findOne({ email: sampleManagerEmail });
   if (!manager) {
     manager = await User.create({
