@@ -226,10 +226,20 @@ export default function AdminProducts() {
             
             <div className="mb-6">
               <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Product Image</label>
-              <div className="flex items-center gap-4">
-                <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading} className="p-2 border rounded-xl flex-1 bg-white" />
-                {uploading && <span className="text-sm">Uploading...</span>}
-                {newProduct.image && <img src={newProduct.image} alt="Preview" className="h-16 w-16 object-cover rounded-xl" />}
+              <input
+                type="url"
+                placeholder="Paste a live image URL (https://...)"
+                className="w-full p-3 border rounded-xl bg-white mb-2"
+                value={newProduct.image}
+                onChange={(e) => setNewProduct({ ...newProduct, image: e.target.value })}
+              />
+              <div className="border-t border-ink/10 pt-2">
+                <div className="text-xs text-ink/60 mb-2">Or upload a file:</div>
+                <div className="flex items-center gap-4">
+                  <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading} className="p-2 border rounded-xl flex-1 bg-white" />
+                  {uploading && <span className="text-sm">Uploading...</span>}
+                  {newProduct.image && <img src={newProduct.image} alt="Preview" className="h-16 w-16 object-cover rounded-xl" />}
+                </div>
               </div>
             </div>
 
@@ -268,7 +278,14 @@ export default function AdminProducts() {
               filteredProducts.map(p => (
                 <tr key={p._id}>
                   <td className="p-4">
-                    <img src={resolveCatalogImage(p)} className="w-12 h-12 rounded object-cover" alt={p.name} />
+                    <img
+                      src={resolveCatalogImage(p)}
+                      className="w-12 h-12 rounded object-cover bg-sand"
+                      alt={p.name}
+                      onError={(e) => {
+                        e.currentTarget.src = CATALOG_PLACEHOLDER_IMAGE;
+                      }}
+                    />
                   </td>
                   <td className="p-4 font-medium">{p.name}</td>
                   <td className="p-4">₹{p.price}</td>

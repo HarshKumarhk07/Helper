@@ -135,7 +135,7 @@ export default function UserBookings() {
                           </span>
                           <button
                             onClick={() => setTrackingBooking(b)}
-                            className="rounded border border-ink/30 px-3 py-1 text-xs uppercase tracking-widest text-ink transition hover:bg-ink hover:text-paper:bg-paper:text-ink"
+                            className="rounded border border-ink/30 px-3 py-1 text-xs uppercase tracking-widest text-ink transition hover:bg-ink hover:text-paper"
                           >
                             Track & PINs
                           </button>
@@ -167,7 +167,7 @@ export default function UserBookings() {
                       </button>
                       <button
                         onClick={() => setReviewBooking(b)}
-                        className="rounded border border-ink/30 px-3 py-1 text-xs uppercase tracking-widest text-ink transition hover:bg-ink hover:text-paper:bg-paper:text-ink"
+                        className="rounded border border-ink/30 px-3 py-1 text-xs uppercase tracking-widest text-ink transition hover:bg-ink hover:text-paper"
                       >
                         Leave a Review
                       </button>

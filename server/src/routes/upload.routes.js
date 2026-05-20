@@ -1,12 +1,12 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/auth.js';
-import { upload } from '../utils/cloudinary.js';
+import { upload, isCloudinaryConfigured } from '../utils/cloudinary.js';
 
 const router = Router();
 
-// Any authenticated user can upload an image — used for profile photos and
-// inline KYC document uploads. Cloudinary applies type + size limits inside
-// `utils/cloudinary.js` (8x.png/jpg/jpeg/webp, capped at 800x800).
+// Any authenticated user can upload an image — used for profile photos,
+// service/product images, and inline KYC documents. Cloudinary applies type +
+// size limits inside `utils/cloudinary.js`.
 router.post('/', requireAuth, (req, res) => {
   upload.single('image')(req, res, (err) => {
     if (err) {
@@ -19,9 +19,13 @@ router.post('/', requireAuth, (req, res) => {
     if (!req.file) {
       return res.status(400).json({ error: 'No image uploaded' });
     }
-    const url = req.file.filename
-      ? `http://localhost:5000/uploads/${req.file.filename}`
-      : req.file.path;
+    // Cloudinary storage puts the public CDN https URL on `req.file.path`.
+    // Disk fallback leaves a local FS path — derive an absolute URL from the
+    // actual request host so it resolves on the deployed server. Never
+    // hardcode localhost: that breaks every non-local environment.
+    const url = isCloudinaryConfigured
+      ? req.file.path
+      : `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
     res.json({ url });
   });
 });

@@ -38,18 +38,17 @@ const strengthBar = [
   'bg-emerald-500',
 ];
 
-const friendlyError = (err) => {
-  const status = err?.response?.status;
-  const msg =
-    err?.response?.data?.message || err?.response?.data?.error || err?.message || '';
-  if (/already used/i.test(msg)) return 'This reset link has already been used. Request a new one.';
-  if (/expired/i.test(msg) || /invalid or already used/i.test(msg))
-    return 'This reset link has expired. Request a new one.';
-  if (status === 400 && /password/i.test(msg))
-    return 'Password must be at least 8 characters.';
-  if (/account not found/i.test(msg)) return 'Account not found.';
-  return msg || 'Could not update your password. Try again or request a new link.';
-};
+  const friendlyError = (err) => {
+    const status = err?.response?.status;
+    const msg =
+      err?.response?.data?.message || err?.response?.data?.error || err?.message || '';
+    if (/already used/i.test(msg)) return 'This reset link has already been used. Request a new one.';
+    if (/expired/i.test(msg) || /invalid or already used/i.test(msg))
+      return 'This reset link has expired. Request a new one.';
+    if (/account not found/i.test(msg)) return 'Account not found.';
+    // Prefer server-provided message (this may include specific password policy reasons)
+    return msg || 'Could not update your password. Try again or request a new link.';
+  };
 
 export default function ResetPassword() {
   const [params] = useSearchParams();

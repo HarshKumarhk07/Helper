@@ -91,7 +91,7 @@ export default function App() {
     <div className="flex min-h-screen flex-col bg-paper text-ink">
       <ScrollToTop />
       <Navbar />
-      <main className="flex-1 pt-16">
+      <main className="flex-1 pt-24">
         <Suspense fallback={<PageFallback />}>
           <Routes>
             <Route path="/" element={<Home />} />

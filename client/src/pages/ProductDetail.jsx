@@ -7,7 +7,7 @@ import { formatPrice } from '../lib/booking.js';
 import FadeUp from '../components/ui/FadeUp.jsx';
 import SkeletonCard from '../components/ui/SkeletonCard.jsx';
 import { useCart } from '../context/CartContext.jsx';
-import { resolveCatalogImage } from '../lib/catalogImage.js';
+import { resolveCatalogImage, CATALOG_PLACEHOLDER_IMAGE } from '../lib/catalogImage.js';
 import { motion } from 'framer-motion';
 
 export default function ProductDetail() {
@@ -104,6 +104,7 @@ export default function ProductDetail() {
                 alt={product.name}
                 loading="lazy"
                 decoding="async"
+                onError={(e) => { e.currentTarget.src = CATALOG_PLACEHOLDER_IMAGE }}
                 className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 border border-ink/10 rounded-[3rem] pointer-events-none"></div>

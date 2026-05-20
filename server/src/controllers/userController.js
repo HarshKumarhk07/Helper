@@ -1,5 +1,6 @@
 import User from '../models/User.js';
 import { ApiError, asyncHandler } from '../utils/asyncHandler.js';
+import { validatePassword } from '../utils/passwordPolicy.js';
 
 export const listUsers = asyncHandler(async (req, res) => {
   const { role, q } = req.query;
@@ -17,6 +18,11 @@ export const adminCreateUser = asyncHandler(async (req, res) => {
   const { name, email, phone, aadhaarNumber, panNumber, passportPhoto, kycStatus, password, role } = req.body;
   const exists = await User.findOne({ email });
   if (exists) throw new ApiError(409, 'Email already in use');
+  if (password) {
+    const check = validatePassword(password);
+    if (!check.ok) throw new ApiError(400, check.message);
+  }
+
   const user = await User.create({
     name,
     email,
@@ -53,6 +59,10 @@ export const adminUpdateUser = asyncHandler(async (req, res) => {
 
   if (updates.password === '') delete updates.password;
   if ('password' in updates && !updates.password) delete updates.password;
+  if (updates.password) {
+    const check = validatePassword(updates.password);
+    if (!check.ok) throw new ApiError(400, check.message);
+  }
 
   if (updates.passportPhoto) {
     updates.avatar = updates.passportPhoto;

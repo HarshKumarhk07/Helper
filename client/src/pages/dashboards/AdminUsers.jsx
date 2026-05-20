@@ -109,7 +109,14 @@ export default function AdminUsers() {
       });
       load();
     } catch (err) {
-      toast.error(err?.response?.data?.error || 'Failed to create user');
+      const resp = err?.response?.data;
+      if (resp?.details) {
+        // show field details if provided
+        const first = Array.isArray(resp.details) ? resp.details.map(d => d.message).join('; ') : resp.details;
+        toast.error(first || resp?.error || 'Failed to create user');
+      } else {
+        toast.error(resp?.error || 'Failed to create user');
+      }
     }
   };
 
@@ -146,7 +153,13 @@ export default function AdminUsers() {
       toast.success('User updated successfully');
       closeEditor();
     } catch (err) {
-      toast.error(err?.response?.data?.error || 'Failed to update user');
+      const resp = err?.response?.data;
+      if (resp?.details) {
+        const first = Array.isArray(resp.details) ? resp.details.map(d => d.message).join('; ') : resp.details;
+        toast.error(first || resp?.error || 'Failed to update user');
+      } else {
+        toast.error(resp?.error || 'Failed to update user');
+      }
     }
   };
 

@@ -45,6 +45,25 @@ export default function BookingCard({ booking, footer }) {
                 {booking.address.line1}, {booking.address.city}
               </span>
             )}
+            {/* Show customer, notes and assigned worker when available */}
+            {booking.user && (
+              <span className="inline-flex items-center gap-2">
+                <strong className="text-ink/80">Customer:</strong>
+                <span className="text-ink/70">{booking.user?.name} {booking.user?.phone ? `· ${booking.user?.phone}` : booking.user?.email || ''}</span>
+              </span>
+            )}
+            {booking.notes && (
+              <span className="inline-flex items-center gap-2">
+                <strong className="text-ink/80">Notes:</strong>
+                <span className="text-ink/70">{booking.notes}</span>
+              </span>
+            )}
+            {booking.worker && (
+              <span className="inline-flex items-center gap-2">
+                <strong className="text-ink/80">Assigned:</strong>
+                <span className="text-ink/70">{booking.worker?.name} {booking.worker?.phone ? `· ${booking.worker?.phone}` : ''}</span>
+              </span>
+            )}
           </div>
         </div>
 

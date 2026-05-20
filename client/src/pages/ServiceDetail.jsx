@@ -8,7 +8,7 @@ import FadeUp from '../components/ui/FadeUp.jsx';
 import SkeletonCard from '../components/ui/SkeletonCard.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useCart } from '../context/CartContext.jsx';
-import { resolveCatalogImage } from '../lib/catalogImage.js';
+import { resolveCatalogImage, CATALOG_PLACEHOLDER_IMAGE } from '../lib/catalogImage.js';
 import { motion } from 'framer-motion';
 
 export default function ServiceDetail() {
@@ -101,6 +101,7 @@ export default function ServiceDetail() {
                 alt={service.name}
                 loading="lazy"
                 decoding="async"
+                onError={(e) => { e.currentTarget.src = CATALOG_PLACEHOLDER_IMAGE }}
                 className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 border border-ink/10 rounded-[3rem] pointer-events-none"></div>

@@ -6,6 +6,7 @@ import { ApiError, asyncHandler } from '../utils/asyncHandler.js';
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../utils/jwt.js';
 import { notifyPasswordReset } from '../utils/notificationService.js';
 import { logAudit } from '../utils/auditLogger.js';
+import { validatePassword } from '../utils/passwordPolicy.js';
 
 const RESET_TTL_MINUTES = 30;
 const hashToken = (token) => crypto.createHash('sha256').update(token).digest('hex');
@@ -134,9 +135,11 @@ export const resetPassword = asyncHandler(async (req, res) => {
   if (!token || typeof token !== 'string') {
     throw new ApiError(400, 'Invalid reset link');
   }
-  if (!password || typeof password !== 'string' || password.length < 8) {
-    throw new ApiError(400, 'Password must be at least 8 characters');
+  if (!password || typeof password !== 'string') {
+    throw new ApiError(400, 'Password is required');
   }
+  const check = validatePassword(password);
+  if (!check.ok) throw new ApiError(400, check.message);
 
   const tokenHash = hashToken(token);
   const record = await PasswordResetToken.findOne({ tokenHash });
