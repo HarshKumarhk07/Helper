@@ -21,11 +21,13 @@ const UNIQUE_SERVICE_IMAGES = {
   'Kitchen Deep Cleaning': 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=800&auto=format&fit=crop&q=80', // Deep cleaning pristine kitchen counters
   'Sofa Cleaning': 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800&auto=format&fit=crop&q=80', // Clean premium living room sofa
   'Carpet Cleaning': 'https://images.unsplash.com/photo-1558556405-307188941785?w=800&auto=format&fit=crop&q=80', // Professional vacuuming carpet
-  'Full Home Cleaning': 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800&auto=format&fit=crop&q=80', // Complete organized home room cleaning
+  'Full Home Cleaning': 'https://images.unsplash.com/photo-1563808828921-7854a7ce84d1?w=800&auto=format&fit=crop&q=80', // Full home deep cleaning with equipment
+  'Full Home Deep Cleaning': 'https://images.unsplash.com/photo-1563808828921-7854a7ce84d1?w=800&auto=format&fit=crop&q=80', // Full home deep cleaning with equipment
   'Water Tank Cleaning': 'https://images.unsplash.com/photo-1542013936693-884339e144be?w=800&auto=format&fit=crop&q=80', // High pressure water jet cleaning / industrial scrubbing context
 
   /* ─── BEAUTY & WELLNESS ───────────────────────────────────── */
   'Haircut at Home': 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800&auto=format&fit=crop&q=80', // Professional haircutting session
+  'Beauty & Wellness': 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=800&auto=format&fit=crop&q=80', // Professional beauty and wellness services
   'Facial & Cleanup': 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=800&auto=format&fit=crop&q=80', // Skincare cleanup/facial applying product
   'Bridal Makeup': 'https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=800&auto=format&fit=crop&q=80', // Exquisite makeup artist preparing client
   'Waxing': 'https://images.unsplash.com/photo-1559599101-f09722fb4948?w=800&auto=format&fit=crop&q=80', // Smooth skin waxing aesthetics
@@ -35,7 +37,7 @@ const UNIQUE_SERVICE_IMAGES = {
 
   /* ─── APPLIANCE SERVICES ──────────────────────────────────── */
   'AC Repair': 'https://images.unsplash.com/photo-1626806819282-2c1dc01a5e0c?w=800&auto=format&fit=crop&q=80', // Technician repairing AC unit
-  'AC Installation': 'https://images.unsplash.com/photo-1615875605825-5eb9bb5d52ac?w=800&auto=format&fit=crop&q=80', // Installing modern wall split AC
+  'AC Installation': 'https://images.unsplash.com/photo-1585771724684-38269d6639fd?w=800&auto=format&fit=crop&q=80', // Professional AC unit installation
   'Refrigerator Repair': 'https://images.unsplash.com/photo-1584568694244-14fbdf83bd30?w=800&auto=format&fit=crop&q=80', // Internal view open premium fridge repair
   'Washing Machine Repair': 'https://images.unsplash.com/photo-1626806787426-5910811b6325?w=800&auto=format&fit=crop&q=80', // Dedicated front load machine component repair
   'Microwave Repair': 'https://images.unsplash.com/photo-1574269909862-7e1d70bb8078?w=800&auto=format&fit=crop&q=80', // High tech kitchen appliance fix
