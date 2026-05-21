@@ -107,6 +107,9 @@ export default function ManagerDashboard() {
         <PillButton variant="solid" to="/admin/settings">
           Settings →
         </PillButton>
+        <PillButton variant="solid" to="/me/kyc">
+          KYC verification →
+        </PillButton>
         <PillButton variant="solid" to="/me/profile-edit">
           Edit profile →
         </PillButton>

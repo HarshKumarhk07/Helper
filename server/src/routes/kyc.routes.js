@@ -33,8 +33,8 @@ const kycMultipart = (req, res, next) => {
   });
 };
 
-router.get('/me', requireRole(ROLES.WORKER), getMyKyc);
-router.post('/me', requireRole(ROLES.WORKER), kycMultipart, submitKyc);
+router.get('/me', requireRole(ROLES.WORKER, ROLES.MANAGER), getMyKyc);
+router.post('/me', requireRole(ROLES.WORKER, ROLES.MANAGER), kycMultipart, submitKyc);
 
 router.get('/submissions', requireRole(ROLES.ADMIN, ROLES.MANAGER), listKycSubmissions);
 router.get('/submissions/:id', requireRole(ROLES.ADMIN, ROLES.MANAGER), getKycSubmission);

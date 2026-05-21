@@ -9,7 +9,25 @@
       "Bash(git checkout *)",
       "Bash(node -e \"import\\('multer-storage-cloudinary'\\).then\\(\\(\\)=>console.log\\('OK: multer-storage-cloudinary installed'\\)\\).catch\\(e=>console.log\\('MISSING:', e.message\\)\\)\")",
       "Bash(node --input-type=module -e ' *)",
-      "Bash(curl -s http://localhost:5000/api/product-categories)"
+      "Bash(curl -s http://localhost:5000/api/product-categories)",
+      "Bash(node --check src/controllers/kycController.js)",
+      "Bash(node --check src/routes/kyc.routes.js)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5000/api/health)",
+      "Bash(curl -s http://localhost:5000/api/health)",
+      "PowerShell($pids = Get-NetTCPConnection -LocalPort 5000 -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique; if \\($pids\\) { foreach \\($p in $pids\\) { Write-Output \"Stopping PID $p \\($\\(\\(Get-Process -Id $p -ErrorAction SilentlyContinue\\).ProcessName\\)\\)\"; Stop-Process -Id $p -Force -ErrorAction SilentlyContinue } } else { Write-Output \"Nothing listening on port 5000\" })",
+      "Bash(curl -s -o /dev/null -w \"port 5000 status: %{http_code}\\\\n\" --max-time 3 http://localhost:5000/api/health)",
+      "Bash(curl -s -o /dev/null -w \"port 5000: %{http_code}\\\\n\" --max-time 3 http://localhost:5000/api/health)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" --max-time 3 http://localhost:5000/api/health)",
+      "PowerShell($conns = Get-NetTCPConnection -LocalPort 5000 -State Listen -ErrorAction SilentlyContinue; if \\($conns\\) { $conns | ForEach-Object { $proc = Get-Process -Id $_.OwningProcess -ErrorAction SilentlyContinue; Write-Output \\(\"PID \" + $_.OwningProcess + \" = \" + $proc.ProcessName + \" | started \" + $proc.StartTime\\) } } else { Write-Output \"port 5000 free\" })",
+      "Bash(cat \"C:\\\\Users\\\\harsh\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-harsh-Desktop-Avani-Projects-velora-house\\\\6558d5bd-12d2-42b7-9cca-7863e3d3fca1\\\\tasks\\\\btpum23fh.output\")",
+      "Bash(netstat -ano)",
+      "Bash(cmd //c \"taskkill /F /T /PID 22432\")",
+      "Bash(cmd //c \"taskkill /F /PID 22432\")",
+      "PowerShell(try { Stop-Process -Id 22432 -Force -ErrorAction Stop; \"killed 22432\" } catch { \"kill failed: $_\" })",
+      "PowerShell($goodChild = \\(Get-NetTCPConnection -LocalPort 5000 -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty OwningProcess\\); if \\(-not $goodChild\\) { \"no server on 5000\"; exit }; $goodNodemon = \\(Get-CimInstance Win32_Process -Filter \"ProcessId=$goodChild\"\\).ParentProcessId; \"keeping server PID $goodChild \\(nodemon $goodNodemon\\)\"; $nodes = Get-CimInstance Win32_Process -Filter \"Name='node.exe'\" | Where-Object { $_.CommandLine -match 'velora-house' -and $_.CommandLine -match 'nodemon|server\\\\.js' }; foreach \\($n in $nodes\\) { if \\($n.ProcessId -ne $goodChild -and $n.ProcessId -ne $goodNodemon\\) { try { Stop-Process -Id $n.ProcessId -Force -ErrorAction Stop; \"killed stray $\\($n.ProcessId\\)\" } catch { \"could not kill $\\($n.ProcessId\\)\" } } })",
+      "Bash(node src/seed/fix-kyc-paths.js)",
+      "Bash(curl -s -o /dev/null -w \"panCard image: %{http_code}\\\\n\" http://localhost:5000/uploads/panCard-1779380727294-106531282.jpeg)",
+      "Bash(curl -s -o /dev/null -w \"backend health: %{http_code}\\\\n\" --max-time 4 http://localhost:5000/api/health)"
     ]
   }
 }

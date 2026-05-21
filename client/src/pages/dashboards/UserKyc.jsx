@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import {
   ShieldCheck,
@@ -11,6 +12,7 @@ import {
 import DashboardShell from './DashboardShell.jsx';
 import FadeUp from '../../components/ui/FadeUp.jsx';
 import { getMyKyc, submitKyc } from '../../api/kyc.js';
+import { useAuth } from '../../context/AuthContext.jsx';
 
 const FIELDS = [
   { key: 'aadhaarFront', label: 'Aadhaar Front', required: true },
@@ -60,6 +62,13 @@ export default function UserKyc() {
   const [submitting, setSubmitting] = useState(false);
 
   const refresh = () => {
+    // KYC applies to service professionals only (workers + managers).
+    if (user?.role !== 'worker' && user?.role !== 'manager') {
+      setLoading(false);
+      setData(null);
+      return;
+    }
+
     setLoading(true);
     getMyKyc()
       .then((res) => {
@@ -71,9 +80,19 @@ export default function UserKyc() {
       .finally(() => setLoading(false));
   };
 
+  const { user } = useAuth();
+
   useEffect(() => {
+    // Trigger refresh only when user role is available; otherwise avoid calling
+    // the worker-only endpoint which will return 403 for non-workers.
+    if (user === null) {
+      // not logged in
+      setLoading(false);
+      return;
+    }
     refresh();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   const handleFile = (key, file) => {
     if (!file) return;
@@ -141,6 +160,12 @@ export default function UserKyc() {
         <div className="text-sm text-ink/60">Loading…</div>
       </DashboardShell>
     );
+  }
+
+  // KYC is for service professionals (workers + managers) only — send any
+  // other authenticated role away rather than showing an unusable form.
+  if (user && user.role !== 'worker' && user.role !== 'manager') {
+    return <Navigate to="/" replace />;
   }
 
   const banner = STATUS_BANNER[data?.kycStatus] || STATUS_BANNER.pending;
@@ -222,12 +247,10 @@ export default function UserKyc() {
               const showPreview = newPreview || existingUrl;
               const isPdfPreview = newPreview === 'pdf' || /\.pdf(\?|$)/i.test(existingUrl || '');
               return (
-                <label
+                <div
                   key={key}
-                  className={`group relative flex flex-col rounded-2xl border-2 border-dashed p-4 transition cursor-pointer ${
-                    isVerified
-                      ? 'border-ink/10 opacity-60 cursor-not-allowed'
-                      : 'border-ink/20 hover:border-ink/50:border-paper/50'
+                  className={`group flex flex-col rounded-2xl border-2 border-dashed p-4 transition ${
+                    isVerified ? 'border-ink/10 opacity-60' : 'border-ink/20'
                   }`}
                 >
                   <div className="mb-3 flex items-center justify-between text-xs uppercase tracking-widest text-ink/60">
@@ -237,32 +260,50 @@ export default function UserKyc() {
                     {!isVerified && <Upload size={14} />}
                   </div>
 
-                  {showPreview ? (
-                    isPdfPreview ? (
-                      <div className="flex h-40 items-center justify-center rounded-xl bg-ink/5">
-                        <FileText size={36} className="text-ink/40" />
-                      </div>
+                  {/* Upload zone — the file input is scoped to this label only,
+                      so the "View current" link below stays independently clickable. */}
+                  <label
+                    className={`relative block transition ${
+                      isVerified
+                        ? 'cursor-not-allowed'
+                        : 'cursor-pointer hover:opacity-90'
+                    }`}
+                  >
+                    {showPreview ? (
+                      isPdfPreview ? (
+                        <div className="flex h-40 items-center justify-center rounded-xl bg-ink/5">
+                          <FileText size={36} className="text-ink/40" />
+                        </div>
+                      ) : (
+                        <img
+                          src={newPreview || existingUrl}
+                          alt={label}
+                          className="h-40 w-full rounded-xl object-cover"
+                        />
+                      )
                     ) : (
-                      <img
-                        src={newPreview || existingUrl}
-                        alt={label}
-                        className="h-40 w-full rounded-xl object-cover"
-                      />
-                    )
-                  ) : (
-                    <div className="flex h-40 flex-col items-center justify-center rounded-xl bg-ink/5 text-xs text-ink/50">
-                      <Upload size={24} className="mb-2" />
-                      Tap to upload
-                    </div>
-                  )}
+                      <div className="flex h-40 flex-col items-center justify-center rounded-xl bg-ink/5 text-xs text-ink/50">
+                        <Upload size={24} className="mb-2" />
+                        Tap to upload
+                      </div>
+                    )}
+
+                    <input
+                      type="file"
+                      accept="image/*,application/pdf"
+                      disabled={isVerified}
+                      capture={key === 'selfie' ? 'user' : undefined}
+                      onChange={(e) => handleFile(key, e.target.files?.[0])}
+                      className="absolute inset-0 cursor-pointer opacity-0 disabled:cursor-not-allowed"
+                    />
+                  </label>
 
                   {existingUrl && !newPreview && (
                     <a
                       href={existingUrl}
                       target="_blank"
                       rel="noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="mt-2 text-center text-xs text-ink/60 underline"
+                      className="mt-2 text-center text-xs text-ink/60 underline hover:text-ink"
                     >
                       View current
                     </a>
@@ -272,16 +313,7 @@ export default function UserKyc() {
                       {files[key].name}
                     </div>
                   )}
-
-                  <input
-                    type="file"
-                    accept="image/*,application/pdf"
-                    disabled={isVerified}
-                    capture={key === 'selfie' ? 'user' : undefined}
-                    onChange={(e) => handleFile(key, e.target.files?.[0])}
-                    className="absolute inset-0 cursor-pointer opacity-0 disabled:cursor-not-allowed"
-                  />
-                </label>
+                </div>
               );
             })}
           </div>

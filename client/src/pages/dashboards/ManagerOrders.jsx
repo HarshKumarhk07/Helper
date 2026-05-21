@@ -131,7 +131,7 @@ export default function ManagerOrders() {
                   </td>
                   <td className="p-4"><StatusBadge status={b.status} /></td>
                   <td className="p-4 text-xs">
-                    {b.worker ? (
+                    {b.worker && (
                       <>
                         <div>{b.worker.name}</div>
                         {b.worker.kycStatus !== 'verified' && (
@@ -140,18 +140,24 @@ export default function ManagerOrders() {
                           </div>
                         )}
                       </>
-                    ) : (
+                    )}
+                    {/* Assign / reassign — allowed while the booking is still
+                        placed or assigned (incl. after auto-assignment). */}
+                    {['placed', 'assigned'].includes(b.status) && (
                       <select
+                        key={b.worker?._id || 'none'}
                         defaultValue=""
                         onChange={(e) => onAssign(b, e.target.value)}
-                        className="rounded-pill border border-ink/20 bg-paper px-3 py-1 text-xs"
+                        className={`rounded-pill border border-ink/20 bg-paper px-3 py-1 text-xs ${b.worker ? 'mt-1' : ''}`}
                       >
-                        <option value="">Assign…</option>
-                        {workers.map((w) => (
-                          <option key={w._id} value={w._id}>
-                            {w.name}
-                          </option>
-                        ))}
+                        <option value="">{b.worker ? 'Reassign…' : 'Assign…'}</option>
+                        {workers
+                          .filter((w) => w._id !== b.worker?._id)
+                          .map((w) => (
+                            <option key={w._id} value={w._id}>
+                              {w.name}
+                            </option>
+                          ))}
                       </select>
                     )}
                   </td>

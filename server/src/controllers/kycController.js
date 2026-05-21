@@ -8,14 +8,27 @@ import { BOOKING_STATUS } from '../config/booking.js';
 import { ApiError, asyncHandler } from '../utils/asyncHandler.js';
 import { logAudit } from '../utils/auditLogger.js';
 import { notifyKycApproved, notifyKycRejected } from '../utils/notificationService.js';
+import { isCloudinaryConfigured } from '../utils/cloudinary.js';
+
+// Resolve a multer file to a browser-loadable URL. Cloudinary storage already
+// puts an https URL on `.path`; the disk fallback leaves a local FS path —
+// serve those through the static /uploads route on the request's own host.
+const resolveUploadUrl = (req, file) =>
+  isCloudinaryConfigured
+    ? file.path
+    : `${req.protocol}://${req.get('host')}/uploads/${file.filename}`;
 
 const KYC_FIELDS = ['aadhaarFront', 'aadhaarBack', 'panCard', 'selfie'];
+
+// KYC identity verification applies to service professionals — workers and
+// managers. Customers and admins have no KYC profile.
+const KYC_ROLES = [ROLES.WORKER, ROLES.MANAGER];
 
 const safeUser = (u) => u.toSafeJSON();
 
 export const getMyKyc = asyncHandler(async (req, res) => {
-  if (req.user.role !== ROLES.WORKER) {
-    throw new ApiError(403, 'Only workers have a KYC profile');
+  if (!KYC_ROLES.includes(req.user.role)) {
+    throw new ApiError(403, 'Only service professionals have a KYC profile');
   }
   const user = await User.findById(req.user._id);
   res.json({
@@ -30,8 +43,8 @@ export const getMyKyc = asyncHandler(async (req, res) => {
 });
 
 export const submitKyc = asyncHandler(async (req, res) => {
-  if (req.user.role !== ROLES.WORKER) {
-    throw new ApiError(403, 'Only workers can submit KYC');
+  if (!KYC_ROLES.includes(req.user.role)) {
+    throw new ApiError(403, 'Only service professionals can submit KYC');
   }
 
   const user = await User.findById(req.user._id);
@@ -61,8 +74,9 @@ export const submitKyc = asyncHandler(async (req, res) => {
   const files = req.files || {};
   let uploadedAny = false;
   KYC_FIELDS.forEach((field) => {
-    if (files[field]?.[0]?.path) {
-      docs[field] = files[field][0].path;
+    const file = files[field]?.[0];
+    if (file) {
+      docs[field] = resolveUploadUrl(req, file);
       uploadedAny = true;
     }
   });
@@ -90,7 +104,7 @@ export const submitKyc = asyncHandler(async (req, res) => {
 
 export const listKycSubmissions = asyncHandler(async (req, res) => {
   const { status = 'submitted', q } = req.query;
-  const filter = { role: ROLES.WORKER };
+  const filter = { role: { $in: KYC_ROLES } };
   if (status && status !== 'all') filter.kycStatus = status;
   if (q) {
     filter.$or = [
@@ -106,7 +120,7 @@ export const listKycSubmissions = asyncHandler(async (req, res) => {
       .sort({ kycSubmittedAt: -1, createdAt: -1 })
       .limit(200),
     User.aggregate([
-      { $match: { role: ROLES.WORKER } },
+      { $match: { role: { $in: KYC_ROLES } } },
       {
         $group: {
           _id: { $ifNull: ['$kycStatus', 'pending'] },
@@ -128,15 +142,15 @@ export const listKycSubmissions = asyncHandler(async (req, res) => {
 
 
 export const getKycSubmission = asyncHandler(async (req, res) => {
-  const worker = await User.findOne({ _id: req.params.id, role: ROLES.WORKER })
+  const worker = await User.findOne({ _id: req.params.id, role: { $in: KYC_ROLES } })
     .populate('kycReviewedBy', 'name email');
-  if (!worker) throw new ApiError(404, 'Worker not found');
+  if (!worker) throw new ApiError(404, 'Submission not found');
   res.json({ worker: safeUser(worker) });
 });
 
 export const approveKyc = asyncHandler(async (req, res) => {
-  const worker = await User.findOne({ _id: req.params.id, role: ROLES.WORKER });
-  if (!worker) throw new ApiError(404, 'Worker not found');
+  const worker = await User.findOne({ _id: req.params.id, role: { $in: KYC_ROLES } });
+  if (!worker) throw new ApiError(404, 'Submission not found');
   if (worker.kycStatus === 'verified') {
     throw new ApiError(409, 'Already verified');
   }
@@ -167,8 +181,8 @@ export const rejectKyc = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'Rejection reason is required');
   }
 
-  const worker = await User.findOne({ _id: req.params.id, role: ROLES.WORKER });
-  if (!worker) throw new ApiError(404, 'Worker not found');
+  const worker = await User.findOne({ _id: req.params.id, role: { $in: KYC_ROLES } });
+  if (!worker) throw new ApiError(404, 'Submission not found');
   if (worker.kycStatus === 'rejected') {
     throw new ApiError(409, 'Already rejected');
   }
