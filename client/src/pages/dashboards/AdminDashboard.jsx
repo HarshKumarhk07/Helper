@@ -151,7 +151,7 @@ export default function AdminDashboard() {
       legend: { display: true, labels: { font: { size: isMobile ? 10 : 12 } } },
       title: {
         display: true,
-        text: 'Orders & Bookings Trends (Last 30 Days)',
+        text: 'Orders | Bookings Trends (Last 30 Days)',
         color: '#888',
         font: { family: '"Chivo Mono", monospace', size: isMobile ? 12 : 14 }
       },
@@ -285,7 +285,7 @@ export default function AdminDashboard() {
           KYC approval →
         </PillButton>
         <PillButton variant="solid" to="/admin/users">
-          Users & roles →
+          Users | roles →
         </PillButton>
         <PillButton variant="solid" to="/admin/orders">
           Add admin notes on orders →
@@ -294,10 +294,13 @@ export default function AdminDashboard() {
           Inventory control →
         </PillButton>
         <PillButton variant="solid" to="/admin/services">
-          Services & pricing →
+          Services | pricing →
         </PillButton>
         <PillButton variant="solid" to="/admin/categories">
           Manage categories →
+        </PillButton>
+        <PillButton variant="solid" to="/admin/product-categories">
+          Shop the Collection →
         </PillButton>
         <PillButton variant="solid" to="/admin/settings">
           Platform settings →

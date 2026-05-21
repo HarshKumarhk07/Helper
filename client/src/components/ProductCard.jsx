@@ -66,19 +66,19 @@ export default function ProductCard({ product, onFavoriteChange }) {
           <p className="mt-1.5 text-xs text-ink/50 line-clamp-1">{product.description}</p>
         </Link>
         
-        {/* Bottom row: Price & Button */}
-        <div className="mt-4 pt-4 border-t border-ink/5 flex items-center justify-between">
+        {/* Bottom: Price + Action — stacks on mobile so nothing overlaps */}
+        <div className="mt-4 pt-4 border-t border-ink/5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-col">
             <span className="text-[10px] uppercase tracking-widest text-ink/40 font-medium mb-0.5">Price</span>
             <span className="text-base sm:text-lg font-bold text-ink">₹{product.price}</span>
           </div>
-          
+
           <Link
             to={`/products/${product._id}`}
             aria-label="View"
-            className="flex items-center justify-center sm:gap-1.5 text-[10px] sm:text-xs font-bold uppercase tracking-widest text-white bg-ink rounded-full h-10 w-10 sm:h-auto sm:w-auto sm:px-5 sm:py-3 hover:bg-[#6f5cff] transition-all duration-300 hover:shadow-lg hover:shadow-[#6f5cff]/20"
+            className="flex w-full sm:w-auto items-center justify-center gap-1.5 text-xs font-bold uppercase tracking-widest text-white bg-ink rounded-full py-2.5 sm:py-3 px-4 sm:px-5 hover:bg-[#6f5cff] transition-all duration-300 hover:shadow-lg hover:shadow-[#6f5cff]/20"
           >
-            <span className="hidden sm:inline">View</span>
+            View
             <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" />
           </Link>
         </div>

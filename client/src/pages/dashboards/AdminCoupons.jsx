@@ -256,7 +256,7 @@ export default function AdminCoupons() {
 
             {/* Expiry Date */}
             <div>
-              <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Expiry Date & Time</label>
+              <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Expiry Date | Time</label>
               <input
                 required
                 type="datetime-local"
@@ -280,7 +280,7 @@ export default function AdminCoupons() {
             </div>
 
             <div className="col-span-full mt-2 border-t border-ink/10 pt-4">
-              <div className="text-xs uppercase tracking-widest text-ink/60">Eligibility & limits</div>
+              <div className="text-xs uppercase tracking-widest text-ink/60">Eligibility | limits</div>
             </div>
 
             <div>
@@ -326,7 +326,7 @@ export default function AdminCoupons() {
                 onChange={(e) => setForm({ ...form, appliesTo: e.target.value })}
                 className="w-full p-3 border border-ink/20 rounded-xl bg-white focus:border-ink outline-none"
               >
-                <option value="both">Services & products</option>
+                <option value="both">Services | products</option>
                 <option value="services">Services only</option>
                 <option value="products">Products only</option>
               </select>
@@ -501,7 +501,7 @@ export default function AdminCoupons() {
 
               {/* Expiry Date */}
               <div>
-                <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Expiry Date & Time</label>
+                <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Expiry Date | Time</label>
                 <input
                   type="datetime-local"
                   className="w-full p-3 border border-ink/20 rounded-xl bg-white focus:border-ink outline-none"
@@ -524,7 +524,7 @@ export default function AdminCoupons() {
               </div>
 
               <div className="col-span-full mt-2 border-t border-ink/10 pt-4">
-                <div className="text-xs uppercase tracking-widest text-ink/60">Eligibility & limits</div>
+                <div className="text-xs uppercase tracking-widest text-ink/60">Eligibility | limits</div>
               </div>
 
               <div>
@@ -570,7 +570,7 @@ export default function AdminCoupons() {
                   onChange={(e) => setEditForm({ ...editForm, appliesTo: e.target.value })}
                   className="w-full p-3 border border-ink/20 rounded-xl bg-white focus:border-ink outline-none"
                 >
-                  <option value="both">Services & products</option>
+                  <option value="both">Services | products</option>
                   <option value="services">Services only</option>
                   <option value="products">Products only</option>
                 </select>

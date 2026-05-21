@@ -18,6 +18,14 @@ export const createServiceSchema = z.object({
   image: imageField,
   tags: z.array(z.string()).optional(),
   isActive: z.boolean().optional(),
+  isFeatured: z.boolean().optional(),
 });
 
-export const updateServiceSchema = createServiceSchema.partial();
+export const updateServiceSchema = createServiceSchema
+  .partial()
+  .extend({
+    category: z.union([objectId, z.literal(''), z.null()]).optional().transform((value) => {
+      if (value === '') return null;
+      return value;
+    }),
+  });

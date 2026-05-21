@@ -344,11 +344,6 @@ export default function LocationModal() {
 
               {/* Predictions */}
               <div className="mt-4 border-t border-ink/5 max-h-[320px] overflow-y-auto drawer-scroll">
-                {!GOOGLE_API_KEY && (
-                  <div className="px-5 sm:px-8 py-4 text-xs text-ink/45 leading-relaxed">
-                    Tip: set <code className="font-mono text-[11px]">VITE_GOOGLE_MAPS_API_KEY</code> to enable Google Places autocomplete suggestions.
-                  </div>
-                )}
                 {GOOGLE_API_KEY && loadingPlaces && (
                   <div className="px-5 sm:px-8 py-6 flex items-center gap-3 text-sm text-ink/50">
                     <Loader2 size={16} className="animate-spin" /> Searching…

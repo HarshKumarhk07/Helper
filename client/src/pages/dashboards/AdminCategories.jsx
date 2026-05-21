@@ -249,15 +249,8 @@ export default function AdminCategories() {
               </div>
             </div>
             <div className="md:col-span-2">
-              <Label>Image URL</Label>
-              <input
-                value={form.image}
-                onChange={(e) => setForm((f) => ({ ...f, image: e.target.value }))}
-                placeholder="https://… or upload below"
-                className={inputClass}
-              />
-              <div className="mt-3 border-t border-ink/10 pt-3">
-                <div className="text-xs text-ink/60 mb-2">Or upload from computer:</div>
+              <Label>Category image</Label>
+              <div className="mt-2">
                 <div className="flex items-center gap-3">
                   <input
                     type="file"

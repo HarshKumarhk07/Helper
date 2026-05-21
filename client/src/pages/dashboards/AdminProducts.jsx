@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { listProducts, createProduct, deleteProduct, updateProduct } from '../../api/products.js';
+import { listProductCategories } from '../../api/productCategories.js';
 import api from '../../api/axios.js';
 import FadeUp from '../../components/ui/FadeUp.jsx';
 import DashboardShell from './DashboardShell.jsx';
@@ -10,6 +11,7 @@ import { resolveCatalogImage } from '../../lib/catalogImage.js';
 export default function AdminProducts() {
   const [products, setProducts] = useState([]);
   const [lowStockProducts, setLowStockProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -19,11 +21,11 @@ export default function AdminProducts() {
   const lowStockThreshold = 5;
   
   const [newProduct, setNewProduct] = useState({
-    name: '', slug: '', description: '', price: '', stock: '', category: 'all', image: '', isFeatured: false
+    name: '', slug: '', description: '', price: '', stock: '', category: '', image: '', isFeatured: false
   });
 
   const [editForm, setEditForm] = useState({
-    name: '', slug: '', description: '', price: '', stock: '', category: 'all', image: '', isFeatured: false
+    name: '', slug: '', description: '', price: '', stock: '', category: '', image: '', isFeatured: false
   });
 
   const load = () => {
@@ -40,7 +42,12 @@ export default function AdminProducts() {
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    listProductCategories()
+      .then(setCategories)
+      .catch(() => toast.error('Failed to load product categories'));
+  }, []);
 
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
@@ -71,7 +78,7 @@ export default function AdminProducts() {
       await createProduct({ ...newProduct, price: Number(newProduct.price), stock: Number(newProduct.stock) });
       toast.success('Product created');
       setShowForm(false);
-      setNewProduct({ name: '', slug: '', description: '', price: '', stock: '', category: 'all', image: '', isFeatured: false });
+      setNewProduct({ name: '', slug: '', description: '', price: '', stock: '', category: '', image: '', isFeatured: false });
       load();
     } catch (err) {
       toast.error(err?.response?.data?.error || 'Failed to create product');
@@ -101,7 +108,7 @@ export default function AdminProducts() {
       description: product.description || '',
       price: product.price || '',
       stock: product.stock || '',
-      category: product.category || 'all',
+      category: product.category || '',
       image: product.image || '',
       isFeatured: Boolean(product.isFeatured),
     });
@@ -109,7 +116,7 @@ export default function AdminProducts() {
 
   const closeEditor = () => {
     setEditingProduct(null);
-    setEditForm({ name: '', slug: '', description: '', price: '', stock: '', category: 'all', image: '', isFeatured: false });
+    setEditForm({ name: '', slug: '', description: '', price: '', stock: '', category: '', image: '', isFeatured: false });
   };
 
   const getFilteredProducts = () => {
@@ -215,7 +222,17 @@ export default function AdminProducts() {
               </div>
               <div>
                 <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Category</label>
-                <input required placeholder="e.g., Electronics" className="w-full p-3 border rounded-xl bg-white" value={newProduct.category} onChange={(e) => setNewProduct({...newProduct, category: e.target.value})} />
+                <select required className="w-full p-3 border rounded-xl bg-white" value={newProduct.category} onChange={(e) => setNewProduct({...newProduct, category: e.target.value})}>
+                  <option value="">Select a category</option>
+                  {categories.map((c) => (
+                    <option key={c._id} value={c.name}>{c.name}</option>
+                  ))}
+                </select>
+                {categories.length === 0 && (
+                  <p className="mt-1.5 text-[11px] text-amber-700">
+                    No product categories yet — add them in Admin → Shop the Collection.
+                  </p>
+                )}
               </div>
             </div>
             
@@ -226,15 +243,8 @@ export default function AdminProducts() {
             
             <div className="mb-6">
               <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Product Image</label>
-              <input
-                type="url"
-                placeholder="Paste a live image URL (https://...)"
-                className="w-full p-3 border rounded-xl bg-white mb-2"
-                value={newProduct.image}
-                onChange={(e) => setNewProduct({ ...newProduct, image: e.target.value })}
-              />
               <div className="border-t border-ink/10 pt-2">
-                <div className="text-xs text-ink/60 mb-2">Or upload a file:</div>
+                <div className="text-xs text-ink/60 mb-2">Upload from computer:</div>
                 <div className="flex items-center gap-4">
                   <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading} className="p-2 border rounded-xl flex-1 bg-white" />
                   {uploading && <span className="text-sm">Uploading...</span>}
@@ -359,17 +369,24 @@ export default function AdminProducts() {
               </div>
               <div className="md:col-span-2">
                 <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Category</label>
-                <input required placeholder="e.g., Electronics" className="w-full p-3 border rounded-xl bg-white text-ink border-ink/20" value={editForm.category} onChange={(e) => setEditForm({ ...editForm, category: e.target.value })} />
+                <select required className="w-full p-3 border rounded-xl bg-white text-ink border-ink/20" value={editForm.category} onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}>
+                  <option value="">Select a category</option>
+                  {editForm.category && !categories.some((c) => c.name === editForm.category) && (
+                    <option value={editForm.category}>{editForm.category} (current)</option>
+                  )}
+                  {categories.map((c) => (
+                    <option key={c._id} value={c.name}>{c.name}</option>
+                  ))}
+                </select>
               </div>
               <div className="md:col-span-2">
                 <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Description</label>
                 <textarea required placeholder="Product description..." className="w-full p-3 border rounded-xl bg-white text-ink border-ink/20 h-24" value={editForm.description} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })} />
               </div>
               <div className="md:col-span-2">
-                <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Image URL or Upload</label>
-                <input placeholder="Image URL" className="w-full p-3 border rounded-xl bg-white text-ink border-ink/20 mb-2" value={editForm.image} onChange={(e) => setEditForm({ ...editForm, image: e.target.value })} />
+                <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Product Image</label>
                 <div className="border-t border-ink/10 pt-3">
-                  <div className="text-xs text-ink/60 mb-2">Or upload new image:</div>
+                  <div className="text-xs text-ink/60 mb-2">Upload from computer:</div>
                   <input type="file" accept="image/*" className="w-full text-sm" onChange={async (e) => {
                     const file = e.target.files?.[0];
                     if (!file) return;

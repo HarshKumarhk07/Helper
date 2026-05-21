@@ -15,7 +15,7 @@ export default function WorkerDashboard() {
           Open job queue →
         </PillButton>
         <PillButton variant="solid" to="/worker/availability">
-          Schedule & online →
+          Schedule | online →
         </PillButton>
         <PillButton variant="solid" to="/worker/earnings">
           View earnings →

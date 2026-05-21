@@ -18,10 +18,10 @@ export default function UserDashboard() {
           Saved addresses →
         </PillButton>
         <PillButton variant="solid" to="/me/coupons">
-          Offers & coupons →
+          Offers | coupons →
         </PillButton>
         <PillButton variant="solid" to="/me/support">
-          Help & support →
+          Help | support →
         </PillButton>
         <PillButton variant="solid" to="/me/wallet">
           Wallet →

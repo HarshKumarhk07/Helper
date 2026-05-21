@@ -343,7 +343,7 @@ export default function BookingFlow() {
                   referenceId: firstBooking._id,
                   type: 'booking',
                 });
-                toast.success('Payment successful & Services Scheduled!');
+                toast.success('Payment successful | Services Scheduled!');
                 serviceCartItems.forEach((item) => removeFromCart(item.product));
                 navigate('/me/bookings');
               } catch {
@@ -405,7 +405,7 @@ export default function BookingFlow() {
                 referenceId: booking._id,
                 type: 'booking',
               });
-              toast.success('Payment successful & Booking Confirmed!');
+              toast.success('Payment successful | Booking Confirmed!');
               navigate('/me/bookings');
             } catch {
               toast.error('Payment verification failed');
@@ -488,7 +488,7 @@ export default function BookingFlow() {
                     onClick={() => setBookingType('scheduled')}
                     icon={Calendar}
                     title="Schedule"
-                    sub="Pick a date & time"
+                    sub="Pick a date | time"
                   />
                 </div>
 

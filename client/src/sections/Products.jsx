@@ -3,33 +3,33 @@ import { Link } from 'react-router-dom';
 import { ArrowUpRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { listProducts } from '../api/products.js';
+import { listProductCategories } from '../api/productCategories.js';
 import toast from 'react-hot-toast';
 import ProductCard from '../components/ProductCard.jsx';
 
-const PRODUCT_CATEGORIES_INFO = [
-  { name: 'Cleaning Products', image: 'https://images.unsplash.com/photo-1584820927498-cafe2c1c6843?w=800&q=80' },
-  { name: 'Beauty Products', image: 'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=800&q=80' },
-  { name: 'Home Appliances', image: 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=800&q=80' },
-  { name: 'Home Essentials', image: 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=800&q=80' },
-  { name: 'Repair Accessories', image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=800&q=80' },
-];
+const CATEGORY_FALLBACK_IMAGE =
+  'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=800&q=80';
 
 export default function Products() {
   const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState([]);
 
   useEffect(() => {
     listProducts({ limit: 1000 })
       .then(setProducts)
-      .catch(() => toast.error('Failed to load products'))
-      .finally(() => setLoading(false));
+      .catch(() => toast.error('Failed to load products'));
+    listProductCategories({ active: 'true' })
+      .then(setCategories)
+      .catch(() => {
+        /* section just renders without the category grid */
+      });
   }, []);
 
-  const featuredCategories = PRODUCT_CATEGORIES_INFO.map(cat => ({
+  const featuredCategories = categories.map((cat) => ({
     title: cat.name,
-    count: `${products.filter(p => p.category === cat.name).length} items`,
+    count: `${products.filter((p) => p.category === cat.name).length} items`,
     slug: cat.name,
-    image: cat.image,
+    image: cat.image || CATEGORY_FALLBACK_IMAGE,
   }));
 
   return (
@@ -62,6 +62,7 @@ export default function Products() {
         </FadeUp>
 
         {/* Product Categories Grid */}
+        {featuredCategories.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6 lg:gap-8">
           {featuredCategories.map((cat, i) => (
             <FadeUp key={cat.slug} delay={i * 0.1} className="h-full">
@@ -91,6 +92,7 @@ export default function Products() {
             </FadeUp>
           ))}
         </div>
+        )}
 
         {/* Featured Products Showcase */}
         {products.filter(p => p.isFeatured).length > 0 && (

@@ -44,10 +44,7 @@ export const updateCategory = asyncHandler(async (req, res) => {
 });
 
 export const deleteCategory = asyncHandler(async (req, res) => {
-  const inUse = await Service.exists({ category: req.params.id });
-  if (inUse) {
-    throw new ApiError(409, 'Cannot delete: services exist in this category');
-  }
+  await Service.updateMany({ category: req.params.id }, { $set: { category: null } });
   const cat = await ServiceCategory.findByIdAndDelete(req.params.id);
   if (!cat) throw new ApiError(404, 'Category not found');
   res.json({ ok: true });

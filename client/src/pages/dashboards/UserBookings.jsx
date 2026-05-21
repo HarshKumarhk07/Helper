@@ -67,7 +67,7 @@ export default function UserBookings() {
         <p className="mt-2 text-sm text-black/80">
           This page shows service bookings only. Product orders are in My orders.
           The live map appears only for bookings that are assigned or in progress,
-          using the Track & PINs button or the full tracker link inside each booking card.
+          using the Track | PINs button or the full tracker link inside each booking card.
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
           <Link
@@ -137,7 +137,7 @@ export default function UserBookings() {
                             onClick={() => setTrackingBooking(b)}
                             className="rounded border border-ink/30 px-3 py-1 text-xs uppercase tracking-widest text-ink transition hover:bg-ink hover:text-paper"
                           >
-                            Track & PINs
+                            Track | PINs
                           </button>
                           <Link
                             to={`/track/${b._id}`}

@@ -40,7 +40,7 @@ export default function AdminOrders() {
   };
 
   return (
-    <DashboardShell eyebrow="(Commerce control)" title="ORDER NOTES & REVIEW.">
+    <DashboardShell eyebrow="(Commerce control)" title="ORDER NOTES | REVIEW.">
       <div className="space-y-4">
         {loading ? (
           <div className="skeleton h-32 w-full" />

@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Star, Users, ChevronRight } from 'lucide-react';
 import FadeUp from '../components/ui/FadeUp.jsx';
+import ServiceModal from '../components/services/ServiceModal.jsx';
+import { getCategoryModal } from '../data/servicesData.js';
 
 // 3D-style avatar/emoji icons from Microsoft Fluent Emoji,
 // served as SVG via the public Iconify CDN (api.iconify.design).
@@ -105,6 +107,17 @@ const PHOTOS = [
 ];
 
 export default function Hero() {
+  const navigate = useNavigate();
+  const [modalData, setModalData] = useState(null);
+
+  // A tile opens its subcategory modal if it has one; otherwise it goes
+  // straight to the filtered catalog.
+  const handleCategoryClick = (cat) => {
+    const modal = getCategoryModal(cat.label);
+    if (modal) setModalData(modal);
+    else navigate(`/services?cat=${cat.slug}`);
+  };
+
   return (
     <section className="relative bg-paper pt-0 pb-16 md:pt-0 md:pb-20">
       <div className="container-velora">
@@ -121,9 +134,10 @@ export default function Hero() {
               <div className="mt-8 rounded-[1.75rem] border border-ink/8 bg-paper p-5 md:p-7 shadow-soft">
                 <div className="grid grid-cols-4 gap-x-2 gap-y-6 md:gap-x-4 md:gap-y-8">
                   {CATEGORIES.map((cat) => (
-                    <Link
+                    <button
                       key={cat.label}
-                      to={`/services?cat=${cat.slug}`}
+                      type="button"
+                      onClick={() => handleCategoryClick(cat)}
                       className="group flex flex-col items-center text-center"
                     >
                       <div
@@ -134,7 +148,7 @@ export default function Hero() {
                       <span className="mt-3 text-xs md:text-[13px] font-medium text-ink/80 group-hover:text-ink leading-snug">
                         {cat.label}
                       </span>
-                    </Link>
+                    </button>
                   ))}
                 </div>
 
@@ -143,7 +157,7 @@ export default function Hero() {
                     to="/products"
                     className="inline-flex items-center gap-1 text-sm font-semibold text-ink hover:text-[#6f5cff] transition-colors group"
                   >
-                    Native Smart Products
+                    Our Products
                     <ChevronRight
                       size={16}
                       className="transition-transform group-hover:translate-x-0.5"
@@ -191,6 +205,8 @@ export default function Hero() {
           </div>
         </div>
       </div>
+
+      <ServiceModal data={modalData} onClose={() => setModalData(null)} />
     </section>
   );
 }

@@ -10,7 +10,7 @@ import { ROLES } from '../config/roles.js';
 const CATEGORIES = [
   { name: 'Home Services', icon: 'house', color: '#18181A', sortOrder: 1 },
   { name: 'Cleaning Services', icon: 'sparkles', color: '#18181A', sortOrder: 2 },
-  { name: 'Beauty & Wellness', icon: 'scissors', color: '#18181A', sortOrder: 3 },
+  { name: 'Beauty | Wellness', icon: 'scissors', color: '#18181A', sortOrder: 3 },
   { name: 'Appliance Services', icon: 'wrench', color: '#18181A', sortOrder: 4 },
 ];
 
@@ -99,7 +99,7 @@ const SERVICES_BY_CATEGORY = {
       description: 'Event makeup, bridal prep, and polished looks for any occasion.',
     },
     {
-      name: 'Massage & Spa',
+      name: 'Massage | Spa',
       price: 1799,
       durationMinutes: 120,
       description: 'Relaxing spa session focused on recovery, stress relief, and comfort.',
@@ -150,7 +150,7 @@ const PRODUCTS = [
   { name: 'Bathroom Cleaner', description: 'Heavy-duty bathroom cleaner for tiles, sinks, and limescale removal.', price: 199, stock: 70, category: 'Cleaning Products' },
   { name: 'Kitchen Spray', description: 'Grease-cutting spray for stovetops, counters, and kitchen appliances.', price: 179, stock: 90, category: 'Cleaning Products' },
   { name: 'Vacuum Cleaner', description: 'Compact vacuum cleaner for quick cleaning across rooms and upholstery.', price: 6999, stock: 12, category: 'Cleaning Products' },
-  { name: 'Mops & Brushes', description: 'Everyday cleaning kit with durable mop heads and scrubbing brushes.', price: 399, stock: 100, category: 'Cleaning Products' },
+  { name: 'Mops | Brushes', description: 'Everyday cleaning kit with durable mop heads and scrubbing brushes.', price: 399, stock: 100, category: 'Cleaning Products' },
   { name: 'Shampoo', description: 'Gentle daily-use shampoo for soft, clean, and manageable hair.', price: 299, stock: 95, category: 'Beauty Products' },
   { name: 'Face Wash', description: 'Refreshing face wash for a clean feel and balanced skin care routine.', price: 249, stock: 85, category: 'Beauty Products' },
   { name: 'Hair Oil', description: 'Nourishing hair oil to support scalp health and reduce dryness.', price: 349, stock: 75, category: 'Beauty Products' },

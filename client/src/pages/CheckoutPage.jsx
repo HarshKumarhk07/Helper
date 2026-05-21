@@ -167,7 +167,7 @@ export default function CheckoutPage() {
                 referenceId: order._id,
                 type: 'ecommerce'
               });
-              toast.success('Payment successful & Order placed!');
+              toast.success('Payment successful | Order placed!');
               uniqueProductIds.forEach((productId) => removeFromCart(productId));
               navigate('/me/orders');
             } catch (err) {

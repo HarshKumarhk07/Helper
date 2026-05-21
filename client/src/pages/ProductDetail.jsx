@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import toast from 'react-hot-toast';
 import { ArrowUpRight, ShoppingCart, ShieldCheck, Truck } from 'lucide-react';
 import { getProduct } from '../api/products.js';
 import { formatPrice } from '../lib/booking.js';
@@ -45,7 +44,6 @@ export default function ProductDetail() {
       price: product.price,
       image: resolveCatalogImage(product),
     });
-    toast.success('Added to cart');
   };
 
   if (loading) {

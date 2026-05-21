@@ -1,6 +1,7 @@
 import { Link, useNavigate, useLocation as useRouterLocation } from 'react-router-dom';
 import { Search, Heart, ShoppingBag, User as UserIcon, Menu, X, MapPin, ChevronDown } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useCart } from '../../context/CartContext.jsx';
 import { useFavorites } from '../../context/FavoritesContext.jsx';
@@ -10,10 +11,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const NAV = [
   { to: '/', label: 'Home' },
-  { to: '/services?cat=home-services', label: 'Services' },
-  { to: '/services?cat=cleaning-services', label: 'Cleaning' },
-  { to: '/services?cat=beauty-wellness', label: 'Beauty' },
-  { to: '/services?cat=appliance-services', label: 'Appliances' },
+  { to: '/services', label: 'Services' },
+  { to: '/products', label: 'Products' },
 ];
 
 const PANEL_BY_ROLE = {
@@ -38,13 +37,14 @@ export default function Navbar() {
   const navigate = useNavigate();
   const routerLocation = useRouterLocation();
 
-  // Compute active link manually — pathname-only matching makes all
-  // /services?cat=... links share the same active state, so we have to
-  // compare the full path+query.
-  const currentUrl = `${routerLocation.pathname}${routerLocation.search}`;
+  // Active link by pathname — '/services' stays highlighted on filtered
+  // (/services?cat=...) and detail (/services/:id) pages alike.
   const isNavActive = (to) => {
     if (to === '/') return routerLocation.pathname === '/';
-    return currentUrl === to;
+    return (
+      routerLocation.pathname === to ||
+      routerLocation.pathname.startsWith(`${to}/`)
+    );
   };
   const [open, setOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -182,19 +182,20 @@ export default function Navbar() {
             <div className="flex items-center">
               {searchOpen ? (
                 <motion.form
-                  initial={{ width: 0, opacity: 0 }}
-                  animate={{ width: 'auto', opacity: 1 }}
-                  exit={{ width: 0, opacity: 0 }}
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ duration: 0.2 }}
                   onSubmit={handleSearchSubmit}
-                  className="flex items-center gap-2 rounded-full border border-ink/10 bg-paper px-3 py-1.5 shadow-sm absolute right-32 z-10 md:static"
+                  className="absolute inset-x-0 z-30 flex items-center gap-2 rounded-full border border-ink/10 bg-paper px-4 py-2 shadow-md md:static md:inset-auto md:px-3 md:py-1.5 md:shadow-sm"
                 >
-                  <Search size={16} className="text-ink/50" />
+                  <Search size={16} className="text-ink/50 shrink-0" />
                   <input
                     ref={searchInputRef}
                     value={searchValue}
                     onChange={(e) => setSearchValue(e.target.value)}
-                    placeholder="Search..."
-                    className="w-32 md:w-48 bg-transparent text-sm outline-none placeholder:text-ink/40 text-ink font-medium"
+                    placeholder="Search services..."
+                    className="min-w-0 flex-1 md:w-48 md:flex-none bg-transparent text-sm outline-none placeholder:text-ink/40 text-ink font-medium"
                   />
                   <button
                     type="button"
@@ -202,9 +203,10 @@ export default function Navbar() {
                       setSearchOpen(false);
                       setSearchValue('');
                     }}
-                    className="text-ink/40 hover:text-ink transition-colors p-1"
+                    className="text-ink/40 hover:text-ink transition-colors p-1 shrink-0"
+                    aria-label="Close search"
                   >
-                    <X size={14} />
+                    <X size={16} />
                   </button>
                 </motion.form>
               ) : (
@@ -275,7 +277,9 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* Mobile Menu Expansion */}
+        {/* Mobile Menu Expansion — portaled to <body> so it escapes the
+            navbar's backdrop-filter containing block and sizes to the viewport. */}
+        {createPortal(
         <AnimatePresence>
           {open && (
             <>
@@ -296,7 +300,7 @@ export default function Navbar() {
                 animate={{ x: 0 }}
                 exit={{ x: '-100%' }}
                 transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                className="fixed left-0 top-0 bottom-0 z-50 h-screen flex flex-col bg-paper shadow-2xl"
+                className="fixed left-0 top-0 bottom-0 z-50 flex flex-col bg-paper shadow-2xl"
                 style={{
                   width: 'min(85vw, 380px)',
                   paddingTop: 'env(safe-area-inset-top)',
@@ -355,7 +359,7 @@ export default function Navbar() {
                 </div>
 
                 {/* Scrollable Content */}
-                <div className="flex-1 overflow-y-auto scroll-smooth drawer-scroll">
+                <div className="flex-1 min-h-0 overflow-y-auto scroll-smooth drawer-scroll">
                   {/* Main Navigation */}
                   <nav className="px-3 py-4 space-y-1">
                     <div className="text-[11px] font-semibold uppercase tracking-widest text-ink px-3 py-2">Navigation</div>
@@ -472,7 +476,9 @@ export default function Navbar() {
               </motion.div>
             </>
           )}
-        </AnimatePresence>
+        </AnimatePresence>,
+        document.body
+        )}
       </div>
     </header>
     <LocationModal />

@@ -4,12 +4,12 @@ import { motion } from 'framer-motion';
 
 const SERVICES = [
   { icon: Home, title: 'Home Maintenance', blurb: 'Plumbing, electrical, carpentry.' },
-  { icon: Sparkles, title: 'Deep Cleaning', blurb: 'Full home & sofa cleaning.' },
-  { icon: Scissors, title: 'Beauty & Salon', blurb: 'At-home grooming & spa.' },
-  { icon: PlugZap, title: 'Appliance Repair', blurb: 'AC, fridge & washing machines.' },
-  { icon: Wrench, title: 'Carpentry Experts', blurb: 'Custom furniture & repairs.' },
+  { icon: Sparkles, title: 'Deep Cleaning', blurb: 'Full home | sofa cleaning.' },
+  { icon: Scissors, title: 'Beauty | Salon', blurb: 'At-home grooming | spa.' },
+  { icon: PlugZap, title: 'Appliance Repair', blurb: 'AC, fridge | washing machines.' },
+  { icon: Wrench, title: 'Carpentry Experts', blurb: 'Custom furniture | repairs.' },
   { icon: Shield, title: 'Pest Control', blurb: 'Complete home protection.' },
-  { icon: Zap, title: 'Electrical Repair', blurb: 'Wiring, panels & fixtures.' },
+  { icon: Zap, title: 'Electrical Repair', blurb: 'Wiring, panels | fixtures.' },
 ];
 
 const MARQUEE_ITEMS = [...SERVICES, ...SERVICES];

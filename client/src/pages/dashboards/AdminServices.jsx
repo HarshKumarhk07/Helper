@@ -126,7 +126,7 @@ export default function AdminServices() {
         ...editForm,
         slug: slugify(editForm.name),
         price: Number(editForm.price),
-        category: editForm.category,
+        category: editForm.category || null,
         durationMinutes: editForm.durationMinutes ? Number(editForm.durationMinutes) : 60
       };
       const updated = await updateService(editingService._id, payload);
@@ -149,9 +149,9 @@ export default function AdminServices() {
   };
 
   return (
-    <DashboardShell eyebrow="(Categories & pricing)" title="SERVICES, CATEGORIES & PRICING.">
+    <DashboardShell eyebrow="(Categories | pricing)" title="SERVICES, CATEGORIES | PRICING.">
       <div className="flex justify-between items-center mb-8">
-        <h2 className="text-xl font-bold">Categories & pricing</h2>
+        <h2 className="text-xl font-bold">Categories | pricing</h2>
         <button onClick={() => setShowForm(!showForm)} className="pill-btn-solid text-sm">
           {showForm ? 'Cancel' : 'Add New Service'}
         </button>
@@ -316,7 +316,6 @@ export default function AdminServices() {
               <div className="md:col-span-2">
                 <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Category</label>
                 <select
-                  required
                   className="w-full p-2 text-sm border rounded-xl bg-white text-ink border-ink/20"
                   value={editForm.category}
                   onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}

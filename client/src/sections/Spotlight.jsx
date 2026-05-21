@@ -51,10 +51,10 @@ export default function Spotlight() {
               <FadeUp key={c.to} delay={i * 0.05} className="h-full">
                 <Link
                   to={c.to}
-                  className={`group relative flex flex-col sm:block h-full sm:h-56 md:h-60 rounded-2xl overflow-hidden shadow-soft hover:shadow-card hover:-translate-y-1 transition-all duration-500`}
+                  className={`group relative flex flex-col sm:block h-[260px] sm:h-56 md:h-60 rounded-2xl overflow-hidden shadow-soft hover:shadow-card hover:-translate-y-1 transition-all duration-500`}
                   style={{ backgroundColor: c.bgColor }}
                 >
-                  <div className="relative w-full aspect-[16/9] sm:hidden overflow-hidden">
+                  <div className="relative w-full h-32 shrink-0 sm:hidden overflow-hidden">
                     <img
                       src={c.image}
                       alt={c.imageAlt}

@@ -40,6 +40,12 @@ export default function ServicesIndex() {
       .catch(() => toast.error('Failed to load categories'));
   }, []);
 
+  // Keep the search box in sync with the URL — so navbar searches, "clear
+  // filters", and back/forward navigation all reflect in the input.
+  useEffect(() => {
+    setSearch(q);
+  }, [q]);
+
   useEffect(() => {
     setLoading(true);
     const filters = { active: 'true' };

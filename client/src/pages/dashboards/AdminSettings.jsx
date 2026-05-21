@@ -116,7 +116,7 @@ export default function AdminSettings() {
           </FadeUp>
 
           <FadeUp>
-            <Card title="Brand & support">
+            <Card title="Brand | support">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <TextField
                   label="Platform name"

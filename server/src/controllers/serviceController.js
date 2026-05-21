@@ -10,13 +10,24 @@ export const listServices = asyncHandler(async (req, res) => {
   const filter = {};
   if (active === 'true') filter.isActive = true;
   if (featured === 'true') filter.isFeatured = true;
-  if (q) filter.name = { $regex: q, $options: 'i' };
   if (category) {
     const cat = category.match(/^[a-f0-9]{24}$/)
       ? await ServiceCategory.findById(category)
       : await ServiceCategory.findOne({ slug: category });
     if (cat) filter.category = cat._id;
     else return res.json({ services: [] });
+  }
+  if (q) {
+    // Match the query against the service name, its description, OR the
+    // name of any category it belongs to — so searching a category term
+    // like "appliance" still surfaces "AC Installation".
+    const rx = { $regex: q.trim(), $options: 'i' };
+    const matchedCats = await ServiceCategory.find({ name: rx }).select('_id');
+    const or = [{ name: rx }, { description: rx }];
+    if (matchedCats.length) {
+      or.push({ category: { $in: matchedCats.map((c) => c._id) } });
+    }
+    filter.$or = or;
   }
 
   const services = await Service.find(filter)

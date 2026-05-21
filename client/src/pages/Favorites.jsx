@@ -19,7 +19,7 @@ export default function Favorites() {
             <div className="text-xs uppercase tracking-widest text-ink/60">
               (Favorites)
             </div>
-            <h1 className="heading-display mt-3 text-4xl md:text-6xl text-paper">YOUR SAVED ITEMS</h1>
+            <h1 className="heading-display mt-3 text-4xl md:text-6xl text-ink">YOUR SAVED ITEMS</h1>
           </div>
           <PillButton to="/">Continue browsing</PillButton>
         </div>

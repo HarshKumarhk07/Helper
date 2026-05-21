@@ -31,8 +31,8 @@ export default function Footer() {
           <div className="mb-6 text-xs font-semibold uppercase tracking-widest text-ink">Services</div>
           <ul className="space-y-4 text-sm text-ink/60 font-medium">
             <li><Link to="/services" className="hover:text-ink transition-colors w-max inline-block">Deep Cleaning</Link></li>
-            <li><Link to="/services" className="hover:text-ink transition-colors w-max inline-block">Plumbing & Electrical</Link></li>
-            <li><Link to="/services" className="hover:text-ink transition-colors w-max inline-block">Beauty & Spa</Link></li>
+            <li><Link to="/services" className="hover:text-ink transition-colors w-max inline-block">Plumbing | Electrical</Link></li>
+            <li><Link to="/services" className="hover:text-ink transition-colors w-max inline-block">Beauty | Spa</Link></li>
             <li><Link to="/services" className="hover:text-ink transition-colors w-max inline-block">Appliance Repair</Link></li>
           </ul>
         </div>
@@ -42,7 +42,7 @@ export default function Footer() {
           <ul className="space-y-4 text-sm text-ink/60 font-medium">
             <li><Link to="/" className="hover:text-ink transition-colors w-max inline-block">Our Philosophy</Link></li>
             <li><a href="#careers" className="hover:text-ink transition-colors w-max inline-block">Careers</a></li>
-            <li><a href="#press" className="hover:text-ink transition-colors w-max inline-block">Press & Media</a></li>
+            <li><a href="#press" className="hover:text-ink transition-colors w-max inline-block">Press | Media</a></li>
             <li><a href="#contact" className="hover:text-ink transition-colors w-max inline-block">Contact Us</a></li>
           </ul>
         </div>
@@ -55,7 +55,7 @@ export default function Footer() {
             © {year} UrbanEase — Unified Operations
           </span>
           <span className="text-xs text-ink/40 font-medium tracking-wide">
-            Powered by advanced tracking & seamless booking.
+            Powered by advanced tracking | seamless booking.
           </span>
         </div>
       </div>

@@ -14,7 +14,7 @@ const NEW_CATEGORIES = [
     image: '/assets/categories/pest_control.png'
   },
   {
-    name: 'Painting & Renovation',
+    name: 'Painting | Renovation',
     description: 'Expert painters and renovation specialists to refresh your living space.',
     icon: 'paintbrush',
     color: '#84591A',
@@ -23,7 +23,7 @@ const NEW_CATEGORIES = [
     image: '/assets/categories/painting.png'
   },
   {
-    name: 'Car Wash & Detailing',
+    name: 'Car Wash | Detailing',
     description: 'Premium mobile car washing and detailing right at your doorstep.',
     icon: 'sparkles',
     color: '#1F2D5A',
@@ -32,7 +32,7 @@ const NEW_CATEGORIES = [
     image: '/assets/categories/car_wash.png'
   },
   {
-    name: 'Smart Home & CCTV',
+    name: 'Smart Home | CCTV',
     description: 'Installation and setup for security cameras, locks, and smart home devices.',
     icon: 'wrench',
     color: '#18181A',
@@ -41,7 +41,7 @@ const NEW_CATEGORIES = [
     image: '/assets/categories/cctv.png'
   },
   {
-    name: 'Packers & Movers',
+    name: 'Packers | Movers',
     description: 'Safe, reliable, and hassle-free relocation and shifting services.',
     icon: 'home',
     color: '#7F4F24',
@@ -50,7 +50,7 @@ const NEW_CATEGORIES = [
     image: '/assets/categories/packers.png'
   },
   {
-    name: 'Pet Care & Grooming',
+    name: 'Pet Care | Grooming',
     description: 'Professional bathing, grooming, and care for your furry companions.',
     icon: 'flower',
     color: '#5A1F46',

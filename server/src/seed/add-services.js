@@ -125,7 +125,7 @@ const SERVICES_BY_CATEGORY_SLUG = {
     },
   ],
 
-  /* ─── BEAUTY & WELLNESS ───────────────────────────────────── */
+  /* ─── BEAUTY | WELLNESS ───────────────────────────────────── */
   'beauty-wellness': [
     {
       name: 'Haircut at Home',
@@ -136,7 +136,7 @@ const SERVICES_BY_CATEGORY_SLUG = {
       image: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800&auto=format&fit=crop',
     },
     {
-      name: 'Facial & Cleanup',
+      name: 'Facial | Cleanup',
       price: 499,
       durationMinutes: 60,
       description: 'Deep pore cleansing facial and skin cleanup for glowing, refreshed skin at home.',
@@ -160,7 +160,7 @@ const SERVICES_BY_CATEGORY_SLUG = {
       image: 'https://images.unsplash.com/photo-1559599101-f09722fb4948?w=800&auto=format&fit=crop',
     },
     {
-      name: 'Manicure & Pedicure',
+      name: 'Manicure | Pedicure',
       price: 599,
       durationMinutes: 75,
       description: 'Nail shaping, cuticle care, exfoliation, and polish for hands and feet at home.',
@@ -317,7 +317,7 @@ const SERVICES_BY_CATEGORY_SLUG = {
     },
   ],
 
-  /* ─── PAINTING & RENOVATION ──────────────────────────────── */
+  /* ─── PAINTING | RENOVATION ──────────────────────────────── */
   'painting-renovation': [
     {
       name: 'Interior Painting',
@@ -345,7 +345,7 @@ const SERVICES_BY_CATEGORY_SLUG = {
     },
   ],
 
-  /* ─── PET CARE & GROOMING ────────────────────────────────── */
+  /* ─── PET CARE | GROOMING ────────────────────────────────── */
   'pet-care-grooming': [
     {
       name: 'Pet Grooming',
@@ -373,7 +373,7 @@ const SERVICES_BY_CATEGORY_SLUG = {
     },
   ],
 
-  /* ─── CAR WASH & DETAILING ───────────────────────────────── */
+  /* ─── CAR WASH | DETAILING ───────────────────────────────── */
   'car-wash-detailing': [
     {
       name: 'Basic Car Wash',
@@ -401,7 +401,7 @@ const SERVICES_BY_CATEGORY_SLUG = {
     },
   ],
 
-  /* ─── SMART HOME & CCTV ──────────────────────────────────── */
+  /* ─── SMART HOME | CCTV ──────────────────────────────────── */
   'smart-home-cctv': [
     {
       name: 'CCTV Installation',
@@ -420,7 +420,7 @@ const SERVICES_BY_CATEGORY_SLUG = {
       image: 'https://images.unsplash.com/photo-1558618047-3c8c76ca6786?w=800&auto=format&fit=crop',
     },
     {
-      name: 'Wi-Fi Setup & Optimization',
+      name: 'Wi-Fi Setup | Optimization',
       price: 499,
       durationMinutes: 60,
       description: 'Router placement, range extender setup, and network optimisation for full-home coverage.',
@@ -429,7 +429,7 @@ const SERVICES_BY_CATEGORY_SLUG = {
     },
   ],
 
-  /* ─── PACKERS & MOVERS ────────────────────────────────────── */
+  /* ─── PACKERS | MOVERS ────────────────────────────────────── */
   'packers-movers': [
     {
       name: 'Home Relocation',

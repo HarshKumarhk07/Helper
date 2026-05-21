@@ -12,12 +12,12 @@ const FEATURES = [
   {
     icon: ShieldCheck,
     title: 'Secure Authentication',
-    body: 'Start & end jobs exclusively with a one-time PIN. Auditable timestamps for every visit guarantee absolute peace of mind.',
+    body: 'Start | end jobs exclusively with a one-time PIN. Auditable timestamps for every visit guarantee absolute peace of mind.',
   },
   {
     icon: MapPin,
     title: 'Intelligent Routing',
-    body: 'Professionals are dispatched via proximity & expertise algorithms, delivering a transparent and precise ETA to your doorstep.',
+    body: 'Professionals are dispatched via proximity | expertise algorithms, delivering a transparent and precise ETA to your doorstep.',
   },
 ];
 

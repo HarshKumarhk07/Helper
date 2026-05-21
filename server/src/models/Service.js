@@ -5,7 +5,8 @@ const serviceSchema = new mongoose.Schema(
     category: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'ServiceCategory',
-      required: true,
+      default: null,
+      required: false,
       index: true,
     },
     name: { type: String, required: true, trim: true, maxlength: 120 },

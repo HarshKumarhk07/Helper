@@ -25,13 +25,13 @@ const UNIQUE_SERVICE_IMAGES = {
   'Full Home Deep Cleaning': 'https://images.unsplash.com/photo-1563808828921-7854a7ce84d1?w=800&auto=format&fit=crop&q=80', // Full home deep cleaning with equipment
   'Water Tank Cleaning': 'https://images.unsplash.com/photo-1542013936693-884339e144be?w=800&auto=format&fit=crop&q=80', // High pressure water jet cleaning / industrial scrubbing context
 
-  /* ─── BEAUTY & WELLNESS ───────────────────────────────────── */
+  /* ─── BEAUTY | WELLNESS ───────────────────────────────────── */
   'Haircut at Home': 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800&auto=format&fit=crop&q=80', // Professional haircutting session
-  'Beauty & Wellness': 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=800&auto=format&fit=crop&q=80', // Professional beauty and wellness services
-  'Facial & Cleanup': 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=800&auto=format&fit=crop&q=80', // Skincare cleanup/facial applying product
+  'Beauty | Wellness': 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=800&auto=format&fit=crop&q=80', // Professional beauty and wellness services
+  'Facial | Cleanup': 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=800&auto=format&fit=crop&q=80', // Skincare cleanup/facial applying product
   'Bridal Makeup': 'https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=800&auto=format&fit=crop&q=80', // Exquisite makeup artist preparing client
   'Waxing': 'https://images.unsplash.com/photo-1559599101-f09722fb4948?w=800&auto=format&fit=crop&q=80', // Smooth skin waxing aesthetics
-  'Manicure & Pedicure': 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=800&auto=format&fit=crop&q=80', // Polishing beautiful nails
+  'Manicure | Pedicure': 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=800&auto=format&fit=crop&q=80', // Polishing beautiful nails
   'Spa Therapy': 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=800&auto=format&fit=crop&q=80', // Rejuvenating warm spa room
   'Head Massage': 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800&auto=format&fit=crop&q=80', // Soothing head/scalp massage
 
@@ -49,27 +49,27 @@ const UNIQUE_SERVICE_IMAGES = {
   'Termite Treatment': 'https://images.unsplash.com/photo-1560448204-603b3fc33ddc?w=800&auto=format&fit=crop&q=80', // Treating structural base/wood
   'Mosquito Control': 'https://images.unsplash.com/photo-1583335944870-d32a6e6b0d18?w=800&auto=format&fit=crop&q=80', // Fogging / spraying outdoor perimeter
 
-  /* ─── PAINTING & RENOVATION ──────────────────────────────── */
+  /* ─── PAINTING | RENOVATION ──────────────────────────────── */
   'Interior Painting': 'https://images.unsplash.com/photo-1562259929-b7e181d8d007?w=800&auto=format&fit=crop&q=80', // Painter professionally applying color on wall
   'Texture Painting': 'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=800&auto=format&fit=crop&q=80', // Detailed wall design application
   'Waterproofing': 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&auto=format&fit=crop&q=80', // Applying protective sealant coating
 
-  /* ─── PET CARE & GROOMING ────────────────────────────────── */
+  /* ─── PET CARE | GROOMING ────────────────────────────────── */
   'Pet Grooming': 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=800&auto=format&fit=crop&q=80', // Happy dog being washed/groomed
   'Pet Walking': 'https://images.unsplash.com/photo-1601758123927-198f37e2fa1d?w=800&auto=format&fit=crop&q=80', // Walking golden retriever outdoors
   'Pet Training': 'https://images.unsplash.com/photo-1546527868-ccb7ee7dfa6a?w=800&auto=format&fit=crop&q=80', // Engaging pet training session
 
-  /* ─── CAR WASH & DETAILING ───────────────────────────────── */
+  /* ─── CAR WASH | DETAILING ───────────────────────────────── */
   'Basic Car Wash': 'https://images.unsplash.com/photo-1520340356584-f9917d1eea6f?w=800&auto=format&fit=crop&q=80', // Foam suds sliding down polished car hood
   'Full Car Detailing': 'https://images.unsplash.com/photo-1485291571150-772bcfc10da5?w=800&auto=format&fit=crop&q=80', // High-end interior microfiber wiping/detailing
   'Engine Bay Cleaning': 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=800&auto=format&fit=crop&q=80', // Spotless car engine setup
 
-  /* ─── SMART HOME & CCTV ──────────────────────────────────── */
+  /* ─── SMART HOME | CCTV ──────────────────────────────────── */
   'CCTV Installation': 'https://images.unsplash.com/photo-1558002038-1055907df827?w=800&auto=format&fit=crop&q=80', // Sleek wall security surveillance camera mounted
   'Smart Lock Setup': 'https://images.unsplash.com/photo-1558618047-3c8c76ca6786?w=800&auto=format&fit=crop&q=80', // Modern keyless digital smart lock closeup
-  'Wi-Fi Setup & Optimization': 'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=800&auto=format&fit=crop&q=80', // Modern high speed glowing networking equipment
+  'Wi-Fi Setup | Optimization': 'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=800&auto=format&fit=crop&q=80', // Modern high speed glowing networking equipment
 
-  /* ─── PACKERS & MOVERS ────────────────────────────────────── */
+  /* ─── PACKERS | MOVERS ────────────────────────────────────── */
   'Home Relocation': 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&auto=format&fit=crop&q=80', // Professionally packed beautiful living space boxes ready
   'Office Shifting': 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&auto=format&fit=crop&q=80', // Corporate workspace relocation context
   'Vehicle Transport': 'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?w=800&auto=format&fit=crop&q=80', // Specialized flatbed transport context
