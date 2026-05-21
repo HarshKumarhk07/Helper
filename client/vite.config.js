@@ -11,6 +11,12 @@ export default defineConfig({
         target: 'http://localhost:5000',
         changeOrigin: true,
       },
+      // Serve backend-uploaded files through the app's own origin so stored
+      // paths stay host-agnostic ('/uploads/...') instead of leaking localhost:5000.
+      '/uploads': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+      },
     },
   },
   build: {

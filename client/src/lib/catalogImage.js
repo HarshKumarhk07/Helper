@@ -11,6 +11,25 @@ const getUploadOrigin = () => {
   }
 };
 
+/**
+ * Resolve any stored media reference (KYC docs, uploads, etc.) to a loadable
+ * URL. Absolute URLs pass through; relative '/uploads/...' paths get the API
+ * origin prefixed in prod, or stay relative in dev (Vite proxy forwards them) —
+ * so the backend host never leaks into stored data or the address bar.
+ */
+export const mediaUrl = (src) => {
+  if (!src || typeof src !== 'string') return '';
+  const s = src.trim();
+  if (!s || s.startsWith('file://')) return '';
+  if (/^(https?:|data:|blob:)/i.test(s)) return s;
+  if (s.startsWith('/uploads') || s.startsWith('uploads/')) {
+    const origin = getUploadOrigin();
+    const path = s.startsWith('/') ? s : `/${s}`;
+    return origin ? `${origin}${path}` : path;
+  }
+  return s;
+};
+
 export const resolveCatalogImage = (item, fallback = CATALOG_PLACEHOLDER_IMAGE) => {
   const image = item?.image;
 

@@ -20,12 +20,11 @@ router.post('/', requireAuth, (req, res) => {
       return res.status(400).json({ error: 'No image uploaded' });
     }
     // Cloudinary storage puts the public CDN https URL on `req.file.path`.
-    // Disk fallback leaves a local FS path — derive an absolute URL from the
-    // actual request host so it resolves on the deployed server. Never
-    // hardcode localhost: that breaks every non-local environment.
+    // Disk fallback is returned as a host-agnostic '/uploads/...' path so no
+    // server host is baked into stored data; the client resolves it.
     const url = isCloudinaryConfigured
       ? req.file.path
-      : `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+      : `/uploads/${req.file.filename}`;
     res.json({ url });
   });
 });

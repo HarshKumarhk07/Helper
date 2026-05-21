@@ -84,7 +84,7 @@ export default function AdminWorkers() {
         setWorkers(res.workers || []);
         if (res.counts) setCounts(res.counts);
       })
-      .catch(() => toast.error('Failed to load workers'))
+      .catch(() => toast.error('Failed to load KYC submissions'))
       .finally(() => setLoading(false));
   };
 
@@ -143,7 +143,7 @@ export default function AdminWorkers() {
   };
 
   return (
-    <DashboardShell eyebrow="Operations" title="Worker KYC">
+    <DashboardShell eyebrow="Operations" title="KYC verification">
       <FadeUp>
         <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="flex flex-wrap gap-2">
@@ -182,7 +182,7 @@ export default function AdminWorkers() {
         <table className="w-full text-left text-sm text-ink">
           <thead className="bg-sand/50 text-xs uppercase tracking-widest text-ink/60">
             <tr>
-              <th className="p-4 font-normal">Worker</th>
+              <th className="p-4 font-normal">Applicant</th>
               <th className="p-4 font-normal">KYC</th>
               <th className="p-4 font-normal">Submitted</th>
               <th className="p-4 font-normal">Reviewed</th>
@@ -199,7 +199,7 @@ export default function AdminWorkers() {
             ) : filtered.length === 0 ? (
               <tr>
                 <td colSpan="5" className="p-6 text-center text-ink/60">
-                  No workers in this state.
+                  No submissions in this state.
                 </td>
               </tr>
             ) : (
@@ -209,7 +209,14 @@ export default function AdminWorkers() {
                   className="transition hover:bg-sand/30:bg-[#18181A]/50"
                 >
                   <td className="p-4 text-ink">
-                    <div className="font-medium text-ink">{w.name}</div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-ink">{w.name}</span>
+                      {w.role && (
+                        <span className="rounded-full bg-ink/8 px-2 py-0.5 text-[10px] uppercase tracking-widest text-ink/60">
+                          {w.role}
+                        </span>
+                      )}
+                    </div>
                     <div className="text-xs text-ink">{w.email}</div>
                     <div className="text-xs text-ink">{w.phone || '—'}</div>
                   </td>
@@ -250,12 +257,15 @@ export default function AdminWorkers() {
                       >
                         Quick review
                       </button>
-                      <Link
-                        to={`/admin/workers/${w._id}`}
-                        className="text-xs uppercase tracking-widest text-ink hover:underline"
-                      >
-                        Full profile →
-                      </Link>
+                      {/* Full profile aggregates jobs/earnings — workers only. */}
+                      {w.role === 'worker' && (
+                        <Link
+                          to={`/admin/workers/${w._id}`}
+                          className="text-xs uppercase tracking-widest text-ink hover:underline"
+                        >
+                          Full profile →
+                        </Link>
+                      )}
                     </div>
                   </td>
                 </tr>

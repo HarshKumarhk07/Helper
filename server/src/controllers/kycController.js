@@ -10,13 +10,11 @@ import { logAudit } from '../utils/auditLogger.js';
 import { notifyKycApproved, notifyKycRejected } from '../utils/notificationService.js';
 import { isCloudinaryConfigured } from '../utils/cloudinary.js';
 
-// Resolve a multer file to a browser-loadable URL. Cloudinary storage already
-// puts an https URL on `.path`; the disk fallback leaves a local FS path —
-// serve those through the static /uploads route on the request's own host.
-const resolveUploadUrl = (req, file) =>
-  isCloudinaryConfigured
-    ? file.path
-    : `${req.protocol}://${req.get('host')}/uploads/${file.filename}`;
+// Resolve a multer file to a stored reference. Cloudinary storage puts a full
+// https URL on `.path`; the disk fallback is stored as a host-agnostic
+// '/uploads/...' path so no server host leaks into the database.
+const resolveUploadUrl = (file) =>
+  isCloudinaryConfigured ? file.path : `/uploads/${file.filename}`;
 
 const KYC_FIELDS = ['aadhaarFront', 'aadhaarBack', 'panCard', 'selfie'];
 
@@ -76,7 +74,7 @@ export const submitKyc = asyncHandler(async (req, res) => {
   KYC_FIELDS.forEach((field) => {
     const file = files[field]?.[0];
     if (file) {
-      docs[field] = resolveUploadUrl(req, file);
+      docs[field] = resolveUploadUrl(file);
       uploadedAny = true;
     }
   });

@@ -27,7 +27,8 @@
       "PowerShell($goodChild = \\(Get-NetTCPConnection -LocalPort 5000 -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty OwningProcess\\); if \\(-not $goodChild\\) { \"no server on 5000\"; exit }; $goodNodemon = \\(Get-CimInstance Win32_Process -Filter \"ProcessId=$goodChild\"\\).ParentProcessId; \"keeping server PID $goodChild \\(nodemon $goodNodemon\\)\"; $nodes = Get-CimInstance Win32_Process -Filter \"Name='node.exe'\" | Where-Object { $_.CommandLine -match 'velora-house' -and $_.CommandLine -match 'nodemon|server\\\\.js' }; foreach \\($n in $nodes\\) { if \\($n.ProcessId -ne $goodChild -and $n.ProcessId -ne $goodNodemon\\) { try { Stop-Process -Id $n.ProcessId -Force -ErrorAction Stop; \"killed stray $\\($n.ProcessId\\)\" } catch { \"could not kill $\\($n.ProcessId\\)\" } } })",
       "Bash(node src/seed/fix-kyc-paths.js)",
       "Bash(curl -s -o /dev/null -w \"panCard image: %{http_code}\\\\n\" http://localhost:5000/uploads/panCard-1779380727294-106531282.jpeg)",
-      "Bash(curl -s -o /dev/null -w \"backend health: %{http_code}\\\\n\" --max-time 4 http://localhost:5000/api/health)"
+      "Bash(curl -s -o /dev/null -w \"backend health: %{http_code}\\\\n\" --max-time 4 http://localhost:5000/api/health)",
+      "Bash(node src/seed/fix-upload-urls.js)"
     ]
   }
 }

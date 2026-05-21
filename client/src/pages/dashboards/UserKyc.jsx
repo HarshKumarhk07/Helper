@@ -12,6 +12,7 @@ import {
 import DashboardShell from './DashboardShell.jsx';
 import FadeUp from '../../components/ui/FadeUp.jsx';
 import { getMyKyc, submitKyc } from '../../api/kyc.js';
+import { mediaUrl } from '../../lib/catalogImage.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 
 const FIELDS = [
@@ -242,7 +243,7 @@ export default function UserKyc() {
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {FIELDS.map(({ key, label, required }) => {
-              const existingUrl = data?.documents?.[key];
+              const existingUrl = mediaUrl(data?.documents?.[key]);
               const newPreview = previews[key];
               const showPreview = newPreview || existingUrl;
               const isPdfPreview = newPreview === 'pdf' || /\.pdf(\?|$)/i.test(existingUrl || '');
