@@ -29,7 +29,7 @@ export default function Philosophy() {
   const opacity = useTransform(scrollYProgress, [0, 0.5, 1], [0.5, 1, 0.5]);
 
   return (
-    <section ref={containerRef} className="bg-paper py-24 md:py-32 relative overflow-hidden">
+    <section id="philosophy" ref={containerRef} className="bg-paper py-24 md:py-32 relative overflow-hidden">
       <div className="container-velora">
         <div className="grid gap-16 lg:grid-cols-[1fr,1.2fr] items-center">
           

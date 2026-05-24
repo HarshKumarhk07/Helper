@@ -15,12 +15,14 @@ const CAT_IMAGES = {
   'home-services': 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80',
   'cleaning-services': 'https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80',
   'beauty-wellness': 'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80',
-  'appliance-services': 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80',
+  'women-s-salon': 'https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80',
+  'men-s-salon': 'https://images.unsplash.com/photo-1599351431202-1e0f0137899a?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=85',
+  'appliance-services': 'https://images.unsplash.com/photo-1626806819282-2c1dc01a5e0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80',
   'pest-control': 'https://images.unsplash.com/photo-1563453392212-326f5e854473?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80',
-  'painting-renovation': 'https://images.unsplash.com/photo-1562259929-b7e181d8d007?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80',
+  'painting-renovation': '/assets/categories/painting.png',
   'car-wash-detailing': 'https://images.unsplash.com/photo-1601362840469-51e4d8d58785?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80',
-  'smart-home-cctv': 'https://images.unsplash.com/photo-1557324232-b8917d3c3dcb?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80',
-  'packers-movers': 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80',
+  'smart-home-cctv': '/assets/categories/cctv.png',
+  'packers-movers': '/assets/categories/packers.png',
   'pet-care-grooming': 'https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80'
 };
 
@@ -88,7 +90,7 @@ export default function ServicesIndex() {
             transition={{ duration: 0.8 }}
             src={currentHeroImage}
             alt="Category Header"
-            className="absolute inset-0 w-full h-full object-cover opacity-60"
+            className="absolute inset-0 w-full h-full object-cover object-center opacity-60"
           />
         </AnimatePresence>
         

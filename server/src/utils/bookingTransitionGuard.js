@@ -34,8 +34,12 @@ export const assertBookingTransition = ({ booking, to, pin, role, userId }) => {
     throw new ApiError(400, 'Invalid start PIN');
   }
 
-  if (isWorker && to === BOOKING_STATUS.COMPLETED && booking.endPin !== pin) {
-    throw new ApiError(400, 'Invalid end PIN');
+  // Completing a booking now requires the end PIN from anyone — including
+  // admins and managers. The customer holds the PIN and it's the proof
+  // that the service was actually delivered, so we don't let staff
+  // silently force-complete without it.
+  if (to === BOOKING_STATUS.COMPLETED && booking.endPin !== pin) {
+    throw new ApiError(400, 'Valid end PIN is required to mark this booking complete');
   }
 
   return { isOwner, isWorker, isAdmin, isManager };

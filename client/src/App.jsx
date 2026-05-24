@@ -1,13 +1,38 @@
-import { lazy, Suspense, useEffect } from 'react';
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { lazy, Suspense, useEffect, useRef } from 'react';
+import { Routes, Route, Navigate, useLocation, useNavigationType } from 'react-router-dom';
 import Navbar from './components/layout/Navbar.jsx';
 import Footer from './components/layout/Footer.jsx';
 
+// Route-change scroll behavior:
+//  - first paint / browser reload → leave alone (let the browser restore scroll)
+//  - back / forward (POP) → leave alone (browser handles scroll restoration)
+//  - hash in URL (#section) → scroll that element into view
+//  - any other navigation (PUSH/REPLACE) → jump to top
 function ScrollToTop() {
-  const { pathname } = useLocation();
+  const { pathname, hash, key } = useLocation();
+  const navType = useNavigationType();
+  const isFirst = useRef(true);
+
   useEffect(() => {
+    if (isFirst.current) {
+      isFirst.current = false;
+      return;
+    }
+    if (navType === 'POP') return;
+
+    if (hash) {
+      // Wait one frame so the target node is mounted before scrolling.
+      requestAnimationFrame(() => {
+        const el = document.getElementById(hash.slice(1));
+        if (el) el.scrollIntoView({ behavior: 'instant', block: 'start' });
+        else window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      });
+      return;
+    }
+
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-  }, [pathname]);
+  }, [pathname, hash, key, navType]);
+
   return null;
 }
 

@@ -197,14 +197,13 @@ export default function AdminUsers() {
               <input required type="password" placeholder="Password" className="p-3 border rounded-xl bg-white text-ink placeholder-ink/40 border-ink/20 focus:outline-none focus:border-ink:border-paper/60" value={newUser.password} onChange={(e) => setNewUser({...newUser, password: e.target.value})} />
               <input placeholder="Aadhaar Number" inputMode="numeric" maxLength={12} className="p-3 border rounded-xl bg-white text-ink placeholder-ink/40 border-ink/20 focus:outline-none focus:border-ink:border-paper/60" value={newUser.aadhaarNumber} onChange={(e) => setNewUser({...newUser, aadhaarNumber: e.target.value.replace(/\D/g, '').slice(0, 12)})} />
               <input placeholder="PAN Number" maxLength={10} className="p-3 border rounded-xl bg-white text-ink placeholder-ink/40 border-ink/20 focus:outline-none focus:border-ink:border-paper/60 uppercase" value={newUser.panNumber} onChange={(e) => setNewUser({...newUser, panNumber: e.target.value.toUpperCase().slice(0, 10)})} />
-              <input placeholder="Passport Photo URL" type="url" className="p-3 border rounded-xl bg-white text-ink placeholder-ink/40 border-ink/20 focus:outline-none focus:border-ink:border-paper/60" value={newUser.passportPhoto} onChange={(e) => setNewUser({...newUser, passportPhoto: e.target.value})} />
               <div className="md:col-span-2 rounded-xl border border-dashed border-ink/20 bg-white p-4">
                 <div className="mb-2 text-xs uppercase tracking-widest text-ink">Passport size photo - or choose from computer</div>
                 <div className="flex flex-col gap-3 md:flex-row md:items-center">
                   <input
                     type="file"
                     accept="image/*"
-                    className="w-full text-sm text-ink file:mr-4 file:rounded-pill file:border-0 file:bg-ink file:px-4 file:py-2 file:text-paper:bg-paper:text-ink"
+                    className="w-full text-sm text-ink file:mr-4 file:rounded-full file:border file:border-ink/15 file:bg-paper file:px-4 file:py-2 file:font-medium file:text-ink hover:file:bg-sand"
                     onChange={async (e) => {
                       const file = e.target.files?.[0];
                       if (!file) return;
@@ -315,8 +314,8 @@ export default function AdminUsers() {
       </div>
 
       {editingUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/70 px-4 backdrop-blur-sm">
-          <div className="card-rounded w-full max-w-3xl border border-paper/10 bg-paper p-6 text-ink shadow-[0_30px_90px_rgba(0,0,0,0.35)]">
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-ink/70 px-4 py-8 backdrop-blur-sm">
+          <div className="card-rounded w-full max-w-3xl border border-paper/10 bg-paper p-6 text-ink shadow-[0_30px_90px_rgba(0,0,0,0.35)] max-h-[calc(100vh-4rem)] overflow-y-auto">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <div className="text-xs uppercase tracking-widest text-ink">Edit user</div>
@@ -330,7 +329,6 @@ export default function AdminUsers() {
               <input required placeholder="Full Name" className="p-3 border rounded-xl bg-transparent border-ink/20 text-ink placeholder-ink/45" value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} />
               <input required type="email" placeholder="Email Address" className="p-3 border rounded-xl bg-transparent border-ink/20 text-ink placeholder-ink/45" value={editForm.email} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} />
               <input placeholder="Phone Number" className="p-3 border rounded-xl bg-transparent border-ink/20 text-ink placeholder-ink/45" value={editForm.phone} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} />
-              <input placeholder="Passport Photo URL" className="p-3 border rounded-xl bg-transparent border-ink/20 text-ink placeholder-ink/45" value={editForm.passportPhoto} onChange={(e) => setEditForm({ ...editForm, passportPhoto: e.target.value })} />
               <input placeholder="Aadhaar Number" inputMode="numeric" maxLength={12} className="p-3 border rounded-xl bg-transparent border-ink/20 text-ink placeholder-ink/45" value={editForm.aadhaarNumber} onChange={(e) => setEditForm({ ...editForm, aadhaarNumber: e.target.value.replace(/\D/g, '').slice(0, 12) })} />
               <input placeholder="PAN Number" maxLength={10} className="p-3 border rounded-xl bg-transparent border-ink/20 text-ink placeholder-ink/45 uppercase" value={editForm.panNumber} onChange={(e) => setEditForm({ ...editForm, panNumber: e.target.value.toUpperCase().slice(0, 10) })} />
               <div className="md:col-span-2 rounded-xl border border-dashed border-ink/20 bg-transparent p-4">
@@ -339,7 +337,7 @@ export default function AdminUsers() {
                   <input
                     type="file"
                     accept="image/*"
-                    className="w-full text-sm text-ink file:mr-4 file:rounded-pill file:border-0 file:bg-ink file:px-4 file:py-2 file:text-paper:bg-paper:text-ink"
+                    className="w-full text-sm text-ink file:mr-4 file:rounded-full file:border file:border-ink/15 file:bg-paper file:px-4 file:py-2 file:font-medium file:text-ink hover:file:bg-sand"
                     onChange={async (e) => {
                       const file = e.target.files?.[0];
                       if (!file) return;

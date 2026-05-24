@@ -8,9 +8,6 @@ export default function WorkerDashboard() {
       title="ON THE GROUND, ON SCHEDULE."
     >
       <div className="flex flex-wrap gap-3">
-        <PillButton variant="solid" to="/worker">
-          Worker panel →
-        </PillButton>
         <PillButton variant="solid" to="/worker/jobs">
           Open job queue →
         </PillButton>

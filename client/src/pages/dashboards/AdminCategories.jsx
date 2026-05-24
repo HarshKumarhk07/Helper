@@ -74,6 +74,9 @@ export default function AdminCategories() {
       isActive: !!cat.isActive,
       sortOrder: cat.sortOrder || 0,
     });
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
   };
 
   const cancel = () => {

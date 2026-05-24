@@ -14,8 +14,8 @@ export default function AdminAuditLogs() {
     action: '',
   });
 
-  const load = async () => {
-    setLoading(true);
+  const load = async ({ silent = false } = {}) => {
+    if (!silent) setLoading(true);
     try {
       const response = await api.get('/audit', {
         params: {
@@ -29,24 +29,27 @@ export default function AdminAuditLogs() {
       setDemoMode(!!response.data.demoMode);
       setLastUpdated(new Date());
     } catch (err) {
-      toast.error('Failed to load audit logs');
+      if (!silent) toast.error('Failed to load audit logs');
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
+  // Initial load + reload when filters change — full loading state.
   useEffect(() => {
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters]);
 
+  // Background poll while live mode is on — silent so the table doesn't
+  // flash "Loading..." every 7 seconds.
   useEffect(() => {
     if (!isLive) return undefined;
-
     const intervalId = setInterval(() => {
-      load();
+      load({ silent: true });
     }, 7000);
-
     return () => clearInterval(intervalId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLive, filters]);
 
   const statusColor = (status) => {

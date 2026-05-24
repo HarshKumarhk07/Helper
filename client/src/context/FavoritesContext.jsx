@@ -53,26 +53,39 @@ export function FavoritesProvider({ children }) {
 
   const [favorites, setFavorites] = useState(() => readKey(currentKey));
   const lastKeyRef = useRef(currentKey);
+  const wasAuthenticatedRef = useRef(isAuthenticated);
   const validatedRef = useRef(new Set());
-  const hydratedKeyRef = useRef(currentKey);
 
-  // When the active user changes, reload favorites from THAT user's bucket so
-  // one user's favorites never leak into another's session.
+  useEffect(() => {
+    const wasAuthenticated = wasAuthenticatedRef.current;
+    wasAuthenticatedRef.current = isAuthenticated;
+
+    // On explicit logout, clear the signed-out bucket so the next guest view
+    // doesn't continue showing the previous account's likes.
+    if (wasAuthenticated && !isAuthenticated && !bootstrapping) {
+      setFavorites([]);
+      validatedRef.current.delete(GUEST_KEY);
+      writeKey(GUEST_KEY, []);
+    }
+  }, [isAuthenticated, bootstrapping]);
+
+  // When the active user changes (login/logout), reload favorites from THAT
+  // user's bucket so one user's favorites never leak into another's session.
   useEffect(() => {
     if (lastKeyRef.current === currentKey) return;
     lastKeyRef.current = currentKey;
-    hydratedKeyRef.current = currentKey;
     setFavorites(readKey(currentKey));
   }, [currentKey]);
 
-  // Persist on change — but only after we've reloaded the new bucket. Without
-  // this guard, the persist effect can clobber the freshly-loaded user bucket
-  // with the prior (guest) favorites during the brief window between currentKey
-  // changing and the reload effect running.
+  // Persist only when `favorites` actually changes — never on currentKey
+  // change alone. The old version listened on `[favorites, currentKey]` and
+  // would fire on logout with the previous user's still-in-closure favorites,
+  // writing them into the new bucket (guest). That's how "liked items leak
+  // across accounts" happens.
   useEffect(() => {
-    if (hydratedKeyRef.current !== currentKey) return;
     writeKey(currentKey, favorites);
-  }, [favorites, currentKey]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [favorites]);
 
   // Validate favorites against the server — drop orphans silently so stale-id
   // navigation never 404s. Waits for AuthContext to finish bootstrapping so we

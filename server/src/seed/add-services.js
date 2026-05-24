@@ -193,7 +193,7 @@ const SERVICES_BY_CATEGORY_SLUG = {
       durationMinutes: 90,
       description: 'AC diagnosis, gas refill, filter cleaning, and full performance restoration.',
       tags: ['AC', 'air conditioner', 'repair', 'cooling', 'gas refill'],
-      image: 'https://images.unsplash.com/photo-1631567091196-b28bf32ba673?w=800&auto=format&fit=crop',
+      image: 'https://images.unsplash.com/photo-1626806819282-2c1dc01a5e0c?w=800&auto=format&fit=crop',
     },
     {
       name: 'AC Installation',

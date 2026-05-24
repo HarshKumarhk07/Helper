@@ -24,18 +24,20 @@ export const createAddress = asyncHandler(async (req, res) => {
     await Address.updateMany({ user: req.user._id }, { isDefault: false });
   }
 
-  // Geocode address if lat/lng are missing
+  // Best-effort geocode. Coordinates power delivery routing, but a saved
+  // address without them is still useful (the customer knows where it is) —
+  // so a Nominatim miss or rate-limit must not block address creation.
   if (!hasCoords(payload.lat, payload.lng)) {
     const addressStr = `${payload.line1}, ${payload.line2 || ''}, ${payload.city}, ${payload.state || ''}, ${payload.pincode}`.replace(/,\s*,/g, ',');
-    const coords = await geocodeAddress(addressStr);
-    if (coords) {
-      payload.lat = coords.lat;
-      payload.lng = coords.lng;
+    try {
+      const coords = await geocodeAddress(addressStr);
+      if (coords) {
+        payload.lat = coords.lat;
+        payload.lng = coords.lng;
+      }
+    } catch {
+      /* geocoder failed — save the address without coords */
     }
-  }
-
-  if (!hasCoords(payload.lat, payload.lng)) {
-    throw new ApiError(400, 'Could not resolve location coordinates for this address');
   }
 
   const addr = await Address.create(payload);
@@ -49,26 +51,25 @@ export const updateAddress = asyncHandler(async (req, res) => {
     await Address.updateMany({ user: req.user._id }, { isDefault: false });
   }
 
-  // If address changed and lat/lng not explicitly provided, re-geocode
+  // If address fields changed and lat/lng not explicitly provided, best-effort
+  // re-geocode. Same as create — never block the update on a geocode miss.
   if ((req.body.line1 || req.body.city || req.body.pincode) && !hasCoords(req.body.lat, req.body.lng)) {
     const pLine1 = req.body.line1 || owned.line1;
     const pLine2 = req.body.line2 || owned.line2 || '';
     const pCity = req.body.city || owned.city;
     const pState = req.body.state || owned.state || '';
     const pPincode = req.body.pincode || owned.pincode;
-    
-    const addressStr = `${pLine1}, ${pLine2}, ${pCity}, ${pState}, ${pPincode}`.replace(/,\s*,/g, ',');
-    const coords = await geocodeAddress(addressStr);
-    if (coords) {
-      req.body.lat = coords.lat;
-      req.body.lng = coords.lng;
-    }
-  }
 
-  const nextLat = req.body.lat ?? owned.lat;
-  const nextLng = req.body.lng ?? owned.lng;
-  if (!hasCoords(nextLat, nextLng)) {
-    throw new ApiError(400, 'Could not resolve location coordinates for this address');
+    const addressStr = `${pLine1}, ${pLine2}, ${pCity}, ${pState}, ${pPincode}`.replace(/,\s*,/g, ',');
+    try {
+      const coords = await geocodeAddress(addressStr);
+      if (coords) {
+        req.body.lat = coords.lat;
+        req.body.lng = coords.lng;
+      }
+    } catch {
+      /* geocoder failed — keep existing coords if any */
+    }
   }
 
   Object.assign(owned, req.body);

@@ -1,19 +1,48 @@
 import { Link } from 'react-router-dom';
-import { Heart, ArrowRight } from 'lucide-react';
+import { Heart, ShoppingCart, Plus, Minus } from 'lucide-react';
 import { useFavorites } from '../context/FavoritesContext.jsx';
+import { useCart } from '../context/CartContext.jsx';
 import { resolveCatalogImage } from '../lib/catalogImage.js';
 
 export default function ProductCard({ product, onFavoriteChange }) {
   const { favorites, toggleFavorite } = useFavorites();
+  const { cart, addToCart, removeFromCart, updateQuantity } = useCart();
   const image = resolveCatalogImage(product);
-  
-  const isFavorited = favorites.some(fav => fav._id === product._id);
+
+  const isFavorited = favorites.some((fav) => fav._id === product._id);
+  const inCart = cart.find((it) => it.product === product._id && it.kind !== 'service');
+  const qty = inCart?.quantity || 0;
 
   const handleFavorite = (e) => {
     e.preventDefault();
     e.stopPropagation();
     toggleFavorite({ ...product, kind: 'product' });
     if (onFavoriteChange) onFavoriteChange(!isFavorited);
+  };
+
+  const handleAddToCart = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    addToCart({
+      _id: product._id,
+      kind: 'product',
+      name: product.name,
+      price: product.price,
+      image,
+    });
+  };
+
+  const handleDec = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (qty <= 1) removeFromCart(product._id);
+    else updateQuantity(product._id, qty - 1);
+  };
+
+  const handleInc = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    updateQuantity(product._id, qty + 1);
   };
 
   return (
@@ -73,14 +102,37 @@ export default function ProductCard({ product, onFavoriteChange }) {
             <span className="text-base sm:text-lg font-bold text-ink">₹{product.price}</span>
           </div>
 
-          <Link
-            to={`/products/${product._id}`}
-            aria-label="View"
-            className="flex w-full sm:w-auto items-center justify-center gap-1.5 text-xs font-bold uppercase tracking-widest text-white bg-ink rounded-full py-2.5 sm:py-3 px-4 sm:px-5 hover:bg-[#6f5cff] transition-all duration-300 hover:shadow-lg hover:shadow-[#6f5cff]/20"
-          >
-            View
-            <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" />
-          </Link>
+          {inCart ? (
+            <div className="flex w-full sm:w-auto items-center justify-between sm:justify-center gap-2 rounded-full bg-ink text-paper py-1.5 sm:py-2 px-2 sm:px-2.5">
+              <button
+                type="button"
+                onClick={handleDec}
+                aria-label={qty <= 1 ? 'Remove from cart' : 'Decrease quantity'}
+                className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full hover:bg-paper/10 transition"
+              >
+                <Minus size={14} />
+              </button>
+              <span className="min-w-[24px] text-center text-sm font-bold tabular-nums">{qty}</span>
+              <button
+                type="button"
+                onClick={handleInc}
+                aria-label="Increase quantity"
+                className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full hover:bg-paper/10 transition"
+              >
+                <Plus size={14} />
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={handleAddToCart}
+              aria-label="Add to cart"
+              className="flex w-full sm:w-auto items-center justify-center gap-1.5 text-xs font-bold uppercase tracking-widest text-white bg-ink rounded-full py-2.5 sm:py-3 px-4 sm:px-5 hover:bg-[#6f5cff] transition-all duration-300 hover:shadow-lg hover:shadow-[#6f5cff]/20"
+            >
+              Add
+              <ShoppingCart size={14} />
+            </button>
+          )}
         </div>
       </div>
     </div>

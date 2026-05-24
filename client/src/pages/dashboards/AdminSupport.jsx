@@ -46,7 +46,7 @@ const fmtRelative = (date) => {
 export default function AdminSupport() {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('awaiting_agent');
+  const [filter, setFilter] = useState('all');
   const [q, setQ] = useState('');
 
   const load = () => {

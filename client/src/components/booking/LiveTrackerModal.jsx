@@ -38,6 +38,13 @@ export default function LiveTrackerModal({ booking, onClose }) {
         : null,
   });
 
+  // Close on Escape — backdrop click is handled inline below.
+  useEffect(() => {
+    const onKey = (e) => e.key === 'Escape' && onClose?.();
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
   useEffect(() => {
     if (!booking?._id) return undefined;
 
@@ -91,10 +98,19 @@ export default function LiveTrackerModal({ booking, onClose }) {
   }, [booking?._id]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/80 p-4 backdrop-blur-sm">
-      <div className="relative w-full max-w-2xl overflow-hidden rounded-2xl border border-white/10 bg-[#0f172a] text-paper shadow-2xl">
+    <div
+      role="dialog"
+      aria-modal="true"
+      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/80 p-4 backdrop-blur-sm"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-2xl overflow-hidden rounded-2xl border border-white/10 bg-[#0f172a] text-paper shadow-2xl"
+      >
         <button
           onClick={onClose}
+          aria-label="Close"
           className="absolute right-4 top-4 z-[500] rounded-full bg-white/10 p-2 text-paper hover:bg-white/20"
         >
           <X size={18} />

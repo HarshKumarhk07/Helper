@@ -1,5 +1,19 @@
 import { z } from 'zod';
 
+const mediaUrl = z
+  .string()
+  .trim()
+  .refine(
+    (value) =>
+      value === '' ||
+      /^(https?:|data:|blob:)/i.test(value) ||
+      value.startsWith('/uploads/') ||
+      value.startsWith('uploads/'),
+    'Invalid media URL'
+  )
+  .optional()
+  .or(z.literal(''));
+
 export const signupSchema = z.object({
   name: z.string().min(2).max(80),
   email: z.string().email().toLowerCase(),
@@ -18,7 +32,7 @@ export const adminCreateUserSchema = z.object({
   phone: z.string().optional().default(''),
   aadhaarNumber: z.string().trim().regex(/^\d{12}$/).optional().or(z.literal('')),
   panNumber: z.string().trim().regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/i).optional().or(z.literal('')),
-  passportPhoto: z.string().url().optional().or(z.literal('')),
+  passportPhoto: mediaUrl,
   kycStatus: z.enum(['pending', 'verified', 'rejected']).optional().default('pending'),
   password: z.string().min(8).max(128),
   role: z.enum(['admin', 'manager', 'worker', 'user']),
@@ -30,29 +44,27 @@ export const adminUpdateUserSchema = z.object({
   phone: z.string().max(20).optional().or(z.literal('')),
   aadhaarNumber: z.string().trim().regex(/^\d{12}$/).optional().or(z.literal('')),
   panNumber: z.string().trim().regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/i).optional().or(z.literal('')),
-  passportPhoto: z.string().url().optional().or(z.literal('')),
+  passportPhoto: mediaUrl,
   kycStatus: z.enum(['pending', 'verified', 'rejected']).optional(),
-  avatar: z.string().url().optional().or(z.literal('')),
+  avatar: mediaUrl,
   password: z.string().min(8).max(128).optional().or(z.literal('')),
   role: z.enum(['admin', 'manager', 'worker', 'user']).optional(),
   isActive: z.boolean().optional(),
 });
 
-const optionalUrl = z.string().url().optional().or(z.literal(''));
-
 export const updateMeSchema = z.object({
   name: z.string().min(2).max(80).optional(),
   phone: z.string().max(20).optional(),
-  avatar: z.string().url().optional(),
-  passportPhoto: optionalUrl,
+  avatar: mediaUrl,
+  passportPhoto: mediaUrl,
   aadhaarNumber: z.string().trim().regex(/^\d{12}$/).optional().or(z.literal('')),
   panNumber: z.string().trim().regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/i).optional().or(z.literal('')),
   kycDocuments: z
     .object({
-      aadhaarFront: optionalUrl,
-      aadhaarBack: optionalUrl,
-      panCard: optionalUrl,
-      selfie: optionalUrl,
+      aadhaarFront: mediaUrl,
+      aadhaarBack: mediaUrl,
+      panCard: mediaUrl,
+      selfie: mediaUrl,
     })
     .partial()
     .optional(),

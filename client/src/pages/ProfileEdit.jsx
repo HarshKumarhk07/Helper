@@ -6,7 +6,6 @@ import {
   User as UserIcon,
   Phone,
   Mail,
-  Image as ImageIcon,
   Upload,
   CheckCircle2,
 } from 'lucide-react';
@@ -14,6 +13,7 @@ import { motion } from 'framer-motion';
 import api from '../api/axios.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { Field, PrimaryCTA, ErrorBanner } from '../components/auth/AuthFormPrimitives.jsx';
+import { mediaUrl } from '../lib/catalogImage.js';
 
 const fadeUp = {
   initial: { opacity: 0, y: 12 },
@@ -70,9 +70,7 @@ export default function ProfileEdit() {
     try {
       const fd = new FormData();
       fd.append('image', file);
-      const { data } = await api.post('/upload', fd, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const { data } = await api.post('/upload', fd);
       setForm((f) => ({ ...f, passportPhoto: data.url }));
       setPhotoState('done');
       toast.success('Photo uploaded');
@@ -113,6 +111,9 @@ export default function ProfileEdit() {
   };
 
   const isWorker = user?.role === 'worker';
+  const isManager = user?.role === 'manager';
+  // KYC applies to service professionals — don't pitch it to customers.
+  const showKycPanel = isWorker || isManager;
   const showEmailField = !user?.email || isPlaceholderEmail(user?.email);
 
   return (
@@ -155,7 +156,8 @@ export default function ProfileEdit() {
                 Edit my profile
               </h1>
               <p className="mt-1 text-sm text-ink/60">
-                Update your personal details. Workers manage KYC documents on the dedicated worker page.
+                Update your personal details. Service professionals manage KYC
+                documents on the dedicated KYC page.
               </p>
             </div>
           </motion.div>
@@ -206,16 +208,11 @@ export default function ProfileEdit() {
             </Section>
 
             <Section title="Profile photo">
-              <Field
-                label="Image URL"
-                type="url"
-                value={form.passportPhoto}
-                onChange={(v) => setForm((f) => ({ ...f, passportPhoto: v }))}
-                placeholder="https://… (or upload below)"
-                leadingIcon={<ImageIcon size={16} />}
-              />
-              <div className="mt-3 grid grid-cols-1 items-start gap-3 sm:grid-cols-[1fr_auto]">
-                <label className="relative flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-ink/15 bg-ink/[0.02] px-3 py-3 text-xs font-medium text-ink/70 transition-colors hover:border-ink/40.03]:border-paper/40">
+              {/* Upload-only — accepting an arbitrary external URL is a real
+                  SSRF / content-spoof / pixel-tracking risk; files go through
+                  our upload route which validates type and size. */}
+              <div className="grid grid-cols-1 items-start gap-3 sm:grid-cols-[1fr_auto]">
+                <label className="relative flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-ink/15 bg-ink/[0.02] px-3 py-3 text-xs font-medium text-ink/70 transition-colors hover:border-ink/40">
                   {photoState === 'uploading' ? (
                     <>
                       <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-ink/30 border-t-ink" />
@@ -241,7 +238,7 @@ export default function ProfileEdit() {
                 </label>
                 {form.passportPhoto && (
                   <img
-                    src={form.passportPhoto}
+                    src={mediaUrl(form.passportPhoto) || form.passportPhoto}
                     alt="Profile photo preview"
                     className="h-16 w-16 rounded-xl border-2 border-ink/15 object-cover"
                     onError={(e) => {
@@ -249,24 +246,34 @@ export default function ProfileEdit() {
                     }}
                   />
                 )}
+                {form.passportPhoto && (
+                  <button
+                    type="button"
+                    onClick={() => setForm((f) => ({ ...f, passportPhoto: '' }))}
+                    className="text-xs uppercase tracking-widest text-ink/50 hover:text-ink underline sm:col-span-2"
+                  >
+                    Remove photo
+                  </button>
+                )}
               </div>
             </Section>
 
-            <div className="rounded-2xl border-2 border-amber-300 bg-amber-50/70 p-4 text-sm text-amber-900.06]">
-              <div className="font-semibold">Manage your KYC</div>
-              <p className="mt-1 text-xs">
-                {isWorker 
-                  ? "Workers verify identity on a dedicated KYC page that supports Aadhaar, PAN and selfie uploads."
-                  : "Verify your identity on the dedicated KYC page to unlock all platform features."}
-              </p>
-              <button
-                type="button"
-                onClick={() => navigate(isWorker ? '/worker/kyc' : '/me/kyc')}
-                className="mt-3 inline-flex items-center gap-2 rounded-full bg-ink px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-paper hover:opacity-90"
-              >
-                Open KYC page →
-              </button>
-            </div>
+            {showKycPanel && (
+              <div className="rounded-2xl border-2 border-amber-300 bg-amber-50/70 p-4 text-sm text-amber-900">
+                <div className="font-semibold">Manage your KYC</div>
+                <p className="mt-1 text-xs">
+                  Verify your identity on the dedicated KYC page — supports Aadhaar,
+                  PAN and selfie uploads.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => navigate(isWorker ? '/worker/kyc' : '/me/kyc')}
+                  className="mt-3 inline-flex items-center gap-2 rounded-full bg-ink px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-paper hover:opacity-90"
+                >
+                  Open KYC page →
+                </button>
+              </div>
+            )}
 
             {error && <ErrorBanner>{error}</ErrorBanner>}
 

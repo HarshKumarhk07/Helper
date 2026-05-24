@@ -15,5 +15,8 @@ export const listAllOrders = () =>
 export const updateOrderStatus = (id, status) =>
   api.put(`/orders/${id}/status`, { status }).then((r) => r.data.order);
 
+export const cancelMyOrder = (id) =>
+  api.post(`/orders/${id}/cancel`).then((r) => r.data.order);
+
 export const updateOrderNote = (id, note) =>
   api.patch(`/orders/${id}/note`, { note }).then((r) => r.data.order);

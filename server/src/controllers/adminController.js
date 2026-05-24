@@ -42,15 +42,26 @@ export const getDashboardStats = asyncHandler(async (req, res) => {
     { $limit: 10 }
   ]);
 
-  // Category Performance (based on completed bookings)
+  // Category Performance (based on completed bookings).
+  // Joins back to ServiceCategory so the dashboard shows the category name
+  // instead of a raw ObjectId. Deleted categories fall back to "Uncategorized".
   const categoryPerformance = await Booking.aggregate([
     { $match: { status: 'completed' } },
     { $lookup: { from: 'services', localField: 'service', foreignField: '_id', as: 'serviceInfo' } },
     { $unwind: '$serviceInfo' },
     { $group: { _id: '$serviceInfo.category', revenue: { $sum: '$amount' }, count: { $sum: 1 } } },
-    { $project: { category: '$_id', revenue: 1, count: 1, _id: 0 } },
+    { $lookup: { from: 'servicecategories', localField: '_id', foreignField: '_id', as: 'categoryInfo' } },
+    { $unwind: { path: '$categoryInfo', preserveNullAndEmptyArrays: true } },
+    {
+      $project: {
+        category: { $ifNull: ['$categoryInfo.name', 'Uncategorized'] },
+        revenue: 1,
+        count: 1,
+        _id: 0,
+      },
+    },
     { $sort: { revenue: -1 } },
-    { $limit: 10 }
+    { $limit: 10 },
   ]);
 
   // Growth Trends (last 30 days revenue and orders)

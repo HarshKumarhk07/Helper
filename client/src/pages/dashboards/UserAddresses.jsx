@@ -1,24 +1,27 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { listMyAddresses, createAddress, deleteAddress } from '../../api/addresses.js';
+import { listMyAddresses, createAddress, updateAddress, deleteAddress } from '../../api/addresses.js';
 import FadeUp from '../../components/ui/FadeUp.jsx';
 import PillButton from '../../components/ui/PillButton.jsx';
-import { Trash2, AlertTriangle } from 'lucide-react';
+import { Trash2, AlertTriangle, Edit2 } from 'lucide-react';
+
+const EMPTY_FORM = {
+  label: 'home',
+  line1: '',
+  line2: '',
+  city: '',
+  state: '',
+  pincode: '',
+  isDefault: false,
+};
 
 export default function UserAddresses() {
   const [addresses, setAddresses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState(null);
   const [deleteModal, setDeleteModal] = useState({ show: false, addressId: null, addressLabel: '' });
-  const [newAddress, setNewAddress] = useState({
-    label: 'home',
-    line1: '',
-    line2: '',
-    city: '',
-    state: '',
-    pincode: '',
-    isDefault: false
-  });
+  const [form, setForm] = useState(EMPTY_FORM);
 
   const load = () => {
     setLoading(true);
@@ -32,13 +35,43 @@ export default function UserAddresses() {
     load();
   }, []);
 
-  const handleCreate = async (e) => {
+  const startNew = () => {
+    setEditingId(null);
+    setForm(EMPTY_FORM);
+    setShowForm(true);
+  };
+
+  const startEdit = (addr) => {
+    setEditingId(addr._id);
+    setForm({
+      label: addr.label || 'home',
+      line1: addr.line1 || '',
+      line2: addr.line2 || '',
+      city: addr.city || '',
+      state: addr.state || '',
+      pincode: addr.pincode || '',
+      isDefault: !!addr.isDefault,
+    });
+    setShowForm(true);
+  };
+
+  const cancelForm = () => {
+    setShowForm(false);
+    setEditingId(null);
+    setForm(EMPTY_FORM);
+  };
+
+  const handleSave = async (e) => {
     e.preventDefault();
     try {
-      await createAddress(newAddress);
-      toast.success('Address saved!');
-      setShowForm(false);
-      setNewAddress({ label: 'home', line1: '', line2: '', city: '', state: '', pincode: '', isDefault: false });
+      if (editingId) {
+        await updateAddress(editingId, form);
+        toast.success('Address updated');
+      } else {
+        await createAddress(form);
+        toast.success('Address saved!');
+      }
+      cancelForm();
       load();
     } catch (err) {
       toast.error(err?.response?.data?.error || 'Failed to save address');
@@ -70,7 +103,7 @@ export default function UserAddresses() {
           <h1 className="heading-display text-4xl md:text-6xl">SAVED PLACES.</h1>
         </div>
         <button
-          onClick={() => setShowForm(!showForm)}
+          onClick={() => (showForm ? cancelForm() : startNew())}
           className="pill-btn-solid text-sm"
         >
           {showForm ? 'Cancel' : 'Add New'}
@@ -79,29 +112,38 @@ export default function UserAddresses() {
 
       {showForm && (
         <FadeUp>
-          <form onSubmit={handleCreate} className="card-rounded p-6 mb-8 bg-sand/30">
-            <h3 className="heading-display text-xl mb-4">NEW ADDRESS</h3>
+          <form onSubmit={handleSave} className="card-rounded p-6 mb-8 bg-sand/30">
+            <h3 className="heading-display text-xl mb-4">
+              {editingId ? 'EDIT ADDRESS' : 'NEW ADDRESS'}
+            </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <select 
-                value={newAddress.label} 
-                onChange={(e) => setNewAddress({...newAddress, label: e.target.value})}
+              <select
+                value={form.label}
+                onChange={(e) => setForm({ ...form, label: e.target.value })}
                 className="p-3 border border-ink/20 rounded-xl bg-transparent focus:border-ink outline-none"
               >
                 <option value="home">Home</option>
                 <option value="work">Work</option>
                 <option value="other">Other</option>
               </select>
-              <input required placeholder="Line 1" className="p-3 border border-ink/20 rounded-xl bg-transparent focus:border-ink outline-none" value={newAddress.line1} onChange={(e) => setNewAddress({...newAddress, line1: e.target.value})} />
-              <input placeholder="Line 2 (Optional)" className="p-3 border border-ink/20 rounded-xl bg-transparent focus:border-ink outline-none" value={newAddress.line2} onChange={(e) => setNewAddress({...newAddress, line2: e.target.value})} />
-              <input required placeholder="City" className="p-3 border border-ink/20 rounded-xl bg-transparent focus:border-ink outline-none" value={newAddress.city} onChange={(e) => setNewAddress({...newAddress, city: e.target.value})} />
-              <input required placeholder="State" className="p-3 border border-ink/20 rounded-xl bg-transparent focus:border-ink outline-none" value={newAddress.state} onChange={(e) => setNewAddress({...newAddress, state: e.target.value})} />
-              <input required placeholder="Pincode" className="p-3 border border-ink/20 rounded-xl bg-transparent focus:border-ink outline-none" value={newAddress.pincode} onChange={(e) => setNewAddress({...newAddress, pincode: e.target.value})} />
+              <input required placeholder="Line 1" className="p-3 border border-ink/20 rounded-xl bg-transparent focus:border-ink outline-none" value={form.line1} onChange={(e) => setForm({ ...form, line1: e.target.value })} />
+              <input placeholder="Line 2 (Optional)" className="p-3 border border-ink/20 rounded-xl bg-transparent focus:border-ink outline-none" value={form.line2} onChange={(e) => setForm({ ...form, line2: e.target.value })} />
+              <input required placeholder="City" className="p-3 border border-ink/20 rounded-xl bg-transparent focus:border-ink outline-none" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
+              <input required placeholder="State" className="p-3 border border-ink/20 rounded-xl bg-transparent focus:border-ink outline-none" value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} />
+              <input required placeholder="Pincode" className="p-3 border border-ink/20 rounded-xl bg-transparent focus:border-ink outline-none" value={form.pincode} onChange={(e) => setForm({ ...form, pincode: e.target.value })} />
             </div>
             <label className="flex items-center gap-2 mb-6">
-              <input type="checkbox" checked={newAddress.isDefault} onChange={(e) => setNewAddress({...newAddress, isDefault: e.target.checked})} />
+              <input type="checkbox" checked={form.isDefault} onChange={(e) => setForm({ ...form, isDefault: e.target.checked })} />
               <span className="text-sm">Set as default</span>
             </label>
-            <button type="submit" className="pill-btn-solid">Save Address</button>
+            <div className="flex gap-3">
+              <button type="submit" className="pill-btn-solid">
+                {editingId ? 'Save Changes' : 'Save Address'}
+              </button>
+              <button type="button" onClick={cancelForm} className="pill-btn text-sm">
+                Cancel
+              </button>
+            </div>
           </form>
         </FadeUp>
       )}
@@ -129,9 +171,22 @@ export default function UserAddresses() {
                 {addr.line2 && <div className="text-sm text-ink/80 mb-1">{addr.line2}</div>}
                 <div className="text-sm text-ink/80">{addr.city}, {addr.state} {addr.pincode}</div>
                 
-                <div className="mt-6 pt-4 border-t border-ink/10 flex justify-end">
-                  <button onClick={() => handleDelete(addr._id, addr.label)} className="text-red-500 hover:text-red-700 transition">
+                <div className="mt-6 pt-4 border-t border-ink/10 flex justify-end gap-3">
+                  <button
+                    onClick={() => startEdit(addr)}
+                    title="Edit address"
+                    className="inline-flex items-center gap-2 rounded-full border border-ink/15 px-3 py-1.5 text-xs uppercase tracking-widest text-ink/70 transition hover:border-ink/30 hover:text-ink"
+                  >
+                    <Edit2 size={16} />
+                    Edit address
+                  </button>
+                  <button
+                    onClick={() => handleDelete(addr._id, addr.label)}
+                    title="Delete address"
+                    className="inline-flex items-center gap-2 rounded-full border border-red-200 px-3 py-1.5 text-xs uppercase tracking-widest text-red-600 transition hover:border-red-300 hover:text-red-700"
+                  >
                     <Trash2 size={16} />
+                    Delete
                   </button>
                 </div>
               </div>

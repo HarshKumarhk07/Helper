@@ -15,6 +15,7 @@ import DashboardShell from './DashboardShell.jsx';
 import { getOrder } from '../../api/orders.js';
 import { downloadInvoice } from '../../api/invoices.js';
 import { formatDateTime, formatPrice } from '../../lib/booking.js';
+import { CATALOG_PLACEHOLDER_IMAGE, resolveCatalogImage } from '../../lib/catalogImage.js';
 
 const STATUS_FLOW = [
   { key: 'placed', label: 'Placed', Icon: ClipboardList },
@@ -182,13 +183,17 @@ export default function UserOrderDetail() {
                   className="flex items-center justify-between gap-4 py-3 text-sm"
                 >
                   <div className="flex items-center gap-3">
-                    {it.product?.image && (
-                      <img
-                        src={it.product.image}
-                        alt={it.name}
-                        className="h-12 w-12 rounded-lg border border-black/10 object-cover"
-                      />
-                    )}
+                    <img
+                      src={resolveCatalogImage(it.product)}
+                      alt={it.name}
+                      loading="lazy"
+                      onError={(e) => {
+                        if (e.currentTarget.src !== CATALOG_PLACEHOLDER_IMAGE) {
+                          e.currentTarget.src = CATALOG_PLACEHOLDER_IMAGE;
+                        }
+                      }}
+                      className="h-12 w-12 rounded-lg border border-black/10 object-cover"
+                    />
                     <div>
                       <div className="font-medium text-black">{it.name}</div>
                       <div className="text-xs text-black/60">

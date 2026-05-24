@@ -153,7 +153,7 @@ export default function SupportThread({ adminMode = false }) {
                 disabled={statusUpdating}
                 className="rounded-full border border-ink/30 px-4 py-1.5 text-xs uppercase tracking-widest hover:bg-ink hover:text-paper disabled:opacity-50"
               >
-                Close
+                Close ticket
               </button>
             )}
             {ticket.status === 'closed' && (

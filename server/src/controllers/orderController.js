@@ -2,6 +2,7 @@ import Order from '../models/Order.js';
 import Product from '../models/Product.js';
 import Address from '../models/Address.js';
 import Coupon from '../models/Coupon.js';
+import Cart from '../models/Cart.js';
 import User from '../models/User.js';
 import { ApiError, asyncHandler } from '../utils/asyncHandler.js';
 import { applyOrderStatusTimestamps, recordOrderHistory, resolveCouponForOrder } from '../utils/ecommerce.js';
@@ -101,6 +102,14 @@ export const createOrder = asyncHandler(async (req, res) => {
     await Product.findByIdAndUpdate(item.product, { $inc: { stock: -item.quantity } });
   }
 
+  // Clear the ordered items out of the user's server cart so they don't
+  // ghost back into the local cart on the next sync.
+  const orderedIds = processedItems.map((p) => p.product);
+  await Cart.updateOne(
+    { user: req.user._id },
+    { $pull: { items: { product: { $in: orderedIds } } } }
+  );
+
   if (coupon && order.paymentMode === 'cod') {
     await Coupon.findByIdAndUpdate(coupon._id, { $inc: { usedCount: 1 } });
     recordCouponUsage({ couponCode: coupon.code, userId: req.user._id }).catch(() => null);
@@ -136,6 +145,48 @@ export const getMyOrder = asyncHandler(async (req, res) => {
 export const listMyOrders = asyncHandler(async (req, res) => {
   const orders = await Order.find({ user: req.user._id }).sort({ createdAt: -1 });
   res.json({ orders });
+});
+
+// Customer-initiated cancellation. Allowed only while the order is still in
+// 'placed' — once the team starts processing/shipping, the customer must
+// contact support to cancel.
+export const cancelMyOrder = asyncHandler(async (req, res) => {
+  const order = await Order.findById(req.params.id);
+  if (!order) throw new ApiError(404, 'Order not found');
+  if (String(order.user) !== String(req.user._id)) {
+    throw new ApiError(403, 'Forbidden');
+  }
+  if (order.status !== 'placed') {
+    throw new ApiError(
+      409,
+      `Order is already ${order.status} and can no longer be cancelled here. Please contact support.`
+    );
+  }
+
+  const from = order.status;
+  order.status = 'cancelled';
+  applyOrderStatusTimestamps(order, 'cancelled');
+  recordOrderHistory(order, from, 'cancelled', req.user, 'Cancelled by customer');
+  await order.save();
+
+  // Return reserved stock now that the order isn't going through.
+  for (const item of order.items) {
+    if (item.product) {
+      await Product.findByIdAndUpdate(item.product, { $inc: { stock: item.quantity } });
+    }
+  }
+
+  logAudit({
+    req,
+    action: 'cancel_order',
+    resource: 'order',
+    resourceId: order._id,
+    changes: { status: { from, to: 'cancelled' } },
+  });
+
+  notifyOrderStatus({ user: req.user, order, previousStatus: from });
+
+  res.json({ order });
 });
 
 export const listAllOrders = asyncHandler(async (req, res) => {

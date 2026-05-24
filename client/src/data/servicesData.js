@@ -38,17 +38,19 @@ export const CATEGORY_MODALS = {
     title: 'AC Repair | Service',
     blurb: 'Keep your cooling running all season.',
     subcategories: [
-      { label: 'AC Service | Repair', image: img('1626806819282-2c1dc01a5e0c'), category: 'Appliance Services' },
-      { label: 'AC Installation', image: img('1585771724684-38269d6639fd'), category: 'Appliance Services' },
+      { label: 'AC Service | Repair', image: '/assets/categories/ac-repair-1.jpg', category: 'Appliance Services' },
+      { label: 'AC Installation', image: '/assets/categories/ac-repair-2.jpg', category: 'Appliance Services' },
     ],
   },
   Cleaning: {
     title: 'Home Cleaning',
     blurb: 'Spotless homes, professionally done.',
     subcategories: [
-      { label: 'Full Home Cleaning', image: img('1563808828921-7854a7ce84d1'), category: 'Cleaning Services' },
-      { label: 'Bathroom Cleaning', image: img('1584622781564-1d987f7333c1'), category: 'Cleaning Services' },
-      { label: 'Kitchen Cleaning', image: img('1584622650111-993a426fbf0a'), category: 'Cleaning Services' },
+      // Prefer a dedicated Cleaning category if it exists; otherwise route
+      // into Home Services where the cleaning services currently live.
+      { label: 'Full Home Cleaning', image: img('1563808828921-7854a7ce84d1'), category: ['Cleaning Services', 'Cleaning', 'Home Services'] },
+      { label: 'Bathroom Cleaning', image: img('1584622781564-1d987f7333c1'), category: ['Cleaning Services', 'Cleaning', 'Home Services'] },
+      { label: 'Kitchen Cleaning', image: img('1584622650111-993a426fbf0a'), category: ['Cleaning Services', 'Cleaning', 'Home Services'] },
     ],
   },
   'Home Repair': {
@@ -97,25 +99,37 @@ const normalize = (s) =>
     .trim();
 
 /**
- * Resolve a curated category name to a live /services link.
+ * Resolve a curated category reference to a live /services link.
  *
- * Matches against the real category list (exact first, then fuzzy contains),
- * so the route survives renames. If nothing matches — e.g. the category was
- * deleted — it falls back to the full catalog instead of a dead ?cat= link.
+ * Accepts a single name OR an array of candidate names (tried in order — the
+ * first match wins). Matches against the real category list exact-first,
+ * then fuzzy-contains, so renames don't break the link. If no candidate
+ * resolves, falls back to the full catalog rather than a dead ?cat= link.
+ *
+ * Array form is useful when a subcategory has a sensible "preferred" home but
+ * should also fall back gracefully if the catalog is shaped differently —
+ * e.g. `['Cleaning Services', 'Home Services']` prefers a Cleaning category
+ * if you add one, otherwise routes to the Home Services category.
  */
-export const resolveCategoryHref = (categoryName, categories = []) => {
-  const target = normalize(categoryName);
-  if (!target || !categories.length) return '/services';
+export const resolveCategoryHref = (categoryRef, categories = []) => {
+  if (!categories.length) return '/services';
 
-  const exact = categories.find((c) => normalize(c.name) === target);
-  const fuzzy =
-    exact ||
-    categories.find((c) => {
+  const candidates = Array.isArray(categoryRef) ? categoryRef : [categoryRef];
+  for (const name of candidates) {
+    const target = normalize(name);
+    if (!target) continue;
+
+    const exact = categories.find((c) => normalize(c.name) === target);
+    if (exact) return `/services?cat=${exact.slug}`;
+
+    const fuzzy = categories.find((c) => {
       const n = normalize(c.name);
       return n.includes(target) || target.includes(n);
     });
+    if (fuzzy) return `/services?cat=${fuzzy.slug}`;
+  }
 
-  return fuzzy ? `/services?cat=${fuzzy.slug}` : '/services';
+  return '/services';
 };
 
 // Fallback route for a tile that has no modal entry — go straight to catalog.

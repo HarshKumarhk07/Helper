@@ -63,8 +63,26 @@ export default function AdminBookings() {
   };
 
   const onTransition = async (booking, to) => {
+    // Destructive transitions (cancel) get an extra confirmation step so a
+    // misclick can't kill an active booking.
+    if (to === 'cancelled') {
+      const ok = window.confirm(
+        `Cancel booking ${booking.code || ''}? The customer will be notified and this can't be undone.`
+      );
+      if (!ok) return;
+    }
+    // Completing requires the end PIN held by the customer — even for admins.
+    let pin;
+    if (to === 'completed') {
+      pin = window.prompt(
+        `Enter the end PIN given to the customer to mark ${booking.code || 'this booking'} complete:`
+      );
+      if (pin === null) return;
+      pin = pin.trim();
+      if (!pin) return;
+    }
     try {
-      await transitionStatus(booking._id, to);
+      await transitionStatus(booking._id, to, undefined, pin);
       toast.success(`Moved to ${to.replace('_', ' ')}`);
       load();
     } catch (err) {

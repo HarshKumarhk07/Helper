@@ -9,6 +9,7 @@ import {
   approveKyc,
   rejectKyc,
 } from '../../api/kyc.js';
+import { mediaUrl } from '../../lib/catalogImage.js';
 
 const STATUS_TABS = [
   { key: 'submitted', label: 'Pending Review' },
@@ -27,7 +28,10 @@ const KYC_BADGE = {
 
 const fmtDate = (d) => (d ? new Date(d).toLocaleString() : '—');
 
-const DocPreview = ({ label, url }) => {
+const DocPreview = ({ label, url: rawUrl }) => {
+  // Stored value may be a relative '/uploads/...' path — resolve to a
+  // loadable URL via mediaUrl, same as the rest of the app.
+  const url = mediaUrl(rawUrl);
   if (!url) {
     return (
       <div className="rounded-xl border border-dashed border-ink/15 p-3 text-xs text-ink/60">

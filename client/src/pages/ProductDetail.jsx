@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowUpRight, ShoppingCart, ShieldCheck, Truck } from 'lucide-react';
+import { ArrowUpRight, ShoppingCart, ShieldCheck, Truck, Plus, Minus } from 'lucide-react';
 import { getProduct } from '../api/products.js';
 import { formatPrice } from '../lib/booking.js';
 import FadeUp from '../components/ui/FadeUp.jsx';
@@ -11,7 +11,7 @@ import { motion } from 'framer-motion';
 
 export default function ProductDetail() {
   const { id } = useParams();
-  const { addToCart } = useCart();
+  const { cart, addToCart, removeFromCart, updateQuantity } = useCart();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -163,13 +163,46 @@ export default function ProductDetail() {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-4">
-                <button 
-                  onClick={handleAddToCart}
-                  className={`pill-btn !bg-ink !text-paper hover:!bg-ink/80 flex-1 justify-center py-4 text-sm shadow-xl hover:shadow-2xl hover:-translate-y-1 ${product.stock <= 0 ? 'opacity-60 cursor-not-allowed hover:!bg-ink' : ''}`}
-                  disabled={product.stock <= 0}
-                >
-                  {product.stock > 0 ? 'Add to cart' : 'Unavailable'} <ShoppingCart size={18} />
-                </button>
+                {(() => {
+                  const inCart = cart.find((it) => it.product === product._id && it.kind !== 'service');
+                  const qty = inCart?.quantity || 0;
+                  if (inCart) {
+                    return (
+                      <div className="flex flex-1 items-center justify-between gap-2 rounded-full bg-ink text-paper px-3 py-2 shadow-xl">
+                        <button
+                          type="button"
+                          onClick={() => (qty <= 1 ? removeFromCart(product._id) : updateQuantity(product._id, qty - 1))}
+                          aria-label={qty <= 1 ? 'Remove from cart' : 'Decrease quantity'}
+                          className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-paper/10 transition"
+                        >
+                          <Minus size={18} />
+                        </button>
+                        <div className="flex flex-col items-center">
+                          <span className="text-[10px] uppercase tracking-widest text-paper/60">In cart</span>
+                          <span className="text-lg font-bold tabular-nums leading-none">{qty}</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => updateQuantity(product._id, qty + 1)}
+                          aria-label="Increase quantity"
+                          disabled={product.stock > 0 && qty >= product.stock}
+                          className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-paper/10 transition disabled:opacity-50"
+                        >
+                          <Plus size={18} />
+                        </button>
+                      </div>
+                    );
+                  }
+                  return (
+                    <button
+                      onClick={handleAddToCart}
+                      className={`pill-btn !bg-ink !text-paper hover:!bg-ink/80 flex-1 justify-center py-4 text-sm shadow-xl hover:shadow-2xl hover:-translate-y-1 ${product.stock <= 0 ? 'opacity-60 cursor-not-allowed hover:!bg-ink' : ''}`}
+                      disabled={product.stock <= 0}
+                    >
+                      {product.stock > 0 ? 'Add to cart' : 'Unavailable'} <ShoppingCart size={18} />
+                    </button>
+                  );
+                })()}
               </div>
               
             </div>

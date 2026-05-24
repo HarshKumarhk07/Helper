@@ -28,7 +28,13 @@
       "Bash(node src/seed/fix-kyc-paths.js)",
       "Bash(curl -s -o /dev/null -w \"panCard image: %{http_code}\\\\n\" http://localhost:5000/uploads/panCard-1779380727294-106531282.jpeg)",
       "Bash(curl -s -o /dev/null -w \"backend health: %{http_code}\\\\n\" --max-time 4 http://localhost:5000/api/health)",
-      "Bash(node src/seed/fix-upload-urls.js)"
+      "Bash(node src/seed/fix-upload-urls.js)",
+      "Read(//c/Users/harsh/Desktop/Avani Projects/**)",
+      "Bash(node --check src/controllers/orderController.js)",
+      "Bash(node --check src/controllers/addressController.js)",
+      "Bash(node --check src/utils/bookingTransitionGuard.js)",
+      "Bash(node --check src/utils/passwordPolicy.js)",
+      "Bash(node --check src/controllers/adminController.js)"
     ]
   }
 }

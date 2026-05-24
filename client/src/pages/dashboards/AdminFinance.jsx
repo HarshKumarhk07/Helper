@@ -24,9 +24,10 @@ export default function AdminFinance() {
     localStorage.setItem(COMMISSION_KEY, String(commissionRate));
   }, [commissionRate]);
 
-  useEffect(() => {
+  const handleSaveNote = () => {
     localStorage.setItem(NOTE_KEY, settlementNote);
-  }, [settlementNote]);
+    toast.success('Settlement note saved');
+  };
 
   const revenue = stats?.stats?.totalRevenue || 0;
   const commissionAmount = useMemo(() => Math.round((revenue * commissionRate) / 100), [revenue, commissionRate]);
@@ -66,8 +67,17 @@ export default function AdminFinance() {
               rows={4}
               value={settlementNote}
               onChange={(e) => setSettlementNote(e.target.value)}
-              className="mt-3 w-full rounded-2xl border border-ink/15 bg-transparent px-4 py-3 text-sm outline-none focus:border-ink:border-paper/60"
+              className="mt-3 w-full rounded-2xl border border-ink/15 bg-transparent px-4 py-3 text-sm outline-none focus:border-ink"
             />
+            <div className="mt-3 flex justify-end">
+              <button
+                type="button"
+                onClick={handleSaveNote}
+                className="inline-flex items-center gap-2 rounded-full bg-ink px-5 py-2 text-xs uppercase tracking-widest text-paper transition hover:opacity-90"
+              >
+                Save note
+              </button>
+            </div>
           </div>
         </div>
       )}

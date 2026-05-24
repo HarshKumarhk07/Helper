@@ -51,6 +51,11 @@ export default function AdminProductCategories() {
       isActive: !!cat.isActive,
       sortOrder: cat.sortOrder || 0,
     });
+    // The edit form mounts above the table; scroll to it so the admin
+    // immediately sees what they clicked into.
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
   };
 
   const cancel = () => {

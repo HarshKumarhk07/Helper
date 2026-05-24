@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { listMyOrders } from '../../api/orders.js';
+import { listMyOrders, cancelMyOrder } from '../../api/orders.js';
 import { downloadInvoice } from '../../api/invoices.js';
 import FadeUp from '../../components/ui/FadeUp.jsx';
 import { formatDateTime, formatPrice } from '../../lib/booking.js';
@@ -10,6 +10,7 @@ export default function UserOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedOrderId, setExpandedOrderId] = useState(null);
+  const [cancelling, setCancelling] = useState(null);
 
   useEffect(() => {
     listMyOrders()
@@ -17,6 +18,20 @@ export default function UserOrders() {
       .catch(() => toast.error('Failed to load orders'))
       .finally(() => setLoading(false));
   }, []);
+
+  const handleCancel = async (order) => {
+    if (!window.confirm(`Cancel order ${order.orderId}? This can't be undone.`)) return;
+    setCancelling(order._id);
+    try {
+      const updated = await cancelMyOrder(order._id);
+      setOrders((current) => current.map((o) => (o._id === updated._id ? updated : o)));
+      toast.success('Order cancelled');
+    } catch (err) {
+      toast.error(err?.response?.data?.error || err?.response?.data?.message || 'Could not cancel');
+    } finally {
+      setCancelling(null);
+    }
+  };
 
   return (
     <section className="container-velora py-12 md:py-16">
@@ -61,6 +76,16 @@ export default function UserOrders() {
                     >
                       {expandedOrderId === order._id ? 'Hide timeline' : 'Quick timeline'}
                     </button>
+                    {order.status === 'placed' && (
+                      <button
+                        type="button"
+                        disabled={cancelling === order._id}
+                        onClick={() => handleCancel(order)}
+                        className="text-xs uppercase tracking-widest text-red-600 hover:text-red-700 transition disabled:opacity-50"
+                      >
+                        {cancelling === order._id ? 'Cancelling…' : 'Cancel order'}
+                      </button>
+                    )}
                   </div>
                 </div>
                 <div className="space-y-2">

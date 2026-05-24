@@ -59,12 +59,27 @@ export default function ManagerOrders() {
   };
 
   const onTransition = async (booking, to) => {
+    if (to === 'cancelled') {
+      const ok = window.confirm(
+        `Cancel booking ${booking.code || ''}? The customer will be notified and this can't be undone.`
+      );
+      if (!ok) return;
+    }
+    let pin;
+    if (to === 'completed') {
+      pin = window.prompt(
+        `Enter the end PIN given to the customer to mark ${booking.code || 'this booking'} complete:`
+      );
+      if (pin === null) return; // user cancelled the prompt
+      pin = pin.trim();
+      if (!pin) return;
+    }
     try {
-      await transitionStatus(booking._id, to);
+      await transitionStatus(booking._id, to, undefined, pin);
       toast.success(`Moved to ${to.replace('_', ' ')}`);
       load();
     } catch (err) {
-      toast.error(err?.response?.data?.message || 'Transition failed');
+      toast.error(err?.response?.data?.error || err?.response?.data?.message || 'Transition failed');
     }
   };
 

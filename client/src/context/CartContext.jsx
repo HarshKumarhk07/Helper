@@ -93,7 +93,6 @@ export function CartProvider({ children }) {
   const [cart, setCart] = useState(loadInitial);
   const syncedForUserRef = useRef(null);
   const lastKeyRef = useRef(currentKey);
-  const hydratedKeyRef = useRef(currentKey);
   const validatedRef = useRef(new Set());
 
   // When the active user changes, swap to that user's cart bucket so one
@@ -101,17 +100,17 @@ export function CartProvider({ children }) {
   useEffect(() => {
     if (lastKeyRef.current === currentKey) return;
     lastKeyRef.current = currentKey;
-    hydratedKeyRef.current = currentKey;
     setCart(readKey(currentKey));
   }, [currentKey]);
 
-  // Persist locally on every change — gated on the bucket having been
-  // reloaded for the new key, to avoid clobbering a freshly-loaded user
-  // bucket with prior (guest) cart contents during the key-switch window.
+  // Persist only when `cart` actually changes — never on currentKey change
+  // alone. Listening to currentKey here would fire on logout with the
+  // previous user's still-in-closure cart and write it into the new bucket,
+  // leaking items across accounts.
   useEffect(() => {
-    if (hydratedKeyRef.current !== currentKey) return;
     writeKey(currentKey, cart);
-  }, [cart, currentKey]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cart]);
 
   // Validate the saved cart's items still exist on the server (drop ghosts).
   // Wait for AuthContext to finish bootstrapping so we validate the correct

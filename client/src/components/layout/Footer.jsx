@@ -1,7 +1,24 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { listCategories } from '../../api/categories.js';
+import { listProductCategories } from '../../api/productCategories.js';
 
 export default function Footer() {
   const year = new Date().getFullYear();
+  const [serviceCats, setServiceCats] = useState([]);
+  const [productCats, setProductCats] = useState([]);
+
+  // Pull a few real categories so footer links always reflect the current
+  // catalog instead of hardcoded labels that drift when categories change.
+  useEffect(() => {
+    listCategories({ active: 'true' })
+      .then((cats) => setServiceCats((cats || []).slice(0, 4)))
+      .catch(() => {});
+    listProductCategories({ active: 'true' })
+      .then((cats) => setProductCats((cats || []).slice(0, 4)))
+      .catch(() => {});
+  }, []);
+
   return (
     <footer className="border-t border-ink/5 bg-sand pt-20 pb-10 text-ink">
       <div className="container-velora grid gap-12 md:grid-cols-4 md:gap-8">
@@ -20,30 +37,71 @@ export default function Footer() {
         <div>
           <div className="mb-6 text-xs font-semibold uppercase tracking-widest text-ink">Shop</div>
           <ul className="space-y-4 text-sm text-ink/60 font-medium">
-            <li><Link to="/products" className="hover:text-ink transition-colors w-max inline-block">New Arrivals</Link></li>
-            <li><Link to="/products" className="hover:text-ink transition-colors w-max inline-block">Bestsellers</Link></li>
-            <li><Link to="/products" className="hover:text-ink transition-colors w-max inline-block">The Lookbook</Link></li>
-            <li><Link to="/products" className="hover:text-ink transition-colors w-max inline-block">Exclusive Offers</Link></li>
+            <li>
+              <Link to="/products" className="hover:text-ink transition-colors w-max inline-block">
+                All Products
+              </Link>
+            </li>
+            {productCats.map((c) => (
+              <li key={c._id}>
+                <Link
+                  to={`/products?category=${encodeURIComponent(c.name)}`}
+                  className="hover:text-ink transition-colors w-max inline-block"
+                >
+                  {c.name}
+                </Link>
+              </li>
+            ))}
           </ul>
         </div>
 
         <div>
           <div className="mb-6 text-xs font-semibold uppercase tracking-widest text-ink">Services</div>
           <ul className="space-y-4 text-sm text-ink/60 font-medium">
-            <li><Link to="/services" className="hover:text-ink transition-colors w-max inline-block">Deep Cleaning</Link></li>
-            <li><Link to="/services" className="hover:text-ink transition-colors w-max inline-block">Plumbing | Electrical</Link></li>
-            <li><Link to="/services" className="hover:text-ink transition-colors w-max inline-block">Beauty | Spa</Link></li>
-            <li><Link to="/services" className="hover:text-ink transition-colors w-max inline-block">Appliance Repair</Link></li>
+            <li>
+              <Link to="/services" className="hover:text-ink transition-colors w-max inline-block">
+                All Services
+              </Link>
+            </li>
+            {serviceCats.map((c) => (
+              <li key={c._id}>
+                <Link
+                  to={`/services?cat=${c.slug}`}
+                  className="hover:text-ink transition-colors w-max inline-block"
+                >
+                  {c.name}
+                </Link>
+              </li>
+            ))}
           </ul>
         </div>
 
         <div>
           <div className="mb-6 text-xs font-semibold uppercase tracking-widest text-ink">Studio</div>
           <ul className="space-y-4 text-sm text-ink/60 font-medium">
-            <li><Link to="/" className="hover:text-ink transition-colors w-max inline-block">Our Philosophy</Link></li>
-            <li><a href="#careers" className="hover:text-ink transition-colors w-max inline-block">Careers</a></li>
-            <li><a href="#press" className="hover:text-ink transition-colors w-max inline-block">Press | Media</a></li>
-            <li><a href="#contact" className="hover:text-ink transition-colors w-max inline-block">Contact Us</a></li>
+            <li>
+              <Link to="/#philosophy" className="hover:text-ink transition-colors w-max inline-block">
+                Our Philosophy
+              </Link>
+            </li>
+            <li>
+              <Link to="/me/support" className="hover:text-ink transition-colors w-max inline-block">
+                Help | Support
+              </Link>
+            </li>
+            <li>
+              <a
+                href="mailto:support@urbanease.com"
+                className="hover:text-ink transition-colors w-max inline-block"
+              >
+                Contact Us
+              </a>
+            </li>
+            <li>
+              <Link to="/favorites" className="hover:text-ink transition-colors w-max inline-block">
+                Saved Items
+              </Link>
+            </li>
           </ul>
         </div>
 
