@@ -1,4 +1,5 @@
 import { useAuth } from '../../context/AuthContext.jsx';
+import { mediaUrl } from '../../lib/catalogImage.js';
 
 export default function DashboardShell({ eyebrow, title, children, slices }) {
   const { user } = useAuth();
@@ -11,7 +12,7 @@ export default function DashboardShell({ eyebrow, title, children, slices }) {
       <div className="flex items-center gap-4 mt-4">
         {(user?.passportPhoto || user?.avatar) && (
           <img
-            src={user.passportPhoto || user.avatar}
+            src={mediaUrl(user.passportPhoto || user.avatar)}
             alt={user.name}
             className="h-14 w-14 rounded-full object-cover border border-ink/20"
           />

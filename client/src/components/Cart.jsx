@@ -1,3 +1,5 @@
+import { mediaUrl } from '../lib/catalogImage.js';
+
 const cartItems = [
   {
     id: 'P-001',
@@ -35,7 +37,7 @@ export default function Cart() {
               {cartItems.map((item) => (
                 <tr key={item.id} className="border-b last:border-none">
                   <td className="py-3 px-4 flex items-center gap-4">
-                    <img src={item.image} alt={item.name} className="w-14 h-14 object-cover rounded-xl" />
+                    <img src={mediaUrl(item.image)} alt={item.name} className="w-14 h-14 object-cover rounded-xl" />
                     <span>{item.name}</span>
                   </td>
                   <td className="py-3 px-4">₹{item.price}</td>

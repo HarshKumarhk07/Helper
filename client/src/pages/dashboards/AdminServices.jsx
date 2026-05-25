@@ -7,6 +7,7 @@ import FadeUp from '../../components/ui/FadeUp.jsx';
 import DashboardShell from './DashboardShell.jsx';
 import { Trash2, AlertTriangle, Edit2, Star } from 'lucide-react';
 import { resolveCatalogImage, CATALOG_PLACEHOLDER_IMAGE } from '../../lib/catalogImage.js';
+import { mediaUrl } from '../../lib/catalogImage.js';
 
 export default function AdminServices() {
   const [services, setServices] = useState([]);
@@ -204,7 +205,7 @@ export default function AdminServices() {
                 <div className="flex items-center gap-4">
                   <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading} className="p-2 border rounded-xl flex-1 bg-white" />
                   {uploading && <span className="text-sm">Uploading...</span>}
-                  {newService.image && <img src={newService.image} alt="Preview" className="h-16 w-16 object-cover rounded-xl" />}
+                  {newService.image && <img src={mediaUrl(newService.image)} alt="Preview" className="h-16 w-16 object-cover rounded-xl" />}
                 </div>
               </div>
             </div>
@@ -327,9 +328,8 @@ export default function AdminServices() {
               </div>
               <div className="md:col-span-2">
                 <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Image</label>
-                <input placeholder="Image URL" className="w-full p-2 text-sm border rounded-xl bg-white text-ink border-ink/20 mb-2" value={editForm.image} onChange={(e) => setEditForm({ ...editForm, image: e.target.value })} />
                 <div className="border-t border-ink/10 pt-2">
-                  <div className="text-xs text-ink/60 mb-2">Or upload new image:</div>
+                  <div className="text-xs text-ink/60 mb-2">Upload new image:</div>
                   <input type="file" accept="image/*" className="w-full text-xs" onChange={async (e) => {
                     const file = e.target.files?.[0];
                     if (!file) return;
@@ -344,7 +344,7 @@ export default function AdminServices() {
                     }
                   }} />
                 </div>
-                {editForm.image && <img src={editForm.image} alt="Preview" className="h-12 w-12 object-cover rounded-lg mt-2" />}
+                {editForm.image && <img src={mediaUrl(editForm.image)} alt="Preview" className="h-12 w-12 object-cover rounded-lg mt-2" />}
               </div>
 
               <div className="md:col-span-2 flex gap-2 pt-2">

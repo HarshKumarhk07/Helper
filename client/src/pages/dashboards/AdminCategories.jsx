@@ -11,6 +11,7 @@ import {
 } from '../../api/categories.js';
 import { listUsers } from '../../api/users.js';
 import api from '../../api/axios.js';
+import { mediaUrl } from '../../lib/catalogImage.js';
 
 const slugify = (s) =>
   String(s || '')
@@ -284,7 +285,7 @@ export default function AdminCategories() {
               </div>
               {form.image && (
                 <img
-                  src={form.image}
+                  src={mediaUrl(form.image)}
                   alt="preview"
                   className="mt-3 h-24 w-24 rounded-xl border border-ink/10 object-cover"
                 />

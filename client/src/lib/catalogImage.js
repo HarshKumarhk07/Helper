@@ -30,19 +30,35 @@ export const mediaUrl = (src) => {
   return s;
 };
 
-export const resolveCatalogImage = (item, fallback = CATALOG_PLACEHOLDER_IMAGE) => {
-  const image = item?.image;
-
-  if (typeof image === 'string' && image.trim()) {
-    const trimmed = image.trim();
-    if (trimmed.startsWith('/uploads/') || trimmed.startsWith('uploads/')) {
-      const origin = getUploadOrigin();
-      return origin ? `${origin}${trimmed.startsWith('/') ? trimmed : `/${trimmed}`}` : trimmed;
-    }
-    if (!trimmed.startsWith('file://')) {
-      return trimmed;
-    }
+const resolveCandidate = (value) => {
+  if (typeof value === 'string') return mediaUrl(value);
+  if (value && typeof value === 'object') {
+    return mediaUrl(value.url || value.src || value.image || value.path);
   }
-  
+  return '';
+};
+
+export const resolveCatalogImage = (item, fallback = CATALOG_PLACEHOLDER_IMAGE) => {
+  if (typeof item === 'string') {
+    return resolveCandidate(item) || fallback;
+  }
+
+  const candidates = [
+    item?.image,
+    item?.imageUrl,
+    item?.thumbnail,
+    item?.coverImage,
+    item?.media,
+    item?.media?.url,
+    item?.media?.src,
+    item?.images?.[0],
+    item?.assets?.[0],
+  ];
+
+  for (const candidate of candidates) {
+    const resolved = resolveCandidate(candidate);
+    if (resolved) return resolved;
+  }
+
   return fallback;
 };

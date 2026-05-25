@@ -7,6 +7,7 @@ import FadeUp from '../../components/ui/FadeUp.jsx';
 import DashboardShell from './DashboardShell.jsx';
 import { Trash2, AlertTriangle, Edit2, Star } from 'lucide-react';
 import { resolveCatalogImage } from '../../lib/catalogImage.js';
+import { mediaUrl } from '../../lib/catalogImage.js';
 
 export default function AdminProducts() {
   const [products, setProducts] = useState([]);
@@ -248,7 +249,7 @@ export default function AdminProducts() {
                 <div className="flex items-center gap-4">
                   <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading} className="p-2 border rounded-xl flex-1 bg-white" />
                   {uploading && <span className="text-sm">Uploading...</span>}
-                  {newProduct.image && <img src={newProduct.image} alt="Preview" className="h-16 w-16 object-cover rounded-xl" />}
+                  {newProduct.image && <img src={mediaUrl(newProduct.image)} alt="Preview" className="h-16 w-16 object-cover rounded-xl" />}
                 </div>
               </div>
             </div>
@@ -401,7 +402,7 @@ export default function AdminProducts() {
                     }
                   }} />
                 </div>
-                {editForm.image && <img src={editForm.image} alt="Preview" className="h-16 w-16 object-cover rounded-xl mt-3" />}
+                {editForm.image && <img src={mediaUrl(editForm.image)} alt="Preview" className="h-16 w-16 object-cover rounded-xl mt-3" />}
               </div>
 
               <label className="md:col-span-2 inline-flex items-center gap-2 text-xs uppercase tracking-widest text-ink/70">

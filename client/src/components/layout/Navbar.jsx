@@ -10,6 +10,7 @@ import LocationModal from '../location/LocationModal.jsx';
 import { motion, AnimatePresence } from 'framer-motion';
 import { listProducts } from '../../api/products.js';
 import { listServices } from '../../api/services.js';
+import { mediaUrl } from '../../lib/catalogImage.js';
 
 const NAV = [
   { to: '/', label: 'Home' },
@@ -291,7 +292,7 @@ export default function Navbar() {
                         >
                           {suggestion.image && (
                             <img
-                              src={suggestion.image}
+                              src={mediaUrl(suggestion.image)}
                               alt={suggestion.name}
                               className="h-10 w-10 rounded object-cover shrink-0"
                               onError={(e) => {
@@ -347,7 +348,7 @@ export default function Navbar() {
               <div className="hidden md:flex items-center gap-4 pl-4 border-l border-ink/10">
                 {(user?.passportPhoto || user?.avatar) && (
                   <img
-                    src={user.passportPhoto || user.avatar}
+                    src={mediaUrl(user.passportPhoto || user.avatar)}
                     alt={user.name}
                     className="h-8 w-8 rounded-full object-cover border border-ink/20"
                     onError={(e) => {

@@ -19,6 +19,7 @@ import FadeUp from '../../components/ui/FadeUp.jsx';
 import { getWorkerProfile, approveKyc, rejectKyc } from '../../api/kyc.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { formatPrice, formatDateTime } from '../../lib/booking.js';
+import { mediaUrl } from '../../lib/catalogImage.js';
 
 const KYC_BADGE = {
   pending: 'bg-ink/10 text-ink/70',
@@ -114,7 +115,7 @@ export default function AdminWorkerDetail() {
         <div className="flex items-center gap-4">
           {(worker.passportPhoto || worker.avatar) && (
             <img
-              src={worker.passportPhoto || worker.avatar}
+              src={mediaUrl(worker.passportPhoto || worker.avatar)}
               alt={worker.name}
               className="h-16 w-16 rounded-full object-cover border-2 border-ink/10"
               onError={(e) => {

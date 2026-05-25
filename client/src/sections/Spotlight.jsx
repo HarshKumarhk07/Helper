@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import FadeUp from '../components/ui/FadeUp.jsx';
 import { listCategories } from '../api/categories.js';
+import { mediaUrl } from '../lib/catalogImage.js';
 
 export default function Spotlight() {
   const [cards, setCards] = useState([]);
@@ -21,7 +22,7 @@ export default function Spotlight() {
             cta: 'Book now',
             ctaCls: 'bg-paper text-ink hover:bg-paper/90',
             to: `/services?cat=${cat.slug}`,
-            image: cat.image || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=700&q=80',
+            image: mediaUrl(cat.image) || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=700&q=80',
             imageAlt: cat.name,
           };
         });
@@ -56,7 +57,7 @@ export default function Spotlight() {
                 >
                   <div className="relative w-full h-32 shrink-0 sm:hidden overflow-hidden">
                     <img
-                      src={c.image}
+                      src={mediaUrl(c.image)}
                       alt={c.imageAlt}
                       loading="lazy"
                       className="absolute inset-0 h-full w-full object-cover transition-transform duration-[1.2s] group-hover:scale-110"
@@ -64,7 +65,7 @@ export default function Spotlight() {
                   </div>
 
                   <img
-                    src={c.image}
+                    src={mediaUrl(c.image)}
                     alt=""
                     loading="lazy"
                     aria-hidden

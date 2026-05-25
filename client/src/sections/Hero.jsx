@@ -4,6 +4,7 @@ import { Star, Users, ChevronRight } from 'lucide-react';
 import FadeUp from '../components/ui/FadeUp.jsx';
 import ServiceModal from '../components/services/ServiceModal.jsx';
 import { getCategoryModal } from '../data/servicesData.js';
+import { mediaUrl } from '../lib/catalogImage.js';
 
 // 3D-style avatar/emoji icons from Microsoft Fluent Emoji,
 // served as SVG via the public Iconify CDN (api.iconify.design).
@@ -69,7 +70,7 @@ const CATEGORIES = [
 ];
 
 function CategoryTileMedia({ cat }) {
-  const [src, setSrc] = useState(cat.image);
+  const [src, setSrc] = useState(mediaUrl(cat.image));
   return (
     <img
       src={src}

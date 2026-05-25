@@ -10,6 +10,7 @@ import {
   deleteProductCategory,
 } from '../../api/productCategories.js';
 import api from '../../api/axios.js';
+import { mediaUrl } from '../../lib/catalogImage.js';
 
 const emptyForm = () => ({
   name: '',
@@ -171,15 +172,9 @@ export default function AdminProductCategories() {
               />
             </div>
             <div className="md:col-span-2">
-              <Label>Cover image URL</Label>
-              <input
-                value={form.image}
-                onChange={(e) => setForm((f) => ({ ...f, image: e.target.value }))}
-                placeholder="https://… or upload below"
-                className={inputClass}
-              />
+              <Label>Cover image</Label>
               <div className="mt-3 border-t border-ink/10 pt-3">
-                <div className="mb-2 text-xs text-ink/60">Or upload from computer:</div>
+                <div className="mb-2 text-xs text-ink/60">Upload from computer:</div>
                 <input
                   type="file"
                   accept="image/*"
@@ -193,7 +188,7 @@ export default function AdminProductCategories() {
               </div>
               {form.image && (
                 <img
-                  src={form.image}
+                  src={mediaUrl(form.image)}
                   alt="cover preview"
                   className="mt-3 h-28 w-44 rounded-xl border border-ink/10 object-cover"
                 />
@@ -254,7 +249,7 @@ export default function AdminProductCategories() {
                   <td className="p-4">
                     {c.image ? (
                       <img
-                        src={c.image}
+                        src={mediaUrl(c.image)}
                         alt={c.name}
                         className="h-12 w-16 rounded-lg object-cover"
                       />

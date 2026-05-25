@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import PillButton from '../components/ui/PillButton.jsx';
 import FadeUp from '../components/ui/FadeUp.jsx';
 import { Trash2, Plus, Minus } from 'lucide-react';
+import { mediaUrl } from '../lib/catalogImage.js';
 
 export default function CartPage() {
   const { cart, removeFromCart, updateQuantity } = useCart();
@@ -46,7 +47,7 @@ export default function CartPage() {
               <div className="flex gap-4 p-4 card-rounded items-center">
                 <div className="w-20 h-24 bg-sand flex-shrink-0 rounded-xl overflow-hidden">
                   {item.image ? (
-                    <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                    <img src={mediaUrl(item.image)} alt={item.name} className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-xs text-ink/40">No Image</div>
                   )}
