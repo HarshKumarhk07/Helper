@@ -1,6 +1,13 @@
 import 'dotenv/config';
+import dns from 'dns';
 import http from 'http';
 import app from './app.js';
+
+// Render's containers don't have IPv6 egress. If Node's resolver picks an
+// IPv6 record first (smtp.gmail.com, etc.) the socket dies with ENETUNREACH
+// no matter what `family` you pass to the consumer. Flip the global resolver
+// to prefer IPv4 once, here, and every outbound call inherits it.
+dns.setDefaultResultOrder('ipv4first');
 import connectDB from './config/db.js';
 import { initSocket } from './sockets/index.js';
 import { refreshCommissionCacheFromDB } from './utils/earnings.js';

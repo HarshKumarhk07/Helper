@@ -63,6 +63,7 @@ export const sendEmail = async ({ to, subject, html, text }) => {
       html,
       text: text || stripHtml(html),
     });
+    console.log(`[notification] email sent to ${to} (${info.messageId}) — ${subject}`);
     return { ok: true, id: info.messageId };
   } catch (err) {
     console.error('[notification] email failed:', err.message);

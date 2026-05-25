@@ -36,7 +36,8 @@
       "Bash(node --check src/utils/passwordPolicy.js)",
       "Bash(node --check src/controllers/adminController.js)",
       "Bash(node --check src/utils/notificationService.js)",
-      "Bash(node --check src/app.js)"
+      "Bash(node --check src/app.js)",
+      "Bash(node --check src/server.js)"
     ]
   }
 }
