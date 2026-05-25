@@ -39,6 +39,11 @@ const app = express();
 // (304 just means the client's cached copy is still fresh — not an error).
 app.set('etag', false);
 
+// Render (and most cloud hosts) sit behind a reverse proxy that sets
+// X-Forwarded-For. Without trusting it, express-rate-limit refuses to start
+// and req.ip is the proxy IP — so audit logs and rate limits both go wrong.
+app.set('trust proxy', 1);
+
 app.use(
   helmet({
     crossOriginResourcePolicy: { policy: 'cross-origin' },

@@ -34,7 +34,9 @@
       "Bash(node --check src/controllers/addressController.js)",
       "Bash(node --check src/utils/bookingTransitionGuard.js)",
       "Bash(node --check src/utils/passwordPolicy.js)",
-      "Bash(node --check src/controllers/adminController.js)"
+      "Bash(node --check src/controllers/adminController.js)",
+      "Bash(node --check src/utils/notificationService.js)",
+      "Bash(node --check src/app.js)"
     ]
   }
 }

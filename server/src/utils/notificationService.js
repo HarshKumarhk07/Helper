@@ -14,6 +14,10 @@ const getMailer = () => {
     port: Number(SMTP_PORT) || 587,
     secure: Number(SMTP_PORT) === 465,
     auth: { user: SMTP_USER, pass: SMTP_PASS },
+    // Force IPv4 — hosts like Render don't have IPv6 egress, so Gmail's
+    // AAAA records would otherwise resolve to an unreachable address and
+    // fail with ENETUNREACH on the first send.
+    family: 4,
   });
   if (!mailerLoggedReady) {
     mailerLoggedReady = true;
