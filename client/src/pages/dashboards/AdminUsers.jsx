@@ -198,7 +198,7 @@ export default function AdminUsers() {
               <input placeholder="Aadhaar Number" inputMode="numeric" maxLength={12} className="p-3 border rounded-xl bg-white text-ink placeholder-ink/40 border-ink/20 focus:outline-none focus:border-ink:border-paper/60" value={newUser.aadhaarNumber} onChange={(e) => setNewUser({...newUser, aadhaarNumber: e.target.value.replace(/\D/g, '').slice(0, 12)})} />
               <input placeholder="PAN Number" maxLength={10} className="p-3 border rounded-xl bg-white text-ink placeholder-ink/40 border-ink/20 focus:outline-none focus:border-ink:border-paper/60 uppercase" value={newUser.panNumber} onChange={(e) => setNewUser({...newUser, panNumber: e.target.value.toUpperCase().slice(0, 10)})} />
               <div className="md:col-span-2 rounded-xl border border-dashed border-ink/20 bg-white p-4">
-                <div className="mb-2 text-xs uppercase tracking-widest text-ink">Passport size photo - or choose from computer</div>
+                <div className="mb-2 text-xs uppercase tracking-widest text-ink">Passport size photo</div>
                 <div className="flex flex-col gap-3 md:flex-row md:items-center">
                   <input
                     type="file"
@@ -332,7 +332,7 @@ export default function AdminUsers() {
               <input placeholder="Aadhaar Number" inputMode="numeric" maxLength={12} className="p-3 border rounded-xl bg-transparent border-ink/20 text-ink placeholder-ink/45" value={editForm.aadhaarNumber} onChange={(e) => setEditForm({ ...editForm, aadhaarNumber: e.target.value.replace(/\D/g, '').slice(0, 12) })} />
               <input placeholder="PAN Number" maxLength={10} className="p-3 border rounded-xl bg-transparent border-ink/20 text-ink placeholder-ink/45 uppercase" value={editForm.panNumber} onChange={(e) => setEditForm({ ...editForm, panNumber: e.target.value.toUpperCase().slice(0, 10) })} />
               <div className="md:col-span-2 rounded-xl border border-dashed border-ink/20 bg-transparent p-4">
-                <div className="mb-2 text-xs uppercase tracking-widest text-ink">Or choose from computer</div>
+                <div className="mb-2 text-xs uppercase tracking-widest text-ink">Passport size photo</div>
                 <div className="flex flex-col gap-3 md:flex-row md:items-center">
                   <input
                     type="file"

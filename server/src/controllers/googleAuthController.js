@@ -7,7 +7,13 @@ import { logAudit } from '../utils/auditLogger.js';
 import { verifyFirebaseIdToken } from '../utils/firebaseAdmin.js';
 
 const buildTokens = (user) => {
-  const payload = { sub: user._id.toString(), role: user.role };
+  // Carry the user's tokenVersion so logout / password-reset can invalidate
+  // Google-issued tokens the same way as email-password ones.
+  const payload = {
+    sub: user._id.toString(),
+    role: user.role,
+    tv: user.tokenVersion || 0,
+  };
   return {
     accessToken: signAccessToken(payload),
     refreshToken: signRefreshToken(payload),

@@ -245,6 +245,10 @@ export default function WorkerNav() {
   };
 
   const handleComplete = async () => {
+    if (!booking?.endPin) {
+      toast.error('End PIN is not available for this booking yet');
+      return;
+    }
     const pin = window.prompt('Enter the 6-digit End PIN from the customer:');
     if (!pin) return;
     setWorking(true);
@@ -438,11 +442,17 @@ export default function WorkerNav() {
               </button>
               <button
                 onClick={handleComplete}
-                disabled={working || !inProgress}
+                disabled={working || !inProgress || !booking?.endPin}
+                title={booking?.endPin ? 'Enter the customer end PIN to complete the job' : 'End PIN is not available for this booking yet'}
                 className="inline-flex items-center justify-center gap-2 rounded-full bg-sky-500 px-4 py-2.5 text-xs uppercase tracking-widest text-white transition hover:bg-sky-400 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <CheckCircle2 size={13} /> Complete with PIN
               </button>
+              {inProgress && (
+                <div className={`col-span-2 text-center text-[10px] uppercase tracking-widest ${booking?.endPin ? 'text-sky-300/80' : 'text-amber-300'}`}>
+                  {booking?.endPin ? 'End PIN required before completion' : 'End PIN missing for this booking'}
+                </div>
+              )}
             </div>
           )}
 

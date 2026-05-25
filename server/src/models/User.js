@@ -38,6 +38,11 @@ const userSchema = new mongoose.Schema(
     avatar: { type: String, default: '' },
     isActive: { type: Boolean, default: true },
     lastLoginAt: { type: Date },
+    // Bumped on logout / password reset / forced sign-out. Tokens carry the
+    // version they were issued at; the auth middleware rejects any token
+    // whose version is older than the user's current one, so a stolen
+    // token is killed by signing out — no shared blacklist needed.
+    tokenVersion: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

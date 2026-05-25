@@ -75,6 +75,10 @@ export default function AdminBookings() {
     // Completing requires the end PIN held by the customer — even for admins.
     let pin;
     if (to === 'completed') {
+      if (!booking.endPin) {
+        toast.error('End PIN is not available for this booking yet');
+        return;
+      }
       pin = window.prompt(
         `Enter the end PIN given to the customer to mark ${booking.code || 'this booking'} complete:`
       );
@@ -211,12 +215,19 @@ export default function AdminBookings() {
                       </button>
                     )}
                     {b.status === 'in_progress' && (
-                      <button
-                        onClick={() => onTransition(b, 'completed')}
-                        className="rounded-pill border border-ink bg-ink/85 text-paper px-3 py-1 text-[10px] uppercase tracking-widest hover:bg-ink hover:text-paper"
-                      >
-                        Mark complete
-                      </button>
+                      <div className="flex flex-col gap-1">
+                        <button
+                          onClick={() => onTransition(b, 'completed')}
+                          disabled={!b.endPin}
+                          title={b.endPin ? 'Enter the customer end PIN to complete this booking' : 'End PIN is not available for this booking yet'}
+                          className="rounded-pill border border-ink bg-ink/85 px-3 py-1 text-[10px] uppercase tracking-widest text-paper hover:bg-ink hover:text-paper disabled:cursor-not-allowed disabled:border-ink/20 disabled:bg-ink/20 disabled:text-ink/40"
+                        >
+                          Mark complete
+                        </button>
+                        <span className={`text-[10px] uppercase tracking-widest ${b.endPin ? 'text-amber-700' : 'text-red-600'}`}>
+                          {b.endPin ? 'End PIN required' : 'End PIN missing'}
+                        </span>
+                      </div>
                     )}
                     {isAdmin && b.paymentStatus !== 'refunded' && (
                       <button

@@ -12,7 +12,14 @@ const RESET_TTL_MINUTES = 30;
 const hashToken = (token) => crypto.createHash('sha256').update(token).digest('hex');
 
 const buildTokens = (user) => {
-  const payload = { sub: user._id.toString(), role: user.role };
+  // Embed the user's current tokenVersion. The auth middleware verifies
+  // this on every request — bumping the user's version on logout / password
+  // reset instantly invalidates every previously-issued token.
+  const payload = {
+    sub: user._id.toString(),
+    role: user.role,
+    tv: user.tokenVersion || 0,
+  };
   return {
     accessToken: signAccessToken(payload),
     refreshToken: signRefreshToken(payload),
@@ -73,6 +80,12 @@ export const refresh = asyncHandler(async (req, res) => {
   const user = await User.findById(decoded.sub);
   if (!user || !user.isActive) throw new ApiError(401, 'User no longer active');
 
+  // Same version check as the auth middleware — a refresh token from before
+  // a logout / password reset must not silently mint fresh access tokens.
+  if ((decoded.tv || 0) !== (user.tokenVersion || 0)) {
+    throw new ApiError(401, 'Session ended — please sign in again');
+  }
+
   const tokens = buildTokens(user);
   res.json({ user: user.toSafeJSON(), ...tokens });
 });
@@ -81,7 +94,14 @@ export const me = asyncHandler(async (req, res) => {
   res.json({ user: req.user.toSafeJSON() });
 });
 
-export const logout = asyncHandler(async (_req, res) => {
+export const logout = asyncHandler(async (req, res) => {
+  // Bump the version so every previously-issued access AND refresh token
+  // for this user is rejected on its next use. Stolen tokens die the
+  // moment the real user signs out.
+  await User.updateOne(
+    { _id: req.user._id },
+    { $inc: { tokenVersion: 1 } }
+  );
   res.json({ ok: true });
 });
 
@@ -154,6 +174,10 @@ export const resetPassword = asyncHandler(async (req, res) => {
   if (!user) throw new ApiError(404, 'Account not found');
 
   user.password = password; // pre-save hook hashes it
+  // A password reset must invalidate every active session — bump the
+  // token version so any previously-issued access/refresh tokens are
+  // rejected by the auth middleware.
+  user.tokenVersion = (user.tokenVersion || 0) + 1;
   await user.save();
 
   record.usedAt = new Date();

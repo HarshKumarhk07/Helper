@@ -277,53 +277,66 @@ export default function AdminDashboard() {
       eyebrow="(Admin console)"
       title="EVERYTHING, IN ONE PANE."
     >
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3 mb-8 sm:mb-10">
-        <PillButton variant="solid" to="/admin/bookings">
-          Open bookings →
-        </PillButton>
-        <PillButton variant="solid" to="/admin/workers">
-          KYC approval →
-        </PillButton>
-        <PillButton variant="solid" to="/admin/users">
-          Users | roles →
-        </PillButton>
-        <PillButton variant="solid" to="/admin/orders">
-          Add admin notes on orders →
-        </PillButton>
-        <PillButton variant="solid" to="/admin/products">
-          Inventory control →
-        </PillButton>
-        <PillButton variant="solid" to="/admin/services">
-          Services | pricing →
-        </PillButton>
-        <PillButton variant="solid" to="/admin/categories">
-          Manage categories →
-        </PillButton>
-        <PillButton variant="solid" to="/admin/product-categories">
-          Shop the Collection →
-        </PillButton>
-        <PillButton variant="solid" to="/admin/settings">
-          Platform settings →
-        </PillButton>
-        <PillButton variant="solid" to="/admin/coupons">
-          Manage coupons →
-        </PillButton>
-        <PillButton variant="solid" to="/admin/payouts">
-          Worker payouts →
-        </PillButton>
-        <PillButton variant="solid" to="/admin/finance">
-          Commission overview →
-        </PillButton>
-        <PillButton variant="solid" to="/admin/support">
-          Support queue →
-        </PillButton>
-        <PillButton variant="solid" to="/admin/wallet">
-          User wallets →
-        </PillButton>
-        <PillButton variant="solid" to="/admin/audit-logs">
-          View audit logs →
-        </PillButton>
-        <PillButton to="/services">Browse catalog</PillButton>
+      <div className="mb-8 space-y-6 sm:mb-10 sm:space-y-8">
+        <AdminSection title="Bookings & Orders">
+          <PillButton variant="solid" to="/admin/bookings">
+            Open bookings →
+          </PillButton>
+          <PillButton variant="solid" to="/admin/orders">
+            Add admin notes on orders →
+          </PillButton>
+        </AdminSection>
+
+        <AdminSection title="Users & Workers">
+          <PillButton variant="solid" to="/admin/users">
+            Users | roles →
+          </PillButton>
+          <PillButton variant="solid" to="/admin/workers">
+            KYC approval →
+          </PillButton>
+          <PillButton variant="solid" to="/admin/payouts">
+            Worker payouts →
+          </PillButton>
+          <PillButton variant="solid" to="/admin/finance">
+            Commission overview →
+          </PillButton>
+        </AdminSection>
+
+        <AdminSection title="Catalog & Services">
+          <PillButton variant="solid" to="/admin/services">
+            Services | pricing →
+          </PillButton>
+          <PillButton variant="solid" to="/admin/categories">
+            Manage categories →
+          </PillButton>
+          <PillButton variant="solid" to="/admin/products">
+            Inventory control →
+          </PillButton>
+          <PillButton variant="solid" to="/admin/product-categories">
+            Shop the Collection →
+          </PillButton>
+        </AdminSection>
+
+        <AdminSection title="Finance">
+          <PillButton variant="solid" to="/admin/wallet">
+            User wallets →
+          </PillButton>
+          <PillButton variant="solid" to="/admin/coupons">
+            Manage coupons →
+          </PillButton>
+        </AdminSection>
+
+        <AdminSection title="Platform">
+          <PillButton variant="solid" to="/admin/settings">
+            Platform settings →
+          </PillButton>
+          <PillButton variant="solid" to="/admin/support">
+            Support queue →
+          </PillButton>
+          <PillButton variant="solid" to="/admin/audit-logs">
+            View audit logs →
+          </PillButton>
+        </AdminSection>
       </div>
 
       {loading ? (
@@ -461,5 +474,34 @@ export default function AdminDashboard() {
         </div>
       ) : null}
     </DashboardShell>
+  );
+}
+
+// Section wrapper for the admin landing grid — a small label above a
+// responsive grid of equal-sized pills. 2 cols on mobile so the cards
+// stay tap-friendly without each pill stretching across the full row.
+function AdminSection({ title, children }) {
+  return (
+    <section>
+      <div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-ink/55">
+        {title}
+      </div>
+      <div
+        className="
+          grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4
+          gap-2 sm:gap-3
+          [&>*]:w-full
+          [&>*]:!justify-between
+          [&>*]:!px-3 sm:[&>*]:!px-4
+          [&>*]:!py-3
+          [&>*]:!text-[11px] sm:[&>*]:!text-xs md:[&>*]:!text-sm
+          [&>*]:!leading-tight
+          [&>*]:text-left
+          [&>*]:min-h-[56px]
+        "
+      >
+        {children}
+      </div>
+    </section>
   );
 }

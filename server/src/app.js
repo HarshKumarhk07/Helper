@@ -62,11 +62,35 @@ app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
 if (process.env.NODE_ENV !== 'test') app.use(morgan('dev'));
 
+// JSON 429 response so the frontend's axios catches it the same as any
+// other API error — express-rate-limit's default plain-text body otherwise
+// triggers a JSON parse error in the client.
+const jsonRateLimitHandler = (req, res, _next, options) =>
+  res.status(options.statusCode || 429).json({
+    error: 'Too many requests. Please slow down and try again shortly.',
+    retryAfterSeconds: Math.ceil(options.windowMs / 1000),
+  });
+
+// General auth-area limiter — covers signup, refresh, forgot/reset, google.
+// Login gets its own much tighter limiter below.
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 50,
   standardHeaders: true,
   legacyHeaders: false,
+  handler: jsonRateLimitHandler,
+});
+
+// Dedicated brute-force limiter for /login: 5 attempts per 10 minutes per
+// IP. Successful logins don't count (skipSuccessfulRequests) so a normal
+// user typing the right password twice in a row never gets locked out.
+const loginLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: true,
+  handler: jsonRateLimitHandler,
 });
 
 app.use('/uploads', express.static('uploads'));
@@ -79,6 +103,10 @@ app.get('/api/health', (_req, res) =>
   res.json({ status: 'ok', service: 'urbanease', time: new Date().toISOString() })
 );
 
+// Login gets the strict per-route limiter; the rest of /api/auth keeps the
+// looser one. Order matters — loginLimiter has to be mounted on the exact
+// path before the broader middleware.
+app.use('/api/auth/login', loginLimiter);
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/categories', categoryRoutes);

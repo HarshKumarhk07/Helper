@@ -37,7 +37,12 @@
       "Bash(node --check src/controllers/adminController.js)",
       "Bash(node --check src/utils/notificationService.js)",
       "Bash(node --check src/app.js)",
-      "Bash(node --check src/server.js)"
+      "Bash(node --check src/server.js)",
+      "Bash(node --check src/middleware/auth.js)",
+      "Bash(node --check src/controllers/authController.js)",
+      "Bash(node --check src/controllers/bookingController.js)",
+      "Bash(node --check src/controllers/googleAuthController.js)",
+      "Bash(node --check src/models/User.js)"
     ]
   }
 }

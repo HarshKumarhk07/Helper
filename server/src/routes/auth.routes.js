@@ -18,7 +18,9 @@ const router = Router();
 router.post('/signup', validate(signupSchema), signup);
 router.post('/login', validate(loginSchema), login);
 router.post('/refresh', refresh);
-router.post('/logout', logout);
+// Logout must be authenticated — otherwise the server has no idea whose
+// tokens to revoke, so the call would be a no-op.
+router.post('/logout', requireAuth, logout);
 router.post('/forgot-password', forgotPassword);
 router.post('/reset-password', resetPassword);
 router.post('/google', googleSignIn);
