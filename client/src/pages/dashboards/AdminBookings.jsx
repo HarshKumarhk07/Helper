@@ -28,7 +28,8 @@ export default function AdminBookings() {
 
   const load = () => {
     setLoading(true);
-    listAllBookings(filter === 'all' ? {} : { status: filter })
+    const query = filter === 'all' ? {} : filter === 'refunded' ? { paymentStatus: 'refunded' } : { status: filter };
+    listAllBookings(query)
       .then(setBookings)
       .catch(() => toast.error('Failed to load bookings'))
       .finally(() => setLoading(false));

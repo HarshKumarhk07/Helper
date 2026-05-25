@@ -205,9 +205,10 @@ export const listMyBookings = asyncHandler(async (req, res) => {
 });
 
 export const listAllBookings = asyncHandler(async (req, res) => {
-  const { status, worker, user, category } = req.query;
+  const { status, paymentStatus, worker, user, category } = req.query;
   const filter = {};
   if (status) filter.status = status;
+  if (paymentStatus) filter.paymentStatus = paymentStatus;
   if (worker) filter.worker = worker;
   if (user) filter.user = user;
   if (category) filter.category = category;

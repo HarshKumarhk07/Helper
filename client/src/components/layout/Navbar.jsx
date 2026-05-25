@@ -8,6 +8,8 @@ import { useFavorites } from '../../context/FavoritesContext.jsx';
 import { useLocation } from '../../context/LocationContext.jsx';
 import LocationModal from '../location/LocationModal.jsx';
 import { motion, AnimatePresence } from 'framer-motion';
+import { listProducts } from '../../api/products.js';
+import { listServices } from '../../api/services.js';
 
 const NAV = [
   { to: '/', label: 'Home' },
@@ -50,8 +52,11 @@ export default function Navbar() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchValue, setSearchValue] = useState('');
   const [scrolled, setScrolled] = useState(false);
+  const [suggestions, setSuggestions] = useState([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const searchInputRef = useRef(null);
-  
+  const debounceTimer = useRef(null);
+
   const panelPath = PANEL_BY_ROLE[user?.role] || '/dashboard';
   const panelLabel = PANEL_LABEL_BY_ROLE[user?.role] || 'Dashboard';
 
@@ -68,6 +73,50 @@ export default function Navbar() {
       setTimeout(() => searchInputRef.current?.focus(), 100);
     }
   }, [searchOpen]);
+
+  useEffect(() => {
+    if (!searchValue.trim()) {
+      setSuggestions([]);
+      return;
+    }
+
+    setLoadingSuggestions(true);
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+
+    debounceTimer.current = setTimeout(async () => {
+      try {
+        const query = searchValue.trim();
+        const [products, services] = await Promise.all([
+          listProducts({ q: query, limit: 5 }).catch(err => {
+            console.error('Products fetch error:', err);
+            return [];
+          }),
+          listServices({ q: query, limit: 5 }).catch(err => {
+            console.error('Services fetch error:', err);
+            return [];
+          }),
+        ]);
+
+        console.log('Autocomplete results:', { products, services, query });
+
+        const combined = [
+          ...(products || []).map(p => ({ type: 'product', ...p })),
+          ...(services || []).map(s => ({ type: 'service', ...s })),
+        ].slice(0, 6);
+
+        setSuggestions(combined);
+      } catch (err) {
+        console.error('Autocomplete fetch failed:', err);
+        setSuggestions([]);
+      } finally {
+        setLoadingSuggestions(false);
+      }
+    }, 300);
+
+    return () => {
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    };
+  }, [searchValue]);
 
   // Prevent body scroll when drawer is open
   useEffect(() => {
@@ -86,6 +135,18 @@ export default function Navbar() {
     navigate(`/services?q=${encodeURIComponent(query)}`);
     setSearchOpen(false);
     setSearchValue('');
+    setSuggestions([]);
+  };
+
+  const handleSuggestionClick = (suggestion) => {
+    if (suggestion.type === 'product') {
+      navigate(`/products/${suggestion._id}`);
+    } else {
+      navigate(`/services/${suggestion._id}`);
+    }
+    setSearchOpen(false);
+    setSearchValue('');
+    setSuggestions([]);
   };
 
   return (
@@ -179,36 +240,79 @@ export default function Navbar() {
               <MapPin size={20} strokeWidth={1.5} className="text-[#6f5cff]" />
             </button>
 
-            <div className="flex items-center">
+            <div className="flex items-center relative">
               {searchOpen ? (
-                <motion.form
+                <motion.div
                   initial={{ opacity: 0, y: -4 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -4 }}
                   transition={{ duration: 0.2 }}
-                  onSubmit={handleSearchSubmit}
-                  className="absolute inset-x-0 z-30 flex items-center gap-2 rounded-full border border-ink/10 bg-paper px-4 py-2 shadow-md md:static md:inset-auto md:px-3 md:py-1.5 md:shadow-sm"
+                  className="absolute inset-x-0 z-30 top-0 md:static"
                 >
-                  <Search size={16} className="text-ink/50 shrink-0" />
-                  <input
-                    ref={searchInputRef}
-                    value={searchValue}
-                    onChange={(e) => setSearchValue(e.target.value)}
-                    placeholder="Search services..."
-                    className="min-w-0 flex-1 md:w-48 md:flex-none bg-transparent text-sm outline-none placeholder:text-ink/40 text-ink font-medium"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSearchOpen(false);
-                      setSearchValue('');
-                    }}
-                    className="text-ink/40 hover:text-ink transition-colors p-1 shrink-0"
-                    aria-label="Close search"
+                  <form
+                    onSubmit={handleSearchSubmit}
+                    className="flex items-center gap-2 rounded-full border border-ink/10 bg-paper px-4 py-2 shadow-md md:px-3 md:py-1.5 md:shadow-sm"
                   >
-                    <X size={16} />
-                  </button>
-                </motion.form>
+                    <Search size={16} className="text-ink/50 shrink-0" />
+                    <input
+                      ref={searchInputRef}
+                      value={searchValue}
+                      onChange={(e) => setSearchValue(e.target.value)}
+                      placeholder="Search services..."
+                      className="min-w-0 flex-1 md:w-48 md:flex-none bg-transparent text-sm outline-none placeholder:text-ink/40 text-ink font-medium"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearchOpen(false);
+                        setSearchValue('');
+                        setSuggestions([]);
+                      }}
+                      className="text-ink/40 hover:text-ink transition-colors p-1 shrink-0"
+                      aria-label="Close search"
+                    >
+                      <X size={16} />
+                    </button>
+                  </form>
+
+                  {/* Autocomplete Dropdown */}
+                  {suggestions.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -2 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="absolute top-full left-0 right-0 mt-2 md:left-auto md:right-0 md:w-72 bg-paper border border-ink/10 rounded-lg shadow-lg max-h-96 overflow-y-auto z-40"
+                    >
+                      {suggestions.map((suggestion, idx) => (
+                        <button
+                          key={`${suggestion.type}-${suggestion._id}`}
+                          type="button"
+                          onClick={() => handleSuggestionClick(suggestion)}
+                          className="w-full px-4 py-3 text-left hover:bg-ink/5 border-b border-ink/5 last:border-b-0 transition-colors flex items-start gap-3"
+                        >
+                          {suggestion.image && (
+                            <img
+                              src={suggestion.image}
+                              alt={suggestion.name}
+                              className="h-10 w-10 rounded object-cover shrink-0"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                              }}
+                            />
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <div className="font-medium text-sm text-ink truncate">
+                              {suggestion.name}
+                            </div>
+                            <div className="text-xs text-ink/50 truncate">
+                              {suggestion.type === 'product' ? 'Product' : 'Service'}
+                              {suggestion.price && ` • ₹${suggestion.price}`}
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </motion.div>
+                  )}
+                </motion.div>
               ) : (
                 <button
                   type="button"
