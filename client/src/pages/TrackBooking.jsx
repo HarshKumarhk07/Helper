@@ -11,6 +11,8 @@ import {
   XCircle,
   Hourglass,
   Truck,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import RouteMap from '../components/booking/RouteMap.jsx';
@@ -82,6 +84,9 @@ export default function TrackBooking() {
   const [state, setState] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+  // Sheet starts collapsed so the customer sees the map first; they can
+  // expand for the full ETA / timeline details whenever they want.
+  const [sheetExpanded, setSheetExpanded] = useState(false);
 
   // ── Bootstrap from REST so the page paints immediately ───────────────────
   useEffect(() => {
@@ -334,91 +339,121 @@ export default function TrackBooking() {
       {/* ── Bottom info sheet ── */}
       {!loading && !error && state?.booking && (
         <div className="absolute bottom-0 left-0 right-0 z-[400] px-3 pb-3">
-          <div className="mx-auto max-w-2xl rounded-3xl border border-white/10 bg-[#0f172a]/95 p-5 shadow-[0_-12px_40px_rgba(0,0,0,0.45)] backdrop-blur">
+          <div className="mx-auto max-w-2xl rounded-3xl border border-white/10 bg-[#0f172a]/95 px-4 py-3 shadow-[0_-12px_40px_rgba(0,0,0,0.45)] backdrop-blur">
 
-            {/* Status + call row */}
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-2 flex-wrap">
+            {/* Drag handle / collapse toggle so the map stays visible */}
+            <button
+              type="button"
+              onClick={() => setSheetExpanded((v) => !v)}
+              className="-mt-1 mb-2 mx-auto flex w-full items-center justify-center gap-2 text-[10px] uppercase tracking-widest text-paper/55 hover:text-paper transition"
+              aria-label={sheetExpanded ? 'Collapse details' : 'Expand details'}
+            >
+              <span className="h-1 w-10 rounded-full bg-white/20" />
+              {sheetExpanded ? <ChevronDown size={12} /> : <ChevronUp size={12} />}
+              <span>{sheetExpanded ? 'Hide details' : 'Show details'}</span>
+              <span className="h-1 w-10 rounded-full bg-white/20" />
+            </button>
+
+            {/* Always-visible compact row: status + ETA + Call */}
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 min-w-0 flex-wrap">
                 <span
-                  className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-[10px] font-medium uppercase tracking-widest ring-1 ring-inset ${
+                  className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-medium uppercase tracking-widest ring-1 ring-inset ${
                     STATUS_BADGE[status] || ''
                   }`}
                 >
-                  {isCancelled ? <XCircle size={12} /> : <Truck size={12} />}
+                  {isCancelled ? <XCircle size={11} /> : <Truck size={11} />}
                   {STATUS_LABEL[status] || status}
                 </span>
-                {lastSeenLabel && state?.workerLocation && (
-                  <span className="text-[10px] uppercase tracking-widest text-paper/50">
-                    Updated {lastSeenLabel}
+                <span className="text-xs text-paper/80">
+                  <span className="text-paper/50">ETA </span>
+                  <span className="font-semibold tabular-nums">
+                    {fmtMinutes(state?.eta?.durationSeconds)}
                   </span>
-                )}
-                {state?.eta?.fallback && (
-                  <span className="text-[10px] uppercase tracking-widest text-amber-300/80">
-                    Approx. ETA
+                  <span className="text-paper/50"> · </span>
+                  <span className="font-semibold tabular-nums">
+                    {fmtKm(state?.eta?.distanceMeters)}
                   </span>
-                )}
+                </span>
               </div>
               {state?.booking?.worker?.phone && (
                 <a
                   href={`tel:${state.booking.worker.phone}`}
-                  className="inline-flex items-center gap-2 rounded-full bg-emerald-500 px-4 py-1.5 text-xs uppercase tracking-widest text-[#04130c] hover:bg-emerald-400 transition"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500 px-3 py-1.5 text-[11px] uppercase tracking-widest text-[#04130c] hover:bg-emerald-400 transition shrink-0"
                 >
-                  <Phone size={12} /> Call
+                  <Phone size={11} /> Call
                 </a>
               )}
             </div>
 
-            {/* ETA stats */}
-            <div className="mt-4 grid grid-cols-3 gap-3 text-center">
-              <Stat label="ETA" value={fmtMinutes(state?.eta?.durationSeconds)} />
-              <Stat label="Arrival" value={fmtTimeFromNow(state?.eta?.durationSeconds)} />
-              <Stat label="Distance" value={fmtKm(state?.eta?.distanceMeters)} />
-            </div>
+            {/* Expandable details — hidden by default to keep the panel small */}
+            {sheetExpanded && (
+              <>
+                {/* ETA stat tiles */}
+                <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+                  <Stat label="ETA" value={fmtMinutes(state?.eta?.durationSeconds)} />
+                  <Stat label="Arrival" value={fmtTimeFromNow(state?.eta?.durationSeconds)} />
+                  <Stat label="Distance" value={fmtKm(state?.eta?.distanceMeters)} />
+                </div>
 
-            {/* Worker + address row */}
-            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-4">
-              <div>
-                <div className="text-xs uppercase tracking-widest text-paper/50">
-                  {state.booking.service?.name || 'Service'}
-                </div>
-                <div className="mt-1 text-sm font-semibold">
-                  {state.booking.worker?.name || 'Awaiting assignment'}
-                </div>
-              </div>
-              <div className="text-right text-sm">
-                <div className="flex items-center justify-end gap-1 text-paper/70">
-                  <MapPin size={12} />
-                  {state.booking.address?.city || '—'}
-                </div>
-                <div className="mt-0.5 text-xs text-paper/50">
-                  {state.booking.address?.line1}
-                </div>
-              </div>
-            </div>
+                {/* Status meta line */}
+                {(lastSeenLabel && state?.workerLocation) || state?.eta?.fallback ? (
+                  <div className="mt-2 flex flex-wrap items-center gap-3 text-[10px] uppercase tracking-widest">
+                    {lastSeenLabel && state?.workerLocation && (
+                      <span className="text-paper/50">Updated {lastSeenLabel}</span>
+                    )}
+                    {state?.eta?.fallback && (
+                      <span className="text-amber-300/80">Approx. ETA</span>
+                    )}
+                  </div>
+                ) : null}
 
-            {/* Progress timeline */}
-            <ol className="mt-4 grid grid-cols-4 gap-1.5">
-              {TIMELINE.map((step) => {
-                const stepIdx = TIMELINE.findIndex((s) => s.key === step.key);
-                const currIdx = TIMELINE.findIndex((s) => s.key === status);
-                const reached = stepIdx <= currIdx;
-                const current = step.key === status;
-                return (
-                  <li
-                    key={step.key}
-                    className={`rounded-xl px-2 py-1.5 text-center text-[10px] uppercase tracking-widest ${
-                      current
-                        ? 'bg-sky-400/20 text-sky-300 ring-1 ring-sky-400/40'
-                        : reached
-                        ? 'bg-emerald-400/10 text-emerald-300/80'
-                        : 'bg-white/5 text-paper/35'
-                    }`}
-                  >
-                    {step.label}
-                  </li>
-                );
-              })}
-            </ol>
+                {/* Worker + address row */}
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-3">
+                  <div className="min-w-0">
+                    <div className="text-[10px] uppercase tracking-widest text-paper/50">
+                      {state.booking.service?.name || 'Service'}
+                    </div>
+                    <div className="mt-0.5 text-sm font-semibold truncate">
+                      {state.booking.worker?.name || 'Awaiting assignment'}
+                    </div>
+                  </div>
+                  <div className="text-right text-xs min-w-0">
+                    <div className="flex items-center justify-end gap-1 text-paper/70">
+                      <MapPin size={11} />
+                      {state.booking.address?.city || '—'}
+                    </div>
+                    <div className="mt-0.5 text-[11px] text-paper/50 truncate">
+                      {state.booking.address?.line1}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Progress timeline */}
+                <ol className="mt-3 grid grid-cols-4 gap-1">
+                  {TIMELINE.map((step) => {
+                    const stepIdx = TIMELINE.findIndex((s) => s.key === step.key);
+                    const currIdx = TIMELINE.findIndex((s) => s.key === status);
+                    const reached = stepIdx <= currIdx;
+                    const current = step.key === status;
+                    return (
+                      <li
+                        key={step.key}
+                        className={`rounded-lg px-2 py-1 text-center text-[9px] uppercase tracking-widest ${
+                          current
+                            ? 'bg-sky-400/20 text-sky-300 ring-1 ring-sky-400/40'
+                            : reached
+                            ? 'bg-emerald-400/10 text-emerald-300/80'
+                            : 'bg-white/5 text-paper/35'
+                        }`}
+                      >
+                        {step.label}
+                      </li>
+                    );
+                  })}
+                </ol>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -428,9 +463,9 @@ export default function TrackBooking() {
 
 function Stat({ label, value }) {
   return (
-    <div className="rounded-2xl bg-white/5 px-3 py-3">
-      <div className="text-[10px] uppercase tracking-widest text-paper/50">{label}</div>
-      <div className="mt-1 text-xl font-semibold tabular-nums">{value}</div>
+    <div className="rounded-xl bg-white/5 px-2 py-2">
+      <div className="text-[9px] uppercase tracking-widest text-paper/50">{label}</div>
+      <div className="mt-0.5 text-base font-semibold tabular-nums">{value}</div>
     </div>
   );
 }
