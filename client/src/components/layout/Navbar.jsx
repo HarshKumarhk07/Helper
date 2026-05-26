@@ -345,20 +345,22 @@ export default function Navbar() {
             </Link>
 
             {isAuthenticated ? (
-              <div className="hidden md:flex items-center gap-4 pl-4 border-l border-ink/10">
+              <div className="hidden md:flex items-center gap-3 lg:gap-4 pl-3 lg:pl-4 border-l border-ink/10 shrink-0">
                 {(user?.passportPhoto || user?.avatar) && (
-                  <img
-                    src={mediaUrl(user.passportPhoto || user.avatar)}
-                    alt={user.name}
-                    className="h-8 w-8 rounded-full object-cover border border-ink/20"
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none';
-                    }}
-                  />
+                  <Link to={panelPath} className="shrink-0" aria-label={panelLabel}>
+                    <img
+                      src={mediaUrl(user.passportPhoto || user.avatar)}
+                      alt={user.name}
+                      className="h-8 w-8 rounded-full object-cover border border-ink/20"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  </Link>
                 )}
                 <Link
                   to={panelPath}
-                  className="text-sm font-medium text-ink/70 hover:text-ink transition-colors"
+                  className="hidden lg:inline-block text-sm font-medium text-ink/70 hover:text-ink transition-colors whitespace-nowrap"
                 >
                   {panelLabel}
                 </Link>
@@ -367,7 +369,7 @@ export default function Navbar() {
                     await logout();
                     navigate('/');
                   }}
-                  className="pill-btn !py-1.5 !px-4 text-xs"
+                  className="pill-btn !py-1.5 !px-4 text-xs whitespace-nowrap shrink-0"
                 >
                   Sign out
                 </button>

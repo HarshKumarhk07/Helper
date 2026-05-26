@@ -18,7 +18,7 @@ export const postSendTestEmail = async (req, res) => {
   if (process.env.NODE_ENV === 'production' && !requireToken(req)) {
     return res.status(403).json({ error: 'forbidden' });
   }
-  const to = req.body.to || process.env.SMTP_USER;
+  const to = req.body.to || process.env.MAIL_FROM_EMAIL;
   const subject = req.body.subject || 'Test email from UrbanEase';
   const html = req.body.html || '<p>This is a test email from UrbanEase.</p>';
   const result = await sendEmail({ to, subject, html });

@@ -11,6 +11,8 @@ import {
   MapPin,
   Clock,
   LocateFixed,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import RouteMap from '../components/booking/RouteMap.jsx';
@@ -68,6 +70,7 @@ export default function WorkerNav() {
   const [state, setState] = useState(null);
   const [loading, setLoading] = useState(true);
   const [working, setWorking] = useState(false);
+  const [sheetExpanded, setSheetExpanded] = useState(true);
 
   // ── Local GPS position for the worker marker ─────────────────────────────
   // The server broadcasts the worker's location back to the booking room, but
@@ -355,7 +358,20 @@ export default function WorkerNav() {
       <div className="absolute bottom-0 left-0 right-0 z-[400] px-3 pb-3">
         <div className="mx-auto max-w-2xl rounded-3xl border border-white/10 bg-[#0f172a]/95 p-5 shadow-[0_-12px_40px_rgba(0,0,0,0.45)] backdrop-blur">
 
-          {/* Status + actions row */}
+          {/* Drag handle / collapse toggle so the worker can uncover the map */}
+          <button
+            type="button"
+            onClick={() => setSheetExpanded((v) => !v)}
+            className="-mt-2 mb-3 mx-auto flex w-full items-center justify-center gap-2 text-[10px] uppercase tracking-widest text-paper/55 hover:text-paper transition"
+            aria-label={sheetExpanded ? 'Collapse details' : 'Expand details'}
+          >
+            <span className="h-1 w-10 rounded-full bg-white/20" />
+            {sheetExpanded ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
+            <span>{sheetExpanded ? 'Hide details' : 'Show details'}</span>
+            <span className="h-1 w-10 rounded-full bg-white/20" />
+          </button>
+
+          {/* Status + actions row — always visible so PIN / call stay reachable */}
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span
               className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-[10px] font-medium uppercase tracking-widest ring-1 ring-inset ${
@@ -384,6 +400,9 @@ export default function WorkerNav() {
             </div>
           </div>
 
+          {/* Expandable section — hides the bulky info so the map is visible */}
+          {sheetExpanded && (
+          <>
           {/* ETA / Distance stats */}
           <div className="mt-4 grid grid-cols-3 gap-3 text-center">
             <Stat label="ETA" value={fmtMin(state.eta?.durationSeconds)} />
@@ -429,8 +448,10 @@ export default function WorkerNav() {
               )}
             </div>
           </div>
+          </>
+          )}
 
-          {/* Action buttons */}
+          {/* Action buttons — always visible so PIN entry stays accessible even when collapsed */}
           {!finished && (
             <div className="mt-4 grid grid-cols-2 gap-2">
               <button

@@ -23,12 +23,10 @@ const buildIntegrationsView = () => ({
     ),
     cloudName: process.env.CLOUDINARY_CLOUD_NAME || '',
   },
-  smtp: {
-    configured: !!(
-      process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS
-    ),
-    host: process.env.SMTP_HOST || '',
-    from: process.env.MAIL_FROM || '',
+  brevo: {
+    configured: !!process.env.BREVO_API_KEY,
+    senderEmail: process.env.MAIL_FROM_EMAIL || '',
+    senderName: process.env.MAIL_FROM_NAME || '',
   },
   twilio: {
     configured: !!(

@@ -1,30 +1,29 @@
-import nodemailer from 'nodemailer';
+import { BrevoClient } from '@getbrevo/brevo';
 import twilio from 'twilio';
 
 const isBlank = (v) => v === undefined || v === null || String(v).trim() === '';
 
-let mailer = null;
-let mailerLoggedReady = false;
-const getMailer = () => {
-  if (mailer) return mailer;
-  const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS } = process.env;
-  if (isBlank(SMTP_HOST) || isBlank(SMTP_USER) || isBlank(SMTP_PASS)) return null;
-  mailer = nodemailer.createTransport({
-    host: SMTP_HOST,
-    port: Number(SMTP_PORT) || 587,
-    secure: Number(SMTP_PORT) === 465,
-    auth: { user: SMTP_USER, pass: SMTP_PASS },
-    // Force IPv4 — hosts like Render don't have IPv6 egress, so Gmail's
-    // AAAA records would otherwise resolve to an unreachable address and
-    // fail with ENETUNREACH on the first send.
-    family: 4,
-  });
-  if (!mailerLoggedReady) {
-    mailerLoggedReady = true;
-    console.log(`[notification] SMTP configured (${SMTP_HOST})`);
+// Brevo transactional email client. Cached at first use so we don't recreate
+// the SDK instance per request. Returns null (not throws) if BREVO_API_KEY
+// isn't set — callers degrade gracefully with `{ skipped: true }`.
+let brevoClient = null;
+let brevoLoggedReady = false;
+const getBrevoClient = () => {
+  if (brevoClient) return brevoClient;
+  const apiKey = process.env.BREVO_API_KEY;
+  if (isBlank(apiKey)) return null;
+  brevoClient = new BrevoClient({ apiKey });
+  if (!brevoLoggedReady) {
+    brevoLoggedReady = true;
+    console.log('[notification] Brevo transactional email configured');
   }
-  return mailer;
+  return brevoClient;
 };
+
+const getSenderIdentity = () => ({
+  email: process.env.MAIL_FROM_EMAIL || 'noreply@urbanease.com',
+  name: process.env.MAIL_FROM_NAME || 'UrbanEase',
+});
 
 let smsClient = null;
 let smsLoggedReady = false;
@@ -51,23 +50,50 @@ const e164 = (phone) => {
   return `+${digits}`;
 };
 
+// Send a transactional email through Brevo. Accepts a single recipient
+// address or an array of addresses. Returns `{ skipped }` when the API key
+// is missing or the recipient is blank so the calling notify*() flows can
+// silently proceed without aborting the user-facing request.
 export const sendEmail = async ({ to, subject, html, text }) => {
   if (isBlank(to)) return { skipped: true, reason: 'missing_to' };
-  const transport = getMailer();
-  if (!transport) return { skipped: true, reason: 'smtp_not_configured' };
+  const client = getBrevoClient();
+  if (!client) return { skipped: true, reason: 'brevo_not_configured' };
+
+  // Normalize `to` to Brevo's expected shape: [{ email, name? }, ...].
+  // Accept string, array of strings, or array of {email,name} objects so
+  // existing callers don't need changes.
+  const recipients = (Array.isArray(to) ? to : [to])
+    .map((entry) => {
+      if (!entry) return null;
+      if (typeof entry === 'string') return { email: entry.trim() };
+      if (entry.email) return { email: String(entry.email).trim(), ...(entry.name ? { name: entry.name } : {}) };
+      return null;
+    })
+    .filter((r) => r && r.email);
+
+  if (!recipients.length) return { skipped: true, reason: 'missing_to' };
+
   try {
-    const info = await transport.sendMail({
-      from: process.env.MAIL_FROM || `UrbanEase <${process.env.SMTP_USER}>`,
-      to,
+    const response = await client.transactionalEmails.sendTransacEmail({
+      sender: getSenderIdentity(),
+      to: recipients,
       subject,
-      html,
-      text: text || stripHtml(html),
+      htmlContent: html,
+      textContent: text || stripHtml(html),
     });
-    console.log(`[notification] email sent to ${to} (${info.messageId}) — ${subject}`);
-    return { ok: true, id: info.messageId };
+    const messageId = response?.messageId || response?.body?.messageId || null;
+    console.log(
+      `[notification] email sent to ${recipients.map((r) => r.email).join(', ')} (${messageId || 'no-id'}) — ${subject}`
+    );
+    return { ok: true, id: messageId };
   } catch (err) {
-    console.error('[notification] email failed:', err.message);
-    return { ok: false, error: err.message };
+    // Brevo SDK errors surface useful detail on err.body / err.statusCode.
+    // Surface both so logs are actionable without leaking the API key.
+    const status = err?.statusCode || err?.status || err?.response?.status;
+    const body = err?.body || err?.response?.body || err?.response?.data;
+    const detail = (body && (body.message || body.code)) || err?.message || 'unknown error';
+    console.error(`[notification] Brevo email failed (status=${status || 'n/a'}): ${detail}`);
+    return { ok: false, error: detail, status };
   }
 };
 
@@ -437,6 +463,6 @@ const escapeHtml = (s) =>
     .replace(/'/g, '&#39;');
 
 export const notificationStatus = () => ({
-  email: !!getMailer(),
+  email: !!getBrevoClient(),
   sms: !!getSmsClient(),
 });

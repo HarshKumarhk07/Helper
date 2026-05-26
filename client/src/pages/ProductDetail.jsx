@@ -168,16 +168,16 @@ export default function ProductDetail() {
                   const qty = inCart?.quantity || 0;
                   if (inCart) {
                     return (
-                      <div className="flex flex-1 items-center justify-between gap-2 rounded-full bg-ink text-paper px-3 py-2 shadow-xl">
+                      <div className="flex flex-1 items-center justify-between gap-2 rounded-full bg-ink px-2 py-2 shadow-xl">
                         <button
                           type="button"
                           onClick={() => (qty <= 1 ? removeFromCart(product._id) : updateQuantity(product._id, qty - 1))}
                           aria-label={qty <= 1 ? 'Remove from cart' : 'Decrease quantity'}
-                          className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-paper/10 transition"
+                          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-paper/15 text-paper ring-1 ring-paper/30 hover:bg-paper/25 active:scale-95 transition"
                         >
-                          <Minus size={18} />
+                          <Minus size={20} strokeWidth={2.5} />
                         </button>
-                        <div className="flex flex-col items-center">
+                        <div className="flex flex-col items-center text-paper">
                           <span className="text-[10px] uppercase tracking-widest text-paper/60">In cart</span>
                           <span className="text-lg font-bold tabular-nums leading-none">{qty}</span>
                         </div>
@@ -186,9 +186,9 @@ export default function ProductDetail() {
                           onClick={() => updateQuantity(product._id, qty + 1)}
                           aria-label="Increase quantity"
                           disabled={product.stock > 0 && qty >= product.stock}
-                          className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-paper/10 transition disabled:opacity-50"
+                          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-paper/15 text-paper ring-1 ring-paper/30 hover:bg-paper/25 active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed"
                         >
-                          <Plus size={18} />
+                          <Plus size={20} strokeWidth={2.5} />
                         </button>
                       </div>
                     );

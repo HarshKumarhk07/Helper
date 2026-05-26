@@ -152,7 +152,30 @@ export default function ManagerOrders() {
                   <td className="p-4 text-xs">
                     {b.worker && (
                       <>
-                        <div>{b.worker.name}</div>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span>{b.worker.name}</span>
+                          {(() => {
+                            // History tracks every assign / reassign event. We
+                            // surface a small badge so the manager can see at a
+                            // glance that this booking has been moved between
+                            // workers — important context for accountability.
+                            const reassigns = (b.history || []).filter((h) =>
+                              /reassigned/i.test(h.note || '')
+                            ).length;
+                            if (!reassigns) return null;
+                            const last = [...(b.history || [])]
+                              .reverse()
+                              .find((h) => /reassigned/i.test(h.note || ''));
+                            return (
+                              <span
+                                title={last?.note || 'Reassigned'}
+                                className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-widest text-amber-700"
+                              >
+                                ↻ Reassigned{reassigns > 1 ? ` ×${reassigns}` : ''}
+                              </span>
+                            );
+                          })()}
+                        </div>
                         {b.worker.kycStatus !== 'verified' && (
                           <div className="text-amber-600">
                             KYC {b.worker.kycStatus}

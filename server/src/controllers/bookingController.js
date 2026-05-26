@@ -44,24 +44,19 @@ const populateBooking = (q) =>
     .populate('worker', 'name phone email')
     .populate('user', 'name phone email');
 
-// Slim DTO for customer-facing list endpoints. Drops fields the client
-// doesn't need but that leak meaningful info to anyone reading devtools:
-//  - startPin / endPin: security codes — only surfaced on the detail/tracker
+// Slim DTO for customer-facing list endpoints. Drops fields the owner
+// doesn't need to see leaking from the booking row:
 //  - worker.phone / worker.email: worker PII; reach via in-app messaging
-//  - address.lat / address.lng: exact GPS of the user's home
-//  - history: internal user IDs and status transitions
+//  - history: internal user IDs and status transitions (audit trail)
+// Note: startPin / endPin are intentionally preserved — the customer
+// shares them with the worker to start/complete the job, so the UI must
+// render them. They're only generated server-side and never reused.
 const sanitizeBookingForOwner = (booking) => {
   const obj = booking?.toObject ? booking.toObject() : { ...booking };
-  delete obj.startPin;
-  delete obj.endPin;
   delete obj.history;
   if (obj.worker && typeof obj.worker === 'object') {
     delete obj.worker.phone;
     delete obj.worker.email;
-  }
-  if (obj.address && typeof obj.address === 'object') {
-    delete obj.address.lat;
-    delete obj.address.lng;
   }
   return obj;
 };
@@ -220,11 +215,11 @@ export const listMyBookings = asyncHandler(async (req, res) => {
   const { status } = req.query;
   const filter = { user: req.user._id };
   if (status) filter.status = status;
-  // No +startPin/+endPin here — PINs are select:false by default and only
-  // belong on the single-booking detail/tracker. Also drop history from the
-  // wire to keep the list response lean.
+  // PINs are select:false by default. We surface them here so the customer
+  // can read their own Start/End PIN in the tracker modal and dictate it to
+  // the worker on site. History is still dropped to keep the wire lean.
   const bookings = await populateBooking(
-    Booking.find(filter).select('-history').sort({ createdAt: -1 }).limit(200)
+    Booking.find(filter).select('+startPin +endPin -history').sort({ createdAt: -1 }).limit(200)
   );
   res.json({ bookings: bookings.map(sanitizeBookingForOwner) });
 });

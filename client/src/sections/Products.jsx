@@ -6,6 +6,7 @@ import { listProducts } from '../api/products.js';
 import { listProductCategories } from '../api/productCategories.js';
 import toast from 'react-hot-toast';
 import ProductCard from '../components/ProductCard.jsx';
+import { mediaUrl } from '../lib/catalogImage.js';
 
 const CATEGORY_FALLBACK_IMAGE =
   'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=800&q=80';
@@ -29,7 +30,11 @@ export default function Products() {
     title: cat.name,
     count: `${products.filter((p) => p.category === cat.name).length} items`,
     slug: cat.name,
-    image: cat.image || CATEGORY_FALLBACK_IMAGE,
+    // Resolve stored references through mediaUrl(): Cloudinary URLs pass
+    // through, '/uploads/...' paths get the API origin prefixed (otherwise
+    // they 404 against the Vercel host and every card falls back to the
+    // same Unsplash placeholder).
+    image: mediaUrl(cat.image) || CATEGORY_FALLBACK_IMAGE,
   }));
 
   return (
@@ -74,7 +79,7 @@ export default function Products() {
                     alt={cat.title}
                     loading="lazy"
                     onError={(e) => {
-                      e.currentTarget.src = 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=800&q=80';
+                      e.currentTarget.src = CATEGORY_FALLBACK_IMAGE;
                     }}
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
                   />

@@ -4,7 +4,7 @@ import { listCoupons, createCoupon, updateCoupon, deleteCoupon } from '../../api
 import { listCategories } from '../../api/categories.js';
 import DashboardShell from './DashboardShell.jsx';
 import PillButton from '../../components/ui/PillButton.jsx';
-import { Trash2, AlertTriangle, Edit2 } from 'lucide-react';
+import { Trash2, AlertTriangle, Edit2, X } from 'lucide-react';
 
 const emptyCreate = () => ({
   code: '',
@@ -426,9 +426,23 @@ export default function AdminCoupons() {
 
       {/* Edit Modal */}
       {editingCoupon && (
-        <div className="fixed inset-0 bg-ink/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-[0_30px_90px_rgba(0,0,0,0.35)] max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-ink/10">
+        <div
+          className="fixed inset-0 bg-ink/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={closeEditor}
+        >
+          <div
+            className="relative bg-white rounded-2xl shadow-[0_30px_90px_rgba(0,0,0,0.35)] max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={closeEditor}
+              aria-label="Close"
+              className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-ink/10 bg-white text-ink/60 hover:bg-ink/5 hover:text-ink transition"
+            >
+              <X size={18} />
+            </button>
+            <div className="p-6 pr-16 border-b border-ink/10">
               <h2 className="text-xl font-bold">EDIT COUPON: {editingCoupon.code}</h2>
             </div>
             <form onSubmit={handleUpdateCoupon} className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -18,6 +18,7 @@
     "test:slice-e": "node scripts/sliceE-validation.mjs"
   },
   "dependencies": {
+    "@getbrevo/brevo": "^5.0.4",
     "bcryptjs": "^2.4.3",
     "cloudinary": "^1.41.3",
     "cors": "^2.8.5",
@@ -31,7 +32,6 @@
     "morgan": "^1.10.0",
     "multer": "^2.1.1",
     "multer-storage-cloudinary": "^4.0.0",
-    "nodemailer": "^8.0.7",
     "pdfkit": "^0.18.0",
     "razorpay": "^2.9.6",
     "socket.io": "^4.8.3",

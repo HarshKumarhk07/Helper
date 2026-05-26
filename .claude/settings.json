@@ -42,7 +42,21 @@
       "Bash(node --check src/controllers/authController.js)",
       "Bash(node --check src/controllers/bookingController.js)",
       "Bash(node --check src/controllers/googleAuthController.js)",
-      "Bash(node --check src/models/User.js)"
+      "Bash(node --check src/models/User.js)",
+      "Bash(npm uninstall *)",
+      "Bash(node -e \"import\\('@getbrevo/brevo'\\).then\\(m => console.log\\(Object.keys\\(m\\).filter\\(k => /Transac|SendSmtp|ApiKey/.test\\(k\\)\\).slice\\(0,20\\)\\)\\)\")",
+      "Bash(node -e \"import\\('@getbrevo/brevo'\\).then\\(m => console.log\\(Object.keys\\(m\\).slice\\(0,40\\)\\)\\).catch\\(e => console.error\\(e.message\\)\\)\")",
+      "Bash(node -e \"import\\('@getbrevo/brevo'\\).then\\(m => { console.log\\('Brevo:', typeof m.Brevo, Object.keys\\(m.Brevo || {}\\).slice\\(0,30\\)\\); console.log\\('BrevoClient:', typeof m.BrevoClient\\); }\\)\")",
+      "Bash(node -e \"import\\('@getbrevo/brevo'\\).then\\(m => { const c = new m.BrevoClient\\({ apiKey: 'x' }\\); console.log\\('client keys:', Object.keys\\(c\\).slice\\(0,40\\)\\); console.log\\('proto:', Object.getOwnPropertyNames\\(Object.getPrototypeOf\\(c\\)\\).slice\\(0,40\\)\\); }\\)\")",
+      "Bash(node -e \"import\\('@getbrevo/brevo'\\).then\\(m => { const c = new m.BrevoClient\\({ apiKey: 'x' }\\); const te = c.transactionalEmails; console.log\\('te type:', typeof te\\); console.log\\('te proto:', Object.getOwnPropertyNames\\(Object.getPrototypeOf\\(te\\)\\).slice\\(0,40\\)\\); }\\)\")",
+      "Bash(node -e \"console.log\\(require\\('@getbrevo/brevo/package.json'\\).version\\)\")",
+      "Bash(node -e \"import\\('@getbrevo/brevo'\\).then\\(m => { const sample = m.Brevo.SendSmtpEmail; console.log\\(typeof sample\\); const ex = new sample\\(\\); console.log\\(Object.keys\\(ex\\)\\); }\\)\")",
+      "Bash(node -e \"const m = require\\('@getbrevo/brevo'\\); console.log\\('Brevo.SendSmtpEmail type:', typeof m.Brevo.SendSmtpEmail\\);\")",
+      "Bash(node -e \"const m = require\\('@getbrevo/brevo'\\); console.log\\(Object.keys\\(m.Brevo\\).filter\\(k => /Send|Email|Transac/i.test\\(k\\)\\).slice\\(0,40\\)\\);\")",
+      "Bash(findstr /n \"sendTransacEmail\")",
+      "Bash(dir /b)",
+      "Bash(node --check src/controllers/settingsController.js)",
+      "Bash(node --check src/controllers/debugController.js)"
     ]
   }
 }
