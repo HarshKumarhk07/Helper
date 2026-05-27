@@ -5,9 +5,10 @@ import { createOrder } from '../api/orders.js';
 import { createRazorpayOrder, verifyRazorpayPayment } from '../api/payments.js';
 import { validateCoupon } from '../api/coupons.js';
 import { getProduct } from '../api/products.js';
+import { listMyAddresses } from '../api/addresses.js';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
-import { CreditCard, Truck, Tag, ShieldCheck, Crosshair, Loader2, Navigation } from 'lucide-react';
+import { CreditCard, Truck, Tag, ShieldCheck, Crosshair, Loader2, Navigation, MapPin, Plus, Check } from 'lucide-react';
 import { geocodeAddressText, hasValidCoords, reverseGeocodeCoordinates } from '../lib/geocoding.js';
 import RouteMap from '../components/booking/RouteMap.jsx';
 
@@ -22,6 +23,15 @@ export default function CheckoutPage() {
   const [addressMode, setAddressMode] = useState('current');
   const [detectingLocation, setDetectingLocation] = useState(false);
   const [addressError, setAddressError] = useState('');
+  // Saved-address picker state. Mirrors the BookingFlow UX so the customer
+  // can pick a previously-saved address with one tap instead of re-typing.
+  const [addresses, setAddresses] = useState([]);
+  const [selectedAddressId, setSelectedAddressId] = useState('');
+  const [showAddressForm, setShowAddressForm] = useState(false);
+  // True when the user picked "Use Current Location" from the picker (not the
+  // form). When set, handleCheckout sends the inline address (filled from
+  // reverse-geocoding) instead of an addressId.
+  const [currentLocationActive, setCurrentLocationActive] = useState(false);
   const [paymentMode, setPaymentMode] = useState('online');
   const [couponCode, setCouponCode] = useState('');
   const [discount, setDiscount] = useState(0);
@@ -36,6 +46,35 @@ export default function CheckoutPage() {
       setCouponCode(urlCoupon);
     }
   }, [searchParams]);
+
+  // Pull saved addresses on mount so the user sees their list of previously
+  // saved delivery addresses (Home / Work / etc.) and can pick one without
+  // re-typing. Falls back to the manual form when nothing is saved.
+  useEffect(() => {
+    let cancelled = false;
+    listMyAddresses()
+      .then((list) => {
+        if (cancelled) return;
+        const items = Array.isArray(list) ? list : [];
+        setAddresses(items);
+        if (items.length === 0) {
+          // No saved addresses — open the manual form straight away.
+          setShowAddressForm(true);
+        } else {
+          // Pre-select the default address (or the first one) so the user
+          // can hit "Pay" without an extra tap.
+          const def = items.find((a) => a.isDefault) || items[0];
+          if (def) setSelectedAddressId(def._id);
+        }
+      })
+      .catch(() => {
+        // Couldn't load saved addresses — degrade to manual entry quietly.
+        setShowAddressForm(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     const scriptId = 'razorpay-checkout-js';
@@ -95,35 +134,46 @@ export default function CheckoutPage() {
         throw new Error('Payment gateway is still loading. Please try again in a moment.');
       }
 
-      let resolvedAddress = { ...address };
-      if (addressMode === 'manual' && !hasValidCoords(resolvedAddress.lat, resolvedAddress.lng)) {
-        const geocoded = await geocodeAddressText([
-          resolvedAddress.line1,
-          resolvedAddress.line2,
-          resolvedAddress.landmark,
-          resolvedAddress.city,
-          resolvedAddress.state,
-          resolvedAddress.pincode,
-        ]);
-        resolvedAddress = {
-          ...resolvedAddress,
-          lat: geocoded.lat,
-          lng: geocoded.lng,
-        };
-      }
+      // Address resolution has three paths now:
+      //  - User picked a saved address card → send addressId, the server
+      //    looks it up + uses its stored coordinates. No geocoding needed.
+      //  - User picked "Use Current Location" from the picker → already
+      //    reverse-geocoded into `address`; send inline.
+      //  - User opened the manual form → geocode if coords are missing.
+      const usingSavedAddress = !showAddressForm && !currentLocationActive && !!selectedAddressId;
+      let resolvedAddress = null;
 
-      if (!hasValidCoords(resolvedAddress.lat, resolvedAddress.lng)) {
-        throw new Error(
-          addressMode === 'current'
-            ? 'Please detect your current location before checkout'
-            : 'Please enter a valid address that can be located on map'
-        );
-      }
+      if (!usingSavedAddress) {
+        resolvedAddress = { ...address };
+        if (addressMode === 'manual' && !hasValidCoords(resolvedAddress.lat, resolvedAddress.lng)) {
+          const geocoded = await geocodeAddressText([
+            resolvedAddress.line1,
+            resolvedAddress.line2,
+            resolvedAddress.landmark,
+            resolvedAddress.city,
+            resolvedAddress.state,
+            resolvedAddress.pincode,
+          ]);
+          resolvedAddress = {
+            ...resolvedAddress,
+            lat: geocoded.lat,
+            lng: geocoded.lng,
+          };
+        }
 
-      console.debug('[checkout] user coordinates', {
-        lat: resolvedAddress.lat,
-        lng: resolvedAddress.lng,
-      });
+        if (!hasValidCoords(resolvedAddress.lat, resolvedAddress.lng)) {
+          throw new Error(
+            addressMode === 'current'
+              ? 'Please detect your current location before checkout'
+              : 'Please enter a valid address that can be located on map'
+          );
+        }
+
+        console.debug('[checkout] user coordinates', {
+          lat: resolvedAddress.lat,
+          lng: resolvedAddress.lng,
+        });
+      }
 
       const uniqueProductIds = [...new Set(productCart.map((item) => item.product).filter(Boolean))];
       const validationResults = await Promise.allSettled(uniqueProductIds.map((productId) => getProduct(productId)));
@@ -140,7 +190,11 @@ export default function CheckoutPage() {
       const activeCouponCode = (appliedCoupon?.code || couponCode).trim().toUpperCase();
       const order = await createOrder({
         items,
-        address: resolvedAddress,
+        // Send EITHER addressId (saved) OR inline address (manual). Server
+        // accepts both; addressId wins when present.
+        ...(usingSavedAddress
+          ? { addressId: selectedAddressId }
+          : { address: resolvedAddress }),
         paymentMode,
         couponCode: activeCouponCode || undefined,
       });
@@ -283,6 +337,135 @@ export default function CheckoutPage() {
                 <Truck size={20} className="text-ink/60" />
                 Shipping Details
               </h2>
+
+              {/* Saved address picker — shown whenever the user has at least
+                  one saved address AND hasn't toggled into "add new" mode.
+                  Mirrors the BookingFlow "WHERE" section so the experience
+                  feels consistent across services and products. */}
+              {addresses.length > 0 && !showAddressForm && (
+                <div className="mb-5 space-y-2.5">
+                  {/* "Use Current Location" pseudo-card — first option in the
+                      picker so a one-tap "deliver here now" flow exists even
+                      when the user has saved addresses. Clicking triggers GPS
+                      + reverse-geocoding, which fills the inline address
+                      state used at checkout. */}
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      // Deselect any saved card and mark current-location mode.
+                      setSelectedAddressId('');
+                      setCurrentLocationActive(true);
+                      detectCurrentLocation();
+                    }}
+                    disabled={detectingLocation}
+                    className={`relative block w-full rounded-2xl border p-4 text-left transition ${
+                      currentLocationActive
+                        ? 'border-emerald-500 bg-emerald-50/60 shadow-sm'
+                        : 'border-emerald-200 bg-emerald-50/30 hover:border-emerald-400 hover:bg-emerald-50/60'
+                    } ${detectingLocation ? 'opacity-70 cursor-wait' : ''}`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          {detectingLocation ? (
+                            <Loader2 size={14} className="animate-spin text-emerald-700" />
+                          ) : (
+                            <Crosshair size={14} className="text-emerald-700" />
+                          )}
+                          <span className="text-xs font-semibold uppercase tracking-widest text-emerald-800">
+                            {detectingLocation ? 'Detecting…' : 'Use my current location'}
+                          </span>
+                        </div>
+                        {/* Once detection has filled the address, show a tiny
+                            confirmation so the user knows what's selected. */}
+                        {currentLocationActive && address.line1 && (
+                          <>
+                            <div className="mt-1.5 break-words text-sm text-ink">{address.line1}</div>
+                            {address.line2 && (
+                              <div className="break-words text-sm text-ink/70">{address.line2}</div>
+                            )}
+                            <div className="text-xs text-ink/60">
+                              {address.city}{address.state ? `, ${address.state}` : ''} {address.pincode}
+                            </div>
+                          </>
+                        )}
+                        {currentLocationActive && !address.line1 && !detectingLocation && (
+                          <div className="mt-1 text-[11px] text-ink/55">
+                            Tap to detect your location and use it as delivery address.
+                          </div>
+                        )}
+                      </div>
+                      {currentLocationActive && address.line1 && (
+                        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white">
+                          <Check size={14} strokeWidth={3} />
+                        </div>
+                      )}
+                    </div>
+                  </button>
+
+                  {addresses.map((a) => {
+                    const active = !currentLocationActive && selectedAddressId === a._id;
+                    return (
+                      <button
+                        key={a._id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedAddressId(a._id);
+                          // Picking a saved card overrides current-location mode.
+                          setCurrentLocationActive(false);
+                        }}
+                        className={`relative block w-full rounded-2xl border p-4 text-left transition ${
+                          active
+                            ? 'border-ink bg-ink/[0.03] shadow-sm'
+                            : 'border-ink/10 bg-white hover:border-ink/30 hover:shadow-sm'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="text-xs font-medium uppercase tracking-widest text-ink">
+                                {a.label}
+                              </span>
+                              {a.isDefault && (
+                                <span className="rounded-full bg-ink/5 px-2 py-0.5 text-[9px] uppercase tracking-widest text-ink/60">
+                                  Default
+                                </span>
+                              )}
+                            </div>
+                            <div className="mt-1.5 break-words text-sm text-ink">{a.line1}</div>
+                            {a.line2 && (
+                              <div className="break-words text-sm text-ink/70">{a.line2}</div>
+                            )}
+                            <div className="text-xs text-ink/60">
+                              {a.city}{a.state ? `, ${a.state}` : ''} {a.pincode}
+                            </div>
+                          </div>
+                          {active && (
+                            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-ink text-white">
+                              <Check size={14} strokeWidth={3} />
+                            </div>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAddressForm(true);
+                      setSelectedAddressId('');
+                      setCurrentLocationActive(false);
+                    }}
+                    className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-widest text-ink hover:underline"
+                  >
+                    <Plus size={12} /> Add a new address
+                  </button>
+                </div>
+              )}
+
+              {/* Mode toggle + manual form — only rendered when the customer
+                  is adding a brand-new address (or has none saved yet). */}
+              {showAddressForm && (
               <div className="mb-5 rounded-2xl border border-ink/10 bg-[#0b1220] p-3 text-white">
                 <div className="grid grid-cols-2 gap-2">
                   <button
@@ -308,8 +491,23 @@ export default function CheckoutPage() {
                     Enter Manually
                   </button>
                 </div>
+                {addresses.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setShowAddressForm(false)}
+                    className="mt-2 inline-flex items-center gap-1 text-[10px] uppercase tracking-widest text-white/60 hover:text-white"
+                  >
+                    ← Back to saved addresses
+                  </button>
+                )}
               </div>
+              )}
 
+              {/* Form-only inputs — hidden when the user is just picking a
+                  saved address. Wrapped in a fragment so we can flip the
+                  whole block off with one condition. */}
+              {showAddressForm && (
+              <>
               {addressMode === 'current' && (
                 <div className="mb-5 rounded-2xl border border-ink/10 bg-sand/40 p-4">
                   <button
@@ -324,22 +522,98 @@ export default function CheckoutPage() {
                 </div>
               )}
 
+              {/* Each input carries the WHATWG autocomplete tokens so Chrome /
+                  Safari / Android Autofill recognise the field and offer the
+                  user's saved address. The "shipping" prefix scopes them to a
+                  delivery profile (vs billing) — important when the same
+                  browser stores both. id+name match so <label> association and
+                  password-manager heuristics both work. */}
               <div className="grid gap-5">
-                <input required placeholder="Street Address / Line 1" className={fieldClass} value={address.line1} onChange={(e) => setAddress({...address, line1: e.target.value})} />
-                <input placeholder="Street Address / Line 2" className={fieldClass} value={address.line2} onChange={(e) => setAddress({...address, line2: e.target.value})} />
-                <input placeholder="Landmark" className={fieldClass} value={address.landmark} onChange={(e) => setAddress({...address, landmark: e.target.value})} />
-                <input required placeholder="City" className={fieldClass} value={address.city} onChange={(e) => setAddress({...address, city: e.target.value})} />
+                <label htmlFor="shipping-line1" className="sr-only">Street Address Line 1</label>
+                <input
+                  required
+                  id="shipping-line1"
+                  name="address-line1"
+                  type="text"
+                  autoComplete="shipping address-line1"
+                  placeholder="Street Address / Line 1"
+                  className={fieldClass}
+                  value={address.line1}
+                  onChange={(e) => setAddress({ ...address, line1: e.target.value })}
+                />
+
+                <label htmlFor="shipping-line2" className="sr-only">Street Address Line 2</label>
+                <input
+                  id="shipping-line2"
+                  name="address-line2"
+                  type="text"
+                  autoComplete="shipping address-line2"
+                  placeholder="Street Address / Line 2"
+                  className={fieldClass}
+                  value={address.line2}
+                  onChange={(e) => setAddress({ ...address, line2: e.target.value })}
+                />
+
+                <label htmlFor="shipping-landmark" className="sr-only">Landmark</label>
+                <input
+                  id="shipping-landmark"
+                  name="landmark"
+                  type="text"
+                  /* No standard autocomplete token for "landmark" — disable so
+                     the browser doesn't try to autofill it with a city. */
+                  autoComplete="off"
+                  placeholder="Landmark"
+                  className={fieldClass}
+                  value={address.landmark}
+                  onChange={(e) => setAddress({ ...address, landmark: e.target.value })}
+                />
+
+                <label htmlFor="shipping-city" className="sr-only">City</label>
+                <input
+                  required
+                  id="shipping-city"
+                  name="city"
+                  type="text"
+                  autoComplete="shipping address-level2"
+                  placeholder="City"
+                  className={fieldClass}
+                  value={address.city}
+                  onChange={(e) => setAddress({ ...address, city: e.target.value })}
+                />
+
                 <div className="grid grid-cols-2 gap-5">
-                  <input required placeholder="State / Province" className={fieldClass} value={address.state} onChange={(e) => setAddress({...address, state: e.target.value})} />
-                  <input required placeholder="PIN Code" className={fieldClass} value={address.pincode} onChange={(e) => setAddress({...address, pincode: e.target.value})} />
+                  <div>
+                    <label htmlFor="shipping-state" className="sr-only">State / Province</label>
+                    <input
+                      required
+                      id="shipping-state"
+                      name="state"
+                      type="text"
+                      autoComplete="shipping address-level1"
+                      placeholder="State / Province"
+                      className={fieldClass}
+                      value={address.state}
+                      onChange={(e) => setAddress({ ...address, state: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="shipping-pincode" className="sr-only">PIN Code</label>
+                    <input
+                      required
+                      id="shipping-pincode"
+                      name="postal-code"
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]{4,8}"
+                      autoComplete="shipping postal-code"
+                      placeholder="PIN Code"
+                      className={fieldClass}
+                      value={address.pincode}
+                      onChange={(e) => setAddress({ ...address, pincode: e.target.value })}
+                    />
+                  </div>
                 </div>
               </div>
-
-              {addressError && (
-                <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
-                  {addressError}
-                </div>
-              )}
 
               <div className="mt-5 rounded-2xl border border-ink/10 bg-white p-3">
                 <div className="mb-2 flex items-center gap-2 text-[10px] uppercase tracking-widest text-ink/50">
@@ -359,6 +633,17 @@ export default function CheckoutPage() {
                   </div>
                 )}
               </div>
+              </>
+              )}
+
+              {/* Error banner shows in both modes so picking-a-saved-address
+                  failures (e.g. missing coords on the saved record) surface
+                  too. */}
+              {addressError && (
+                <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+                  {addressError}
+                </div>
+              )}
             </motion.div>
 
             {/* Payment Method */}

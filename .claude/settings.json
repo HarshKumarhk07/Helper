@@ -63,7 +63,11 @@
       "Bash(node -e \"import\\('dotenv/config'\\).then\\(\\(\\) => { const has = \\(k\\) => { const v = process.env[k]; return { set: !!v, length: v ? v.length : 0 }; }; console.log\\('CLOUDINARY_CLOUD_NAME:', has\\('CLOUDINARY_CLOUD_NAME'\\)\\); console.log\\('CLOUDINARY_API_KEY:   ', has\\('CLOUDINARY_API_KEY'\\)\\); console.log\\('CLOUDINARY_API_SECRET:', has\\('CLOUDINARY_API_SECRET'\\)\\); }\\);\")",
       "Bash(node -e \"import\\('dotenv/config'\\).then\\(\\(\\) => { const has = \\(k\\) => { const v = process.env[k]; return { set: !!v, length: v ? v.length : 0, firstChar: v ? v[0] : null, isNumeric: v ? /^\\\\d+$/.test\\(v\\) : false }; }; console.log\\('CLOUDINARY_CLOUD_NAME:', has\\('CLOUDINARY_CLOUD_NAME'\\)\\); console.log\\('CLOUDINARY_API_KEY:   ', has\\('CLOUDINARY_API_KEY'\\)\\); console.log\\('CLOUDINARY_API_SECRET:', has\\('CLOUDINARY_API_SECRET'\\)\\); }\\);\")",
       "Bash(node -e \"import\\('dotenv/config'\\).then\\(\\(\\) => import\\('./src/utils/cloudinary.js'\\)\\)\")",
-      "Bash(node src/seed/clear-broken-uploads.js)"
+      "Bash(node src/seed/clear-broken-uploads.js)",
+      "Bash(node --check src/pages/CheckoutPage.jsx)",
+      "Bash(node -e \"const fs=require\\('fs'\\);const s=fs.readFileSync\\('src/pages/CheckoutPage.jsx','utf8'\\);const open=\\(s.match\\(/<>/g\\)||[]\\).length;const close=\\(s.match\\(/<\\\\/>/g\\)||[]\\).length;console.log\\('<> count:',open,'</> count:',close\\);\")",
+      "Bash(node -e \"const fs=require\\('fs'\\);const s=fs.readFileSync\\('src/pages/CheckoutPage.jsx','utf8'\\);const lines=s.split\\('\\\\n'\\);lines.forEach\\(\\(l,i\\)=>{if\\(/<>|<\\\\/>/.test\\(l\\)\\)console.log\\(\\(i+1\\)+': '+l.trim\\(\\)\\);}\\);\")",
+      "Bash(node -e \"const fs=require\\('fs'\\);const s=fs.readFileSync\\('src/pages/BookingFlow.jsx','utf8'\\);const open=\\(s.match\\(/<>/g\\)||[]\\).length;const close=\\(s.match\\(/<\\\\/>/g\\)||[]\\).length;console.log\\('<> count:',open,'</> count:',close\\);\")"
     ]
   }
 }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { ArrowUpRight, ShoppingCart, ShieldCheck, Truck, Plus, Minus } from 'lucide-react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { ArrowUpRight, ShoppingCart, ShieldCheck, Truck, Plus, Minus, Zap } from 'lucide-react';
 import { getProduct } from '../api/products.js';
 import { formatPrice } from '../lib/booking.js';
 import FadeUp from '../components/ui/FadeUp.jsx';
@@ -11,6 +11,7 @@ import { motion } from 'framer-motion';
 
 export default function ProductDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { cart, addToCart, removeFromCart, updateQuantity } = useCart();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -44,6 +45,26 @@ export default function ProductDetail() {
       price: product.price,
       image: resolveCatalogImage(product),
     });
+  };
+
+  // "Buy Now" — skip the cart step. Ensure the product is in the cart
+  // (without bumping quantity if already there) and jump straight to
+  // checkout. The cart is left intact so the user can keep other items.
+  const handleBuyNow = () => {
+    if (product.stock <= 0) return;
+    const already = cart.find(
+      (it) => it.product === product._id && it.kind !== 'service'
+    );
+    if (!already) {
+      addToCart({
+        _id: product._id,
+        kind: 'product',
+        name: product.name,
+        price: product.price,
+        image: resolveCatalogImage(product),
+      });
+    }
+    navigate('/checkout');
   };
 
   if (loading) {
@@ -162,45 +183,75 @@ export default function ProductDetail() {
                 )}
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                 {(() => {
-                  const inCart = cart.find((it) => it.product === product._id && it.kind !== 'service');
+                  const inCart = cart.find(
+                    (it) => it.product === product._id && it.kind !== 'service'
+                  );
                   const qty = inCart?.quantity || 0;
-                  if (inCart) {
-                    return (
-                      <div className="flex flex-1 items-center justify-between gap-2 rounded-full bg-ink px-2 py-2 shadow-xl">
-                        <button
-                          type="button"
-                          onClick={() => (qty <= 1 ? removeFromCart(product._id) : updateQuantity(product._id, qty - 1))}
-                          aria-label={qty <= 1 ? 'Remove from cart' : 'Decrease quantity'}
-                          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-paper/15 text-paper ring-1 ring-paper/30 hover:bg-paper/25 active:scale-95 transition"
-                        >
-                          <Minus size={20} strokeWidth={2.5} />
-                        </button>
-                        <div className="flex flex-col items-center text-paper">
-                          <span className="text-[10px] uppercase tracking-widest text-paper/60">In cart</span>
-                          <span className="text-lg font-bold tabular-nums leading-none">{qty}</span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => updateQuantity(product._id, qty + 1)}
-                          aria-label="Increase quantity"
-                          disabled={product.stock > 0 && qty >= product.stock}
-                          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-paper/15 text-paper ring-1 ring-paper/30 hover:bg-paper/25 active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed"
-                        >
-                          <Plus size={20} strokeWidth={2.5} />
-                        </button>
-                      </div>
-                    );
-                  }
+                  const outOfStock = product.stock <= 0;
+
                   return (
-                    <button
-                      onClick={handleAddToCart}
-                      className={`pill-btn !bg-ink !text-paper hover:!bg-ink/80 flex-1 justify-center py-4 text-sm shadow-xl hover:shadow-2xl hover:-translate-y-1 ${product.stock <= 0 ? 'opacity-60 cursor-not-allowed hover:!bg-ink' : ''}`}
-                      disabled={product.stock <= 0}
-                    >
-                      {product.stock > 0 ? 'Add to cart' : 'Unavailable'} <ShoppingCart size={18} />
-                    </button>
+                    <>
+                      {/* Add-to-cart side: shows the +/- pill when already in
+                          cart, otherwise an "Add to cart" button. */}
+                      {inCart ? (
+                        <div className="flex flex-1 items-center justify-between gap-2 rounded-full bg-ink px-2 py-2 shadow-xl">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              qty <= 1
+                                ? removeFromCart(product._id)
+                                : updateQuantity(product._id, qty - 1)
+                            }
+                            aria-label={qty <= 1 ? 'Remove from cart' : 'Decrease quantity'}
+                            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-paper/15 text-paper ring-1 ring-paper/30 hover:bg-paper/25 active:scale-95 transition"
+                          >
+                            <Minus size={20} strokeWidth={2.5} />
+                          </button>
+                          <div className="flex flex-col items-center text-paper">
+                            <span className="text-[10px] uppercase tracking-widest text-paper/60">In cart</span>
+                            <span className="text-lg font-bold tabular-nums leading-none">{qty}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => updateQuantity(product._id, qty + 1)}
+                            aria-label="Increase quantity"
+                            disabled={product.stock > 0 && qty >= product.stock}
+                            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-paper/15 text-paper ring-1 ring-paper/30 hover:bg-paper/25 active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                          >
+                            <Plus size={20} strokeWidth={2.5} />
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={handleAddToCart}
+                          disabled={outOfStock}
+                          className={`pill-btn !bg-ink !text-paper hover:!bg-ink/80 flex-1 justify-center py-4 text-sm shadow-xl hover:shadow-2xl hover:-translate-y-1 ${
+                            outOfStock ? 'opacity-60 cursor-not-allowed hover:!bg-ink' : ''
+                          }`}
+                        >
+                          {outOfStock ? 'Unavailable' : 'Add to cart'} <ShoppingCart size={18} />
+                        </button>
+                      )}
+
+                      {/* Buy Now — primary call-to-action. Skips the cart
+                          step: ensures the product is in the cart (without
+                          bumping quantity) and jumps straight to /checkout.
+                          Disabled when out of stock so the user can't end up
+                          on a checkout for an unavailable item. */}
+                      <button
+                        type="button"
+                        onClick={handleBuyNow}
+                        disabled={outOfStock}
+                        className={`inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-[#6f5cff] text-white py-4 px-6 text-sm font-semibold tracking-wide shadow-xl transition-all duration-300 hover:bg-[#5a48e6] hover:shadow-2xl hover:-translate-y-1 ${
+                          outOfStock ? 'opacity-50 cursor-not-allowed hover:bg-[#6f5cff] hover:translate-y-0' : ''
+                        }`}
+                      >
+                        <Zap size={18} className="fill-white" />
+                        Buy now
+                      </button>
+                    </>
                   );
                 })()}
               </div>

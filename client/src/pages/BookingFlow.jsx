@@ -36,6 +36,10 @@ export default function BookingFlow() {
   const [addressMode, setAddressMode] = useState('current');
   const [detectingLocation, setDetectingLocation] = useState(false);
   const [addressError, setAddressError] = useState('');
+  // True when the user picked "Use Current Location" from the picker (not the
+  // address form). Submission then uses the inline newAddress payload built
+  // from reverse-geocoding instead of an addressId.
+  const [currentLocationActive, setCurrentLocationActive] = useState(false);
   const [newAddress, setNewAddress] = useState({
     label: 'Home',
     line1: '',
@@ -247,12 +251,19 @@ export default function BookingFlow() {
 
     let inlineAddressPayload = null;
     if (!selectedAddressId) {
-      if (!showAddressForm) {
+      // Inline path covers two sources of address data:
+      //  1. The full manual form (showAddressForm = true)
+      //  2. The picker's "Use Current Location" card (currentLocationActive)
+      if (!showAddressForm && !currentLocationActive) {
         toast.error('Select or add an address');
         return;
       }
       if (!newAddress.line1 || !newAddress.city || !newAddress.pincode) {
-        toast.error('Please complete all required address fields (Line 1, City, Pincode)');
+        toast.error(
+          currentLocationActive
+            ? 'Detected location is missing required fields. Please add an address manually.'
+            : 'Please complete all required address fields (Line 1, City, Pincode)'
+        );
         return;
       }
 
@@ -508,13 +519,73 @@ export default function BookingFlow() {
               <Section icon={MapPin} title="Where">
                 {addresses.length > 0 && !showAddressForm && (
                   <div className="space-y-2.5">
+                    {/* "Use Current Location" pseudo-card — first option so a
+                        one-tap "deliver / serve here now" flow exists even
+                        when the user has saved addresses. Mirrors the
+                        Products checkout picker for cross-flow consistency. */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        // Deselect any saved card and mark current-location mode.
+                        setSelectedAddressId('');
+                        setCurrentLocationActive(true);
+                        detectCurrentLocation();
+                      }}
+                      disabled={detectingLocation}
+                      className={`relative block w-full rounded-2xl border p-4 text-left transition ${
+                        currentLocationActive
+                          ? 'border-emerald-500 bg-emerald-50/60 shadow-sm'
+                          : 'border-emerald-200 bg-emerald-50/30 hover:border-emerald-400 hover:bg-emerald-50/60'
+                      } ${detectingLocation ? 'opacity-70 cursor-wait' : ''}`}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            {detectingLocation ? (
+                              <Loader2 size={14} className="animate-spin text-emerald-700" />
+                            ) : (
+                              <Crosshair size={14} className="text-emerald-700" />
+                            )}
+                            <span className="text-xs font-semibold uppercase tracking-widest text-emerald-800">
+                              {detectingLocation ? 'Detecting…' : 'Use my current location'}
+                            </span>
+                          </div>
+                          {currentLocationActive && newAddress.line1 && (
+                            <>
+                              <div className="mt-1.5 break-words text-sm text-black">{newAddress.line1}</div>
+                              {newAddress.line2 && (
+                                <div className="break-words text-sm text-black/70">{newAddress.line2}</div>
+                              )}
+                              <div className="text-xs text-black/60">
+                                {newAddress.city}{newAddress.state ? `, ${newAddress.state}` : ''} {newAddress.pincode}
+                              </div>
+                            </>
+                          )}
+                          {currentLocationActive && !newAddress.line1 && !detectingLocation && (
+                            <div className="mt-1 text-[11px] text-black/55">
+                              Tap to detect your location and use it as service address.
+                            </div>
+                          )}
+                        </div>
+                        {currentLocationActive && newAddress.line1 && (
+                          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white">
+                            <Check size={14} strokeWidth={3} />
+                          </div>
+                        )}
+                      </div>
+                    </button>
+
                     {addresses.map((a) => {
-                      const active = selectedAddressId === a._id;
+                      const active = !currentLocationActive && selectedAddressId === a._id;
                       return (
                         <button
                           key={a._id}
                           type="button"
-                          onClick={() => setSelectedAddressId(a._id)}
+                          onClick={() => {
+                            setSelectedAddressId(a._id);
+                            // Picking a saved card overrides current-location mode.
+                            setCurrentLocationActive(false);
+                          }}
                           className={`relative block w-full rounded-2xl border p-4 text-left transition ${
                             active
                               ? 'border-black bg-black/[0.03] shadow-sm'
@@ -552,7 +623,11 @@ export default function BookingFlow() {
                     })}
                     <button
                       type="button"
-                      onClick={() => setShowAddressForm(true)}
+                      onClick={() => {
+                        setShowAddressForm(true);
+                        setSelectedAddressId('');
+                        setCurrentLocationActive(false);
+                      }}
                       className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-widest text-black hover:underline"
                     >
                       <Plus size={12} /> Add a new address
