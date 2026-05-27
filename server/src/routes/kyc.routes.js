@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { requireAuth, requireRole } from '../middleware/auth.js';
 import { ROLES } from '../config/roles.js';
-import { uploadKyc } from '../utils/cloudinary.js';
+import { uploadKyc, isCloudinaryConfigured } from '../utils/cloudinary.js';
 import {
   getMyKyc,
   submitKyc,
@@ -17,6 +17,12 @@ const router = Router();
 router.use(requireAuth);
 
 const kycMultipart = (req, res, next) => {
+  if (!isCloudinaryConfigured) {
+    return res.status(503).json({
+      error:
+        'Image storage is not configured. Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET on the server to enable KYC document uploads.',
+    });
+  }
   uploadKyc.fields([
     { name: 'aadhaarFront', maxCount: 1 },
     { name: 'aadhaarBack', maxCount: 1 },

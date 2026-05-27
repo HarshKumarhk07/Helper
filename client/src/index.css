@@ -10,7 +10,20 @@
   }
   html, body, #root {
     height: 100%;
+    width: 100%;
+    /* Hard cap horizontal scroll at the root. Any individual section that
+       genuinely needs sideways scrolling (a marquee, a snap row) should
+       enable it locally — never the page. */
+    overflow-x: hidden;
     scroll-behavior: smooth;
+    /* Prevent iOS Safari font-size auto-zoom on text inputs and stop the
+       "opens zoomed" issue some Android browsers show on first load. */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  /* Inputs ≥16px text avoid the iOS "zoom on focus" trigger entirely. */
+  input, select, textarea {
+    font-size: 16px;
   }
   html.drawer-open {
     overflow: hidden;

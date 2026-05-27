@@ -95,6 +95,20 @@ const loginLimiter = rateLimit({
 
 app.use('/uploads', express.static('uploads'));
 
+// Any /uploads/* request that didn't resolve to a real file shouldn't fall
+// through to the JSON notFound handler — the browser asked for an image and
+// would get a JSON body, triggering CORB warnings in the console. Reply with
+// a 1x1 transparent PNG so the <img onError> handler runs cleanly instead.
+const TRANSPARENT_PNG = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
+  'base64'
+);
+app.use('/uploads', (_req, res) => {
+  res.set('Content-Type', 'image/png');
+  res.set('Cache-Control', 'no-store');
+  res.status(404).send(TRANSPARENT_PNG);
+});
+
 app.get('/', (_req, res) => {
   res.status(200).send('API Running Successfully');
 });

@@ -49,8 +49,8 @@ export const CATEGORY_MODALS = {
       // Prefer a dedicated Cleaning category if it exists; otherwise route
       // into Home Services where the cleaning services currently live.
       { label: 'Full Home Cleaning', image: img('1563808828921-7854a7ce84d1'), category: ['Cleaning Services', 'Cleaning', 'Home Services'] },
-      { label: 'Bathroom Cleaning', image: img('1584622781564-1d987f7333c1'), category: ['Cleaning Services', 'Cleaning', 'Home Services'] },
-      { label: 'Kitchen Cleaning', image: img('1584622650111-993a426fbf0a'), category: ['Cleaning Services', 'Cleaning', 'Home Services'] },
+      { label: 'Bathroom Cleaning', image: img('1584622650111-993a426fbf0a'), category: ['Cleaning Services', 'Cleaning', 'Home Services'] },
+      { label: 'Kitchen Cleaning', image: '/assets/kitchenCLeaning.jpg', category: ['Cleaning Services', 'Cleaning', 'Home Services'] },
     ],
   },
   'Home Repair': {

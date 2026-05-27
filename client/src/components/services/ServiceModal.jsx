@@ -1,9 +1,83 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ArrowRight } from 'lucide-react';
 import { SUBCATEGORY_FALLBACK_IMAGE, resolveCategoryHref } from '../../data/servicesData.js';
 import { listCategories } from '../../api/categories.js';
+import { listServices } from '../../api/services.js';
+import { resolveCatalogImage } from '../../lib/catalogImage.js';
+
+// Tolerant matching helper: ignore case + punctuation so "Wall Texture |
+// Decor" matches a service named "wall texture and decor", and "Home
+// Painting" matches "home painting service".
+const normalize = (s) =>
+  String(s || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+
+// Pick the best service photo for a subcategory label. Searches the live
+// catalog so admin-uploaded images flow through automatically. Returns the
+// matched service object (caller resolves the image) or null when nothing
+// remotely matches. `excludeIds` lets the caller avoid showing the same
+// service in two tiles of the same modal.
+const pickServiceForSub = (services, sub, excludeIds = new Set()) => {
+  if (!services?.length) return null;
+  const target = normalize(sub.label);
+  const targetTokens = target.split(' ').filter(Boolean);
+
+  // Pass 1: exact normalized name match (best signal).
+  let found = target
+    ? services.find((s) => normalize(s.name) === target && !excludeIds.has(String(s._id)))
+    : null;
+
+  // Pass 2: service name contains the whole label (or vice versa).
+  if (!found && target) {
+    found = services.find((s) => {
+      if (excludeIds.has(String(s._id))) return false;
+      const name = normalize(s.name);
+      return name.includes(target) || target.includes(name);
+    });
+  }
+
+  // Pass 3: all label tokens appear in service name + category.
+  if (!found && targetTokens.length) {
+    found = services.find((s) => {
+      if (excludeIds.has(String(s._id))) return false;
+      const haystack = `${normalize(s.name)} ${normalize(s.category?.name)}`;
+      return targetTokens.every((t) => haystack.includes(t));
+    });
+  }
+
+  // Pass 4: parent category fallback — when no service name matches, just
+  // pick any service in the same parent category (cycling through unused
+  // ones so different subcategory tiles don't duplicate the same photo).
+  // This is what saves tiles like "Waterproofing" when the admin hasn't
+  // added a literal "Waterproofing" service yet but the parent category
+  // ("Painting | Renovation") has other services with real photos.
+  if (!found && sub.category) {
+    const parentNames = (Array.isArray(sub.category) ? sub.category : [sub.category])
+      .map(normalize)
+      .filter(Boolean);
+    found = services.find((s) => {
+      if (excludeIds.has(String(s._id))) return false;
+      const c = normalize(s.category?.name);
+      if (!c) return false;
+      return parentNames.some((p) => c === p || c.includes(p) || p.includes(c));
+    });
+    // If every category-matching service was already used elsewhere, allow
+    // reuse rather than falling back to the dark Unsplash placeholder.
+    if (!found) {
+      found = services.find((s) => {
+        const c = normalize(s.category?.name);
+        if (!c) return false;
+        return parentNames.some((p) => c === p || c.includes(p) || p.includes(c));
+      });
+    }
+  }
+
+  return found || null;
+};
 
 /**
  * Urban Company-style category modal.
@@ -19,6 +93,7 @@ import { listCategories } from '../../api/categories.js';
  */
 export default function ServiceModal({ data, onClose }) {
   const [categories, setCategories] = useState([]);
+  const [services, setServices] = useState([]);
 
   // Close on Escape + lock body scroll while open.
   useEffect(() => {
@@ -43,6 +118,37 @@ export default function ServiceModal({ data, onClose }) {
         /* resolver gracefully falls back to /services */
       });
   }, [data, categories.length]);
+
+  // Load the live service catalog so each subcategory tile shows the real
+  // admin-uploaded service photo instead of the curated Unsplash fallback.
+  useEffect(() => {
+    if (!data || services.length) return;
+    listServices({ limit: 200 })
+      .then((list) => setServices(Array.isArray(list) ? list : []))
+      .catch(() => {
+        /* tiles fall back to their static sub.image — no toast on a popup */
+      });
+  }, [data, services.length]);
+
+  // Precompute the resolved image per subcategory label. We walk subcategories
+  // sequentially and exclude already-picked service IDs so two tiles in the
+  // same modal don't render the same photo (esp. when several tiles share a
+  // parent-category fallback like "Painting | Renovation").
+  const liveImageByLabel = useMemo(() => {
+    if (!data?.subcategories?.length) return {};
+    const map = {};
+    const used = new Set();
+    for (const sub of data.subcategories) {
+      const service = pickServiceForSub(services, sub, used);
+      if (service) {
+        used.add(String(service._id));
+        map[sub.label] = resolveCatalogImage(service, null) || null;
+      } else {
+        map[sub.label] = null;
+      }
+    }
+    return map;
+  }, [data, services]);
 
   const navigate = useNavigate();
 
@@ -114,11 +220,22 @@ export default function ServiceModal({ data, onClose }) {
                   >
                     <div className="relative aspect-[4/3] overflow-hidden bg-sand">
                       <img
-                        src={sub.image}
+                        // Prefer the admin-uploaded service photo; fall through
+                        // to the curated static image, then the global fallback
+                        // via onError below.
+                        src={liveImageByLabel[sub.label] || sub.image}
                         alt={sub.label}
                         loading="lazy"
                         onError={(e) => {
-                          e.currentTarget.src = SUBCATEGORY_FALLBACK_IMAGE;
+                          // Cascade: live → curated static → generic fallback.
+                          if (
+                            liveImageByLabel[sub.label] &&
+                            e.currentTarget.src.indexOf(sub.image) === -1
+                          ) {
+                            e.currentTarget.src = sub.image;
+                          } else {
+                            e.currentTarget.src = SUBCATEGORY_FALLBACK_IMAGE;
+                          }
                         }}
                         className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                       />

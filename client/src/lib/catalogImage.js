@@ -1,5 +1,26 @@
-export const CATALOG_PLACEHOLDER_IMAGE =
-  'https://images.unsplash.com/photo-1584820927498-cafe2c1c6843?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80';
+// Inline SVG placeholder rendered as a data URI. Used when a catalog item has
+// no usable image. Two reasons we don't use a remote Unsplash photo here:
+//  1. CORB / strict-shield browsers (Brave) sometimes block third-party
+//     images-as-cards, leaving an unstyled grey box.
+//  2. A data URI loads instantly, has no network cost, and can't 404.
+const PLACEHOLDER_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#EFE8DC"/>
+      <stop offset="1" stop-color="#D8CCB6"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#g)"/>
+  <g fill="none" stroke="#9C8B6F" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="100" y="120" width="200" height="160" rx="14"/>
+    <circle cx="160" cy="180" r="18"/>
+    <path d="M120 260 L180 200 L230 240 L270 210 L290 260 Z" fill="#9C8B6F" fill-opacity="0.25"/>
+  </g>
+  <text x="200" y="335" text-anchor="middle" font-family="system-ui,-apple-system,sans-serif"
+        font-size="22" font-weight="600" fill="#7B6A4F" letter-spacing="3">NO IMAGE</text>
+</svg>`;
+
+export const CATALOG_PLACEHOLDER_IMAGE = `data:image/svg+xml;utf8,${encodeURIComponent(PLACEHOLDER_SVG)}`;
 
 const getUploadOrigin = () => {
   const apiUrl = import.meta.env.VITE_API_URL;

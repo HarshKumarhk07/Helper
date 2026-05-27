@@ -11,6 +11,12 @@ export default {
   ],
   theme: {
     extend: {
+      // Extra-small breakpoint for fine-grained mobile control. Default
+      // Tailwind starts at sm:640px which is too coarse for cards that need
+      // to swap label/icon-only around the 480px mark.
+      screens: {
+        xs: '480px',
+      },
       colors: {
         ink: '#1A1A1A',        // Very dark grey for primary text
         paper: '#FFFFFF',      // Pure white for backgrounds

@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { Heart, ShoppingCart, Plus, Minus } from 'lucide-react';
 import { useFavorites } from '../context/FavoritesContext.jsx';
 import { useCart } from '../context/CartContext.jsx';
-import { resolveCatalogImage } from '../lib/catalogImage.js';
+import { resolveCatalogImage, CATALOG_PLACEHOLDER_IMAGE } from '../lib/catalogImage.js';
 
 export default function ProductCard({ product, onFavoriteChange }) {
   const { favorites, toggleFavorite } = useFavorites();
@@ -46,16 +46,18 @@ export default function ProductCard({ product, onFavoriteChange }) {
   };
 
   return (
-    <div className="group flex flex-col h-full cursor-pointer bg-paper rounded-[1.5rem] p-3 transition-all duration-500 hover:shadow-xl hover:-translate-y-1 border border-ink/5 hover:border-ink/10">
-      {/* Image container */}
-      <Link to={`/products/${product._id}`} className="block relative overflow-hidden rounded-[1rem] bg-sand aspect-[4/5]">
+    <div className="group flex flex-col h-full w-full max-w-full min-w-0 cursor-pointer bg-paper rounded-[1.5rem] p-2.5 sm:p-3 transition-all duration-500 hover:shadow-xl hover:-translate-y-1 border border-ink/5 hover:border-ink/10 overflow-hidden">
+      {/* Image container — overflow-hidden clips overlays at the bottom */}
+      <Link to={`/products/${product._id}`} className="block relative w-full overflow-hidden rounded-[1rem] bg-sand aspect-[4/5]">
         <img
           src={image}
           alt={product.name}
           loading="lazy"
           decoding="async"
           onError={(e) => {
-            e.currentTarget.src = 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=800&q=80';
+            if (e.currentTarget.src !== CATALOG_PLACEHOLDER_IMAGE) {
+              e.currentTarget.src = CATALOG_PLACEHOLDER_IMAGE;
+            }
           }}
           className="h-full w-full object-cover transition-transform duration-[1.5s] ease-out group-hover:scale-110"
         />
@@ -86,40 +88,41 @@ export default function ProductCard({ product, onFavoriteChange }) {
         </div>
       </Link>
 
-      {/* Product Info - Flex column to push button to bottom */}
-      <div className="mt-4 px-1 flex flex-col flex-1">
-        <Link to={`/products/${product._id}`} className="block flex-1 group/title">
-          <h3 className="text-[15px] sm:text-base font-semibold text-ink line-clamp-2 leading-tight transition-colors group-hover/title:text-[#6f5cff]">
+      {/* Product Info — min-w-0 so long names truncate instead of stretching
+          the card past its grid cell on small screens. */}
+      <div className="mt-3 sm:mt-4 px-1 flex flex-col flex-1 min-w-0">
+        <Link to={`/products/${product._id}`} className="block flex-1 min-w-0 group/title">
+          <h3 className="text-[14px] sm:text-base font-semibold text-ink line-clamp-2 leading-tight transition-colors group-hover/title:text-[#6f5cff]">
             {product.name}
           </h3>
-          <p className="mt-1.5 text-xs text-ink/50 line-clamp-1">{product.description}</p>
+          <p className="mt-1 text-[11px] sm:text-xs text-ink/50 line-clamp-1">{product.description}</p>
         </Link>
-        
-        {/* Bottom: Price + Action — stacks on mobile so nothing overlaps */}
-        <div className="mt-4 pt-4 border-t border-ink/5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-col">
+
+        {/* Bottom: Price + Action — stacks on mobile so nothing overlaps. */}
+        <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-ink/5 flex flex-col gap-2.5 sm:gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col min-w-0">
             <span className="text-[10px] uppercase tracking-widest text-ink/40 font-medium mb-0.5">Price</span>
-            <span className="text-base sm:text-lg font-bold text-ink">₹{product.price}</span>
+            <span className="text-sm sm:text-lg font-bold text-ink truncate">₹{product.price}</span>
           </div>
 
           {inCart ? (
-            <div className="flex w-full sm:w-auto items-center justify-between sm:justify-center gap-2 rounded-full bg-ink text-paper py-1.5 sm:py-2 px-2 sm:px-2.5">
+            <div className="flex w-full sm:w-auto min-w-0 items-center justify-between sm:justify-center gap-2 rounded-full border border-white/10 bg-[#111111] text-paper py-1.5 sm:py-2 px-2 sm:px-2.5 shadow-sm">
               <button
                 type="button"
                 onClick={handleDec}
                 aria-label={qty <= 1 ? 'Remove from cart' : 'Decrease quantity'}
-                className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full hover:bg-paper/10 transition"
+                className="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-full bg-white/10 text-white ring-1 ring-white/15 hover:bg-white/18 transition"
               >
-                <Minus size={14} />
+                <Minus size={15} strokeWidth={2.75} />
               </button>
-              <span className="min-w-[24px] text-center text-sm font-bold tabular-nums">{qty}</span>
+              <span className="min-w-[20px] text-center text-sm font-bold tabular-nums">{qty}</span>
               <button
                 type="button"
                 onClick={handleInc}
                 aria-label="Increase quantity"
-                className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full hover:bg-paper/10 transition"
+                className="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-full bg-white/10 text-white ring-1 ring-white/15 hover:bg-white/18 transition"
               >
-                <Plus size={14} />
+                <Plus size={15} strokeWidth={2.75} />
               </button>
             </div>
           ) : (
@@ -127,10 +130,10 @@ export default function ProductCard({ product, onFavoriteChange }) {
               type="button"
               onClick={handleAddToCart}
               aria-label="Add to cart"
-              className="flex w-full sm:w-auto items-center justify-center gap-1.5 text-xs font-bold uppercase tracking-widest text-white bg-ink rounded-full py-2.5 sm:py-3 px-4 sm:px-5 hover:bg-[#6f5cff] transition-all duration-300 hover:shadow-lg hover:shadow-[#6f5cff]/20"
+              className="flex w-full sm:w-auto min-w-0 items-center justify-center gap-1.5 text-[11px] sm:text-xs font-bold uppercase tracking-wider sm:tracking-widest text-white bg-ink rounded-full py-2 sm:py-3 px-3 sm:px-5 whitespace-nowrap hover:bg-[#6f5cff] transition-all duration-300 hover:shadow-lg hover:shadow-[#6f5cff]/20"
             >
               Add
-              <ShoppingCart size={14} />
+              <ShoppingCart size={13} className="shrink-0" />
             </button>
           )}
         </div>

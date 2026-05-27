@@ -56,7 +56,14 @@
       "Bash(findstr /n \"sendTransacEmail\")",
       "Bash(dir /b)",
       "Bash(node --check src/controllers/settingsController.js)",
-      "Bash(node --check src/controllers/debugController.js)"
+      "Bash(node --check src/controllers/debugController.js)",
+      "Bash(node --check src/utils/cloudinary.js)",
+      "Bash(node --check src/routes/upload.routes.js)",
+      "Bash(node --check src/seed/migrate-uploads-to-cloudinary.js)",
+      "Bash(node -e \"import\\('dotenv/config'\\).then\\(\\(\\) => { const has = \\(k\\) => { const v = process.env[k]; return { set: !!v, length: v ? v.length : 0 }; }; console.log\\('CLOUDINARY_CLOUD_NAME:', has\\('CLOUDINARY_CLOUD_NAME'\\)\\); console.log\\('CLOUDINARY_API_KEY:   ', has\\('CLOUDINARY_API_KEY'\\)\\); console.log\\('CLOUDINARY_API_SECRET:', has\\('CLOUDINARY_API_SECRET'\\)\\); }\\);\")",
+      "Bash(node -e \"import\\('dotenv/config'\\).then\\(\\(\\) => { const has = \\(k\\) => { const v = process.env[k]; return { set: !!v, length: v ? v.length : 0, firstChar: v ? v[0] : null, isNumeric: v ? /^\\\\d+$/.test\\(v\\) : false }; }; console.log\\('CLOUDINARY_CLOUD_NAME:', has\\('CLOUDINARY_CLOUD_NAME'\\)\\); console.log\\('CLOUDINARY_API_KEY:   ', has\\('CLOUDINARY_API_KEY'\\)\\); console.log\\('CLOUDINARY_API_SECRET:', has\\('CLOUDINARY_API_SECRET'\\)\\); }\\);\")",
+      "Bash(node -e \"import\\('dotenv/config'\\).then\\(\\(\\) => import\\('./src/utils/cloudinary.js'\\)\\)\")",
+      "Bash(node src/seed/clear-broken-uploads.js)"
     ]
   }
 }

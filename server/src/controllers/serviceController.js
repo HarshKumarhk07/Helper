@@ -47,6 +47,7 @@ export const createService = asyncHandler(async (req, res) => {
   const body = { ...req.body };
   if (!body.slug) body.slug = slugify(body.name);
   const svc = await Service.create(body);
+  await svc.populate('category', 'name slug icon color');
   res.status(201).json({ service: svc });
 });
 
@@ -56,6 +57,7 @@ export const updateService = asyncHandler(async (req, res) => {
     runValidators: true,
   });
   if (!svc) throw new ApiError(404, 'Service not found');
+  await svc.populate('category', 'name slug icon color');
   res.json({ service: svc });
 });
 

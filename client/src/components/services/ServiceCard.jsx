@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
-import { Star, Clock, ArrowRight, Heart, BadgeCheck, Flame, ShoppingCart } from 'lucide-react';
+import { Clock, ArrowRight, Heart, BadgeCheck, Flame, ShoppingCart } from 'lucide-react';
 import { formatPrice } from '../../lib/booking.js';
-import { resolveCatalogImage } from '../../lib/catalogImage.js';
+import { resolveCatalogImage, CATALOG_PLACEHOLDER_IMAGE } from '../../lib/catalogImage.js';
 import { useFavorites } from '../../context/FavoritesContext.jsx';
 import { useCart } from '../../context/CartContext.jsx';
 
@@ -34,10 +34,10 @@ export default function ServiceCard({ service }) {
   };
 
   return (
-    <div className="group flex flex-col h-full cursor-pointer bg-paper rounded-[1.5rem] p-3 transition-all duration-500 hover:shadow-xl hover:-translate-y-1 border border-ink/5 hover:border-ink/10">
-      {/* Image container */}
+    <div className="group flex flex-col h-full w-full max-w-full min-w-0 cursor-pointer bg-paper rounded-[1.5rem] p-2.5 sm:p-3 transition-all duration-500 hover:shadow-xl hover:-translate-y-1 border border-ink/5 hover:border-ink/10 overflow-hidden">
+      {/* Image container — overflow-hidden keeps every badge clipped inside */}
       <div
-        className="block relative overflow-hidden rounded-[1rem] bg-sand aspect-[4/5]"
+        className="block relative w-full overflow-hidden rounded-[1rem] bg-sand aspect-[4/5]"
         onClick={() => navigate(`/services/${service._id}`)}
       >
         <img
@@ -46,7 +46,10 @@ export default function ServiceCard({ service }) {
           loading="lazy"
           decoding="async"
           onError={(e) => {
-            e.currentTarget.src = 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=800&q=80';
+            // Inline SVG placeholder — no remote fetch, no CORB risk.
+            if (e.currentTarget.src !== CATALOG_PLACEHOLDER_IMAGE) {
+              e.currentTarget.src = CATALOG_PLACEHOLDER_IMAGE;
+            }
           }}
           className="h-full w-full object-cover transition-transform duration-[1.5s] ease-out group-hover:scale-110"
         />
@@ -83,46 +86,46 @@ export default function ServiceCard({ service }) {
           />
         </button>
 
-        {/* Floating details badge (Duration & Rating) */}
-        <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-paper text-[10px] font-medium tracking-wide">
-          <div className="flex items-center gap-1.5 bg-ink/40 backdrop-blur-md px-2.5 py-1.5 rounded-full border border-paper/20">
-            <Clock size={12} className="text-paper/90" />
-            {service.durationMinutes}m
-          </div>
-          <div className="flex items-center gap-1 bg-ink/40 backdrop-blur-md px-2.5 py-1.5 rounded-full border border-paper/20">
-            <Star size={12} className={service.rating ? 'text-yellow-400 fill-yellow-400' : 'text-paper/60'} />
-            {service.rating?.toFixed(1) || 'New'}
+        {/* Floating duration badge — pinned inside the image at bottom-left.
+            Rating star removed per spec; duration alone reads cleanly. */}
+        <div className="absolute bottom-2 left-2 right-2 flex items-center text-paper text-[10px] font-medium tracking-wide max-w-[calc(100%-16px)]">
+          <div className="inline-flex min-w-0 items-center gap-1 bg-ink/45 backdrop-blur-md px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-full border border-paper/20 truncate">
+            <Clock size={11} className="text-paper/90 shrink-0" />
+            <span className="truncate">{service.durationMinutes}m</span>
           </div>
         </div>
       </div>
 
-      {/* Service Info - Flex column to push button row to bottom */}
-      <div className="mt-4 px-1 flex flex-col flex-1" onClick={() => navigate(`/services/${service._id}`)}>
-        <div className="flex-1 group/title">
-          <div className="text-[10px] uppercase tracking-[0.25em] font-extrabold text-ink/50 mb-1">
+      {/* Service Info — min-w-0 lets long names truncate instead of forcing
+          the card wider than its grid cell on narrow screens. */}
+      <div className="mt-3 sm:mt-4 px-1 flex flex-col flex-1 min-w-0" onClick={() => navigate(`/services/${service._id}`)}>
+        <div className="flex-1 min-w-0 group/title">
+          <div className="text-[9px] sm:text-[10px] uppercase tracking-[0.22em] font-extrabold text-ink/50 mb-1 truncate">
             {service.category?.name || 'Service'}
           </div>
-          <h3 className="text-[15px] sm:text-base font-semibold text-ink line-clamp-2 leading-tight min-h-[2.4em] transition-colors group-hover/title:text-[#6f5cff]">
+          <h3 className="text-[14px] sm:text-base font-semibold text-ink line-clamp-2 leading-tight min-h-[2.4em] transition-colors group-hover/title:text-[#6f5cff]">
             {service.name}
           </h3>
         </div>
 
-        {/* Bottom: Price + Actions — stacks on mobile so nothing overlaps */}
-        <div className="mt-4 pt-4 border-t border-ink/5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-col">
+        {/* Bottom: Price + Actions — stacks on mobile so nothing overlaps.
+            The button row is w-full so flex-1 actually expands the Book CTA
+            instead of leaking past the card edge. */}
+        <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-ink/5 flex flex-col gap-2.5 sm:gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col min-w-0">
             <span className="text-[10px] uppercase tracking-widest text-ink/40 font-medium mb-0.5">Price</span>
-            <span className="text-base sm:text-lg font-bold text-ink">{formatPrice(service.price)}</span>
+            <span className="text-sm sm:text-lg font-bold text-ink truncate">{formatPrice(service.price)}</span>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 w-full sm:w-auto min-w-0">
             <button
               type="button"
               onClick={handleAddToCart}
               aria-label="Add to cart"
               title="Add to cart"
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-ink/15 text-ink transition-all duration-300 hover:bg-ink hover:text-paper"
+              className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full border border-ink/15 text-ink transition-all duration-300 hover:bg-ink hover:text-paper"
             >
-              <ShoppingCart size={16} />
+              <ShoppingCart size={15} />
             </button>
             <button
               type="button"
@@ -131,10 +134,14 @@ export default function ServiceCard({ service }) {
                 navigate(`/book/${service._id}`);
               }}
               aria-label="Book"
-              className="flex flex-1 sm:flex-none items-center justify-center gap-1.5 text-xs font-bold uppercase tracking-widest text-white bg-ink rounded-full py-2.5 sm:py-3 px-4 sm:px-5 hover:bg-[#6f5cff] transition-all duration-300 hover:shadow-lg hover:shadow-[#6f5cff]/20"
+              title="Book"
+              className="flex flex-1 sm:flex-none min-w-0 items-center justify-center gap-1.5 text-[11px] sm:text-xs font-bold uppercase tracking-wider sm:tracking-widest text-white bg-ink rounded-full py-2 sm:py-3 px-3 sm:px-5 whitespace-nowrap hover:bg-[#6f5cff] transition-all duration-300 hover:shadow-lg hover:shadow-[#6f5cff]/20"
             >
-              Book
-              <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" />
+              {/* "Book" label is hidden on mobile (< sm) so the tight cards
+                  show just the arrow instead of clipping to "OOK". Desktop
+                  / tablet (≥ 640px) gets the full "Book →" label. */}
+              <span className="hidden sm:inline">Book</span>
+              <ArrowRight size={14} className="shrink-0 transition-transform group-hover:translate-x-0.5" />
             </button>
           </div>
         </div>

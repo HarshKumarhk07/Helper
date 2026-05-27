@@ -8,6 +8,15 @@ const router = Router();
 // service/product images, and inline KYC documents. Cloudinary applies type +
 // size limits inside `utils/cloudinary.js`.
 router.post('/', requireAuth, (req, res) => {
+  // Cloudinary is the only storage target — refuse the upload if the keys
+  // aren't set, in every environment. The old disk fallback caused images
+  // to silently rot on the next deploy on ephemeral hosts.
+  if (!isCloudinaryConfigured) {
+    return res.status(503).json({
+      error:
+        'Image storage is not configured. Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET on the server to enable uploads.',
+    });
+  }
   upload.single('image')(req, res, (err) => {
     if (err) {
       console.error('[upload] error:', err.message);
@@ -19,13 +28,8 @@ router.post('/', requireAuth, (req, res) => {
     if (!req.file) {
       return res.status(400).json({ error: 'No image uploaded' });
     }
-    // Cloudinary storage puts the public CDN https URL on `req.file.path`.
-    // Disk fallback is returned as a host-agnostic '/uploads/...' path so no
-    // server host is baked into stored data; the client resolves it.
-    const url = isCloudinaryConfigured
-      ? req.file.path
-      : `/uploads/${req.file.filename}`;
-    res.json({ url });
+    // multer-storage-cloudinary puts the public CDN https URL on req.file.path.
+    res.json({ url: req.file.path });
   });
 });
 
