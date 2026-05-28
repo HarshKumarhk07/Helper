@@ -67,7 +67,12 @@
       "Bash(node --check src/pages/CheckoutPage.jsx)",
       "Bash(node -e \"const fs=require\\('fs'\\);const s=fs.readFileSync\\('src/pages/CheckoutPage.jsx','utf8'\\);const open=\\(s.match\\(/<>/g\\)||[]\\).length;const close=\\(s.match\\(/<\\\\/>/g\\)||[]\\).length;console.log\\('<> count:',open,'</> count:',close\\);\")",
       "Bash(node -e \"const fs=require\\('fs'\\);const s=fs.readFileSync\\('src/pages/CheckoutPage.jsx','utf8'\\);const lines=s.split\\('\\\\n'\\);lines.forEach\\(\\(l,i\\)=>{if\\(/<>|<\\\\/>/.test\\(l\\)\\)console.log\\(\\(i+1\\)+': '+l.trim\\(\\)\\);}\\);\")",
-      "Bash(node -e \"const fs=require\\('fs'\\);const s=fs.readFileSync\\('src/pages/BookingFlow.jsx','utf8'\\);const open=\\(s.match\\(/<>/g\\)||[]\\).length;const close=\\(s.match\\(/<\\\\/>/g\\)||[]\\).length;console.log\\('<> count:',open,'</> count:',close\\);\")"
+      "Bash(node -e \"const fs=require\\('fs'\\);const s=fs.readFileSync\\('src/pages/BookingFlow.jsx','utf8'\\);const open=\\(s.match\\(/<>/g\\)||[]\\).length;const close=\\(s.match\\(/<\\\\/>/g\\)||[]\\).length;console.log\\('<> count:',open,'</> count:',close\\);\")",
+      "Bash(node --check src/validators/auth.schema.js)",
+      "Bash(node --check src/controllers/phoneAuthController.js)",
+      "Bash(node --check src/routes/auth.routes.js)",
+      "Bash(node -e \"require\\('dotenv'\\).config\\({path:'server/.env'}\\);const has=\\(k\\)=>{const v=process.env[k];return {set:!!v,length:v?v.length:0};};console.log\\('--- server/.env \\(firebase admin keys\\) ---'\\);console.log\\('FIREBASE_PROJECT_ID:  ',has\\('FIREBASE_PROJECT_ID'\\)\\);console.log\\('FIREBASE_CLIENT_EMAIL:',has\\('FIREBASE_CLIENT_EMAIL'\\)\\);console.log\\('FIREBASE_PRIVATE_KEY: ',has\\('FIREBASE_PRIVATE_KEY'\\)\\);\")",
+      "Bash(node -e \"require\\('dotenv'\\).config\\(\\);const has=\\(k\\)=>{const v=process.env[k];return {set:!!v,length:v?v.length:0};};console.log\\('FIREBASE_PROJECT_ID:  ',has\\('FIREBASE_PROJECT_ID'\\)\\);console.log\\('FIREBASE_CLIENT_EMAIL:',has\\('FIREBASE_CLIENT_EMAIL'\\)\\);console.log\\('FIREBASE_PRIVATE_KEY: ',has\\('FIREBASE_PRIVATE_KEY'\\)\\);\")"
     ]
   }
 }

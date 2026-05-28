@@ -16,6 +16,16 @@ const normalize = (s) =>
     .replace(/[^a-z0-9]+/g, ' ')
     .trim();
 
+// Compact form — strip every non-alphanumeric. Lets "Hair | Makeup" match
+// "Hair Make Up" (both collapse to "hairmakeup") and "Haircut | Grooming"
+// match "Hair Cut | Grooming" (both → "haircutgrooming"). Catches the very
+// common case where the modal label and the catalog service name only
+// differ in whitespace/punctuation.
+const compact = (s) =>
+  String(s || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '');
+
 // Pick the best service photo for a subcategory label. Searches the live
 // catalog so admin-uploaded images flow through automatically. Returns the
 // matched service object (caller resolves the image) or null when nothing
@@ -24,6 +34,7 @@ const normalize = (s) =>
 const pickServiceForSub = (services, sub, excludeIds = new Set()) => {
   if (!services?.length) return null;
   const target = normalize(sub.label);
+  const targetCompact = compact(sub.label);
   const targetTokens = target.split(' ').filter(Boolean);
 
   // Pass 1: exact normalized name match (best signal).
@@ -31,12 +42,32 @@ const pickServiceForSub = (services, sub, excludeIds = new Set()) => {
     ? services.find((s) => normalize(s.name) === target && !excludeIds.has(String(s._id)))
     : null;
 
-  // Pass 2: service name contains the whole label (or vice versa).
+  // Pass 1b: compact-form equality. Catches whitespace/punctuation drift
+  // between the curated modal label and the admin-typed service name —
+  // e.g. "Hair | Makeup" ↔ "Hair Make Up", "Haircut | Grooming" ↔
+  // "Hair Cut | Grooming". This is the single most useful pass because
+  // admins routinely type variant spellings of the same service.
+  if (!found && targetCompact) {
+    found = services.find((s) => {
+      if (excludeIds.has(String(s._id))) return false;
+      return compact(s.name) === targetCompact;
+    });
+  }
+
+  // Pass 2: service name contains the whole label (or vice versa). Now
+  // tries both the spaced and compact forms so "haircut grooming" matches
+  // a service literally named "Hair Cut Grooming Premium".
   if (!found && target) {
     found = services.find((s) => {
       if (excludeIds.has(String(s._id))) return false;
       const name = normalize(s.name);
-      return name.includes(target) || target.includes(name);
+      const nameCompact = compact(s.name);
+      return (
+        name.includes(target) ||
+        target.includes(name) ||
+        nameCompact.includes(targetCompact) ||
+        targetCompact.includes(nameCompact)
+      );
     });
   }
 
