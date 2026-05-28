@@ -105,37 +105,53 @@ export default function ProductCard({ product, onFavoriteChange }) {
             <span className="text-sm sm:text-lg font-bold text-ink truncate">₹{product.price}</span>
           </div>
 
-          {inCart ? (
-            <div className="flex w-full sm:w-auto min-w-0 items-center justify-between sm:justify-center gap-2 rounded-full border border-white/10 bg-[#111111] text-paper py-1.5 sm:py-2 px-2 sm:px-2.5 shadow-sm">
+          {(() => {
+            const outOfStock = (product.stock ?? 0) <= 0;
+            const atStockCap = qty >= (product.stock ?? 0);
+            if (inCart) {
+              return (
+                <div className="flex w-full sm:w-auto min-w-0 items-center justify-between sm:justify-center gap-2 rounded-full border border-white/10 bg-[#111111] text-paper py-1.5 sm:py-2 px-2 sm:px-2.5 shadow-sm">
+                  <button
+                    type="button"
+                    onClick={handleDec}
+                    aria-label={qty <= 1 ? 'Remove from cart' : 'Decrease quantity'}
+                    className="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-full bg-white/10 text-white ring-1 ring-white/15 hover:bg-white/18 transition"
+                  >
+                    <Minus size={15} strokeWidth={2.75} />
+                  </button>
+                  <span className="min-w-[20px] text-center text-sm font-bold tabular-nums">{qty}</span>
+                  <button
+                    type="button"
+                    onClick={handleInc}
+                    aria-label="Increase quantity"
+                    disabled={atStockCap}
+                    title={
+                      atStockCap
+                        ? outOfStock
+                          ? 'Out of stock'
+                          : `Only ${product.stock} available`
+                        : ''
+                    }
+                    className="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-full bg-white/10 text-white ring-1 ring-white/15 hover:bg-white/18 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    <Plus size={15} strokeWidth={2.75} />
+                  </button>
+                </div>
+              );
+            }
+            return (
               <button
                 type="button"
-                onClick={handleDec}
-                aria-label={qty <= 1 ? 'Remove from cart' : 'Decrease quantity'}
-                className="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-full bg-white/10 text-white ring-1 ring-white/15 hover:bg-white/18 transition"
+                onClick={handleAddToCart}
+                disabled={outOfStock}
+                aria-label={outOfStock ? 'Out of stock' : 'Add to cart'}
+                className={`flex w-full sm:w-auto min-w-0 items-center justify-center gap-1.5 text-[11px] sm:text-xs font-bold uppercase tracking-wider sm:tracking-widest text-white bg-ink rounded-full py-2 sm:py-3 px-3 sm:px-5 whitespace-nowrap hover:bg-[#6f5cff] transition-all duration-300 hover:shadow-lg hover:shadow-[#6f5cff]/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-ink`}
               >
-                <Minus size={15} strokeWidth={2.75} />
+                {outOfStock ? 'Sold out' : 'Add'}
+                <ShoppingCart size={13} className="shrink-0" />
               </button>
-              <span className="min-w-[20px] text-center text-sm font-bold tabular-nums">{qty}</span>
-              <button
-                type="button"
-                onClick={handleInc}
-                aria-label="Increase quantity"
-                className="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-full bg-white/10 text-white ring-1 ring-white/15 hover:bg-white/18 transition"
-              >
-                <Plus size={15} strokeWidth={2.75} />
-              </button>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={handleAddToCart}
-              aria-label="Add to cart"
-              className="flex w-full sm:w-auto min-w-0 items-center justify-center gap-1.5 text-[11px] sm:text-xs font-bold uppercase tracking-wider sm:tracking-widest text-white bg-ink rounded-full py-2 sm:py-3 px-3 sm:px-5 whitespace-nowrap hover:bg-[#6f5cff] transition-all duration-300 hover:shadow-lg hover:shadow-[#6f5cff]/20"
-            >
-              Add
-              <ShoppingCart size={13} className="shrink-0" />
-            </button>
-          )}
+            );
+          })()}
         </div>
       </div>
     </div>

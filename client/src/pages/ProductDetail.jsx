@@ -217,7 +217,20 @@ export default function ProductDetail() {
                             type="button"
                             onClick={() => updateQuantity(product._id, qty + 1)}
                             aria-label="Increase quantity"
-                            disabled={product.stock > 0 && qty >= product.stock}
+                            /* Disabled both when the cart already holds every
+                               available unit AND when stock has dropped to 0
+                               since the user last added the item. The old
+                               check `stock > 0 && qty >= stock` ignored the
+                               out-of-stock case and let users push past the
+                               real limit — server then rejected at checkout. */
+                            disabled={qty >= product.stock}
+                            title={
+                              qty >= product.stock
+                                ? product.stock <= 0
+                                  ? 'Out of stock'
+                                  : `Only ${product.stock} available`
+                                : ''
+                            }
                             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-paper/15 text-paper ring-1 ring-paper/30 hover:bg-paper/25 active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed"
                           >
                             <Plus size={20} strokeWidth={2.5} />

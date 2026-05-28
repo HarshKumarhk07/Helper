@@ -1,7 +1,13 @@
 import Booking from '../models/Booking.js';
 import Order from '../models/Order.js';
 import User from '../models/User.js';
+import Product from '../models/Product.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
+
+// Threshold below which a product is flagged as "low stock" on the admin
+// dashboard. Tuned high enough to give the admin time to restock before
+// items go out — anything ≤ this is shown in the alert.
+const LOW_STOCK_THRESHOLD = 5;
 
 export const getDashboardStats = asyncHandler(async (req, res) => {
   const totalBookings = await Booking.countDocuments();
@@ -125,6 +131,18 @@ export const getDashboardStats = asyncHandler(async (req, res) => {
   const orderCountsWithDates = fillMissingDates(growthTrends[2], 30);
   const bookingCountsWithDates = fillMissingDates(growthTrends[3], 30);
 
+  // Low-stock watch list — surfaces every product at or below the threshold
+  // so the admin can restock before items go fully out. Sorted ascending so
+  // the most-urgent items (stock 0) are first. Cap to 20 to keep the payload
+  // small; if the catalog ever has more we'll paginate then.
+  const lowStockProducts = await Product.find({
+    stock: { $lte: LOW_STOCK_THRESHOLD },
+  })
+    .select('name image stock price slug')
+    .sort({ stock: 1, name: 1 })
+    .limit(20)
+    .lean();
+
   res.json({
     stats: {
       totalBookings,
@@ -134,11 +152,14 @@ export const getDashboardStats = asyncHandler(async (req, res) => {
       totalRevenue: bookingsRevenue + ordersRevenue,
       bookingsRevenue,
       ordersRevenue,
+      lowStockCount: lowStockProducts.length,
     },
     recentBookings,
     recentOrders,
     workerPerformance,
     categoryPerformance,
+    lowStockProducts,
+    lowStockThreshold: LOW_STOCK_THRESHOLD,
     growthTrends: {
       bookingRevenue: bookingRevenueWithDates,
       orderRevenue: orderRevenueWithDates,

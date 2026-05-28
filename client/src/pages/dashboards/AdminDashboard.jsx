@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { AlertTriangle, PackageX } from 'lucide-react';
 import DashboardShell from './DashboardShell.jsx';
 import PillButton from '../../components/ui/PillButton.jsx';
 import { getAdminStats } from '../../api/admin.js';
 import { formatPrice } from '../../lib/booking.js';
+import { mediaUrl, CATALOG_PLACEHOLDER_IMAGE } from '../../lib/catalogImage.js';
 import toast from 'react-hot-toast';
 import {
   Chart as ChartJS,
@@ -277,6 +280,91 @@ export default function AdminDashboard() {
       eyebrow="(Admin console)"
       title="EVERYTHING, IN ONE PANE."
     >
+      {/* Low-stock alert banner — only renders when at least one product is
+          at or below the threshold the server returns. Designed to sit at
+          the top of the dashboard so a restock decision happens before the
+          admin starts on anything else. */}
+      {data?.lowStockProducts?.length > 0 && (
+        <div className="mb-6 sm:mb-8 rounded-2xl border border-amber-300/60 bg-amber-50 p-4 sm:p-5 shadow-sm">
+          <div className="flex flex-wrap items-start gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-200/70 text-amber-800">
+              <AlertTriangle size={18} strokeWidth={2.25} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                <h3 className="text-sm font-semibold text-amber-900">
+                  {data.lowStockProducts.length} product
+                  {data.lowStockProducts.length === 1 ? '' : 's'} running low
+                </h3>
+                <span className="text-[11px] uppercase tracking-widest text-amber-800/70">
+                  stock ≤ {data.lowStockThreshold ?? 5}
+                </span>
+              </div>
+              <p className="mt-0.5 text-xs text-amber-800/80">
+                Restock these soon to avoid out-of-stock errors at checkout.
+              </p>
+
+              <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+                {data.lowStockProducts.slice(0, 6).map((p) => {
+                  const soldOut = (p.stock ?? 0) <= 0;
+                  return (
+                    <li
+                      key={p._id}
+                      className={`flex items-center gap-3 rounded-xl border px-3 py-2 text-xs ${
+                        soldOut
+                          ? 'border-red-300 bg-red-50'
+                          : 'border-amber-200 bg-paper'
+                      }`}
+                    >
+                      <img
+                        src={mediaUrl(p.image) || CATALOG_PLACEHOLDER_IMAGE}
+                        alt=""
+                        className="h-9 w-9 shrink-0 rounded-lg object-cover bg-sand"
+                        onError={(e) => {
+                          if (e.currentTarget.src !== CATALOG_PLACEHOLDER_IMAGE) {
+                            e.currentTarget.src = CATALOG_PLACEHOLDER_IMAGE;
+                          }
+                        }}
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate font-semibold text-ink">{p.name}</div>
+                        <div
+                          className={`text-[11px] font-medium uppercase tracking-widest ${
+                            soldOut ? 'text-red-700' : 'text-amber-800/80'
+                          }`}
+                        >
+                          {soldOut ? (
+                            <span className="inline-flex items-center gap-1">
+                              <PackageX size={11} /> Out of stock
+                            </span>
+                          ) : (
+                            `${p.stock} left`
+                          )}
+                        </div>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+
+              <div className="mt-3 flex flex-wrap items-center gap-3">
+                <Link
+                  to="/admin/products"
+                  className="inline-flex items-center gap-1 rounded-full bg-amber-900 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-widest text-amber-50 hover:bg-amber-800 transition"
+                >
+                  Manage inventory →
+                </Link>
+                {data.lowStockProducts.length > 6 && (
+                  <span className="text-[11px] text-amber-800/80">
+                    + {data.lowStockProducts.length - 6} more
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="mb-8 space-y-6 sm:mb-10 sm:space-y-8">
         <AdminSection title="Bookings & Orders">
           <PillButton variant="solid" to="/admin/bookings">
