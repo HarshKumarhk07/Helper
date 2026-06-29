@@ -19,7 +19,7 @@ export const generateInvoice = asyncHandler(async (req, res) => {
   if (!data) throw new ApiError(404, 'Record not found');
 
   // Verify ownership
-  if (req.user.role !== 'admin' && req.user.role !== 'manager' && String(data.user._id) !== String(req.user._id)) {
+  if (req.user.role !== 'admin' && String(data.user._id) !== String(req.user._id)) {
     throw new ApiError(403, 'Forbidden');
   }
 
@@ -35,7 +35,7 @@ export const generateInvoice = asyncHandler(async (req, res) => {
   doc
     .fillColor('#18181a')
     .fontSize(28)
-    .text('URBANEASE', { align: 'right' })
+    .text('HELPER', { align: 'right' })
     .fontSize(10)
     .text('Luxury Minimal Services', { align: 'right' })
     .moveDown();
@@ -121,7 +121,7 @@ export const generateInvoice = asyncHandler(async (req, res) => {
   doc
     .fontSize(10)
     .fillColor('#b8b8b9')
-    .text('Thank you for choosing UrbanEase.', 50, 700, { align: 'center', width: 500 });
+    .text('Thank you for choosing Helper.', 50, 700, { align: 'center', width: 500 });
 
   doc.end();
 });

@@ -27,7 +27,11 @@ const buildTokens = (user) => {
 };
 
 export const signup = asyncHandler(async (req, res) => {
-  const { name, email, phone, password } = req.body;
+  const { name, email, phone, password, role = ROLES.USER } = req.body;
+
+  if (![ROLES.USER, ROLES.WORKER, ROLES.BRAND].includes(role)) {
+    throw new ApiError(400, 'Invalid role selected');
+  }
 
   const exists = await User.findOne({ email });
   if (exists) throw new ApiError(409, 'Email already in use');
@@ -37,7 +41,7 @@ export const signup = asyncHandler(async (req, res) => {
     email,
     phone,
     password,
-    role: ROLES.USER,
+    role,
   });
 
   const tokens = buildTokens(user);
@@ -52,7 +56,7 @@ export const login = asyncHandler(async (req, res) => {
   if (!user.isActive) {
     throw new ApiError(
       403,
-      'Your account is suspended. For further queries connect with support@urbanease.com'
+      'Your account is suspended. For further queries connect with support@helper.com'
     );
   }
 

@@ -200,47 +200,36 @@ export default function CheckoutPage() {
       });
       const payableAmount = order.totalAmount ?? total;
 
-      if (paymentMode === 'cod') {
-        toast.success('Order placed successfully!');
-        uniqueProductIds.forEach((productId) => removeFromCart(productId));
-        navigate('/me/orders');
-      } else {
-        const rpOrder = await createRazorpayOrder({ amount: payableAmount, receipt: order.orderId, type: 'ecommerce' });
-        
-        const options = {
-          key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_xxxx', 
-          amount: rpOrder.amount,
-          currency: rpOrder.currency,
-          name: "UrbanEase",
-          description: "Premium Order Checkout",
-          order_id: rpOrder.id,
-          handler: async function (response) {
-            try {
-              await verifyRazorpayPayment({
-                ...response,
-                referenceId: order._id,
-                type: 'ecommerce'
-              });
-              toast.success('Payment successful | Order placed!');
-              uniqueProductIds.forEach((productId) => removeFromCart(productId));
-              navigate('/me/orders');
-            } catch (err) {
-              toast.error('Payment verification failed');
-            }
-          },
-          prefill: {
-            name: "Customer",
-            email: "customer@example.com",
-            contact: "9999999999"
-          },
-          theme: { color: "#111111" }
-        };
-        const rzp = new window.Razorpay(options);
-        rzp.on('payment.failed', function () {
-          toast.error('Payment failed');
-        });
-        rzp.open();
-      }
+      const rpOrder = await createRazorpayOrder({ amount: payableAmount, receipt: order.orderId, type: 'ecommerce' });
+      
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_xxxx', 
+        amount: rpOrder.amount,
+        currency: rpOrder.currency,
+        name: "Helper",
+        description: "Premium Order Checkout",
+        order_id: rpOrder.id,
+        handler: async function (response) {
+          try {
+            await verifyRazorpayPayment({
+              ...response,
+              referenceId: order._id,
+              type: 'ecommerce'
+            });
+            toast.success('Payment successful | Order placed!');
+            uniqueProductIds.forEach((productId) => removeFromCart(productId));
+            navigate('/me/orders');
+          } catch (err) {
+            toast.error('Payment verification failed');
+          }
+        },
+        theme: { color: "#111111" }
+      };
+      const rzp = new window.Razorpay(options);
+      rzp.on('payment.failed', function () {
+        toast.error('Payment failed');
+      });
+      rzp.open();
     } catch (err) {
       const message = err?.response?.data?.error || err?.message || 'Checkout failed';
       setAddressError(message);
@@ -320,7 +309,7 @@ export default function CheckoutPage() {
           className="mb-12 text-center"
         >
           <h1 className="heading-display text-4xl md:text-5xl text-ink">SECURE CHECKOUT</h1>
-          <p className="mt-4 text-ink/60 text-sm font-medium">Complete your order with UrbanEase.</p>
+          <p className="mt-4 text-ink/60 text-sm font-medium">Complete your order with Helper.</p>
         </motion.div>
         
         <form onSubmit={handleCheckout} className="grid md:grid-cols-[1fr,360px] gap-8 items-start">
@@ -657,17 +646,11 @@ export default function CheckoutPage() {
                 <CreditCard size={20} className="text-ink/60" />
                 Payment Method
               </h2>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <label className={`cursor-pointer flex flex-col items-center justify-center gap-3 p-6 rounded-2xl border-2 transition-all ${paymentMode === 'online' ? 'border-ink bg-ink/5' : 'border-ink/10 hover:border-ink/30'}`}>
-                  <input type="radio" name="paymentMode" value="online" checked={paymentMode === 'online'} onChange={() => setPaymentMode('online')} className="sr-only" />
-                  <CreditCard size={28} className={paymentMode === 'online' ? 'text-ink' : 'text-ink/40'} />
-                  <span className={`text-sm font-medium ${paymentMode === 'online' ? 'text-ink' : 'text-ink/60'}`}>Pay Online (Secure)</span>
-                </label>
-                <label className={`cursor-pointer flex flex-col items-center justify-center gap-3 p-6 rounded-2xl border-2 transition-all ${paymentMode === 'cod' ? 'border-ink bg-ink/5' : 'border-ink/10 hover:border-ink/30'}`}>
-                  <input type="radio" name="paymentMode" value="cod" checked={paymentMode === 'cod'} onChange={() => setPaymentMode('cod')} className="sr-only" />
-                  <Truck size={28} className={paymentMode === 'cod' ? 'text-ink' : 'text-ink/40'} />
-                  <span className={`text-sm font-medium ${paymentMode === 'cod' ? 'text-ink' : 'text-ink/60'}`}>Cash on Delivery</span>
-                </label>
+              <div className="grid gap-4">
+                <div className="flex flex-col items-center justify-center gap-3 p-6 rounded-2xl border border-ink bg-ink/5 text-center">
+                  <CreditCard size={28} className="text-ink" />
+                  <span className="text-sm font-medium text-ink">Pay Online (Secure via Razorpay)</span>
+                </div>
               </div>
             </motion.div>
           </div>

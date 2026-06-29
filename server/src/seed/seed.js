@@ -12,6 +12,7 @@ const CATEGORIES = [
   { name: 'Cleaning Services', icon: 'sparkles', color: '#18181A', sortOrder: 2 },
   { name: 'Beauty | Wellness', icon: 'scissors', color: '#18181A', sortOrder: 3 },
   { name: 'Appliance Services', icon: 'wrench', color: '#18181A', sortOrder: 4 },
+  { name: 'Gardening & Landscaping', icon: 'flower', color: '#18181A', sortOrder: 5 },
 ];
 
 const SERVICES_BY_CATEGORY = {
@@ -143,6 +144,56 @@ const SERVICES_BY_CATEGORY = {
       description: 'Safe wall mounting, cable management, and TV setup at your home.',
     },
   ],
+  'gardening-landscaping': [
+    {
+      name: 'Lawn Mowing',
+      price: 399,
+      durationMinutes: 45,
+      description: 'Professional lawn mowing, edge trimming, and grass clippings disposal.',
+    },
+    {
+      name: 'Garden Cleaning',
+      price: 599,
+      durationMinutes: 90,
+      description: 'Removal of dry leaves, twigs, debris, and thorough tidying of garden beds.',
+    },
+    {
+      name: 'Plant Maintenance',
+      price: 499,
+      durationMinutes: 60,
+      description: 'Watering, soil aeration, organic fertilizing, and general plant care.',
+    },
+    {
+      name: 'Tree Trimming',
+      price: 799,
+      durationMinutes: 120,
+      description: 'Safe trimming of branches, shaping of small trees, and deadwood removal.',
+    },
+    {
+      name: 'Landscaping',
+      price: 2499,
+      durationMinutes: 240,
+      description: 'Full-scale landscape enhancement, turf laying, stone pathing, and soil leveling.',
+    },
+    {
+      name: 'Garden Design',
+      price: 4999,
+      durationMinutes: 300,
+      description: 'Consultation, layout planning, flora selection, and custom garden design proposal.',
+    },
+    {
+      name: 'Weed Removal',
+      price: 349,
+      durationMinutes: 60,
+      description: 'Targeted uprooting of weeds and application of organic weed control.',
+    },
+    {
+      name: 'Hedge Trimming',
+      price: 449,
+      durationMinutes: 60,
+      description: 'Precision pruning, shaping of hedges, borders, and ornamental bushes.',
+    },
+  ],
 };
 
 const PRODUCTS = [
@@ -181,6 +232,7 @@ const CATEGORY_IMAGE = {
   'cleaning-services': '/assets/cleaning-products.svg',
   'beauty-wellness': '/assets/beauty-products.svg',
   'appliance-services': '/assets/home-appliances.svg',
+  'gardening-landscaping': '/assets/gardening.svg',
 };
 
 const PRODUCT_IMAGE = {
@@ -194,9 +246,9 @@ const PRODUCT_IMAGE = {
 const run = async () => {
   await connectDB();
 
-  const adminEmail = process.env.ADMIN_SEED_EMAIL || 'admin@urbanease.com';
+  const adminEmail = process.env.ADMIN_SEED_EMAIL || 'admin@helper.com';
   const adminPassword = process.env.ADMIN_SEED_PASSWORD;
-  const adminName = process.env.ADMIN_SEED_NAME || 'UrbanEase Admin';
+  const adminName = process.env.ADMIN_SEED_NAME || 'Helper Admin';
 
   if (!adminPassword) {
     console.error('[seed] ADMIN_SEED_PASSWORD is required in .env');
@@ -221,7 +273,7 @@ const run = async () => {
     console.log(`[seed] admin refreshed: ${admin.email} (active=true, password reset)`);
   }
 
-  const sampleWorkerEmail = 'worker.demo@urbanease.com';
+  const sampleWorkerEmail = 'worker.demo@helper.com';
   let worker = await User.findOne({ email: sampleWorkerEmail });
   if (!worker) {
     worker = await User.create({
@@ -234,17 +286,7 @@ const run = async () => {
     console.log(`[seed] worker created: ${worker.email} (password = admin seed password)`);
   }
 
-  const sampleManagerEmail = 'manager.demo@urbanease.com';
-  let manager = await User.findOne({ email: sampleManagerEmail });
-  if (!manager) {
-    manager = await User.create({
-      name: 'Demo Manager',
-      email: sampleManagerEmail,
-      password: adminPassword,
-      role: ROLES.MANAGER,
-    });
-    console.log(`[seed] manager created: ${manager.email}`);
-  }
+
 
   await Promise.all([
     ServiceCategory.deleteMany({}),

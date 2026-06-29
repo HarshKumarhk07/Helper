@@ -1,4 +1,9 @@
 import User from '../models/User.js';
+import Booking from '../models/Booking.js';
+import Review from '../models/Review.js';
+import ServiceCategory from '../models/ServiceCategory.js';
+import { ROLES } from '../config/roles.js';
+import { BOOKING_STATUS } from '../config/booking.js';
 import { ApiError, asyncHandler } from '../utils/asyncHandler.js';
 import { validatePassword } from '../utils/passwordPolicy.js';
 
@@ -10,8 +15,31 @@ export const listUsers = asyncHandler(async (req, res) => {
     { name: { $regex: q, $options: 'i' } },
     { email: { $regex: q, $options: 'i' } },
   ];
-  const users = await User.find(filter).sort({ createdAt: -1 }).limit(200);
-  res.json({ users: users.map((u) => u.toSafeJSON()) });
+
+  const page = Math.max(1, parseInt(req.query.page) || 1);
+  const limit = Math.max(1, Math.min(100, parseInt(req.query.limit) || 10));
+  const skip = (page - 1) * limit;
+
+  const totalRecords = await User.countDocuments(filter);
+  const totalPages = Math.ceil(totalRecords / limit);
+
+  const users = await User.find(filter)
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit);
+
+  res.json({
+    users: users.map((u) => u.toSafeJSON()),
+    pagination: {
+      page,
+      limit,
+      skip,
+      totalPages,
+      totalRecords,
+      hasNextPage: page < totalPages,
+      hasPreviousPage: page > 1,
+    }
+  });
 });
 
 export const adminCreateUser = asyncHandler(async (req, res) => {
@@ -43,14 +71,6 @@ export const adminUpdateUser = asyncHandler(async (req, res) => {
 
   const user = await User.findById(id).select('+password');
   if (!user) throw new ApiError(404, 'User not found');
-
-  const isManager = req.user.role === 'manager';
-  if (isManager && user.role === 'admin') {
-    throw new ApiError(403, 'Managers cannot edit admin accounts');
-  }
-  if (isManager && updates.role === 'admin') {
-    throw new ApiError(403, 'Managers cannot promote users to admin');
-  }
 
   if (updates.email && updates.email !== user.email) {
     const emailExists = await User.findOne({ email: updates.email, _id: { $ne: id } });
@@ -108,4 +128,118 @@ export const setUserActive = asyncHandler(async (req, res) => {
   );
   if (!user) throw new ApiError(404, 'User not found');
   res.json({ user: user.toSafeJSON() });
+});
+
+export const getWorkersForCustomer = asyncHandler(async (req, res) => {
+  const { category, q } = req.query;
+
+  const filter = {
+    role: ROLES.WORKER,
+    kycStatus: 'verified',
+    isActive: true,
+  };
+
+  if (category) {
+    let catId = category;
+    if (!catId.match(/^[a-f0-9]{24}$/)) {
+      const cat = await ServiceCategory.findOne({ slug: category });
+      if (cat) catId = cat._id;
+      else return res.json({ workers: [] });
+    }
+    filter.category = catId;
+  }
+
+  if (q) {
+    if (q.trim().match(/^[a-f0-9]{24}$/)) {
+      filter._id = q.trim();
+    } else {
+      filter.$or = [
+        { name: { $regex: q.trim(), $options: 'i' } },
+      ];
+    }
+  }
+
+  const rawWorkers = await User.find(filter)
+    .populate('category', 'name slug icon color')
+    .lean();
+
+  const workers = [];
+
+  for (const w of rawWorkers) {
+    const workerBookings = await Booking.find({ worker: w._id }).distinct('_id');
+    const completedJobsCount = await Booking.countDocuments({ worker: w._id, status: BOOKING_STATUS.COMPLETED });
+
+    // Calculate public rating
+    let publicRating = 0;
+    if (workerBookings.length > 0) {
+      const ratingAgg = await Review.aggregate([
+        { $match: { booking: { $in: workerBookings } } },
+        { $group: { _id: null, avgRating: { $avg: '$rating' } } }
+      ]);
+      if (ratingAgg.length > 0) {
+        publicRating = Math.round(ratingAgg[0].avgRating * 10) / 10;
+      }
+    }
+
+    // Check if the current user has booked this worker before
+    let displayRating = publicRating;
+    let previousRating = null;
+    let hasHiredBefore = false;
+
+    if (req.user) {
+      const lastCompletedBooking = await Booking.findOne({
+        user: req.user._id,
+        worker: w._id,
+        status: BOOKING_STATUS.COMPLETED
+      }).sort({ completedAt: -1 });
+
+      if (lastCompletedBooking) {
+        const lastReview = await Review.findOne({
+          user: req.user._id,
+          booking: lastCompletedBooking._id
+        });
+        if (lastReview) {
+          previousRating = lastReview.rating;
+          displayRating = lastReview.rating;
+          hasHiredBefore = true;
+        }
+      }
+    }
+
+    workers.push({
+      _id: w._id,
+      name: w.name,
+      avatar: w.avatar || w.passportPhoto || '',
+      email: w.email,
+      phone: w.phone,
+      experienceYears: w.experienceYears || 0,
+      completedJobs: completedJobsCount || w.completedJobs || 0,
+      fixedPrice: w.fixedPrice || 0,
+      hourlyRate: w.hourlyRate || 0,
+      pricingType: w.pricingType || 'fixed',
+      isFeatured: !!w.isFeatured,
+      isRecommended: !!w.isRecommended,
+      category: w.category,
+      displayRating,
+      publicRating,
+      previousRating,
+      hasHiredBefore,
+    });
+  }
+
+  // Sorting priorities:
+  // 1. Featured
+  // 2. Recommended
+  // 3. Display Rating
+  // 4. Completed Jobs
+  // 5. Experience
+  workers.sort((a, b) => {
+    if (b.isFeatured !== a.isFeatured) return b.isFeatured ? 1 : -1;
+    if (b.isRecommended !== a.isRecommended) return b.isRecommended ? 1 : -1;
+    if (b.displayRating !== a.displayRating) return b.displayRating - a.displayRating;
+    if (b.completedJobs !== a.completedJobs) return b.completedJobs - a.completedJobs;
+    return b.experienceYears - a.experienceYears;
+  });
+
+  res.json({ workers });
 });

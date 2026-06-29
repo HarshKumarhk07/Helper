@@ -16,9 +16,9 @@ router.use(requireAuth);
 
 router.post('/', createTicket);
 router.get('/mine', listMyTickets);
-router.get('/', requireRole(ROLES.ADMIN, ROLES.MANAGER), listAllTickets);
+router.get('/', requireRole(ROLES.ADMIN), listAllTickets);
 router.get('/:id', getTicket);
 router.post('/:id/messages', addMessage);
-router.patch('/:id/status', requireRole(ROLES.ADMIN, ROLES.MANAGER), updateTicketStatus);
+router.patch('/:id/status', requireRole(ROLES.ADMIN), updateTicketStatus);
 
 export default router;

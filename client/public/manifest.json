@@ -1,6 +1,6 @@
 {
-  "name": "UrbanEase - Urban Service & Heritage Collection",
-  "short_name": "UrbanEase",
+  "name": "Helper - Urban Service & Heritage Collection",
+  "short_name": "Helper",
   "description": "Premium urban services and heritage collection marketplace",
   "start_url": "/",
   "display": "standalone",

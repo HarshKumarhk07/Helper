@@ -7,7 +7,7 @@ import { ROLES } from '../config/roles.js';
 import { BOOKING_STATUS } from '../config/booking.js';
 import { ApiError, asyncHandler } from '../utils/asyncHandler.js';
 import { logAudit } from '../utils/auditLogger.js';
-import { notifyKycApproved, notifyKycRejected } from '../utils/notificationService.js';
+import { notifyKycApproved, notifyKycRejected, notifyBrandApproved, notifyBrandRejected } from '../utils/notificationService.js';
 import { isCloudinaryConfigured } from '../utils/cloudinary.js';
 
 // Resolve a multer file to a stored reference. Cloudinary storage puts a full
@@ -20,7 +20,7 @@ const KYC_FIELDS = ['aadhaarFront', 'aadhaarBack', 'panCard', 'selfie'];
 
 // KYC identity verification applies to service professionals — workers and
 // managers. Customers and admins have no KYC profile.
-const KYC_ROLES = [ROLES.WORKER, ROLES.MANAGER];
+const KYC_ROLES = [ROLES.WORKER, ROLES.BRAND];
 
 const safeUser = (u) => u.toSafeJSON();
 
@@ -112,11 +112,19 @@ export const listKycSubmissions = asyncHandler(async (req, res) => {
     ];
   }
 
+  const page = Math.max(1, parseInt(req.query.page) || 1);
+  const limit = Math.max(1, Math.min(100, parseInt(req.query.limit) || 10));
+  const skip = (page - 1) * limit;
+
+  const totalRecords = await User.countDocuments(filter);
+  const totalPages = Math.ceil(totalRecords / limit);
+
   const [workers, countsAgg] = await Promise.all([
     User.find(filter)
       .populate('kycReviewedBy', 'name email')
       .sort({ kycSubmittedAt: -1, createdAt: -1 })
-      .limit(200),
+      .skip(skip)
+      .limit(limit),
     User.aggregate([
       { $match: { role: { $in: KYC_ROLES } } },
       {
@@ -135,7 +143,19 @@ export const listKycSubmissions = asyncHandler(async (req, res) => {
     counts.all += count;
   });
 
-  res.json({ workers: workers.map(safeUser), counts });
+  res.json({
+    workers: workers.map(safeUser),
+    counts,
+    pagination: {
+      page,
+      limit,
+      skip,
+      totalPages,
+      totalRecords,
+      hasNextPage: page < totalPages,
+      hasPreviousPage: page > 1,
+    }
+  });
 });
 
 
@@ -168,7 +188,11 @@ export const approveKyc = asyncHandler(async (req, res) => {
     changes: { kycStatus: { from: previous, to: 'verified' } },
   });
 
-  notifyKycApproved({ worker });
+  if (worker.role === ROLES.BRAND) {
+    notifyBrandApproved({ brand: worker });
+  } else {
+    notifyKycApproved({ worker });
+  }
 
   res.json({ worker: safeUser(worker) });
 });
@@ -203,14 +227,18 @@ export const rejectKyc = asyncHandler(async (req, res) => {
     },
   });
 
-  notifyKycRejected({ worker, reason: worker.kycRejectionReason });
+  if (worker.role === ROLES.BRAND) {
+    notifyBrandRejected({ brand: worker, reason: worker.kycRejectionReason });
+  } else {
+    notifyKycRejected({ worker, reason: worker.kycRejectionReason });
+  }
 
   res.json({ worker: safeUser(worker) });
 });
 
 // Aggregated admin view of a worker: profile + KYC + availability + earnings totals + recent jobs + reviews.
 export const getWorkerProfile = asyncHandler(async (req, res) => {
-  const worker = await User.findOne({ _id: req.params.id, role: ROLES.WORKER })
+  const worker = await User.findOne({ _id: req.params.id, role: { $in: [ROLES.WORKER, ROLES.BRAND] } })
     .populate('kycReviewedBy', 'name email');
   if (!worker) throw new ApiError(404, 'Worker not found');
 

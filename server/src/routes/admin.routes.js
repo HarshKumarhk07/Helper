@@ -6,7 +6,7 @@ import { getDashboardStats } from '../controllers/adminController.js';
 const router = Router();
 
 router.use(requireAuth);
-router.use(requireRole(ROLES.ADMIN, ROLES.MANAGER));
+router.use(requireRole(ROLES.ADMIN));
 
 router.get('/stats', getDashboardStats);
 

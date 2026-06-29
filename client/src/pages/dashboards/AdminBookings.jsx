@@ -25,20 +25,34 @@ export default function AdminBookings() {
   const [filter, setFilter] = useState('all');
   const [loading, setLoading] = useState(true);
   const [refundTarget, setRefundTarget] = useState(null);
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState(null);
 
   const load = () => {
     setLoading(true);
-    const query = filter === 'all' ? {} : filter === 'refunded' ? { paymentStatus: 'refunded' } : { status: filter };
+    const query = {
+      ...(filter === 'all' ? {} : filter === 'refunded' ? { paymentStatus: 'refunded' } : { status: filter }),
+      page,
+      limit: 10,
+    };
     listAllBookings(query)
-      .then(setBookings)
+      .then((res) => {
+        setBookings(res.bookings || []);
+        setPagination(res.pagination || null);
+      })
       .catch(() => toast.error('Failed to load bookings'))
       .finally(() => setLoading(false));
   };
 
-  useEffect(load, [filter]);
+  useEffect(() => {
+    setPage(1);
+  }, [filter]);
+
+  useEffect(load, [filter, page]);
+
   useEffect(() => {
     listUsers({ role: 'worker' })
-      .then(setWorkers)
+      .then((res) => setWorkers(res.users || res))
       .catch(() => {});
   }, []);
 
@@ -244,6 +258,30 @@ export default function AdminBookings() {
           </tbody>
         </table>
       </div>
+
+      {pagination && pagination.totalPages > 1 && (
+        <div className="mt-6 flex items-center justify-between border-t border-ink/10 pt-4 text-ink">
+          <div className="text-xs text-ink/60">
+            Showing page {pagination.page} of {pagination.totalPages} ({pagination.totalRecords} total records)
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={!pagination.hasPreviousPage}
+              className="rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-medium hover:bg-sand/30 disabled:opacity-50 transition"
+            >
+              Previous
+            </button>
+            <button
+              onClick={() => setPage(p => Math.min(pagination.totalPages, p + 1))}
+              disabled={!pagination.hasNextPage}
+              className="rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-medium hover:bg-sand/30 disabled:opacity-50 transition"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
 
       {refundTarget && (
         <RefundModal

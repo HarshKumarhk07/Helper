@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
-import { Plus, Save, Trash2, Folder, UserCog } from 'lucide-react';
+import { Plus, Save, Trash2, Folder } from 'lucide-react';
 import DashboardShell from './DashboardShell.jsx';
 import FadeUp from '../../components/ui/FadeUp.jsx';
 import {
@@ -9,7 +9,7 @@ import {
   updateCategory,
   deleteCategory,
 } from '../../api/categories.js';
-import { listUsers } from '../../api/users.js';
+
 import api from '../../api/axios.js';
 import { mediaUrl } from '../../lib/catalogImage.js';
 
@@ -37,7 +37,6 @@ const emptyForm = () => ({
 
 export default function AdminCategories() {
   const [categories, setCategories] = useState([]);
-  const [managers, setManagers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null); // category id or 'new'
   const [form, setForm] = useState(emptyForm());
@@ -46,10 +45,9 @@ export default function AdminCategories() {
 
   const load = () => {
     setLoading(true);
-    Promise.all([listCategories(), listUsers({ role: 'manager' })])
-      .then(([cats, mgrs]) => {
+    listCategories()
+      .then((cats) => {
         setCategories(cats);
-        setManagers(mgrs);
       })
       .catch(() => toast.error('Failed to load'))
       .finally(() => setLoading(false));
@@ -71,7 +69,6 @@ export default function AdminCategories() {
       icon: cat.icon || 'sparkles',
       color: cat.color || '#18181A',
       image: cat.image || '',
-      manager: cat.manager?._id || cat.manager || '',
       isActive: !!cat.isActive,
       sortOrder: cat.sortOrder || 0,
     });
@@ -96,7 +93,6 @@ export default function AdminCategories() {
       const payload = {
         ...form,
         slug: form.slug.trim() || slugify(form.name),
-        manager: form.manager || null,
         sortOrder: Number(form.sortOrder) || 0,
       };
       if (editing === 'new') {
@@ -126,17 +122,11 @@ export default function AdminCategories() {
     }
   };
 
-  const managerById = useMemo(
-    () => new Map(managers.map((m) => [m._id, m])),
-    [managers]
-  );
-
   return (
     <DashboardShell eyebrow="Catalog" title="Service categories">
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div className="text-sm text-ink/60">
-          {categories.length} categor{categories.length === 1 ? 'y' : 'ies'} ·{' '}
-          {managers.length} manager{managers.length === 1 ? '' : 's'} available
+          {categories.length} categor{categories.length === 1 ? 'y' : 'ies'}
         </div>
         <button
           onClick={startNew}
@@ -186,21 +176,7 @@ export default function AdminCategories() {
                 className={inputClass}
               />
             </div>
-            <div>
-              <Label>Manager</Label>
-              <select
-                value={form.manager || ''}
-                onChange={(e) => setForm((f) => ({ ...f, manager: e.target.value }))}
-                className={inputClass}
-              >
-                <option value="">— Unassigned —</option>
-                {managers.map((m) => (
-                  <option key={m._id} value={m._id}>
-                    {m.name} ({m.email})
-                  </option>
-                ))}
-              </select>
-            </div>
+
             <div>
               <Label>Sort order</Label>
               <input
@@ -322,7 +298,6 @@ export default function AdminCategories() {
             <tr>
               <th className="p-4 font-normal">Category</th>
               <th className="p-4 font-normal">Slug</th>
-              <th className="p-4 font-normal">Manager</th>
               <th className="p-4 font-normal">Sort</th>
               <th className="p-4 font-normal">Active</th>
               <th className="p-4 font-normal" />
@@ -331,20 +306,18 @@ export default function AdminCategories() {
           <tbody className="divide-y divide-ink/10">
             {loading ? (
               <tr>
-                <td colSpan={6} className="p-6 text-center text-ink/60">
+                <td colSpan={5} className="p-6 text-center text-ink/60">
                   Loading…
                 </td>
               </tr>
             ) : categories.length === 0 ? (
               <tr>
-                <td colSpan={6} className="p-6 text-center text-ink/60">
+                <td colSpan={5} className="p-6 text-center text-ink/60">
                   No categories. Click "New category" to get started.
                 </td>
               </tr>
             ) : (
               categories.map((c) => {
-                const mgr =
-                  c.manager && (c.manager.name || managerById.get(c.manager)?.name);
                 return (
                   <tr
                     key={c._id}
@@ -370,15 +343,6 @@ export default function AdminCategories() {
                       </div>
                     </td>
                     <td className="p-4 font-mono text-xs">{c.slug}</td>
-                    <td className="p-4 text-xs">
-                      {mgr ? (
-                        <span className="inline-flex items-center gap-1">
-                          <UserCog size={12} /> {mgr}
-                        </span>
-                      ) : (
-                        <span className="text-ink/50">Unassigned</span>
-                      )}
-                    </td>
                     <td className="p-4 tabular-nums">{c.sortOrder ?? 0}</td>
                     <td className="p-4">
                       <span

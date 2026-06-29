@@ -80,6 +80,11 @@ export const verifyRazorpayPayment = asyncHandler(async (req, res) => {
         razorpayOrderId: razorpay_order_id,
         razorpayPaymentId: razorpay_payment_id,
       });
+    } else if (type === 'featured_worker') {
+      await User.findByIdAndUpdate(referenceId, {
+        isFeatured: true,
+        isRecommended: true,
+      });
     }
 
     res.json({ message: 'Payment verified successfully' });

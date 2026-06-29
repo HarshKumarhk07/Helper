@@ -24,20 +24,20 @@ const start = async () => {
   }
 
   server.listen(PORT, () => {
-    console.log(`[urbanease] api ready on http://localhost:${PORT}`);
+    console.log(`[helper] api ready on http://localhost:${PORT}`);
   });
 };
 
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('[urbanease] unhandled rejection at:', promise, 'reason:', reason);
+  console.error('[helper] unhandled rejection at:', promise, 'reason:', reason);
 });
 
 process.on('uncaughtException', (err) => {
-  console.error('[urbanease] uncaught exception:', err);
+  console.error('[helper] uncaught exception:', err);
   process.exit(1);
 });
 
 start().catch((err) => {
-  console.error('[urbanease] fatal startup error:', err);
+  console.error('[helper] fatal startup error:', err);
   process.exit(1);
 });

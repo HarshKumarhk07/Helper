@@ -14,19 +14,25 @@ export default function AdminAuditLogs() {
     action: '',
   });
 
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState(null);
+
   const load = async ({ silent = false } = {}) => {
     if (!silent) setLoading(true);
     try {
+      const limit = 10;
+      const skip = (page - 1) * limit;
       const response = await api.get('/audit', {
         params: {
-          limit: 100,
-          skip: 0,
+          limit,
+          skip,
           ...(filters.resource && { resource: filters.resource }),
           ...(filters.action && { action: filters.action }),
         },
       });
       setLogs(response.data.logs || []);
       setDemoMode(!!response.data.demoMode);
+      setPagination(response.data.pagination || null);
       setLastUpdated(new Date());
     } catch (err) {
       if (!silent) toast.error('Failed to load audit logs');
@@ -35,22 +41,21 @@ export default function AdminAuditLogs() {
     }
   };
 
-  // Initial load + reload when filters change — full loading state.
   useEffect(() => {
-    load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    setPage(1);
   }, [filters]);
 
-  // Background poll while live mode is on — silent so the table doesn't
-  // flash "Loading..." every 7 seconds.
+  useEffect(() => {
+    load();
+  }, [filters, page]);
+
   useEffect(() => {
     if (!isLive) return undefined;
     const intervalId = setInterval(() => {
       load({ silent: true });
     }, 7000);
     return () => clearInterval(intervalId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLive, filters]);
+  }, [isLive, filters, page]);
 
   const statusColor = (status) => {
     return status === 'success' ? 'text-green-600' : 'text-red-600';
@@ -154,6 +159,30 @@ export default function AdminAuditLogs() {
           </tbody>
         </table>
       </div>
+
+      {pagination && pagination.totalPages > 1 && (
+        <div className="mt-6 flex items-center justify-between border-t border-ink/10 pt-4 text-ink">
+          <div className="text-xs text-ink/60">
+            Showing page {pagination.page} of {pagination.totalPages} ({pagination.totalRecords} total records)
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={!pagination.hasPreviousPage}
+              className="rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-medium hover:bg-sand/30 disabled:opacity-50 transition"
+            >
+              Previous
+            </button>
+            <button
+              onClick={() => setPage(p => Math.min(pagination.totalPages, p + 1))}
+              disabled={!pagination.hasNextPage}
+              className="rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-medium hover:bg-sand/30 disabled:opacity-50 transition"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
     </DashboardShell>
   );
 }

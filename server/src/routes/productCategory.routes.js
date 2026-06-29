@@ -12,7 +12,7 @@ const router = Router();
 
 router.get('/', listProductCategories);
 
-router.use(requireAuth, requireRole(ROLES.ADMIN, ROLES.MANAGER));
+router.use(requireAuth, requireRole(ROLES.ADMIN));
 router.post('/', createProductCategory);
 router.put('/:id', updateProductCategory);
 router.delete('/:id', deleteProductCategory);

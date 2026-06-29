@@ -9,6 +9,7 @@ import {
   Scissors,
   PaintBucket,
   ArrowRight,
+  Leaf,
 } from 'lucide-react';
 import FadeUp from '../components/ui/FadeUp.jsx';
 
@@ -68,6 +69,13 @@ const CATEGORIES = [
     icon: PaintBucket,
     iconBg: 'bg-violet-100',
     iconColor: 'text-violet-600',
+  },
+  {
+    label: 'Gardening',
+    slug: 'gardening-landscaping',
+    icon: Leaf,
+    iconBg: 'bg-green-100',
+    iconColor: 'text-green-600',
   },
 ];
 

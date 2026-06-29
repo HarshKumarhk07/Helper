@@ -2,9 +2,9 @@ import AuditLog from '../models/AuditLog.js';
 import { ApiError, asyncHandler } from '../utils/asyncHandler.js';
 
 const DEMO_ACTORS = [
-  { _id: 'demo-admin-1', name: 'UrbanEase Admin', email: 'admin@urbanease.demo', role: 'admin' },
-  { _id: 'demo-manager-1', name: 'Ops Manager', email: 'ops@urbanease.demo', role: 'manager' },
-  { _id: 'demo-admin-2', name: 'Finance Admin', email: 'finance@urbanease.demo', role: 'admin' },
+  { _id: 'demo-admin-1', name: 'Helper Admin', email: 'admin@helper.demo', role: 'admin' },
+  { _id: 'demo-manager-1', name: 'Ops Manager', email: 'ops@helper.demo', role: 'manager' },
+  { _id: 'demo-admin-2', name: 'Finance Admin', email: 'finance@helper.demo', role: 'admin' },
 ];
 
 const DEMO_ACTIONS = [
@@ -80,20 +80,45 @@ export const listAuditLogs = asyncHandler(async (req, res) => {
     .skip(Number(skip));
 
   const total = await AuditLog.countDocuments(filter);
+  const pLimit = Number(limit);
+  const pSkip = Number(skip);
+  const page = Math.max(1, Math.floor(pSkip / pLimit) + 1);
+  const totalPages = Math.ceil(total / pLimit);
+
+  const pagination = {
+    page,
+    limit: pLimit,
+    skip: pSkip,
+    totalPages,
+    totalRecords: total,
+    hasNextPage: page < totalPages,
+    hasPreviousPage: page > 1,
+  };
 
   if (!logs.length) {
-    const demoLogs = buildDemoLogs({ resource, action, limit, skip });
+    const demoLogs = buildDemoLogs({ resource, action, limit: pLimit, skip: pSkip });
+    const demoTotal = demoLogs.length;
+    const demoPages = Math.ceil(demoTotal / pLimit);
     return res.json({
       logs: demoLogs,
-      total: demoLogs.length,
-      limit: Number(limit),
-      skip: Number(skip),
+      total: demoTotal,
+      limit: pLimit,
+      skip: pSkip,
       demoMode: true,
       message: 'No persisted audit events found. Showing live demo feed.',
+      pagination: {
+        page,
+        limit: pLimit,
+        skip: pSkip,
+        totalPages: demoPages,
+        totalRecords: demoTotal,
+        hasNextPage: page < demoPages,
+        hasPreviousPage: page > 1,
+      }
     });
   }
 
-  res.json({ logs, total, limit: Number(limit), skip: Number(skip), demoMode: false });
+  res.json({ logs, total, limit: pLimit, skip: pSkip, demoMode: false, pagination });
 });
 
 export const getAuditLog = asyncHandler(async (req, res) => {

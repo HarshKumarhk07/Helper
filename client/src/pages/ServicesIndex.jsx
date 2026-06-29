@@ -2,13 +2,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { listCategories } from '../api/categories.js';
-import { listServices } from '../api/services.js';
-import ServiceCard from '../components/services/ServiceCard.jsx';
 import CategoryChips from '../components/services/CategoryChips.jsx';
 import SkeletonCard from '../components/ui/SkeletonCard.jsx';
 import FadeUp from '../components/ui/FadeUp.jsx';
+import WorkerCard from '../components/services/WorkerCard.jsx';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search } from 'lucide-react';
+import api from '../api/axios.js';
 
 const CAT_IMAGES = {
   'all': 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80',
@@ -23,7 +23,8 @@ const CAT_IMAGES = {
   'car-wash-detailing': 'https://images.unsplash.com/photo-1601362840469-51e4d8d58785?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80',
   'smart-home-cctv': '/assets/categories/cctv.png',
   'packers-movers': '/assets/categories/packers.png',
-  'pet-care-grooming': 'https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80'
+  'pet-care-grooming': 'https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80',
+  'gardening-landscaping': 'https://images.unsplash.com/photo-1533460004989-cef01064af7e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80'
 };
 
 export default function ServicesIndex() {
@@ -32,7 +33,7 @@ export default function ServicesIndex() {
   const q = params.get('q') || '';
 
   const [categories, setCategories] = useState([]);
-  const [services, setServices] = useState([]);
+  const [workers, setWorkers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState(q);
 
@@ -50,12 +51,15 @@ export default function ServicesIndex() {
 
   useEffect(() => {
     setLoading(true);
-    const filters = { active: 'true' };
+    const filters = {};
     if (cat !== 'all') filters.category = cat;
     if (q) filters.q = q;
-    listServices(filters)
-      .then(setServices)
-      .catch(() => toast.error('Failed to load services'))
+    
+    api.get('/users/workers', { params: filters })
+      .then(({ data }) => {
+        setWorkers(data.workers || []);
+      })
+      .catch(() => toast.error('Failed to load professionals'))
       .finally(() => setLoading(false));
   }, [cat, q]);
 
@@ -126,7 +130,7 @@ export default function ServicesIndex() {
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search services..."
+                placeholder="Search professionals..."
                 className="w-full rounded-full border border-ink/10 bg-sand/30 pl-10 pr-24 py-3 text-sm outline-none transition-all focus:border-ink/30 focus:bg-white focus:ring-4 focus:ring-ink/5"
               />
               <button type="submit" className="absolute right-1.5 top-1.5 bottom-1.5 bg-ink text-paper rounded-full px-5 text-xs font-bold tracking-wide hover:bg-[#6f5cff] hover:shadow-md transition-all">
@@ -136,13 +140,13 @@ export default function ServicesIndex() {
           </div>
         </FadeUp>
 
-        {/* Dynamic Service Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8">
+        {/* Dynamic Worker Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
           {loading ? (
-            Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)
-          ) : services.length === 0 ? (
+            Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)
+          ) : workers.length === 0 ? (
             <div className="col-span-full rounded-[2rem] border border-ink/10 bg-paper p-16 text-center shadow-sm">
-              <p className="text-lg text-ink/70 font-medium">No services match your filters.</p>
+              <p className="text-lg text-ink/70 font-medium">No verified professionals match your filters.</p>
               <button 
                 onClick={() => { setParams(new URLSearchParams()); setSearch(''); }}
                 className="mt-6 border-b border-ink/40 pb-1 text-sm tracking-widest uppercase font-bold text-ink hover:border-ink transition-colors"
@@ -151,9 +155,9 @@ export default function ServicesIndex() {
               </button>
             </div>
           ) : (
-            services.map((s, i) => (
-              <FadeUp key={s._id} delay={Math.min(i * 0.05, 0.4)} className="h-full">
-                <ServiceCard service={s} index={i} />
+            workers.map((w, i) => (
+              <FadeUp key={w._id} delay={Math.min(i * 0.05, 0.4)} className="h-full">
+                <WorkerCard worker={w} />
               </FadeUp>
             ))
           )}

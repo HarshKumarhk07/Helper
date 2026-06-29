@@ -15,16 +15,16 @@ const router = Router();
 
 router.use(requireAuth);
 
-router.get('/pending', requireRole(ROLES.ADMIN, ROLES.MANAGER), listPendingByWorker);
+router.get('/pending', requireRole(ROLES.ADMIN), listPendingByWorker);
 router.get(
   '/workers/:workerId/pending',
-  requireRole(ROLES.ADMIN, ROLES.MANAGER),
+  requireRole(ROLES.ADMIN),
   listWorkerPendingEntries
 );
-router.get('/summary', requireRole(ROLES.ADMIN, ROLES.MANAGER), getPayoutSummary);
+router.get('/summary', requireRole(ROLES.ADMIN), getPayoutSummary);
 router.post('/backfill', requireRole(ROLES.ADMIN), backfillEarnings);
 router.post('/', requireRole(ROLES.ADMIN), createPayoutBatch);
-router.get('/', requireRole(ROLES.ADMIN, ROLES.MANAGER), listPayoutBatches);
-router.get('/:id', requireRole(ROLES.ADMIN, ROLES.MANAGER), getPayoutBatch);
+router.get('/', requireRole(ROLES.ADMIN), listPayoutBatches);
+router.get('/:id', requireRole(ROLES.ADMIN), getPayoutBatch);
 
 export default router;

@@ -12,8 +12,8 @@ router.get('/mine', listMyOrders);
 router.get('/:id', getMyOrder);
 router.post('/:id/cancel', cancelMyOrder);
 
-router.get('/', requireRole(ROLES.ADMIN, ROLES.MANAGER), listAllOrders);
-router.put('/:id/status', requireRole(ROLES.ADMIN, ROLES.MANAGER), updateOrderStatus);
-router.patch('/:id/note', requireRole(ROLES.ADMIN, ROLES.MANAGER), updateOrderNote);
+router.get('/', requireRole(ROLES.ADMIN), listAllOrders);
+router.put('/:id/status', requireRole(ROLES.ADMIN), updateOrderStatus);
+router.patch('/:id/note', requireRole(ROLES.ADMIN), updateOrderNote);
 
 export default router;

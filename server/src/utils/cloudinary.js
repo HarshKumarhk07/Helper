@@ -66,7 +66,7 @@ const cloudStorage = isCloudinaryConfigured
   ? new CloudinaryStorage({
       cloudinary,
       params: {
-        folder: 'urbanease',
+        folder: 'helper',
         allowed_formats: ['png', 'jpg', 'jpeg', 'webp'],
         transformation: [{ width: 1200, height: 1200, crop: 'limit' }],
       },

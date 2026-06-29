@@ -80,22 +80,28 @@ export default function AdminWorkers() {
   const [rejectMode, setRejectMode] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState(null);
 
   const load = () => {
     setLoading(true);
-    listKycSubmissions({ status, q })
+    listKycSubmissions({ status, q, page, limit: 10 })
       .then((res) => {
         setWorkers(res.workers || []);
         if (res.counts) setCounts(res.counts);
+        setPagination(res.pagination || null);
       })
       .catch(() => toast.error('Failed to load KYC submissions'))
       .finally(() => setLoading(false));
   };
 
   useEffect(() => {
+    setPage(1);
+  }, [status, q]);
+
+  useEffect(() => {
     load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status]);
+  }, [status, q, page]);
 
   const filtered = useMemo(() => {
     if (!q.trim()) return workers;
@@ -278,6 +284,30 @@ export default function AdminWorkers() {
           </tbody>
         </table>
       </div>
+
+      {pagination && pagination.totalPages > 1 && (
+        <div className="mt-6 flex items-center justify-between border-t border-ink/10 pt-4 text-ink">
+          <div className="text-xs text-ink/60">
+            Showing page {pagination.page} of {pagination.totalPages} ({pagination.totalRecords} total records)
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={!pagination.hasPreviousPage}
+              className="rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-medium hover:bg-sand/30 disabled:opacity-50 transition"
+            >
+              Previous
+            </button>
+            <button
+              onClick={() => setPage(p => Math.min(pagination.totalPages, p + 1))}
+              disabled={!pagination.hasNextPage}
+              className="rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-medium hover:bg-sand/30 disabled:opacity-50 transition"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
 
       {selected && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/70 px-4 backdrop-blur-sm">

@@ -138,7 +138,7 @@ export default function RefundModal({
         <div className="mt-3 text-xs text-ink/60">
           {channel === 'razorpay'
             ? 'Funds go back to the original payment method (typically 5–7 business days).'
-            : "Funds appear in the customer's UrbanEase wallet immediately. Works on COD too."}
+            : "Funds appear in the customer's Helper wallet immediately. Works on COD too."}
         </div>
 
         {!eligibility.ok ? (

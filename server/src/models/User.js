@@ -38,6 +38,26 @@ const userSchema = new mongoose.Schema(
     avatar: { type: String, default: '' },
     isActive: { type: Boolean, default: true },
     lastLoginAt: { type: Date },
+    // Worker specific fields
+    category: { type: mongoose.Schema.Types.ObjectId, ref: 'ServiceCategory', default: null },
+    fixedPrice: { type: Number, default: 0 },
+    hourlyRate: { type: Number, default: 0 },
+    pricingType: { type: String, enum: ['fixed', 'hourly'], default: 'fixed' },
+    experienceYears: { type: Number, default: 0 },
+    completedJobs: { type: Number, default: 0 },
+    isFeatured: { type: Boolean, default: false },
+    isRecommended: { type: Boolean, default: false },
+    workerType: { type: String, enum: ['individual', 'company'], default: 'individual' },
+    company: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null }, // If company worker, links to Brand user
+    
+    // Brand specific fields
+    companyName: { type: String, default: '' },
+    companyAddress: { type: String, default: '' },
+    businessType: { type: String, default: '' },
+    
+    // Custom individual commission rate
+    commissionRate: { type: Number, min: 0, max: 1, default: null },
+
     // Bumped on logout / password reset / forced sign-out. Tokens carry the
     // version they were issued at; the auth middleware rejects any token
     // whose version is older than the user's current one, so a stolen

@@ -3,9 +3,9 @@ import { useAuth } from '../context/AuthContext.jsx';
 
 const ROUTE_BY_ROLE = {
   admin: '/admin',
-  manager: '/manager',
   worker: '/worker',
   user: '/me',
+  brand: '/brand',
 };
 
 export default function RoleRedirect() {

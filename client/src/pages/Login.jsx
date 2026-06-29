@@ -107,7 +107,7 @@ export default function Login() {
             <div className="space-y-5">
               <h1 className="font-display text-[clamp(2.4rem,5vw,4.25rem)] font-light leading-[1.05] tracking-tightest text-ink">
                 Sign in to
-                <span className="mt-1 block font-semibold">UrbanEase.</span>
+                <span className="mt-1 block font-semibold">Helper.</span>
               </h1>
               <div className="h-px w-16 bg-gradient-to-r from-ink/40 to-transparent" />
               <p className="max-w-md text-base font-semibold leading-relaxed text-ink/85">
@@ -236,7 +236,7 @@ export default function Login() {
                   </form>
 
                   <div className="border-t border-ink/10 pt-5 text-center text-sm text-ink/75">
-                    New to UrbanEase?{' '}
+                    New to Helper?{' '}
                     <Link
                       to="/signup"
                       className="font-semibold text-ink underline-offset-4 hover:underline"
@@ -285,7 +285,7 @@ export default function Login() {
               <div className="rounded-xl border border-ink/10 bg-ink/[0.02] px-3 py-2 text-xs text-ink/65.04]">
                 For assistance, contact{' '}
                 <span className="font-mono text-ink">
-                  support@urbanease.com
+                  support@helper.com
                 </span>
                 .
               </div>

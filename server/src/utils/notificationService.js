@@ -21,8 +21,8 @@ const getBrevoClient = () => {
 };
 
 const getSenderIdentity = () => ({
-  email: process.env.MAIL_FROM_EMAIL || 'noreply@urbanease.com',
-  name: process.env.MAIL_FROM_NAME || 'UrbanEase',
+  email: process.env.MAIL_FROM_EMAIL || 'noreply@helper.com',
+  name: process.env.MAIL_FROM_NAME || 'Helper',
 });
 
 let smsClient = null;
@@ -156,14 +156,14 @@ const stripHtml = (html = '') => html.replace(/<[^>]+>/g, '').replace(/\s+/g, ' 
 const wrapEmail = (title, bodyHtml) => `
   <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:560px;margin:0 auto;background:#faf6ef;color:#1a1a1a;border-radius:14px;overflow:hidden;border:1px solid #e7e1d6;">
     <div style="padding:24px 28px;border-bottom:1px solid #e7e1d6;background:#1a1a1a;color:#faf6ef;">
-      <div style="font-size:11px;letter-spacing:0.18em;text-transform:uppercase;opacity:0.7;">UrbanEase</div>
+      <div style="font-size:11px;letter-spacing:0.18em;text-transform:uppercase;opacity:0.7;">Helper</div>
       <div style="font-size:22px;font-weight:600;margin-top:6px;">${title}</div>
     </div>
     <div style="padding:24px 28px;line-height:1.6;font-size:14px;">
       ${bodyHtml}
     </div>
     <div style="padding:18px 28px;font-size:11px;color:#777;border-top:1px solid #e7e1d6;background:#f3eee5;">
-      You're receiving this because you have an account with UrbanEase.
+      You're receiving this because you have an account with Helper.
     </div>
   </div>
 `;
@@ -198,7 +198,7 @@ export const notifyBookingPlaced = ({ user, booking }) =>
     }),
     sendSMS({
       to: user?.phone,
-      body: `UrbanEase: Booking ${booking.code} confirmed for ${inr(booking.amount)}. We'll assign a worker shortly.`,
+      body: `Helper: Booking ${booking.code} confirmed for ${inr(booking.amount)}. We'll assign a worker shortly.`,
     }),
   ]);
 
@@ -223,11 +223,11 @@ export const notifyWorkerAssigned = ({ user, worker, booking, startPin }) =>
     }),
     sendSMS({
       to: user?.phone,
-      body: `UrbanEase: ${worker?.name || 'A worker'} assigned to ${booking.code}. Start PIN: ${startPin}. Share only on arrival.`,
+      body: `Helper: ${worker?.name || 'A worker'} assigned to ${booking.code}. Start PIN: ${startPin}. Share only on arrival.`,
     }),
     sendSMS({
       to: worker?.phone,
-      body: `UrbanEase: New job ${booking.code}. ${fmtAddress(booking.address)}. Ask user for Start PIN on arrival.`,
+      body: `Helper: New job ${booking.code}. ${fmtAddress(booking.address)}. Ask user for Start PIN on arrival.`,
     }),
   ]);
 
@@ -246,7 +246,7 @@ export const notifyJobStarted = ({ user, booking, endPin }) =>
     }),
     sendSMS({
       to: user?.phone,
-      body: `UrbanEase: Service ${booking.code} started. End PIN: ${endPin}. Share only after completion.`,
+      body: `Helper: Service ${booking.code} started. End PIN: ${endPin}. Share only after completion.`,
     }),
   ]);
 
@@ -256,7 +256,7 @@ export const notifyJobCompleted = ({ user, booking, invoiceUrl }) =>
       to: user?.email,
       subject: `Service completed · ${booking.code}`,
       html: wrapEmail(
-        'Thank you for choosing UrbanEase',
+        'Thank you for choosing Helper',
         `
         <p>Your service has been completed.</p>
         <table style="width:100%;border-collapse:collapse;margin:14px 0;">
@@ -270,7 +270,7 @@ export const notifyJobCompleted = ({ user, booking, invoiceUrl }) =>
     }),
     sendSMS({
       to: user?.phone,
-      body: `UrbanEase: ${booking.code} completed. ${inr(booking.amount)}. Rate your experience in the app.`,
+      body: `Helper: ${booking.code} completed. ${inr(booking.amount)}. Rate your experience in the app.`,
     }),
   ]);
 
@@ -290,12 +290,12 @@ export const notifyBookingCancelled = ({ user, worker, booking, reason }) =>
     }),
     sendSMS({
       to: user?.phone,
-      body: `UrbanEase: Booking ${booking.code} cancelled.${reason ? ' ' + reason : ''}`,
+      body: `Helper: Booking ${booking.code} cancelled.${reason ? ' ' + reason : ''}`,
     }),
     worker?.phone
       ? sendSMS({
           to: worker.phone,
-          body: `UrbanEase: Booking ${booking.code} cancelled. Job removed from your list.`,
+          body: `Helper: Booking ${booking.code} cancelled. Job removed from your list.`,
         })
       : Promise.resolve({ skipped: true }),
   ]);
@@ -304,19 +304,19 @@ export const notifyKycApproved = ({ worker }) =>
   Promise.allSettled([
     sendEmail({
       to: worker?.email,
-      subject: 'KYC approved · Welcome to UrbanEase',
+      subject: 'KYC approved · Welcome to Helper',
       html: wrapEmail(
         'You are verified',
         `
         <p>Hi ${worker?.name || 'there'},</p>
-        <p>Your KYC has been approved. You can now start receiving job assignments through the UrbanEase worker app.</p>
+        <p>Your KYC has been approved. You can now start receiving job assignments through the Helper worker app.</p>
         <p style="color:#666;">Make sure your availability is set so dispatch can reach you.</p>
         `
       ),
     }),
     sendSMS({
       to: worker?.phone,
-      body: `UrbanEase: KYC approved. You can start accepting jobs now.`,
+      body: `Helper: KYC approved. You can start accepting jobs now.`,
     }),
   ]);
 
@@ -337,7 +337,48 @@ export const notifyKycRejected = ({ worker, reason }) =>
     }),
     sendSMS({
       to: worker?.phone,
-      body: `UrbanEase: KYC rejected.${reason ? ' Reason: ' + reason : ''} Re-upload documents in the app.`,
+      body: `Helper: KYC rejected.${reason ? ' Reason: ' + reason : ''} Re-upload documents in the app.`,
+    }),
+  ]);
+
+export const notifyBrandApproved = ({ brand }) =>
+  Promise.allSettled([
+    sendEmail({
+      to: brand?.email,
+      subject: 'Brand account approved · Welcome to Helper',
+      html: wrapEmail(
+        'Brand account verified',
+        `
+        <p>Hi ${brand?.name || 'there'},</p>
+        <p>Your brand registration and KYC documents have been reviewed and approved. You can now access your seller portal to manage inventory and list products.</p>
+        <p style="color:#666;">Make sure to log in to complete your seller profile.</p>
+        `
+      ),
+    }),
+    sendSMS({
+      to: brand?.phone,
+      body: `Helper: Brand account approved. You can now start listing products.`,
+    }),
+  ]);
+
+export const notifyBrandRejected = ({ brand, reason }) =>
+  Promise.allSettled([
+    sendEmail({
+      to: brand?.email,
+      subject: 'Brand verification needs attention',
+      html: wrapEmail(
+        'Action required: Brand verification',
+        `
+        <p>Hi ${brand?.name || 'there'},</p>
+        <p>We were unable to verify your Brand KYC documents.</p>
+        ${reason ? `<p><strong>Reason:</strong> ${reason}</p>` : ''}
+        <p>Please log in, check your dashboard, re-upload the requested documents, and our team will review them again.</p>
+        `
+      ),
+    }),
+    sendSMS({
+      to: brand?.phone,
+      body: `Helper: Brand KYC rejected.${reason ? ' Reason: ' + reason : ''} Re-upload documents in your brand dashboard.`,
     }),
   ]);
 
@@ -361,7 +402,7 @@ export const notifyOrderPlaced = ({ user, order }) =>
     }),
     sendSMS({
       to: user?.phone,
-      body: `UrbanEase: Order ${order.code || order._id} placed for ${inr(order.totalAmount || order.total)}.`,
+      body: `Helper: Order ${order.code || order._id} placed for ${inr(order.totalAmount || order.total)}.`,
     }),
   ]);
 
@@ -377,7 +418,7 @@ export const notifyOrderStatus = ({ user, order, status }) =>
     }),
     sendSMS({
       to: user?.phone,
-      body: `UrbanEase: Order ${order.code || order._id} is now ${status}.`,
+      body: `Helper: Order ${order.code || order._id} is now ${status}.`,
     }),
   ]);
 
@@ -385,12 +426,12 @@ export const notifyPasswordReset = ({ user, resetUrl, expiresInMinutes }) =>
   Promise.allSettled([
     sendEmail({
       to: user?.email,
-      subject: 'Reset your UrbanEase password',
+      subject: 'Reset your Helper password',
       html: wrapEmail(
         'Password reset requested',
         `
         <p>Hi ${user?.name || 'there'},</p>
-        <p>We received a request to reset the password on your UrbanEase account. Click the button below to choose a new password.</p>
+        <p>We received a request to reset the password on your Helper account. Click the button below to choose a new password.</p>
         <p style="margin:20px 0;">
           <a href="${resetUrl}" style="display:inline-block;padding:12px 22px;background:#1a1a1a;color:#faf6ef;border-radius:8px;text-decoration:none;font-weight:600;">Reset password</a>
         </p>
@@ -401,7 +442,7 @@ export const notifyPasswordReset = ({ user, resetUrl, expiresInMinutes }) =>
     }),
     sendSMS({
       to: user?.phone,
-      body: `UrbanEase: Password reset requested. Open the link in your email — expires in ${expiresInMinutes} min. If this wasn't you, ignore.`,
+      body: `Helper: Password reset requested. Open the link in your email — expires in ${expiresInMinutes} min. If this wasn't you, ignore.`,
     }),
   ]);
 
@@ -438,7 +479,7 @@ export const notifySupportTicketReplied = ({ user, ticket, replyText, fromAgent 
         fromAgent ? 'We replied to your ticket' : 'Message added',
         `
         <p>Hi ${user?.name || 'there'},</p>
-        <p>${fromAgent ? 'An UrbanEase agent has replied' : 'A new message was added'} to ticket <strong>${ticket.code}</strong>.</p>
+        <p>${fromAgent ? 'A Helper agent has replied' : 'A new message was added'} to ticket <strong>${ticket.code}</strong>.</p>
         <blockquote style="margin:14px 0;padding:12px 16px;border-left:3px solid #1a1a1a;background:#f3eee5;color:#333;">
           ${escapeHtml(replyText).slice(0, 600)}${replyText.length > 600 ? '…' : ''}
         </blockquote>
@@ -449,7 +490,7 @@ export const notifySupportTicketReplied = ({ user, ticket, replyText, fromAgent 
     fromAgent
       ? sendSMS({
           to: user?.phone,
-          body: `UrbanEase: New reply on support ticket ${ticket.code}. Open the app to view.`,
+          body: `Helper: New reply on support ticket ${ticket.code}. Open the app to view.`,
         })
       : Promise.resolve({ skipped: true }),
   ]);

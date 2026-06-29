@@ -29,16 +29,16 @@ router.get('/worker/earnings/entries', requireRole(ROLES.WORKER), getWorkerEarni
 router.post('/', validate(createBookingSchema), createBooking);
 router.get('/mine', listMyBookings);
 router.get('/worker/jobs', requireRole(ROLES.WORKER, ROLES.ADMIN), listWorkerJobs);
-router.get('/', requireRole(ROLES.ADMIN, ROLES.MANAGER), listAllBookings);
+router.get('/', requireRole(ROLES.ADMIN), listAllBookings);
 router.get('/:id', getBooking);
 
 router.post(
   '/:id/assign',
-  requireRole(ROLES.ADMIN, ROLES.MANAGER),
+  requireRole(ROLES.ADMIN),
   validate(assignWorkerSchema),
   assignWorker
 );
-router.post('/:id/auto-assign', requireRole(ROLES.ADMIN, ROLES.MANAGER), autoAssign);
+router.post('/:id/auto-assign', requireRole(ROLES.ADMIN), autoAssign);
 router.post('/:id/status', validate(transitionStatusSchema), transitionStatus);
 
 export default router;

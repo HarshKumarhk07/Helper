@@ -39,7 +39,7 @@ export const getTrackingState = asyncHandler(async (req, res) => {
   const me = String(req.user._id);
   const isOwner = String(booking.user?._id) === me;
   const isWorker = booking.worker && String(booking.worker._id) === me;
-  const isPrivileged = req.user.role === ROLES.ADMIN || req.user.role === ROLES.MANAGER;
+  const isPrivileged = req.user.role === ROLES.ADMIN;
   if (!isOwner && !isWorker && !isPrivileged) {
     throw new ApiError(403, 'Forbidden');
   }

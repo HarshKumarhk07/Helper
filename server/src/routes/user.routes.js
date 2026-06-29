@@ -9,6 +9,7 @@ import {
   adminUpdateUser,
   updateMe,
   setUserActive,
+  getWorkersForCustomer,
 } from '../controllers/userController.js';
 
 const router = Router();
@@ -16,8 +17,9 @@ const router = Router();
 router.use(requireAuth);
 
 router.patch('/me', validate(updateMeSchema), updateMe);
+router.get('/workers', getWorkersForCustomer);
 
-router.get('/', requireRole(ROLES.ADMIN, ROLES.MANAGER), listUsers);
+router.get('/', requireRole(ROLES.ADMIN), listUsers);
 router.post(
   '/',
   requireRole(ROLES.ADMIN),
@@ -26,7 +28,7 @@ router.post(
 );
 router.patch(
   '/:id',
-  requireRole(ROLES.ADMIN, ROLES.MANAGER),
+  requireRole(ROLES.ADMIN),
   validate(adminUpdateUserSchema),
   adminUpdateUser
 );

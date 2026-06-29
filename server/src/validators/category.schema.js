@@ -21,7 +21,6 @@ export const createCategorySchema = z.object({
   icon: z.string().max(40).optional(),
   color: z.string().max(20).optional(),
   image: imageRef,
-  manager: optionalObjectId,
   sortOrder: z.number().int().optional(),
   isActive: z.boolean().optional(),
 });

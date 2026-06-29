@@ -6,7 +6,7 @@ import { createAuditLog, listAuditLogs, getAuditLog, deleteAuditLog } from '../c
 const router = Router();
 
 router.use(requireAuth);
-router.use(requireRole(ROLES.ADMIN, ROLES.MANAGER));
+router.use(requireRole(ROLES.ADMIN));
 
 router.post('/', createAuditLog);
 router.get('/', listAuditLogs);

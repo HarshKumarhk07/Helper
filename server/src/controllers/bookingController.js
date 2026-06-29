@@ -84,26 +84,59 @@ const resolveAddress = async (req) => {
 };
 
 export const createBooking = asyncHandler(async (req, res) => {
-  const { service: serviceId, type, scheduledAt, paymentMode, notes, autoAssign } =
+  const { service: serviceId, category: categoryId, worker: workerId, type, scheduledAt, paymentMode, notes, autoAssign } =
     req.body;
 
   if (type === BOOKING_TYPE.SCHEDULED && !scheduledAt) {
     throw new ApiError(400, 'scheduledAt is required for scheduled bookings');
   }
 
-  let service = await Service.findById(serviceId);
-  if (!service || !service.isActive) {
-    const fallbackService = await Service.findOne({ isActive: true });
-    if (fallbackService) {
-      service = fallbackService;
-    } else {
-      service = {
-        _id: serviceId,
-        price: 749,
-        category: null,
-        isActive: true,
-      };
+  // Force online payment only (decommission offline / Cash on Delivery)
+  if (paymentMode && paymentMode !== PAYMENT_MODE.ONLINE) {
+    throw new ApiError(400, 'Offline payment is not supported. Razorpay online payment only.');
+  }
+
+  let finalAmount = 0;
+  let resolvedCategory = categoryId || null;
+  let resolvedServiceId = serviceId || null;
+  let resolvedWorkerId = workerId || null;
+  let serviceDuration = 60; // default service duration in minutes
+
+  if (workerId) {
+    const workerUser = await User.findById(workerId);
+    if (!workerUser || workerUser.role !== ROLES.WORKER || workerUser.kycStatus !== 'verified') {
+      throw new ApiError(400, 'Selected worker is not active or verified');
     }
+    resolvedWorkerId = workerUser._id;
+    if (!resolvedCategory) {
+      resolvedCategory = workerUser.category;
+    }
+    if (workerUser.pricingType === 'hourly') {
+      finalAmount = workerUser.hourlyRate || 500;
+    } else {
+      finalAmount = workerUser.fixedPrice || 999;
+    }
+  } else if (serviceId) {
+    let service = await Service.findById(serviceId);
+    if (!service || !service.isActive) {
+      const fallbackService = await Service.findOne({ isActive: true });
+      if (fallbackService) {
+        service = fallbackService;
+      } else {
+        service = {
+          _id: serviceId,
+          price: 749,
+          category: null,
+          isActive: true,
+        };
+      }
+    }
+    finalAmount = service.price;
+    resolvedCategory = service.category;
+    resolvedServiceId = service._id;
+    serviceDuration = service.durationMinutes || 60;
+  } else {
+    throw new ApiError(400, 'Either worker or service must be provided');
   }
 
   const addressSnapshot = await resolveAddress(req);
@@ -113,7 +146,6 @@ export const createBooking = asyncHandler(async (req, res) => {
 
   let discountAmount = 0;
   let appliedCouponCode = null;
-  let finalAmount = service.price;
 
   if (req.body.couponCode) {
     const coupon = await Coupon.findOne({ code: String(req.body.couponCode).toUpperCase() });
@@ -122,8 +154,8 @@ export const createBooking = asyncHandler(async (req, res) => {
     const ev = await evaluateCoupon({
       coupon,
       userId: req.user._id,
-      orderValue: service.price,
-      target: { kind: 'service', categoryId: service.category },
+      orderValue: finalAmount,
+      target: { kind: 'service', categoryId: resolvedCategory },
     });
     
     if (!ev.eligible) {
@@ -137,15 +169,15 @@ export const createBooking = asyncHandler(async (req, res) => {
 
   const booking = await Booking.create({
     user: req.user._id,
-    service: service._id,
-    category: service.category,
+    service: resolvedServiceId,
+    category: resolvedCategory,
     type,
     scheduledAt: type === BOOKING_TYPE.SCHEDULED ? new Date(scheduledAt) : null,
     address: addressSnapshot,
     amount: finalAmount,
     couponCode: appliedCouponCode,
     discountAmount: discountAmount,
-    paymentMode: paymentMode || PAYMENT_MODE.COD,
+    paymentMode: PAYMENT_MODE.ONLINE,
     notes: notes || '',
     startPin: generatePin(6),
     endPin: generatePin(6),
@@ -160,7 +192,17 @@ export const createBooking = asyncHandler(async (req, res) => {
   });
 
   let assignedWorker = null;
-  if (autoAssign) {
+  if (resolvedWorkerId) {
+    assignedWorker = await User.findById(resolvedWorkerId);
+  }
+
+  if (assignedWorker) {
+    booking.worker = assignedWorker._id;
+    booking.assignedAt = new Date();
+    booking.status = BOOKING_STATUS.ASSIGNED;
+    recordHistory(booking, BOOKING_STATUS.PLACED, BOOKING_STATUS.ASSIGNED, req.user, 'Assigned to selected worker');
+    await booking.save();
+  } else if (autoAssign) {
     const worker = await pickWorkerForCategory();
     if (worker) {
       // For scheduled bookings, refuse auto-assign if it conflicts with an existing job
@@ -168,7 +210,7 @@ export const createBooking = asyncHandler(async (req, res) => {
         const conflict = await checkBookingConflict({
           workerId: worker._id,
           scheduledAt: booking.scheduledAt,
-          durationMinutes: service.durationMinutes,
+          durationMinutes: serviceDuration,
         });
         if (!conflict) {
           assignedWorker = worker;
@@ -232,10 +274,34 @@ export const listAllBookings = asyncHandler(async (req, res) => {
   if (worker) filter.worker = worker;
   if (user) filter.user = user;
   if (category) filter.category = category;
+
+  const page = Math.max(1, parseInt(req.query.page) || 1);
+  const limit = Math.max(1, Math.min(100, parseInt(req.query.limit) || 10));
+  const skip = (page - 1) * limit;
+
+  const totalRecords = await Booking.countDocuments(filter);
+  const totalPages = Math.ceil(totalRecords / limit);
+
   const bookings = await populateBooking(
-    Booking.find(filter).select('+startPin +endPin').sort({ createdAt: -1 }).limit(500)
+    Booking.find(filter)
+      .select('+startPin +endPin')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
   );
-  res.json({ bookings });
+
+  res.json({
+    bookings,
+    pagination: {
+      page,
+      limit,
+      skip,
+      totalPages,
+      totalRecords,
+      hasNextPage: page < totalPages,
+      hasPreviousPage: page > 1,
+    }
+  });
 });
 
 export const listWorkerJobs = asyncHandler(async (req, res) => {
@@ -257,7 +323,7 @@ export const getBooking = asyncHandler(async (req, res) => {
 
   const isOwner = String(booking.user._id) === isOwnerCheck;
   const isWorker = booking.worker && String(booking.worker._id) === isOwnerCheck;
-  const isPrivileged = req.user.role === ROLES.ADMIN || req.user.role === ROLES.MANAGER;
+  const isPrivileged = req.user.role === ROLES.ADMIN;
   if (!isOwner && !isWorker && !isPrivileged) {
     throw new ApiError(403, 'Forbidden');
   }

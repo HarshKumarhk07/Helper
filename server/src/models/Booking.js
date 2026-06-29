@@ -45,12 +45,13 @@ const bookingSchema = new mongoose.Schema(
     service: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Service',
-      required: true,
+      required: false,
       index: true,
     },
     category: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'ServiceCategory',
+      required: false,
       index: true,
     },
     type: { type: String, enum: BOOKING_TYPE_LIST, required: true },

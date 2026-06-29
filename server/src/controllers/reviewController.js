@@ -61,6 +61,29 @@ export const getReviews = asyncHandler(async (req, res) => {
 
   if (productId) filter.product = productId;
 
-  const reviews = await Review.find(filter).populate('user', 'name').sort({ createdAt: -1 });
-  res.json({ reviews });
+  const page = Math.max(1, parseInt(req.query.page) || 1);
+  const limit = Math.max(1, Math.min(100, parseInt(req.query.limit) || 10));
+  const skip = (page - 1) * limit;
+
+  const totalRecords = await Review.countDocuments(filter);
+  const totalPages = Math.ceil(totalRecords / limit);
+
+  const reviews = await Review.find(filter)
+    .populate('user', 'name')
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit);
+
+  res.json({
+    reviews,
+    pagination: {
+      page,
+      limit,
+      skip,
+      totalPages,
+      totalRecords,
+      hasNextPage: page < totalPages,
+      hasPreviousPage: page > 1,
+    }
+  });
 });

@@ -19,7 +19,7 @@ router.get('/me/transactions', getMyTransactions);
 
 router.get(
   '/users/:userId',
-  requireRole(ROLES.ADMIN, ROLES.MANAGER),
+  requireRole(ROLES.ADMIN),
   getUserWallet
 );
 router.post(

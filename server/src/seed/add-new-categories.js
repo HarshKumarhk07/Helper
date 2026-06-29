@@ -57,6 +57,15 @@ const NEW_CATEGORIES = [
     sortOrder: 10,
     isActive: true,
     image: '/assets/categories/pet_care.png'
+  },
+  {
+    name: 'Gardening & Landscaping',
+    description: 'Nurture your outdoor spaces with professional mowing, design, and pruning.',
+    icon: 'flower',
+    color: '#2A4C2A',
+    sortOrder: 11,
+    isActive: true,
+    image: '/assets/categories/gardening.png'
   }
 ];
 

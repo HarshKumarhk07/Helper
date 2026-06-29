@@ -9,7 +9,7 @@ import User from '../models/User.js';
 const run = async () => {
   await connectDB();
 
-  const res = await User.updateMany(
+  const res1 = await User.updateMany(
     { name: /velora/i },
     [
       {
@@ -17,10 +17,10 @@ const run = async () => {
           name: {
             $replaceAll: {
               input: {
-                $replaceAll: { input: '$name', find: 'Velora', replacement: 'UrbanEase' },
+                $replaceAll: { input: '$name', find: 'Velora', replacement: 'Helper' },
               },
               find: 'velora',
-              replacement: 'urbanease',
+              replacement: 'helper',
             },
           },
         },
@@ -28,7 +28,28 @@ const run = async () => {
     ]
   );
 
-  console.log(`[rename-brand] names updated: ${res.modifiedCount}`);
+  const res2 = await User.updateMany(
+    { name: /urbanease/i },
+    [
+      {
+        $set: {
+          name: {
+            $replaceAll: {
+              input: {
+                $replaceAll: { input: '$name', find: 'UrbanEase', replacement: 'Helper' },
+              },
+              find: 'urbanease',
+              replacement: 'helper',
+            },
+          },
+        },
+      },
+    ]
+  );
+
+  const modifiedCount = res1.modifiedCount + res2.modifiedCount;
+
+  console.log(`[rename-brand] names updated: ${modifiedCount}`);
 
   await mongoose.disconnect();
   process.exit(0);

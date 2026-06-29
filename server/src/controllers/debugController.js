@@ -19,8 +19,8 @@ export const postSendTestEmail = async (req, res) => {
     return res.status(403).json({ error: 'forbidden' });
   }
   const to = req.body.to || process.env.MAIL_FROM_EMAIL;
-  const subject = req.body.subject || 'Test email from UrbanEase';
-  const html = req.body.html || '<p>This is a test email from UrbanEase.</p>';
+  const subject = req.body.subject || 'Test email from Helper';
+  const html = req.body.html || '<p>This is a test email from Helper.</p>';
   const result = await sendEmail({ to, subject, html });
   return res.json({ ok: true, result });
 };

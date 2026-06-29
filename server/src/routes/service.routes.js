@@ -16,7 +16,7 @@ const router = Router();
 router.get('/', listServices);
 router.get('/:id', getService);
 
-router.use(requireAuth, requireRole(ROLES.ADMIN, ROLES.MANAGER));
+router.use(requireAuth, requireRole(ROLES.ADMIN));
 router.post('/', validate(createServiceSchema), createService);
 router.patch('/:id', validate(updateServiceSchema), updateService);
 router.delete('/:id', deleteService);

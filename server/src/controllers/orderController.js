@@ -4,6 +4,8 @@ import Address from '../models/Address.js';
 import Coupon from '../models/Coupon.js';
 import Cart from '../models/Cart.js';
 import User from '../models/User.js';
+import Earning from '../models/Earning.js';
+import { resolveBrandCommissionRate } from '../utils/earnings.js';
 import { ApiError, asyncHandler } from '../utils/asyncHandler.js';
 import { applyOrderStatusTimestamps, recordOrderHistory, resolveCouponForOrder } from '../utils/ecommerce.js';
 import { logAudit } from '../utils/auditLogger.js';
@@ -50,6 +52,9 @@ const resolveAddress = async (req) => {
 export const createOrder = asyncHandler(async (req, res) => {
   const { items, paymentMode, addressId, address, couponCode } = req.body;
   if (!items || !items.length) throw new ApiError(400, 'Order must have items');
+  if (paymentMode && paymentMode !== 'online') {
+    throw new ApiError(400, 'Only online payment is supported');
+  }
 
   let subtotalAmount = 0;
   const processedItems = [];
@@ -84,7 +89,7 @@ export const createOrder = asyncHandler(async (req, res) => {
     couponCode: coupon ? coupon.code : null,
     totalAmount,
     address: resolvedAddress,
-    paymentMode: paymentMode || 'cod',
+    paymentMode: 'online',
     status: 'placed',
     placedAt: new Date(),
     history: [
@@ -110,10 +115,7 @@ export const createOrder = asyncHandler(async (req, res) => {
     { $pull: { items: { product: { $in: orderedIds } } } }
   );
 
-  if (coupon && order.paymentMode === 'cod') {
-    await Coupon.findByIdAndUpdate(coupon._id, { $inc: { usedCount: 1 } });
-    recordCouponUsage({ couponCode: coupon.code, userId: req.user._id }).catch(() => null);
-  }
+
 
   logAudit({
     req,
@@ -136,7 +138,7 @@ export const getMyOrder = asyncHandler(async (req, res) => {
   if (!order) throw new ApiError(404, 'Order not found');
 
   const isOwner = String(order.user) === String(req.user._id);
-  const isPrivileged = req.user.role === 'admin' || req.user.role === 'manager';
+  const isPrivileged = req.user.role === 'admin';
   if (!isOwner && !isPrivileged) throw new ApiError(403, 'Forbidden');
 
   res.json({ order });
@@ -190,8 +192,31 @@ export const cancelMyOrder = asyncHandler(async (req, res) => {
 });
 
 export const listAllOrders = asyncHandler(async (req, res) => {
-  const orders = await Order.find().populate('user', 'name email').sort({ createdAt: -1 });
-  res.json({ orders });
+  const page = Math.max(1, parseInt(req.query.page) || 1);
+  const limit = Math.max(1, Math.min(100, parseInt(req.query.limit) || 10));
+  const skip = (page - 1) * limit;
+
+  const totalRecords = await Order.countDocuments();
+  const totalPages = Math.ceil(totalRecords / limit);
+
+  const orders = await Order.find()
+    .populate('user', 'name email')
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit);
+
+  res.json({
+    orders,
+    pagination: {
+      page,
+      limit,
+      skip,
+      totalPages,
+      totalRecords,
+      hasNextPage: page < totalPages,
+      hasPreviousPage: page > 1,
+    }
+  });
 });
 
 export const updateOrderStatus = asyncHandler(async (req, res) => {
@@ -212,6 +237,34 @@ export const updateOrderStatus = asyncHandler(async (req, res) => {
     resourceId: order._id,
     changes: { status: { from, to: status } },
   });
+
+  if (status === 'delivered') {
+    // Generate earnings for each brand's products in the order
+    for (const item of order.items) {
+      const product = await Product.findById(item.product);
+      if (product && product.brand) {
+        const itemGross = product.price * item.quantity;
+        const rate = await resolveBrandCommissionRate(product.brand);
+        const commAmt = Math.round(itemGross * rate * 100) / 100;
+        const netAmt = Math.round((itemGross - commAmt) * 100) / 100;
+        
+        await Earning.create({
+          worker: product.brand, // set worker field to the brand user ID
+          order: order._id,
+          grossAmount: itemGross,
+          commissionRate: rate,
+          commissionAmount: commAmt,
+          netAmount: netAmt,
+          status: 'pending',
+          completedAt: new Date(),
+        }).catch(err => {
+          if (err.code !== 11000) {
+            console.error('[order earnings error]', err);
+          }
+        });
+      }
+    }
+  }
 
   if (from !== status) {
     const buyer = await User.findById(order.user);

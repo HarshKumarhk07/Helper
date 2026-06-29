@@ -29,15 +29,19 @@ export default function AdminProducts() {
     name: '', slug: '', description: '', price: '', stock: '', category: '', image: '', isFeatured: false
   });
 
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState(null);
+
   const load = () => {
     setLoading(true);
     Promise.all([
-      listProducts(),
+      listProducts({ page, limit: 10 }),
       listProducts({ lowStock: 'true', stockThreshold: lowStockThreshold }),
     ])
-      .then(([allProducts, lowStock]) => {
-        setProducts(allProducts);
-        setLowStockProducts(lowStock);
+      .then(([resProducts, lowStock]) => {
+        setProducts(resProducts.products || []);
+        setPagination(resProducts.pagination || null);
+        setLowStockProducts(lowStock.products || lowStock);
       })
       .catch(() => toast.error('Failed to load products'))
       .finally(() => setLoading(false));
@@ -45,6 +49,9 @@ export default function AdminProducts() {
 
   useEffect(() => {
     load();
+  }, [page]);
+
+  useEffect(() => {
     listProductCategories()
       .then(setCategories)
       .catch(() => toast.error('Failed to load product categories'));
@@ -338,6 +345,30 @@ export default function AdminProducts() {
           </tbody>
         </table>
       </div>
+
+      {pagination && pagination.totalPages > 1 && (
+        <div className="mt-6 flex items-center justify-between border-t border-ink/10 pt-4 text-ink">
+          <div className="text-xs text-ink/60">
+            Showing page {pagination.page} of {pagination.totalPages} ({pagination.totalRecords} total records)
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={!pagination.hasPreviousPage}
+              className="rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-medium hover:bg-sand/30 disabled:opacity-50 transition"
+            >
+              Previous
+            </button>
+            <button
+              onClick={() => setPage(p => Math.min(pagination.totalPages, p + 1))}
+              disabled={!pagination.hasNextPage}
+              className="rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-medium hover:bg-sand/30 disabled:opacity-50 transition"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Edit Product Modal */}
       {editingProduct && (

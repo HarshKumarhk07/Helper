@@ -89,7 +89,7 @@ export const googleSignIn = asyncHandler(async (req, res) => {
   if (!user.isActive) {
     throw new ApiError(
       403,
-      'Your account is suspended. For further queries connect with support@urbanease.com'
+      'Your account is suspended. For further queries connect with support@helper.com'
     );
   }
 

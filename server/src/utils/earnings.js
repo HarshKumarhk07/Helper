@@ -1,5 +1,7 @@
 import Earning from '../models/Earning.js';
 import AdminSettings from '../models/AdminSettings.js';
+import User from '../models/User.js';
+import ServiceCategory from '../models/ServiceCategory.js';
 
 let cachedRate = null;
 let cachedAt = 0;
@@ -11,6 +13,50 @@ const envCommission = () => {
   if (raw < 0) return 0;
   if (raw > 1) return 1;
   return raw;
+};
+
+export const resolveServiceCommissionRate = async (workerId, categoryId) => {
+  // 1. Worker Individual Commission
+  if (workerId) {
+    const worker = await User.findById(workerId).select('commissionRate').lean();
+    if (worker && worker.commissionRate != null) {
+      return worker.commissionRate;
+    }
+  }
+  // 2. Category Commission
+  if (categoryId) {
+    const category = await ServiceCategory.findById(categoryId).select('commissionRate').lean();
+    if (category && category.commissionRate != null) {
+      return category.commissionRate;
+    }
+  }
+  // 3. Global Commission
+  const settings = await AdminSettings.findOne({ key: 'platform' }).lean();
+  if (settings && settings.platformCommissionRate != null) {
+    return settings.platformCommissionRate;
+  }
+  return envCommission();
+};
+
+export const resolveBrandCommissionRate = async (brandId) => {
+  // 1. Brand Individual Commission
+  if (brandId) {
+    const brand = await User.findById(brandId).select('commissionRate').lean();
+    if (brand && brand.commissionRate != null) {
+      return brand.commissionRate;
+    }
+  }
+  // 2. Global Brand Commission Rate
+  const settings = await AdminSettings.findOne({ key: 'platform' }).lean();
+  if (settings) {
+    if (settings.brandCommissionRate != null) {
+      return settings.brandCommissionRate;
+    }
+    if (settings.platformCommissionRate != null) {
+      return settings.platformCommissionRate;
+    }
+  }
+  return 0.15; // default brand commission fallback
 };
 
 export const refreshCommissionCache = (rate) => {
@@ -67,9 +113,14 @@ export const createEarningForBooking = async (booking, options = {}) => {
   const existing = await Earning.findOne({ booking: booking._id });
   if (existing) return existing;
 
+  let resolvedRate = options.rateOverride;
+  if (resolvedRate == null) {
+    resolvedRate = await resolveServiceCommissionRate(booking.worker, booking.category);
+  }
+
   const { grossAmount, commissionAmount, netAmount, rate } = computeEarningSplit(
     booking.amount,
-    options.rateOverride
+    resolvedRate
   );
 
   try {

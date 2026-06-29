@@ -20,14 +20,12 @@ const NAV = [
 
 const PANEL_BY_ROLE = {
   admin: '/admin',
-  manager: '/manager',
   worker: '/worker',
   user: '/me',
 };
 
 const PANEL_LABEL_BY_ROLE = {
   admin: 'Admin panel',
-  manager: 'Manager panel',
   worker: 'Worker panel',
   user: 'My panel',
 };
@@ -208,8 +206,8 @@ export default function Navbar() {
             to="/"
             className="flex-shrink-0 flex justify-center items-center gap-2 group"
           >
-            <div className="h-8 w-8 rounded-full bg-ink text-paper flex items-center justify-center font-serif text-lg group-hover:bg-ink/80 transition-colors">U</div>
-            <span className="font-semibold tracking-[0.15em] text-sm uppercase text-ink">UrbanEase</span>
+            <div className="h-8 w-8 rounded-full bg-ink text-paper flex items-center justify-center font-serif text-lg group-hover:bg-ink/80 transition-colors">H</div>
+            <span className="font-semibold tracking-[0.15em] text-sm uppercase text-ink">Helper</span>
           </Link>
 
           {/* Right Actions */}
@@ -428,8 +426,8 @@ export default function Navbar() {
 
                     {/* Logo in Drawer */}
                     <div className="flex-1 flex items-center justify-center gap-2">
-                      <div className="h-7 w-7 rounded-full bg-ink text-paper flex items-center justify-center font-serif text-sm font-bold">U</div>
-                      <span className="text-xs font-semibold tracking-widest uppercase text-ink">UrbanEase</span>
+                      <div className="h-7 w-7 rounded-full bg-ink text-paper flex items-center justify-center font-serif text-sm font-bold">H</div>
+                      <span className="text-xs font-semibold tracking-widest uppercase text-ink">Helper</span>
                     </div>
 
                     {/* Right Icons - Search and Cart */}

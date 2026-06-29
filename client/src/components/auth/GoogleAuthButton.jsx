@@ -51,7 +51,7 @@ export default function GoogleAuthButton({ label = 'Continue with Google', onSuc
     setLoading(true);
     try {
       const { user, created } = await loginWithGoogle();
-      toast.success(created ? `Welcome to UrbanEase, ${user.name?.split(' ')[0] || ''}` : 'Welcome back');
+      toast.success(created ? `Welcome to Helper, ${user.name?.split(' ')[0] || ''}` : 'Welcome back');
       if (onSuccess) {
         onSuccess({ user, created });
       } else {

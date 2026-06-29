@@ -55,7 +55,7 @@ export default function UserBookings() {
       <div className="text-xs uppercase tracking-widest text-black/60">
         (My bookings)
       </div>
-      <h1 className="heading-display mt-3 text-4xl md:text-6xl">YOUR URBANEASE.</h1>
+      <h1 className="heading-display mt-3 text-4xl md:text-6xl">YOUR HELPER.</h1>
       <p className="mt-3 text-sm text-black/70">
         Signed in as <span className="text-black">{user?.name}</span>
       </p>

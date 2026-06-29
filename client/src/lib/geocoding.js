@@ -6,7 +6,7 @@
 const NOMINATIM = 'https://nominatim.openstreetmap.org';
 const HEADERS = {
   'Accept-Language': 'en',
-  'User-Agent': 'UrbanEase/1.0 (support@urbanease.com)',
+  'User-Agent': 'Helper/1.0 (support@helper.com)',
 };
 
 /**

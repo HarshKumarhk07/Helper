@@ -63,8 +63,8 @@ export default function UserKyc() {
   const [submitting, setSubmitting] = useState(false);
 
   const refresh = () => {
-    // KYC applies to service professionals only (workers + managers).
-    if (user?.role !== 'worker' && user?.role !== 'manager') {
+    // KYC applies to service professionals only (workers).
+    if (user?.role !== 'worker') {
       setLoading(false);
       setData(null);
       return;
@@ -163,9 +163,9 @@ export default function UserKyc() {
     );
   }
 
-  // KYC is for service professionals (workers + managers) only — send any
+  // KYC is for service professionals (workers) only — send any
   // other authenticated role away rather than showing an unusable form.
-  if (user && user.role !== 'worker' && user.role !== 'manager') {
+  if (user && user.role !== 'worker') {
     return <Navigate to="/" replace />;
   }
 

@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 
 const LocationContext = createContext(null);
 
-const STORAGE_KEY = 'urbanease.location';
+const STORAGE_KEY = 'helper.location';
 
 export function LocationProvider({ children }) {
   const [location, setLocationState] = useState(() => {

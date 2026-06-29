@@ -95,7 +95,7 @@ export default function ForgotPassword() {
               </h1>
               <div className="h-px w-16 bg-gradient-to-r from-ink/40 to-transparent" />
               <p className="max-w-md text-base leading-relaxed text-ink/70">
-                Enter the email tied to your UrbanEase account and we'll send a secure link
+                Enter the email tied to your Helper account and we'll send a secure link
                 to set a new password. The link expires after 30 minutes.
               </p>
             </div>

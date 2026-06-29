@@ -51,6 +51,8 @@ const friendlyError = (err) => {
 export default function Signup() {
   const { signup, isAuthenticated, bootstrapping } = useAuth();
   const navigate = useNavigate();
+  const query = new URLSearchParams(window.location.search);
+  const [selectedRole, setSelectedRole] = useState(query.get('role') || 'user');
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -95,8 +97,9 @@ export default function Signup() {
         email: form.email.trim(),
         phone: form.phone.trim(),
         password: form.password,
+        role: selectedRole,
       });
-      toast.success('Welcome to UrbanEase');
+      toast.success('Welcome to Helper');
       navigate('/dashboard', { replace: true });
     } catch (err) {
       const message = friendlyError(err);
@@ -148,12 +151,12 @@ export default function Signup() {
             <div className="space-y-6">
               <h1 className="font-display text-[clamp(2.4rem,5vw,4.25rem)] font-light leading-[1.02] tracking-tightest text-ink">
                 Join
-                <span className="mt-1 block font-semibold">UrbanEase.</span>
+                <span className="mt-1 block font-semibold">Helper.</span>
               </h1>
               <div className="h-px w-20 bg-gradient-to-r from-ink/40 to-transparent" />
               <p className="max-w-lg text-lg font-medium leading-relaxed text-ink/90">
                 Book vetted urban services and shop the heritage collection from one elegant
-                account. Workers and managers are invited by an admin.
+                account. Workers are invited by an admin.
               </p>
             </div>
 
@@ -212,6 +215,53 @@ export default function Signup() {
                   onSubmit={onSubmit}
                   className="space-y-4 px-6 pb-6 pt-2 sm:px-8 sm:pb-8"
                 >
+                  <div className="space-y-2">
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-ink/65">Select Profile Type</label>
+                    <div className="grid grid-cols-3 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedRole('user')}
+                        className={`py-2 px-3 text-xs font-semibold rounded-xl border text-center transition-all ${
+                          selectedRole === 'user'
+                            ? 'bg-ink text-paper border-ink font-bold'
+                            : 'bg-sand/20 border-ink/10 hover:bg-sand/40 text-ink/75'
+                        }`}
+                      >
+                        Customer
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedRole('worker')}
+                        className={`py-2 px-3 text-xs font-semibold rounded-xl border text-center transition-all ${
+                          selectedRole === 'worker'
+                            ? 'bg-ink text-paper border-ink font-bold'
+                            : 'bg-sand/20 border-ink/10 hover:bg-sand/40 text-ink/75'
+                        }`}
+                      >
+                        Worker
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedRole('brand')}
+                        className={`py-2 px-3 text-xs font-semibold rounded-xl border text-center transition-all ${
+                          selectedRole === 'brand'
+                            ? 'bg-ink text-paper border-ink font-bold'
+                            : 'bg-sand/20 border-ink/10 hover:bg-sand/40 text-ink/75'
+                        }`}
+                      >
+                        Brand / Company
+                      </button>
+                    </div>
+                    {selectedRole === 'brand' && (
+                      <p className="text-[10px] text-ink/50 mt-1">
+                        Registering as a brand seller? View our transparent{' '}
+                        <Link to="/brand/pricing" className="text-[#6f5cff] font-semibold underline hover:text-[#6f5cff]/80">
+                          Brand Pricing & Platform Commission Rate
+                        </Link>.
+                      </p>
+                    )}
+                  </div>
+
                   <Field
                     label="Full name"
                     type="text"

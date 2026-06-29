@@ -75,9 +75,10 @@ const AdminCategories = lazy(() => import('./pages/dashboards/AdminCategories.js
 const AdminProductCategories = lazy(() => import('./pages/dashboards/AdminProductCategories.jsx'));
 const AdminSupport = lazy(() => import('./pages/dashboards/AdminSupport.jsx'));
 const AdminWallet = lazy(() => import('./pages/dashboards/AdminWallet.jsx'));
-const ManagerOrders = lazy(() => import('./pages/dashboards/ManagerOrders.jsx'));
-const ManagerWorkers = lazy(() => import('./pages/dashboards/ManagerWorkers.jsx'));
-const ManagerDashboard = lazy(() => import('./pages/dashboards/ManagerDashboard.jsx'));
+const BrandDashboard = lazy(() => import('./pages/dashboards/BrandDashboard.jsx'));
+const BrandProducts = lazy(() => import('./pages/dashboards/BrandProducts.jsx'));
+const BrandKyc = lazy(() => import('./pages/dashboards/BrandKyc.jsx'));
+const BrandPricing = lazy(() => import('./pages/BrandPricing.jsx'));
 
 // Worker surface
 const WorkerDashboard = lazy(() => import('./pages/dashboards/WorkerDashboard.jsx'));
@@ -159,7 +160,7 @@ export default function App() {
               }
             />
 
-            <Route element={<ProtectedRoute roles={['admin', 'manager']} />}>
+            <Route element={<ProtectedRoute roles={['admin']} />}>
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/admin/users" element={<AdminUsers />} />
               <Route path="/admin/workers" element={<AdminWorkers />} />
@@ -171,8 +172,15 @@ export default function App() {
               <Route path="/admin/product-categories" element={<AdminProductCategories />} />
             </Route>
 
-            <Route element={<ProtectedRoute roles={['admin', 'manager']} />}>
-              <Route path="/manager" element={<ManagerDashboard />} />
+            <Route path="/brand/pricing" element={<BrandPricing />} />
+
+            <Route element={<ProtectedRoute roles={['brand', 'admin']} />}>
+              <Route path="/brand" element={<BrandDashboard />} />
+              <Route path="/brand/products" element={<BrandProducts />} />
+              <Route path="/brand/kyc" element={<BrandKyc />} />
+            </Route>
+
+            <Route element={<ProtectedRoute roles={['admin']} />}>
               <Route path="/admin/bookings" element={<AdminBookings />} />
               <Route path="/admin/orders" element={<AdminOrders />} />
               <Route path="/admin/products" element={<AdminProducts />} />
@@ -181,8 +189,6 @@ export default function App() {
               <Route path="/admin/finance" element={<AdminFinance />} />
               <Route path="/admin/payouts" element={<AdminPayouts />} />
               <Route path="/admin/settings" element={<AdminSettings />} />
-              <Route path="/manager/orders" element={<ManagerOrders />} />
-              <Route path="/manager/workers" element={<ManagerWorkers />} />
               <Route path="/admin/support" element={<AdminSupport />} />
               <Route path="/admin/support/:id" element={<SupportThread adminMode />} />
               <Route path="/admin/wallet" element={<AdminWallet />} />

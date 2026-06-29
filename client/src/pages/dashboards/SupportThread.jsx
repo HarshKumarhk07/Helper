@@ -40,7 +40,7 @@ export default function SupportThread({ adminMode = false }) {
   const [statusUpdating, setStatusUpdating] = useState(false);
   const bottomRef = useRef(null);
 
-  const isPrivileged = adminMode && (user?.role === 'admin' || user?.role === 'manager');
+  const isPrivileged = adminMode && (user?.role === 'admin');
 
   const load = () => {
     setLoading(true);
@@ -202,7 +202,7 @@ export default function SupportThread({ adminMode = false }) {
           {ticket.messages.map((m) => {
             const mine = String(m.sender?._id || m.sender) === meId;
             const isAgent =
-              m.senderRole === 'admin' || m.senderRole === 'manager';
+              m.senderRole === 'admin';
             return (
               <div
                 key={m._id}

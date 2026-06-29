@@ -69,8 +69,8 @@ export default function useRazorpay() {
       type, // 'booking' | 'ecommerce' | 'order' (alias of ecommerce)
       referenceId,
       receipt,
-      name = 'UrbanEase',
-      description = 'UrbanEase payment',
+      name = 'Helper',
+      description = 'Helper payment',
       prefill,
       theme,
       onSuccess,

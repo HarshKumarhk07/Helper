@@ -6,13 +6,12 @@ export const assertBookingTransition = ({ booking, to, pin, role, userId }) => {
   const isOwner = String(booking.user) === String(userId);
   const isWorker = booking.worker && String(booking.worker) === String(userId);
   const isAdmin = role === ROLES.ADMIN;
-  const isManager = role === ROLES.MANAGER;
 
   const allowedActors = {
-    [BOOKING_STATUS.ASSIGNED]: [ROLES.ADMIN, ROLES.MANAGER],
+    [BOOKING_STATUS.ASSIGNED]: [ROLES.ADMIN],
     [BOOKING_STATUS.IN_PROGRESS]: [ROLES.WORKER, ROLES.ADMIN],
     [BOOKING_STATUS.COMPLETED]: [ROLES.WORKER, ROLES.ADMIN],
-    [BOOKING_STATUS.CANCELLED]: [ROLES.USER, ROLES.ADMIN, ROLES.MANAGER],
+    [BOOKING_STATUS.CANCELLED]: [ROLES.USER, ROLES.ADMIN],
   };
 
   const actorAllowed = (allowedActors[to] || []).includes(role);
@@ -22,7 +21,7 @@ export const assertBookingTransition = ({ booking, to, pin, role, userId }) => {
     throw new ApiError(403, 'You may not perform that transition');
   }
 
-  if (to !== BOOKING_STATUS.CANCELLED && !isAdmin && !isManager && !isWorker && !isOwner) {
+  if (to !== BOOKING_STATUS.CANCELLED && !isAdmin && !isWorker && !isOwner) {
     throw new ApiError(403, 'Forbidden');
   }
 
@@ -49,5 +48,5 @@ export const assertBookingTransition = ({ booking, to, pin, role, userId }) => {
     }
   }
 
-  return { isOwner, isWorker, isAdmin, isManager };
+  return { isOwner, isWorker, isAdmin };
 };

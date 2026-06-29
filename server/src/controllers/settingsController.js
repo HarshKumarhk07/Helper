@@ -54,6 +54,10 @@ const SETTABLE_FIELDS = [
   'bookingLeadTimeMinutes',
   'cancellationWindowMinutes',
   'autoAssignDefault',
+  'brandRegistrationCharge',
+  'productListingCharge',
+  'brandCommissionRate',
+  'featuredWorkerFee',
 ];
 
 const sanitizeNumber = (n, { min = 0, max = Number.MAX_SAFE_INTEGER } = {}) => {
@@ -80,7 +84,7 @@ export const updateSettings = asyncHandler(async (req, res) => {
   for (const key of SETTABLE_FIELDS) {
     if (!(key in req.body)) continue;
     const raw = req.body[key];
-    if (key === 'platformCommissionRate') {
+    if (key === 'platformCommissionRate' || key === 'brandCommissionRate') {
       const n = sanitizeNumber(raw, { min: 0, max: 1 });
       if (n != null) updates[key] = n;
     } else if (key === 'gstRate') {
@@ -92,6 +96,9 @@ export const updateSettings = asyncHandler(async (req, res) => {
     } else if (key === 'cancellationWindowMinutes') {
       const n = sanitizeNumber(raw, { min: 0, max: 7 * 24 * 60 });
       if (n != null) updates[key] = Math.round(n);
+    } else if (key === 'brandRegistrationCharge' || key === 'productListingCharge' || key === 'featuredWorkerFee') {
+      const n = sanitizeNumber(raw, { min: 0 });
+      if (n != null) updates[key] = n;
     } else if (key === 'autoAssignDefault') {
       updates[key] = !!raw;
     } else {
@@ -120,5 +127,18 @@ export const updateSettings = asyncHandler(async (req, res) => {
   res.json({
     settings,
     integrations: buildIntegrationsView(),
+  });
+});
+
+export const getPublicSettings = asyncHandler(async (req, res) => {
+  const settings = await AdminSettings.getSingleton();
+  res.json({
+    platformName: settings.platformName,
+    supportEmail: settings.supportEmail,
+    supportPhone: settings.supportPhone,
+    brandRegistrationCharge: settings.brandRegistrationCharge || 500,
+    productListingCharge: settings.productListingCharge || 50,
+    brandCommissionRate: settings.brandCommissionRate || 0.15,
+    featuredWorkerFee: settings.featuredWorkerFee || 999,
   });
 });

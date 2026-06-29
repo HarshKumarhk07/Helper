@@ -14,12 +14,14 @@ const inlineAddress = z.object({
 });
 
 export const createBookingSchema = z.object({
-  service: z.string().length(24),
+  service: z.string().length(24).optional(),
+  category: z.string().length(24).optional(),
+  worker: z.string().length(24).optional(),
   type: z.enum(BOOKING_TYPE_LIST),
   scheduledAt: z.string().datetime().optional(),
   addressId: z.string().length(24).optional(),
   address: inlineAddress.optional(),
-  paymentMode: z.enum(PAYMENT_MODE_LIST).optional(),
+  paymentMode: z.literal('online').default('online'),
   notes: z.string().max(500).optional(),
   autoAssign: z.boolean().optional(),
 }).refine((d) => d.addressId || d.address, {

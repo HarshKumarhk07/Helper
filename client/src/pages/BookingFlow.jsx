@@ -14,6 +14,7 @@ import FadeUp from '../components/ui/FadeUp.jsx';
 import SlotPicker from '../components/booking/SlotPicker.jsx';
 import RouteMap from '../components/booking/RouteMap.jsx';
 import { useCart } from '../context/CartContext.jsx';
+import api from '../api/axios.js';
 
 export default function BookingFlow() {
   const { serviceId } = useParams();
@@ -25,7 +26,7 @@ export default function BookingFlow() {
   const [selectedAddressId, setSelectedAddressId] = useState('');
   const [bookingType, setBookingType] = useState('instant');
   const [scheduledAt, setScheduledAt] = useState(null);
-  const [paymentMode, setPaymentMode] = useState('cod');
+  const [paymentMode, setPaymentMode] = useState('online');
   const [autoAssign, setAutoAssign] = useState(true);
   const [notes, setNotes] = useState('');
   const [couponCode, setCouponCode] = useState('');
@@ -71,6 +72,34 @@ export default function BookingFlow() {
   };
 
   useEffect(() => {
+    const query = new URLSearchParams(window.location.search);
+    const isWorker = query.get('type') === 'worker';
+
+    if (isWorker) {
+      api.get(`/users/workers?q=${serviceId}`)
+        .then(({ data }) => {
+          const worker = data.workers?.[0];
+          if (!worker) {
+            toast.error('Selected professional is unavailable');
+            navigate('/services');
+            return;
+          }
+          setService({
+            _id: worker._id,
+            name: `Professional: ${worker.name}`,
+            price: worker.pricingType === 'hourly' ? worker.hourlyRate : worker.fixedPrice,
+            durationMinutes: 60,
+            category: worker.category || { name: 'Direct Professional Booking' },
+            isWorkerBooking: true,
+          });
+        })
+        .catch((err) => {
+          toast.error('Failed to load worker profile');
+          navigate('/services');
+        });
+      return;
+    }
+
     if (serviceId === 'cart') {
       const serviceCartItems = cart.filter((item) => item.kind === 'service');
       if (serviceCartItems.length === 0) {
@@ -344,7 +373,7 @@ export default function BookingFlow() {
             key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_xxxx',
             amount: rpOrder.amount,
             currency: rpOrder.currency,
-            name: 'UrbanEase',
+            name: 'Helper',
             description: 'Premium Service Booking',
             order_id: rpOrder.id,
             handler: async function (response) {
@@ -383,11 +412,16 @@ export default function BookingFlow() {
       }
 
       const payload = {
-        service: service._id,
         type: bookingType,
         paymentMode,
-        autoAssign,
+        autoAssign: service.isWorkerBooking ? false : autoAssign,
       };
+      if (service.isWorkerBooking) {
+        payload.worker = service._id;
+        payload.category = service.category?._id || service.category;
+      } else {
+        payload.service = service._id;
+      }
       if (bookingType === 'scheduled' && scheduledAt) payload.scheduledAt = scheduledAt;
       if (selectedAddressId) payload.addressId = selectedAddressId;
       else if (inlineAddressPayload) payload.address = inlineAddressPayload;
@@ -406,7 +440,7 @@ export default function BookingFlow() {
           key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_xxxx',
           amount: rpOrder.amount,
           currency: rpOrder.currency,
-          name: 'UrbanEase',
+          name: 'Helper',
           description: `Booking: ${service.name}`,
           order_id: rpOrder.id,
           handler: async function (response) {
@@ -781,20 +815,13 @@ export default function BookingFlow() {
 
             <FadeUp delay={0.1}>
               <Section icon={CreditCard} title="Payment">
-                <div className="grid grid-cols-2 gap-2.5">
+                <div className="grid grid-cols-1 gap-2.5">
                   <ChoiceCard
-                    active={paymentMode === 'cod'}
-                    onClick={() => setPaymentMode('cod')}
-                    icon={Banknote}
-                    title="Cash / UPI"
-                    sub="Pay on completion"
-                  />
-                  <ChoiceCard
-                    active={paymentMode === 'online'}
+                    active={true}
                     onClick={() => setPaymentMode('online')}
                     icon={CreditCard}
-                    title="Razorpay"
-                    sub="Card · UPI · Wallet"
+                    title="Razorpay Secure"
+                    sub="Card · UPI · Wallet · Netbanking"
                   />
                 </div>
                 <label className="mt-4 flex items-start gap-2.5 rounded-2xl border border-black/10 bg-white p-3.5 text-sm text-black transition hover:border-black/20">

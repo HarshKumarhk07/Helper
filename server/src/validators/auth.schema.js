@@ -19,6 +19,7 @@ export const signupSchema = z.object({
   email: z.string().email().toLowerCase(),
   phone: z.string().optional().default(''),
   password: z.string().min(8).max(128),
+  role: z.enum(['user', 'worker', 'brand']).optional().default('user'),
 });
 
 export const loginSchema = z.object({
@@ -35,7 +36,7 @@ export const adminCreateUserSchema = z.object({
   passportPhoto: mediaUrl,
   kycStatus: z.enum(['pending', 'verified', 'rejected']).optional().default('pending'),
   password: z.string().min(8).max(128),
-  role: z.enum(['admin', 'manager', 'worker', 'user']),
+  role: z.enum(['admin', 'worker', 'user', 'brand']),
 });
 
 export const adminUpdateUserSchema = z.object({
@@ -48,7 +49,7 @@ export const adminUpdateUserSchema = z.object({
   kycStatus: z.enum(['pending', 'verified', 'rejected']).optional(),
   avatar: mediaUrl,
   password: z.string().min(8).max(128).optional().or(z.literal('')),
-  role: z.enum(['admin', 'manager', 'worker', 'user']).optional(),
+  role: z.enum(['admin', 'worker', 'user', 'brand']).optional(),
   isActive: z.boolean().optional(),
 });
 
@@ -59,6 +60,16 @@ export const updateMeSchema = z.object({
   passportPhoto: mediaUrl,
   aadhaarNumber: z.string().trim().regex(/^\d{12}$/).optional().or(z.literal('')),
   panNumber: z.string().trim().regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/i).optional().or(z.literal('')),
+  // Worker profile fields
+  category: z.string().length(24).optional().nullable(),
+  fixedPrice: z.number().min(0).optional(),
+  hourlyRate: z.number().min(0).optional(),
+  pricingType: z.enum(['fixed', 'hourly']).optional(),
+  experienceYears: z.number().min(0).optional(),
+  // Brand profile fields
+  companyName: z.string().min(2).max(120).optional(),
+  companyAddress: z.string().min(5).max(300).optional(),
+  businessType: z.string().min(2).max(80).optional(),
   kycDocuments: z
     .object({
       aadhaarFront: mediaUrl,

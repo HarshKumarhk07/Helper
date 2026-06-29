@@ -48,17 +48,30 @@ export default function AdminSupport() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [q, setQ] = useState('');
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState(null);
 
   const load = () => {
     setLoading(true);
-    const params = filter === 'all' ? {} : { status: filter };
+    const params = {
+      ...(filter === 'all' ? {} : { status: filter }),
+      page,
+      limit: 10,
+    };
     listAllTickets(params)
-      .then(setTickets)
+      .then((res) => {
+        setTickets(res.tickets || []);
+        setPagination(res.pagination || null);
+      })
       .catch(() => toast.error('Failed to load tickets'))
       .finally(() => setLoading(false));
   };
 
-  useEffect(load, [filter]);
+  useEffect(() => {
+    setPage(1);
+  }, [filter]);
+
+  useEffect(load, [filter, page]);
 
   const filtered = useMemo(() => {
     if (!q.trim()) return tickets;
@@ -214,6 +227,30 @@ export default function AdminSupport() {
           </tbody>
         </table>
       </div>
+
+      {pagination && pagination.totalPages > 1 && (
+        <div className="mt-6 flex items-center justify-between border-t border-ink/10 pt-4 text-ink">
+          <div className="text-xs text-ink/60">
+            Showing page {pagination.page} of {pagination.totalPages} ({pagination.totalRecords} total records)
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={!pagination.hasPreviousPage}
+              className="rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-medium hover:bg-sand/30 disabled:opacity-50 transition"
+            >
+              Previous
+            </button>
+            <button
+              onClick={() => setPage(p => Math.min(pagination.totalPages, p + 1))}
+              disabled={!pagination.hasNextPage}
+              className="rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-medium hover:bg-sand/30 disabled:opacity-50 transition"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
     </DashboardShell>
   );
 }

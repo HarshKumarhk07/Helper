@@ -111,9 +111,8 @@ export default function ProfileEdit() {
   };
 
   const isWorker = user?.role === 'worker';
-  const isManager = user?.role === 'manager';
   // KYC applies to service professionals — don't pitch it to customers.
-  const showKycPanel = isWorker || isManager;
+  const showKycPanel = isWorker;
   const showEmailField = !user?.email || isPlaceholderEmail(user?.email);
 
   return (

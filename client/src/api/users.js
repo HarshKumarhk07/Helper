@@ -1,7 +1,7 @@
 import api from './axios.js';
 
 export const listUsers = (params = {}) =>
-  api.get('/users', { params }).then((r) => r.data.users);
+  api.get('/users', { params }).then((r) => r.data);
 
 export const adminCreateUser = (payload) =>
   api.post('/users', payload).then((r) => r.data.user);

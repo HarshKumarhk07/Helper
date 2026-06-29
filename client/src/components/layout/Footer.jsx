@@ -25,8 +25,8 @@ export default function Footer() {
 
         <div className="col-span-1 md:col-span-1 pr-4">
           <Link to="/" className="flex items-center gap-2 mb-6 hover:opacity-70 transition">
-            <div className="h-8 w-8 rounded-full bg-ink text-paper flex items-center justify-center font-serif text-lg">U</div>
-            <div className="text-sm font-semibold tracking-[0.2em] uppercase">URBANEASE</div>
+            <div className="h-8 w-8 rounded-full bg-ink text-paper flex items-center justify-center font-serif text-lg">H</div>
+            <div className="text-sm font-semibold tracking-[0.2em] uppercase">HELPER</div>
           </Link>
           <p className="max-w-xs text-sm leading-relaxed text-ink/60 font-light">
             Premium service, commerce, and workforce operations for modern homes.
@@ -91,7 +91,7 @@ export default function Footer() {
             </li>
             <li>
               <a
-                href="mailto:support@urbanease.com"
+                href="mailto:support@helper.com"
                 className="hover:text-ink transition-colors w-max inline-block"
               >
                 Contact Us
@@ -110,7 +110,7 @@ export default function Footer() {
       <div className="container-velora mt-20">
         <div className="flex flex-col items-center justify-between gap-4 border-t border-ink/10 pt-8 md:flex-row">
           <span className="text-xs text-ink/50 font-medium uppercase tracking-widest">
-            © {year} UrbanEase — Unified Operations
+            © {year} Helper — Unified Operations
           </span>
           <span className="text-xs text-ink/40 font-medium tracking-wide">
             Powered by advanced tracking | seamless booking.

@@ -11,7 +11,7 @@ import {
   notifySupportTicketReplied,
 } from '../utils/notificationService.js';
 
-const isPrivileged = (role) => role === ROLES.ADMIN || role === ROLES.MANAGER;
+const isPrivileged = (role) => role === ROLES.ADMIN;
 
 const populateTicket = (q) =>
   q
@@ -123,24 +123,32 @@ export const listAllTickets = asyncHandler(async (req, res) => {
   if (category) filter.category = category;
   if (assignedAgent && isObjectId(assignedAgent)) filter.assignedAgent = assignedAgent;
 
-  let query = SupportTicket.find(filter);
+  let finalFilter = { ...filter };
 
   if (q) {
     const code = String(q).toUpperCase();
-    query = SupportTicket.find({
+    finalFilter = {
       ...filter,
       $or: [
         { code: { $regex: code, $options: 'i' } },
         { subject: { $regex: q, $options: 'i' } },
       ],
-    });
+    };
   }
 
-  const tickets = await query
+  const page = Math.max(1, parseInt(req.query.page) || 1);
+  const limit = Math.max(1, Math.min(100, parseInt(req.query.limit) || 10));
+  const skip = (page - 1) * limit;
+
+  const totalRecords = await SupportTicket.countDocuments(finalFilter);
+  const totalPages = Math.ceil(totalRecords / limit);
+
+  const tickets = await SupportTicket.find(finalFilter)
     .populate('user', 'name email phone')
     .populate('assignedAgent', 'name email')
     .sort({ lastActivityAt: -1 })
-    .limit(500)
+    .skip(skip)
+    .limit(limit)
     .lean();
 
   const summarized = tickets.map((t) => {
@@ -163,7 +171,18 @@ export const listAllTickets = asyncHandler(async (req, res) => {
     };
   });
 
-  res.json({ tickets: summarized });
+  res.json({
+    tickets: summarized,
+    pagination: {
+      page,
+      limit,
+      skip,
+      totalPages,
+      totalRecords,
+      hasNextPage: page < totalPages,
+      hasPreviousPage: page > 1,
+    }
+  });
 });
 
 export const getTicket = asyncHandler(async (req, res) => {
@@ -229,7 +248,7 @@ export const addMessage = asyncHandler(async (req, res) => {
 });
 
 export const updateTicketStatus = asyncHandler(async (req, res) => {
-  if (!isPrivileged(req.user.role)) throw new ApiError(403, 'Admin or manager only');
+  if (!isPrivileged(req.user.role)) throw new ApiError(403, 'Admin only');
   const { status, assignedAgent } = req.body;
   if (status && !TICKET_STATUS_LIST.includes(status)) {
     throw new ApiError(400, 'Invalid status');

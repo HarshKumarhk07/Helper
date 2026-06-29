@@ -33,7 +33,11 @@ const orderSchema = new mongoose.Schema(
       type: Object, // Stores snapshot of the address at the time of order
       required: true,
     },
-    paymentMode: { type: String, enum: ['cod', 'online'], default: 'cod' },
+    paymentMode: {
+      type: String,
+      enum: ['online'],
+      default: 'online',
+    },
     paymentStatus: {
       type: String,
       enum: ['pending', 'paid', 'failed', 'refunded'],

@@ -15,9 +15,9 @@ const serviceCategorySchema = new mongoose.Schema(
     icon: { type: String, default: 'sparkles' },
     color: { type: String, default: '#18181A' },
     image: { type: String, default: '' },
-    manager: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     isActive: { type: Boolean, default: true, index: true },
     sortOrder: { type: Number, default: 0 },
+    commissionRate: { type: Number, min: 0, max: 1, default: null },
   },
   { timestamps: true }
 );

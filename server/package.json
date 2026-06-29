@@ -1,7 +1,7 @@
 {
-  "name": "urbanease-server",
+  "name": "helper-server",
   "version": "1.0.0",
-  "description": "UrbanEase backend - Urban service & ecommerce platform",
+  "description": "Helper backend - Urban service & ecommerce platform",
   "main": "src/server.js",
   "type": "module",
   "scripts": {

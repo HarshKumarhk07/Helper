@@ -13,13 +13,16 @@ export default function AdminOrders() {
   const [loading, setLoading] = useState(true);
   const [notes, setNotes] = useState({});
   const [refundTarget, setRefundTarget] = useState(null);
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState(null);
 
   const load = () => {
     setLoading(true);
-    listAllOrders()
-      .then((data) => {
-        setOrders(data || []);
-        setNotes(Object.fromEntries((data || []).map((order) => [order._id, order.adminNote || ''])));
+    listAllOrders({ page, limit: 10 })
+      .then((res) => {
+        setOrders(res.orders || []);
+        setPagination(res.pagination || null);
+        setNotes(Object.fromEntries((res.orders || []).map((order) => [order._id, order.adminNote || ''])));
       })
       .catch(() => toast.error('Failed to load orders'))
       .finally(() => setLoading(false));
@@ -27,7 +30,7 @@ export default function AdminOrders() {
 
   useEffect(() => {
     load();
-  }, []);
+  }, [page]);
 
   const saveNote = async (id) => {
     try {
@@ -129,6 +132,30 @@ export default function AdminOrders() {
           ))
         )}
       </div>
+
+      {pagination && pagination.totalPages > 1 && (
+        <div className="mt-6 flex items-center justify-between border-t border-ink/10 pt-4 text-ink">
+          <div className="text-xs text-ink/60">
+            Showing page {pagination.page} of {pagination.totalPages} ({pagination.totalRecords} total records)
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={!pagination.hasPreviousPage}
+              className="rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-medium hover:bg-sand/30 disabled:opacity-50 transition"
+            >
+              Previous
+            </button>
+            <button
+              onClick={() => setPage(p => Math.min(pagination.totalPages, p + 1))}
+              disabled={!pagination.hasNextPage}
+              className="rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-medium hover:bg-sand/30 disabled:opacity-50 transition"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
 
       {refundTarget && (
         <RefundModal

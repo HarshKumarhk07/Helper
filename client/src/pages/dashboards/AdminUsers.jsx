@@ -39,15 +39,30 @@ export default function AdminUsers() {
     isActive: true,
   });
 
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState(null);
+
   const load = () => {
     setLoading(true);
-    listUsers(roleFilter !== 'all' ? { role: roleFilter } : {})
-      .then(setUsers)
+    const query = {
+      ...(roleFilter !== 'all' ? { role: roleFilter } : {}),
+      page,
+      limit: 10,
+    };
+    listUsers(query)
+      .then((res) => {
+        setUsers(res.users || []);
+        setPagination(res.pagination || null);
+      })
       .catch(() => toast.error('Failed to load users'))
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { load(); }, [roleFilter]);
+  useEffect(() => {
+    setPage(1);
+  }, [roleFilter]);
+
+  useEffect(() => { load(); }, [roleFilter, page]);
 
   const openEditor = (user) => {
     setEditingUser(user);
@@ -171,7 +186,7 @@ export default function AdminUsers() {
       </div>
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 text-ink">
         <div className="flex gap-2">
-          {['all', 'user', 'worker', 'manager'].map(role => (
+          {['all', 'user', 'worker'].map(role => (
             <button
               key={role}
               onClick={() => setRoleFilter(role)}
@@ -228,7 +243,6 @@ export default function AdminUsers() {
               </select>
               <select className="p-3 border rounded-xl bg-white text-ink border-ink/20 focus:outline-none focus:border-ink:border-paper/60" value={newUser.role} onChange={(e) => setNewUser({...newUser, role: e.target.value})}>
                 <option value="worker">Worker</option>
-                <option value="manager">Manager</option>
                 <option value="admin">Admin</option>
               </select>
             </div>
@@ -273,7 +287,7 @@ export default function AdminUsers() {
                   <td className="p-4 text-xs leading-6 text-ink">
                     <div>Aadhaar: {u.aadhaarNumber || 'Not provided'}</div>
                     <div>PAN: {u.panNumber || 'Not provided'}</div>
-                    <div className="uppercase tracking-widest">{u.role === 'worker' || u.role === 'manager' ? 'KYC review enabled' : 'No KYC required'}</div>
+                    <div className="uppercase tracking-widest">{u.role === 'worker' ? 'KYC review enabled' : 'No KYC required'}</div>
                   </td>
                   <td className="p-4">
                     {u.isActive ? (
@@ -313,6 +327,30 @@ export default function AdminUsers() {
         </table>
       </div>
 
+      {pagination && pagination.totalPages > 1 && (
+        <div className="mt-6 flex items-center justify-between border-t border-ink/10 pt-4 text-ink">
+          <div className="text-xs text-ink/60">
+            Showing page {pagination.page} of {pagination.totalPages} ({pagination.totalRecords} total records)
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={!pagination.hasPreviousPage}
+              className="rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-medium hover:bg-sand/30 disabled:opacity-50 transition"
+            >
+              Previous
+            </button>
+            <button
+              onClick={() => setPage(p => Math.min(pagination.totalPages, p + 1))}
+              disabled={!pagination.hasNextPage}
+              className="rounded-lg border border-ink/10 px-3 py-1.5 text-xs font-medium hover:bg-sand/30 disabled:opacity-50 transition"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
+
       {editingUser && (
         <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-ink/70 px-4 py-8 backdrop-blur-sm">
           <div className="card-rounded w-full max-w-3xl border border-paper/10 bg-paper p-6 text-ink shadow-[0_30px_90px_rgba(0,0,0,0.35)] max-h-[calc(100vh-4rem)] overflow-y-auto">
@@ -320,7 +358,7 @@ export default function AdminUsers() {
               <div>
                 <div className="text-xs uppercase tracking-widest text-ink">Edit user</div>
                 <h3 className="heading-display mt-2 text-2xl text-ink">{editingUser.name}</h3>
-                <p className="mt-1 text-sm text-ink">Update worker, user, or manager details and KYC information.</p>
+                <p className="mt-1 text-sm text-ink">Update worker or user details and KYC information.</p>
               </div>
               <button onClick={closeEditor} className="pill-btn text-xs">Close</button>
             </div>
@@ -362,7 +400,6 @@ export default function AdminUsers() {
               </select>
               <select className="p-3 border rounded-xl bg-transparent border-ink/20 text-ink" value={editForm.role} onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}>
                 <option value="worker">Worker</option>
-                <option value="manager">Manager</option>
                 <option value="user">User</option>
                 <option value="admin">Admin</option>
               </select>

@@ -9,6 +9,7 @@ const productSchema = new mongoose.Schema(
     stock: { type: Number, required: true, min: 0, default: 0 },
     image: { type: String, default: '' },
     category: { type: String, required: true, index: true },
+    brand: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null, index: true },
     isFeatured: { type: Boolean, default: false, index: true },
     isActive: { type: Boolean, default: true },
   },

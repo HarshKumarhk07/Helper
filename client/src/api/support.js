@@ -7,7 +7,7 @@ export const listMyTickets = (params = {}) =>
   api.get('/support/mine', { params }).then((r) => r.data.tickets);
 
 export const listAllTickets = (params = {}) =>
-  api.get('/support', { params }).then((r) => r.data.tickets);
+  api.get('/support', { params }).then((r) => r.data);
 
 export const getTicket = (id) =>
   api.get(`/support/${id}`).then((r) => r.data.ticket);

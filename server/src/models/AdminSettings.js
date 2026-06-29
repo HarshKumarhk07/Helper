@@ -9,9 +9,13 @@ const adminSettingsSchema = new mongoose.Schema(
     // Finance
     platformCommissionRate: { type: Number, min: 0, max: 1, default: 0.2 },
     gstRate: { type: Number, min: 0, max: 1, default: 0.18 },
+    brandRegistrationCharge: { type: Number, default: 500 },
+    productListingCharge: { type: Number, default: 50 },
+    brandCommissionRate: { type: Number, min: 0, max: 1, default: 0.15 },
+    featuredWorkerFee: { type: Number, default: 999 },
 
     // Branding / contact
-    platformName: { type: String, default: 'UrbanEase', maxlength: 80 },
+    platformName: { type: String, default: 'Helper', maxlength: 80 },
     supportEmail: { type: String, default: '', maxlength: 120 },
     supportPhone: { type: String, default: '', maxlength: 30 },
     supportHoursLabel: { type: String, default: 'Mon–Sat, 9am–9pm IST', maxlength: 80 },

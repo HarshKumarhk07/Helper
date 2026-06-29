@@ -15,6 +15,6 @@ router.use(requireAuth);
 router.get('/me', requireRole(ROLES.WORKER), getMyAvailability);
 router.put('/me', requireRole(ROLES.WORKER), updateMyAvailability);
 router.post('/me/online', requireRole(ROLES.WORKER), setOnline);
-router.get('/', requireRole(ROLES.ADMIN, ROLES.MANAGER), adminListAvailability);
+router.get('/', requireRole(ROLES.ADMIN), adminListAvailability);
 
 export default router;

@@ -52,7 +52,7 @@ const migrateOne = async (refValue, contextLabel) => {
   }
   try {
     const result = await cloudinary.uploader.upload(filePath, {
-      folder: 'urbanease',
+      folder: 'helper',
       transformation: [{ width: 1200, height: 1200, crop: 'limit' }],
     });
     counters.uploaded += 1;

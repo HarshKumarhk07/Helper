@@ -25,7 +25,6 @@ import payoutRoutes from './routes/payout.routes.js';
 import availabilityRoutes from './routes/availability.routes.js';
 import slotsRoutes from './routes/slots.routes.js';
 import settingsRoutes from './routes/settings.routes.js';
-import managerRoutes from './routes/manager.routes.js';
 import supportRoutes from './routes/support.routes.js';
 import cartRoutes from './routes/cart.routes.js';
 import walletRoutes from './routes/wallet.routes.js';
@@ -114,7 +113,7 @@ app.get('/', (_req, res) => {
 });
 
 app.get('/api/health', (_req, res) =>
-  res.json({ status: 'ok', service: 'urbanease', time: new Date().toISOString() })
+  res.json({ status: 'ok', service: 'helper', time: new Date().toISOString() })
 );
 
 // Login gets the strict per-route limiter; the rest of /api/auth keeps the
@@ -142,7 +141,6 @@ app.use('/api/payouts', payoutRoutes);
 app.use('/api/availability', availabilityRoutes);
 app.use('/api/slots', slotsRoutes);
 app.use('/api/settings', settingsRoutes);
-app.use('/api/manager', managerRoutes);
 app.use('/api/support', supportRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/wallet', walletRoutes);

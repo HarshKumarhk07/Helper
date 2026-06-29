@@ -5,7 +5,7 @@ export default function UserDashboard() {
   return (
     <DashboardShell
       eyebrow="(My account)"
-      title="YOUR URBANEASE."
+      title="YOUR HELPER."
     >
       <div className="flex flex-wrap gap-3">
         <PillButton variant="solid" to="/me/bookings">
