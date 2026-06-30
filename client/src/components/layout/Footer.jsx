@@ -25,8 +25,7 @@ export default function Footer() {
 
         <div className="col-span-1 md:col-span-1 pr-4">
           <Link to="/" className="flex items-center gap-2 mb-6 hover:opacity-70 transition">
-            <div className="h-8 w-8 rounded-full bg-ink text-paper flex items-center justify-center font-serif text-lg">H</div>
-            <div className="text-sm font-semibold tracking-[0.2em] uppercase">HELPER</div>
+            <img src="/HELPER LOGO 02.png" alt="Helper" className="h-9 w-auto object-contain max-w-[120px]" />
           </Link>
           <p className="max-w-xs text-sm leading-relaxed text-ink/60 font-light">
             Premium service, commerce, and workforce operations for modern homes.

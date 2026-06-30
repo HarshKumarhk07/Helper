@@ -25,10 +25,12 @@ export const listProducts = asyncHandler(async (req, res) => {
     if (!decodedUser) {
       throw new ApiError(401, 'Authentication required to view your inventory');
     }
+    // Brand sees ALL their own products (including inactive), no isActive filter
     filter = { brand: decodedUser._id };
   } else if (brand) {
     filter.brand = brand;
   }
+
 
   if (category) filter.category = category;
   if (search || q) filter.name = { $regex: search || q, $options: 'i' };

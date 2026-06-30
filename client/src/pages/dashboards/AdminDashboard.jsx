@@ -403,9 +403,6 @@ export default function AdminDashboard() {
           <PillButton variant="solid" to="/admin/products">
             Inventory control →
           </PillButton>
-          <PillButton variant="solid" to="/admin/product-categories">
-            Shop the Collection →
-          </PillButton>
         </AdminSection>
 
         <AdminSection title="Finance">

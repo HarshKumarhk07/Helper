@@ -31,29 +31,31 @@ export default function BrandDashboard() {
     // Fetch Brand metrics & analytics
     const fetchData = async () => {
       try {
-        const [prodRes, orderRes, earningRes] = await Promise.all([
-          api.get('/products?brand=my'),
-          api.get('/orders'), // Admin/seller orders endpoint (we can filter on the client or update backend)
-          api.get('/payouts/earnings'), // Fetch earnings list
-        ]);
-
+        // Fetch products with brand=my (bypasses isActive=true so brand sees ALL their products)
+        const prodRes = await api.get('/products?brand=my&limit=100');
         const products = prodRes.data.products || [];
         const lowStock = products.filter(p => p.stock <= 5).length;
-        
-        // Filter earnings for this brand user
-        const brandEarnings = (earningRes.data.earnings || []).filter(
-          e => String(e.worker?._id || e.worker) === String(user._id)
-        );
-        const totalEarningsSum = brandEarnings.reduce((sum, e) => sum + e.netAmount, 0);
+
+        // Fetch brand-specific earnings
+        let totalEarningsSum = 0;
+        let brandEarnings = [];
+        try {
+          const earningRes = await api.get('/payouts/earnings');
+          brandEarnings = (earningRes.data.earnings || []).filter(
+            e => String(e.worker?._id || e.worker) === String(user._id)
+          );
+          totalEarningsSum = brandEarnings.reduce((sum, e) => sum + (e.netAmount || 0), 0);
+        } catch {
+          // earnings endpoint may not be accessible for brand — ignore
+        }
 
         setStats({
           totalProducts: products.length,
-          totalOrders: 0, // Order metrics calculated below
+          totalOrders: 0,
           totalEarnings: Math.round(totalEarningsSum * 100) / 100,
           lowStockCount: lowStock,
         });
 
-        // Set recent earnings records
         setRecentEarnings(brandEarnings.slice(0, 5));
       } catch (err) {
         console.error('Failed to load brand dashboard statistics', err);

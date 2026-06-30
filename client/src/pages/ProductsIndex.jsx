@@ -2,18 +2,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { listProducts } from '../api/products.js';
+import { listProductCategories } from '../api/productCategories.js';
 import ProductCard from '../components/ProductCard.jsx';
 import SkeletonCard from '../components/ui/SkeletonCard.jsx';
 import FadeUp from '../components/ui/FadeUp.jsx';
 import { Search } from 'lucide-react';
-
-const PRODUCT_CATEGORIES = [
-  'Cleaning Products',
-  'Beauty Products',
-  'Home Appliances',
-  'Home Essentials',
-  'Repair Accessories'
-];
 
 export default function ProductsIndex() {
   const [params, setParams] = useSearchParams();
@@ -23,6 +16,14 @@ export default function ProductsIndex() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState(q);
+  const [categories, setCategories] = useState([]);
+
+  // Load brand categories from API (admin-managed)
+  useEffect(() => {
+    listProductCategories()
+      .then((cats) => setCategories((cats || []).filter((c) => c.isActive !== false)))
+      .catch(() => {/* silent — fallback to no filters */});
+  }, []);
 
   useEffect(() => {
     setLoading(true);
@@ -91,17 +92,17 @@ export default function ProductsIndex() {
                 >
                   All Products
                 </button>
-                {PRODUCT_CATEGORIES.map((cat) => (
+                {categories.map((cat) => (
                   <button
-                    key={cat}
-                    onClick={() => onCategoryChange(cat)}
+                    key={cat._id}
+                    onClick={() => onCategoryChange(cat.name)}
                     className={`snap-start rounded-full px-4 py-2 text-[11px] font-semibold tracking-wide transition-all duration-300 whitespace-nowrap border ${
-                      category === cat
+                      category === cat.name
                         ? 'bg-ink text-paper border-ink shadow-md scale-105'
                         : 'bg-paper/50 text-ink/60 border-ink/10 hover:bg-paper hover:text-ink hover:border-ink/30 hover:shadow-sm'
                     }`}
                   >
-                    {cat}
+                    {cat.name}
                   </button>
                 ))}
               </div>
