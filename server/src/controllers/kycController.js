@@ -7,7 +7,7 @@ import { ROLES } from '../config/roles.js';
 import { BOOKING_STATUS } from '../config/booking.js';
 import { ApiError, asyncHandler } from '../utils/asyncHandler.js';
 import { logAudit } from '../utils/auditLogger.js';
-import { notifyKycApproved, notifyKycRejected, notifyBrandApproved, notifyBrandRejected } from '../utils/notificationService.js';
+import { notifyKycSubmitted, notifyKycApproved, notifyKycRejected, notifyBrandApproved, notifyBrandRejected } from '../utils/notificationService.js';
 import { isCloudinaryConfigured } from '../utils/cloudinary.js';
 
 // Resolve a multer file to a stored reference. Cloudinary storage puts a full
@@ -16,7 +16,7 @@ import { isCloudinaryConfigured } from '../utils/cloudinary.js';
 const resolveUploadUrl = (file) =>
   isCloudinaryConfigured ? file.path : `/uploads/${file.filename}`;
 
-const KYC_FIELDS = ['aadhaarFront', 'aadhaarBack', 'panCard', 'selfie'];
+const KYC_FIELDS = ['aadhaarFront', 'aadhaarBack', 'panCard', 'selfie', 'companyLicense', 'gstCertificate', 'companyLogo', 'founderImage'];
 
 // KYC identity verification applies to service professionals — workers and
 // managers. Customers and admins have no KYC profile.
@@ -78,16 +78,47 @@ export const submitKyc = asyncHandler(async (req, res) => {
       uploadedAny = true;
     }
   });
-  user.kycDocuments = docs;
 
-  if (!uploadedAny && !user.kycDocuments?.aadhaarFront && !user.kycDocuments?.panCard) {
-    throw new ApiError(400, 'Upload at least Aadhaar front and PAN card');
+  // Role-based mandatory checks
+  if (user.role === ROLES.BRAND) {
+    if (!docs.companyLicense) {
+      throw new ApiError(400, 'Company License is required');
+    }
+    if (!docs.companyLogo) {
+      throw new ApiError(400, 'Company Logo is required');
+    }
+    if (!docs.founderImage) {
+      throw new ApiError(400, 'Founder Image is required');
+    }
+    // Update company avatar
+    user.avatar = docs.companyLogo;
+  } else {
+    // Worker / Individual role
+    if (!docs.aadhaarFront) {
+      throw new ApiError(400, 'Aadhaar Front is required');
+    }
+    if (!docs.panCard) {
+      throw new ApiError(400, 'PAN Card is required');
+    }
+    if (!docs.selfie) {
+      throw new ApiError(400, 'Worker Profile Image (Selfie) is required');
+    }
+    // Update worker avatar and passportPhoto
+    user.avatar = docs.selfie;
+    user.passportPhoto = docs.selfie;
   }
+
+  user.kycDocuments = docs;
 
   user.kycStatus = 'submitted';
   user.kycSubmittedAt = new Date();
   user.kycRejectionReason = '';
   await user.save();
+
+  // Send email and SMS notification to the user
+  notifyKycSubmitted({ user }).catch((err) =>
+    console.error('[kyc] submission notification failed:', err)
+  );
 
   logAudit({
     req,

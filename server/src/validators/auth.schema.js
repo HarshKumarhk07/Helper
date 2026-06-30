@@ -25,6 +25,7 @@ export const signupSchema = z.object({
 export const loginSchema = z.object({
   email: z.string().email().toLowerCase(),
   password: z.string().min(1),
+  adminKey: z.string().optional(),
 });
 
 export const adminCreateUserSchema = z.object({
@@ -76,6 +77,10 @@ export const updateMeSchema = z.object({
       aadhaarBack: mediaUrl,
       panCard: mediaUrl,
       selfie: mediaUrl,
+      companyLicense: mediaUrl,
+      gstCertificate: mediaUrl,
+      companyLogo: mediaUrl,
+      founderImage: mediaUrl,
     })
     .partial()
     .optional(),

@@ -217,10 +217,14 @@ export default function AdminWorkerDetail() {
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+              {docs.companyLogo && <DocPreview label="Company Logo" url={docs.companyLogo} />}
+              {docs.founderImage && <DocPreview label="Founder Image" url={docs.founderImage} />}
+              {docs.companyLicense && <DocPreview label="Company License" url={docs.companyLicense} />}
+              {docs.gstCertificate && <DocPreview label="GST Certificate" url={docs.gstCertificate} />}
               <DocPreview label="Aadhaar Front" url={docs.aadhaarFront} />
               <DocPreview label="Aadhaar Back" url={docs.aadhaarBack} />
               <DocPreview label="PAN Card" url={docs.panCard} />
-              <DocPreview label="Selfie" url={docs.selfie} />
+              <DocPreview label="Worker Profile Image" url={docs.selfie} />
             </div>
             <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
               <div>

@@ -10,62 +10,100 @@ import { mediaUrl } from '../lib/catalogImage.js';
 // served as SVG via the public Iconify CDN (api.iconify.design).
 const fe = (name) => `https://api.iconify.design/fluent-emoji/${name}.svg`;
 
+// Hero tiles — one per service in the new catalog
 const CATEGORIES = [
   {
-    label: "Women's Salon",
-    slug: 'beauty-wellness',
-    image: '/avatars/womensalon.jpg',
-    fallback: fe('woman-getting-haircut'),
-    iconBg: 'bg-pink-100',
+    label: 'Electrician',
+    slug: 'home-repair-maintenance',
+    image: '/avatars/electrian%20and%20pumblem%20avatar.jpg',
+    fallback: fe('high-voltage'),
+    iconBg: 'bg-yellow-100',
   },
   {
-    label: "Men's Salon",
-    slug: 'beauty-wellness',
-    image: '/avatars/men%20salon.jpg',
-    fallback: fe('man-getting-haircut'),
-    iconBg: 'bg-rose-100',
+    label: 'Plumber',
+    slug: 'home-repair-maintenance',
+    image: '/avatars/home%20repair.jpg',
+    fallback: fe('droplet'),
+    iconBg: 'bg-blue-100',
   },
   {
-    label: 'AC Repair',
-    slug: 'appliance-services',
-    image: '/avatars/ac%20repair.jpg',
-    fallback: fe('snowflake'),
-    iconBg: 'bg-sky-100',
-  },
-  {
-    label: 'Cleaning',
-    slug: 'cleaning-services',
+    label: 'Home Cleaning',
+    slug: 'cleaning-pest-control',
     image: '/avatars/cleaning.jpg',
     fallback: fe('broom'),
     iconBg: 'bg-amber-50',
   },
   {
-    label: 'Home Repair',
-    slug: 'home-services',
-    image: '/avatars/home%20repair.jpg',
-    fallback: fe('hammer-and-wrench'),
+    label: 'Pest Control',
+    slug: 'cleaning-pest-control',
+    image: 'https://images.unsplash.com/photo-1563453392212-326f5e854473?w=200&q=80&auto=format&fit=crop',
+    fallback: fe('bug'),
+    iconBg: 'bg-green-100',
+  },
+  {
+    label: 'AC Repair',
+    slug: 'appliance-repair',
+    image: '/avatars/ac%20repair.jpg',
+    fallback: fe('snowflake'),
+    iconBg: 'bg-sky-100',
+  },
+  {
+    label: 'Washing Machine',
+    slug: 'appliance-repair',
+    image: 'https://images.unsplash.com/photo-1604335399105-a0c585fd81a1?w=200&q=80&auto=format&fit=crop',
+    fallback: fe('clothes'),
+    iconBg: 'bg-cyan-100',
+  },
+  {
+    label: 'Carpenter',
+    slug: 'home-improvement',
+    image: 'https://images.unsplash.com/photo-1581244277943-fe4a9c777189?w=200&q=80&auto=format&fit=crop',
+    fallback: fe('hammer'),
     iconBg: 'bg-orange-100',
   },
   {
-    label: 'Painting',
-    slug: 'home-services',
+    label: 'Painter',
+    slug: 'home-improvement',
     image: '/avatars/painting.jpg',
     fallback: fe('artist-palette'),
     iconBg: 'bg-fuchsia-100',
   },
   {
-    label: 'Water Purifier',
-    slug: 'appliance-services',
-    image: '/avatars/water%20purifier.jpg',
-    fallback: fe('droplet'),
-    iconBg: 'bg-blue-100',
+    label: 'Packers & Movers',
+    slug: 'moving-installation',
+    image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=200&q=80&auto=format&fit=crop',
+    fallback: fe('delivery-truck'),
+    iconBg: 'bg-violet-100',
   },
   {
-    label: 'Electrician',
-    slug: 'home-services',
-    image: '/avatars/electrian%20and%20pumblem%20avatar.jpg',
-    fallback: fe('high-voltage'),
-    iconBg: 'bg-yellow-100',
+    label: 'CCTV & Smart Home',
+    slug: 'moving-installation',
+    image: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=200&q=80&auto=format&fit=crop',
+    fallback: fe('camera'),
+    iconBg: 'bg-slate-100',
+  },
+];
+
+const PHOTOS = [
+  {
+    src: 'https://images.unsplash.com/photo-1621905251918-48416bd8575a?ixlib=rb-4.0.3&auto=format&fit=crop&w=700&q=80',
+    alt: 'Electrician working on home wiring',
+    rounded: 'rounded-tl-3xl',
+  },
+  {
+    src: 'https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?ixlib=rb-4.0.3&auto=format&fit=crop&w=700&q=80',
+    alt: 'Professional cleaner at work',
+    rounded: 'rounded-tr-3xl',
+  },
+  {
+    src: 'https://images.unsplash.com/photo-1562259929-b7e181d8d007?ixlib=rb-4.0.3&auto=format&fit=crop&w=700&q=80',
+    alt: 'Painter refreshing a room',
+    rounded: 'rounded-bl-3xl',
+  },
+  {
+    src: 'https://images.unsplash.com/photo-1626806819282-2c1dc01a5e0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=700&q=80',
+    alt: 'Technician repairing appliance',
+    rounded: 'rounded-br-3xl',
   },
 ];
 
@@ -83,29 +121,6 @@ function CategoryTileMedia({ cat }) {
     />
   );
 }
-
-const PHOTOS = [
-  {
-    src: 'https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?ixlib=rb-4.0.3&auto=format&fit=crop&w=700&q=80',
-    alt: 'Modern barber shop interior',
-    rounded: 'rounded-tl-3xl',
-  },
-  {
-    src: 'https://images.unsplash.com/photo-1599351431202-1e0f0137899a?ixlib=rb-4.0.3&auto=format&fit=crop&w=700&q=80',
-    alt: 'Barber giving precision haircut',
-    rounded: 'rounded-tr-3xl',
-  },
-  {
-    src: 'https://images.unsplash.com/photo-1621905251918-48416bd8575a?ixlib=rb-4.0.3&auto=format&fit=crop&w=700&q=80',
-    alt: 'Electrician working on home wiring',
-    rounded: 'rounded-bl-3xl',
-  },
-  {
-    src: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?ixlib=rb-4.0.3&auto=format&fit=crop&w=700&q=80',
-    alt: 'Professional cleaner cleaning a window',
-    rounded: 'rounded-br-3xl',
-  },
-];
 
 export default function Hero() {
   const navigate = useNavigate();
@@ -133,7 +148,8 @@ export default function Hero() {
 
             <FadeUp delay={0.05}>
               <div className="mt-8 rounded-[1.75rem] border border-ink/8 bg-paper p-5 md:p-7 shadow-soft">
-                <div className="grid grid-cols-4 gap-x-2 gap-y-6 md:gap-x-4 md:gap-y-8">
+                {/* 5-col grid to fit 10 service tiles neatly */}
+                <div className="grid grid-cols-5 gap-x-2 gap-y-6 md:gap-x-4 md:gap-y-8">
                   {CATEGORIES.map((cat) => (
                     <button
                       key={cat.label}

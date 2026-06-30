@@ -26,8 +26,10 @@ export function AuthProvider({ children }) {
     localStorage.removeItem(REFRESH_KEY);
   };
 
-  const login = useCallback(async (email, password) => {
-    const { data } = await api.post('/auth/login', { email, password });
+  const login = useCallback(async (email, password, adminKey) => {
+    const body = { email, password };
+    if (adminKey) body.adminKey = adminKey;
+    const { data } = await api.post('/auth/login', body);
     persistTokens(data.accessToken, data.refreshToken);
     setUser(data.user);
     return data.user;

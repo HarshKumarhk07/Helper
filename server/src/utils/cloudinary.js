@@ -79,11 +79,23 @@ const cloudStorage = isCloudinaryConfigured
 // request. The memory storage here just exists to satisfy multer's contract.
 const storage = cloudStorage || multer.memoryStorage();
 
-export const upload = multer({ storage, limits: { fileSize: 8 * 1024 * 1024 } });
+const imageFileFilter = (req, file, cb) => {
+  if (!file.mimetype.startsWith('image/')) {
+    return cb(new Error('Upload only image formats (PNG, JPG, JPEG, WEBP) - videos/other formats are not allowed.'), false);
+  }
+  cb(null, true);
+};
+
+export const upload = multer({
+  storage,
+  limits: { fileSize: 8 * 1024 * 1024 },
+  fileFilter: imageFileFilter,
+});
 
 export const uploadKyc = multer({
   storage,
   limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: imageFileFilter,
 });
 
 export { cloudinary };

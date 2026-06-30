@@ -32,7 +32,7 @@ export default function ProductsIndex() {
     }
     if (q) filters.q = q;
     listProducts(filters)
-      .then(setProducts)
+      .then((res) => setProducts(res.products || res))
       .catch(() => toast.error('Failed to load products'))
       .finally(() => setLoading(false));
   }, [category, q]);

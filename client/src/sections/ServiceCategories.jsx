@@ -1,81 +1,50 @@
 import { Link } from 'react-router-dom';
 import {
-  Snowflake,
-  Sparkles,
-  Flower2,
-  PlugZap,
-  Droplets,
   Wrench,
-  Scissors,
+  Sparkles,
+  Zap,
   PaintBucket,
+  Truck,
   ArrowRight,
-  Leaf,
 } from 'lucide-react';
 import FadeUp from '../components/ui/FadeUp.jsx';
 
+// Static tiles for the "Browse by category" section — 5 new categories
 const CATEGORIES = [
   {
-    label: 'AC Repair',
-    slug: 'appliance-services',
-    icon: Snowflake,
-    iconBg: 'bg-sky-100',
-    iconColor: 'text-sky-600',
-  },
-  {
-    label: 'Cleaning',
-    slug: 'cleaning-services',
-    icon: Sparkles,
-    iconBg: 'bg-emerald-100',
-    iconColor: 'text-emerald-600',
-  },
-  {
-    label: 'Beauty',
-    slug: 'beauty-wellness',
-    icon: Flower2,
-    iconBg: 'bg-pink-100',
-    iconColor: 'text-pink-600',
-  },
-  {
-    label: 'Electrician',
-    slug: 'home-services',
-    icon: PlugZap,
-    iconBg: 'bg-amber-100',
-    iconColor: 'text-amber-600',
-  },
-  {
-    label: 'Plumbing',
-    slug: 'home-services',
-    icon: Droplets,
-    iconBg: 'bg-blue-100',
-    iconColor: 'text-blue-600',
-  },
-  {
-    label: 'Home Repair',
-    slug: 'home-services',
+    label: 'Home Repair & Maintenance',
+    slug: 'home-repair-maintenance',
     icon: Wrench,
     iconBg: 'bg-orange-100',
     iconColor: 'text-orange-600',
   },
   {
-    label: 'Salon',
-    slug: 'beauty-wellness',
-    icon: Scissors,
-    iconBg: 'bg-rose-100',
-    iconColor: 'text-rose-600',
+    label: 'Cleaning & Pest Control',
+    slug: 'cleaning-pest-control',
+    icon: Sparkles,
+    iconBg: 'bg-emerald-100',
+    iconColor: 'text-emerald-600',
   },
   {
-    label: 'Painting',
-    slug: 'home-services',
+    label: 'Appliance Repair',
+    slug: 'appliance-repair',
+    icon: Zap,
+    iconBg: 'bg-sky-100',
+    iconColor: 'text-sky-600',
+  },
+  {
+    label: 'Home Improvement',
+    slug: 'home-improvement',
     icon: PaintBucket,
     iconBg: 'bg-violet-100',
     iconColor: 'text-violet-600',
   },
   {
-    label: 'Gardening',
-    slug: 'gardening-landscaping',
-    icon: Leaf,
-    iconBg: 'bg-green-100',
-    iconColor: 'text-green-600',
+    label: 'Moving & Installation',
+    slug: 'moving-installation',
+    icon: Truck,
+    iconBg: 'bg-amber-100',
+    iconColor: 'text-amber-600',
   },
 ];
 
@@ -109,11 +78,11 @@ export default function ServiceCategories() {
           </div>
         </FadeUp>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 md:gap-5">
           {CATEGORIES.map((cat, i) => {
             const Icon = cat.icon;
             return (
-              <FadeUp key={cat.label} delay={i * 0.04}>
+              <FadeUp key={cat.slug} delay={i * 0.06}>
                 <Link
                   to={`/services?cat=${cat.slug}`}
                   className="group block rounded-2xl border border-ink/8 bg-paper p-5 md:p-6 shadow-soft hover:shadow-card hover:border-ink/15 hover:-translate-y-1 transition-all duration-300"

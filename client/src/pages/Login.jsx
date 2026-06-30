@@ -6,6 +6,7 @@ import {
   EyeOff,
   Mail,
   Lock,
+  ShieldCheck,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -25,22 +26,31 @@ const friendlyError = (err) => {
     err?.response?.data?.message ||
     err?.message ||
     '';
+  if (status === 401 && /admin security key/i.test(msg)) return 'Invalid admin security key.';
   if (status === 401) return 'Email or password is incorrect.';
   if (status === 403 && /suspend/i.test(msg)) return msg;
   if (/network/i.test(msg)) return 'Network issue — check your connection.';
   return msg || 'Login failed. Please try again.';
 };
 
+// Detect if the current email looks like it belongs to an admin
+const isAdminEmail = (email) => email.trim().toLowerCase() === 'admin@helper.com';
+
 export default function Login() {
   const { login, isAuthenticated, bootstrapping } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [showPassword, setShowPassword] = useState(false);
+  const [showAdminKey, setShowAdminKey] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [form, setForm] = useState({ email: '', password: '' });
+  const [form, setForm] = useState({ email: '', password: '', adminKey: '' });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [suspensionNotice, setSuspensionNotice] = useState('');
+
+  const handleEmailChange = (v) => {
+    setForm((f) => ({ ...f, email: v }));
+  };
 
   if (bootstrapping) return null;
   if (isAuthenticated) return <Navigate to="/dashboard" replace />;
@@ -51,7 +61,8 @@ export default function Login() {
     setSuspensionNotice('');
     setSubmitting(true);
     try {
-      await login(form.email.trim(), form.password);
+      const adminKey = isAdminEmail(form.email) ? form.adminKey : undefined;
+      await login(form.email.trim(), form.password, adminKey);
       toast.success('Welcome back');
       navigate(location.state?.from || '/dashboard', { replace: true });
     } catch (err) {
@@ -66,6 +77,7 @@ export default function Login() {
       setSubmitting(false);
     }
   };
+
 
   return (
     <>
@@ -169,7 +181,7 @@ export default function Login() {
                       label="Email"
                       type="email"
                       value={form.email}
-                      onChange={(v) => setForm((f) => ({ ...f, email: v }))}
+                      onChange={handleEmailChange}
                       placeholder="you@example.com"
                       autoComplete="email"
                       required
@@ -196,6 +208,47 @@ export default function Login() {
                         </button>
                       }
                     />
+
+                    {/* Admin security key — shown only when admin email is detected */}
+                    <AnimatePresence>
+                      {isAdminEmail(form.email) && (
+                        <motion.div
+                          key="admin-key"
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.25 }}
+                          className="overflow-hidden"
+                        >
+                          <div className="rounded-xl border border-amber-300/60 bg-amber-50/60 p-3 mb-1">
+                            <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-amber-700 mb-2">
+                              <ShieldCheck size={13} />
+                              Admin Access Detected
+                            </p>
+                            <Field
+                              label="Security Key"
+                              type={showAdminKey ? 'text' : 'password'}
+                              value={form.adminKey}
+                              onChange={(v) => setForm((f) => ({ ...f, adminKey: v }))}
+                              placeholder="Enter admin security key"
+                              autoComplete="off"
+                              required={isAdminEmail(form.email)}
+                              leadingIcon={<ShieldCheck size={16} />}
+                              trailing={
+                                <button
+                                  type="button"
+                                  onClick={() => setShowAdminKey((v) => !v)}
+                                  className="text-ink/45 transition-colors hover:text-ink"
+                                  tabIndex={-1}
+                                >
+                                  {showAdminKey ? <EyeOff size={16} /> : <Eye size={16} />}
+                                </button>
+                              }
+                            />
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
 
                     <div className="flex items-center justify-between pt-1">
                       <label className="group inline-flex cursor-pointer select-none items-center gap-2">

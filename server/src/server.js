@@ -24,7 +24,9 @@ const start = async () => {
   }
 
   server.listen(PORT, () => {
-    console.log(`[helper] api ready on http://localhost:${PORT}`);
+    console.log(`[helper] api ready on port ${PORT}`);
+    console.log(`[helper] environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`[helper] client URL: ${process.env.CLIENT_URL || 'http://localhost:5173'}`);
   });
 };
 

@@ -85,7 +85,7 @@ export default function Navbar() {
     debounceTimer.current = setTimeout(async () => {
       try {
         const query = searchValue.trim();
-        const [products, services] = await Promise.all([
+        const [prodRes, services] = await Promise.all([
           listProducts({ q: query, limit: 5 }).catch(err => {
             console.error('Products fetch error:', err);
             return [];
@@ -95,6 +95,8 @@ export default function Navbar() {
             return [];
           }),
         ]);
+
+        const products = prodRes?.products || prodRes || [];
 
         console.log('Autocomplete results:', { products, services, query });
 

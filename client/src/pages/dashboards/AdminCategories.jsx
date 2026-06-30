@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
-import { Plus, Save, Trash2, Folder } from 'lucide-react';
+import { Plus, Save, Trash2, Folder, Search } from 'lucide-react';
 import DashboardShell from './DashboardShell.jsx';
 import FadeUp from '../../components/ui/FadeUp.jsx';
 import {
@@ -43,6 +43,10 @@ export default function AdminCategories() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
 
+  // Search & Filter state
+  const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState('sortOrder');
+
   const load = () => {
     setLoading(true);
     listCategories()
@@ -52,6 +56,36 @@ export default function AdminCategories() {
       .catch(() => toast.error('Failed to load'))
       .finally(() => setLoading(false));
   };
+
+  const filteredCategories = useMemo(() => {
+    let result = [...categories];
+
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      result = result.filter(
+        (c) =>
+          (c.name || '').toLowerCase().includes(q) ||
+          (c.slug || '').toLowerCase().includes(q) ||
+          (c.description || '').toLowerCase().includes(q)
+      );
+    }
+
+    result.sort((a, b) => {
+      if (sortBy === 'name') {
+        return (a.name || '').localeCompare(b.name || '');
+      } else if (sortBy === 'status') {
+        return (b.isActive ? 1 : 0) - (a.isActive ? 1 : 0);
+      } else {
+        const orderA = a.sortOrder !== undefined ? Number(a.sortOrder) : 0;
+        const orderB = b.sortOrder !== undefined ? Number(b.sortOrder) : 0;
+        const diff = orderA - orderB;
+        if (diff !== 0) return diff;
+        return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+      }
+    });
+
+    return result;
+  }, [categories, search, sortBy]);
 
   useEffect(load, []);
 
@@ -123,10 +157,10 @@ export default function AdminCategories() {
   };
 
   return (
-    <DashboardShell eyebrow="Catalog" title="Service categories">
+    <DashboardShell eyebrow="Catalog" title="Worker Categories">
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div className="text-sm text-ink/60">
-          {categories.length} categor{categories.length === 1 ? 'y' : 'ies'}
+          {categories.length} worker categor{categories.length === 1 ? 'y' : 'ies'} · used by service professionals
         </div>
         <button
           onClick={startNew}
@@ -136,6 +170,34 @@ export default function AdminCategories() {
           <Plus size={14} /> New category
         </button>
       </div>
+
+      {/* Search & Sort Panel */}
+      <FadeUp>
+        <div className="card-rounded mb-6 p-4 flex flex-wrap items-center gap-4 bg-white border border-ink/5">
+          <div className="relative flex-1 min-w-[240px]">
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-ink/40" />
+            <input
+              type="text"
+              placeholder="Search worker categories..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 rounded-xl border border-ink/15 bg-transparent text-sm focus:border-ink focus:outline-none"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs uppercase tracking-widest text-ink/50 font-bold">Sort by</span>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="rounded-xl border border-ink/15 bg-transparent p-2 text-xs font-semibold focus:border-ink focus:outline-none text-ink"
+            >
+              <option value="sortOrder">Sort Order</option>
+              <option value="name">Alphabetical</option>
+              <option value="status">Status</option>
+            </select>
+          </div>
+        </div>
+      </FadeUp>
 
       {editing && (
         <FadeUp>
@@ -310,14 +372,14 @@ export default function AdminCategories() {
                   Loading…
                 </td>
               </tr>
-            ) : categories.length === 0 ? (
+            ) : filteredCategories.length === 0 ? (
               <tr>
                 <td colSpan={5} className="p-6 text-center text-ink/60">
-                  No categories. Click "New category" to get started.
+                  No categories found. Click "New category" to get started.
                 </td>
               </tr>
             ) : (
-              categories.map((c) => {
+              filteredCategories.map((c) => {
                 return (
                   <tr
                     key={c._id}

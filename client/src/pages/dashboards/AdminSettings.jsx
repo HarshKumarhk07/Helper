@@ -32,6 +32,10 @@ export default function AdminSettings() {
           bookingLeadTimeMinutes: settings.bookingLeadTimeMinutes ?? 15,
           cancellationWindowMinutes: settings.cancellationWindowMinutes ?? 60,
           autoAssignDefault: !!settings.autoAssignDefault,
+          brandRegistrationCharge: settings.brandRegistrationCharge ?? 500,
+          productListingCharge: settings.productListingCharge ?? 50,
+          brandCommissionRate: Math.round((settings.brandCommissionRate || 0) * 1000) / 10,
+          featuredWorkerFee: settings.featuredWorkerFee ?? 999,
         });
       })
       .catch(() => toast.error('Failed to load settings'))
@@ -45,7 +49,11 @@ export default function AdminSettings() {
   const handleSave = async () => {
     if (!isAdmin) return;
     if (form.platformCommissionRate < 0 || form.platformCommissionRate > 100) {
-      toast.error('Commission must be between 0 and 100%');
+      toast.error('Platform commission must be between 0 and 100%');
+      return;
+    }
+    if (form.brandCommissionRate < 0 || form.brandCommissionRate > 100) {
+      toast.error('Brand commission must be between 0 and 100%');
       return;
     }
     if (form.gstRate < 0 || form.gstRate > 100) {
@@ -57,7 +65,11 @@ export default function AdminSettings() {
       await updateSettings({
         ...form,
         platformCommissionRate: numberOrZero(form.platformCommissionRate) / 100,
+        brandCommissionRate: numberOrZero(form.brandCommissionRate) / 100,
         gstRate: numberOrZero(form.gstRate) / 100,
+        brandRegistrationCharge: numberOrZero(form.brandRegistrationCharge),
+        productListingCharge: numberOrZero(form.productListingCharge),
+        featuredWorkerFee: numberOrZero(form.featuredWorkerFee),
         bookingLeadTimeMinutes: numberOrZero(form.bookingLeadTimeMinutes),
         cancellationWindowMinutes: numberOrZero(form.cancellationWindowMinutes),
       });
@@ -110,6 +122,50 @@ export default function AdminSettings() {
                   value={form.gstNumber}
                   onChange={(v) => setField('gstNumber', v)}
                   disabled={!isAdmin}
+                />
+              </div>
+            </Card>
+          </FadeUp>
+
+          <FadeUp>
+            <Card title="Seller & Brand Fees">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <NumberField
+                  label="Brand commission (%)"
+                  value={form.brandCommissionRate}
+                  onChange={(v) => setField('brandCommissionRate', v)}
+                  step={0.5}
+                  min={0}
+                  max={100}
+                  disabled={!isAdmin}
+                  hint="Charged only on successful item sales in the brand storefront."
+                />
+                <NumberField
+                  label="Brand registration fee (₹)"
+                  value={form.brandRegistrationCharge}
+                  onChange={(v) => setField('brandRegistrationCharge', v)}
+                  step={50}
+                  min={0}
+                  disabled={!isAdmin}
+                  hint="One-time onboarding charge for brands."
+                />
+                <NumberField
+                  label="Product listing fee (₹)"
+                  value={form.productListingCharge}
+                  onChange={(v) => setField('productListingCharge', v)}
+                  step={5}
+                  min={0}
+                  disabled={!isAdmin}
+                  hint="Standard charge per listed product."
+                />
+                <NumberField
+                  label="Featured worker fee (₹)"
+                  value={form.featuredWorkerFee}
+                  onChange={(v) => setField('featuredWorkerFee', v)}
+                  step={100}
+                  min={0}
+                  disabled={!isAdmin}
+                  hint="Charged to feature workers/brands on the platform."
                 />
               </div>
             </Card>

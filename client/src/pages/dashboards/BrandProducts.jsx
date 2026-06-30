@@ -35,9 +35,10 @@ export default function BrandProducts() {
     Promise.all([
       listProducts({ brand: 'my' }),
     ])
-      .then(([allProducts]) => {
-        setProducts(allProducts);
-        setLowStockProducts(allProducts.filter(p => p.stock <= lowStockThreshold));
+      .then(([resProducts]) => {
+        const prodList = resProducts.products || resProducts;
+        setProducts(prodList);
+        setLowStockProducts(prodList.filter(p => p.stock <= lowStockThreshold));
       })
       .catch(() => toast.error('Failed to load catalog products'))
       .finally(() => setLoading(false));
@@ -283,7 +284,7 @@ export default function BrandProducts() {
                     >
                       <option value="">Select Category</option>
                       {categories.map((c) => (
-                        <option key={c} value={c}>{c}</option>
+                        <option key={c._id} value={c.name}>{c.name}</option>
                       ))}
                     </select>
                   </div>

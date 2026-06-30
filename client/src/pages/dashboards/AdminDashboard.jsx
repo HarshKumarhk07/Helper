@@ -395,7 +395,10 @@ export default function AdminDashboard() {
             Services | pricing →
           </PillButton>
           <PillButton variant="solid" to="/admin/categories">
-            Manage categories →
+            Worker Categories →
+          </PillButton>
+          <PillButton variant="solid" to="/admin/brand-categories">
+            Brand Categories →
           </PillButton>
           <PillButton variant="solid" to="/admin/products">
             Inventory control →

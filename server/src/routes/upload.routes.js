@@ -20,9 +20,8 @@ router.post('/', requireAuth, (req, res) => {
   upload.single('image')(req, res, (err) => {
     if (err) {
       console.error('[upload] error:', err.message);
-      return res.status(500).json({
-        error: 'Image upload failed',
-        details: process.env.NODE_ENV !== 'production' ? err.message : undefined,
+      return res.status(400).json({
+        error: err.message || 'Image upload failed',
       });
     }
     if (!req.file) {

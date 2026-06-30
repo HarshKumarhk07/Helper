@@ -28,19 +28,22 @@ const kycMultipart = (req, res, next) => {
     { name: 'aadhaarBack', maxCount: 1 },
     { name: 'panCard', maxCount: 1 },
     { name: 'selfie', maxCount: 1 },
+    { name: 'companyLicense', maxCount: 1 },
+    { name: 'gstCertificate', maxCount: 1 },
+    { name: 'companyLogo', maxCount: 1 },
+    { name: 'founderImage', maxCount: 1 },
   ])(req, res, (err) => {
     if (err) {
       return res.status(400).json({
-        error: 'KYC upload failed',
-        details: process.env.NODE_ENV !== 'production' ? err.message : undefined,
+        error: err.message || 'KYC upload failed',
       });
     }
     next();
   });
 };
 
-router.get('/me', requireRole(ROLES.WORKER), getMyKyc);
-router.post('/me', requireRole(ROLES.WORKER), kycMultipart, submitKyc);
+router.get('/me', requireRole(ROLES.WORKER, ROLES.BRAND), getMyKyc);
+router.post('/me', requireRole(ROLES.WORKER, ROLES.BRAND), kycMultipart, submitKyc);
 
 router.get('/submissions', requireRole(ROLES.ADMIN), listKycSubmissions);
 router.get('/submissions/:id', requireRole(ROLES.ADMIN), getKycSubmission);

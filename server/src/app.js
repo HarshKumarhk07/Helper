@@ -48,13 +48,46 @@ app.use(
     crossOriginResourcePolicy: { policy: 'cross-origin' },
   })
 );
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'https://urban-company-seven.vercel.app',
+  'https://helper-nine-nu.vercel.app',
+];
+
+export const corsOriginHandler = (origin, callback) => {
+  // Allow requests with no origin (like mobile apps, curl, postman, server-to-server)
+  if (!origin) {
+    return callback(null, true);
+  }
+
+  const normalizedOrigin = origin.replace(/\/$/, '');
+
+  // Check if it matches allowed origins list exactly
+  if (allowedOrigins.includes(normalizedOrigin)) {
+    return callback(null, true);
+  }
+
+  // Check if it is a Vercel deployment/preview subdomain (ends with .vercel.app)
+  if (normalizedOrigin.endsWith('.vercel.app')) {
+    return callback(null, true);
+  }
+
+  // Check if it matches CLIENT_URL from env
+  if (process.env.CLIENT_URL && normalizedOrigin === process.env.CLIENT_URL.replace(/\/$/, '')) {
+    return callback(null, true);
+  }
+
+  // Allow cors
+  callback(null, false);
+};
+
 app.use(
   cors({
-    origin: [
-      process.env.CLIENT_URL || 'http://localhost:5173',
-      'https://urban-company-seven.vercel.app',
-    ],
+    origin: corsOriginHandler,
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
   })
 );
 app.use(express.json({ limit: '1mb' }));
@@ -77,6 +110,7 @@ const authLimiter = rateLimit({
   max: 50,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => req.method === 'OPTIONS',
   handler: jsonRateLimitHandler,
 });
 
@@ -89,6 +123,7 @@ const loginLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skipSuccessfulRequests: true,
+  skip: (req) => req.method === 'OPTIONS',
   handler: jsonRateLimitHandler,
 });
 

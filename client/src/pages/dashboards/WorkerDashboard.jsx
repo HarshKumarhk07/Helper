@@ -1,7 +1,16 @@
+import { Navigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext.jsx';
 import DashboardShell from './DashboardShell.jsx';
 import PillButton from '../../components/ui/PillButton.jsx';
 
 export default function WorkerDashboard() {
+  const { user } = useAuth();
+
+  // Guard: if KYC not verified, send to KYC page
+  if (user && user.kycStatus !== 'verified') {
+    return <Navigate to="/worker/kyc" replace />;
+  }
+
   return (
     <DashboardShell
       eyebrow="(Worker app)"

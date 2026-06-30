@@ -72,6 +72,7 @@ const AdminFinance = lazy(() => import('./pages/dashboards/AdminFinance.jsx'));
 const AdminPayouts = lazy(() => import('./pages/dashboards/AdminPayouts.jsx'));
 const AdminSettings = lazy(() => import('./pages/dashboards/AdminSettings.jsx'));
 const AdminCategories = lazy(() => import('./pages/dashboards/AdminCategories.jsx'));
+const AdminBrandCategories = lazy(() => import('./pages/dashboards/AdminBrandCategories.jsx'));
 const AdminProductCategories = lazy(() => import('./pages/dashboards/AdminProductCategories.jsx'));
 const AdminSupport = lazy(() => import('./pages/dashboards/AdminSupport.jsx'));
 const AdminWallet = lazy(() => import('./pages/dashboards/AdminWallet.jsx'));
@@ -169,6 +170,7 @@ export default function App() {
 
             <Route element={<ProtectedRoute roles={['admin']} />}>
               <Route path="/admin/categories" element={<AdminCategories />} />
+              <Route path="/admin/brand-categories" element={<AdminBrandCategories />} />
               <Route path="/admin/product-categories" element={<AdminProductCategories />} />
             </Route>
 

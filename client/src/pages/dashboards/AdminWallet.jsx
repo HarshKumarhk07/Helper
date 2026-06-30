@@ -39,7 +39,7 @@ export default function AdminWallet() {
   useEffect(() => {
     setLoadingUsers(true);
     listUsers()
-      .then(setUsers)
+      .then((res) => setUsers(res.users || res))
       .catch(() => toast.error('Failed to load users'))
       .finally(() => setLoadingUsers(false));
   }, []);

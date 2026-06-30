@@ -17,7 +17,7 @@ const FIELDS = [
   { key: 'aadhaarFront', label: 'Aadhaar Front', required: true },
   { key: 'aadhaarBack', label: 'Aadhaar Back', required: false },
   { key: 'panCard', label: 'PAN Card', required: true },
-  { key: 'selfie', label: 'Live Selfie', required: false },
+  { key: 'selfie', label: 'Worker Profile Image (Selfie)', required: true },
 ];
 
 const STATUS_BANNER = {
@@ -106,8 +106,10 @@ export default function WorkerKyc() {
 
     const hasExistingAadhaar = !!data?.documents?.aadhaarFront;
     const hasExistingPan = !!data?.documents?.panCard;
+    const hasExistingSelfie = !!data?.documents?.selfie;
     const hasNewAadhaar = !!files.aadhaarFront;
     const hasNewPan = !!files.panCard;
+    const hasNewSelfie = !!files.selfie;
 
     if (!hasExistingAadhaar && !hasNewAadhaar) {
       toast.error('Aadhaar Front is required');
@@ -115,6 +117,10 @@ export default function WorkerKyc() {
     }
     if (!hasExistingPan && !hasNewPan) {
       toast.error('PAN Card is required');
+      return;
+    }
+    if (!hasExistingSelfie && !hasNewSelfie) {
+      toast.error('Worker Profile Image (Selfie) is required');
       return;
     }
 

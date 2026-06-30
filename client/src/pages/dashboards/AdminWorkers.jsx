@@ -364,10 +364,14 @@ export default function AdminWorkers() {
             </div>
 
             <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
+              {selected.kycDocuments?.companyLogo && <DocPreview label="Company Logo" url={selected.kycDocuments.companyLogo} />}
+              {selected.kycDocuments?.founderImage && <DocPreview label="Founder Image" url={selected.kycDocuments.founderImage} />}
+              {selected.kycDocuments?.companyLicense && <DocPreview label="Company License" url={selected.kycDocuments.companyLicense} />}
+              {selected.kycDocuments?.gstCertificate && <DocPreview label="GST Certificate" url={selected.kycDocuments.gstCertificate} />}
               <DocPreview label="Aadhaar Front" url={selected.kycDocuments?.aadhaarFront} />
               <DocPreview label="Aadhaar Back" url={selected.kycDocuments?.aadhaarBack} />
               <DocPreview label="PAN Card" url={selected.kycDocuments?.panCard} />
-              <DocPreview label="Selfie" url={selected.kycDocuments?.selfie} />
+              <DocPreview label="Worker Profile Image" url={selected.kycDocuments?.selfie} />
             </div>
 
             {selected.kycStatus === 'rejected' && selected.kycRejectionReason && (

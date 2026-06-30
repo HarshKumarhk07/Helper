@@ -1,6 +1,7 @@
 import { Server } from 'socket.io';
 import { verifyAccessToken } from '../utils/jwt.js';
 import { ROLES } from '../config/roles.js';
+import { corsOriginHandler } from '../app.js';
 import WorkerAvailability from '../models/WorkerAvailability.js';
 import Booking from '../models/Booking.js';
 import { getRoute, buildEta, significantMove } from '../utils/routing.js';
@@ -114,10 +115,7 @@ export const broadcastLocation = (data) => {
 export const initSocket = (httpServer) => {
   const io = new Server(httpServer, {
     cors: {
-      origin: [
-        process.env.CLIENT_URL || 'http://localhost:5173',
-        'https://urban-company-seven.vercel.app',
-      ],
+      origin: corsOriginHandler,
       methods: ['GET', 'POST'],
       credentials: true,
     },

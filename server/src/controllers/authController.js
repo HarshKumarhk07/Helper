@@ -1,4 +1,7 @@
 import crypto from 'crypto';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import User from '../models/User.js';
 import PasswordResetToken from '../models/PasswordResetToken.js';
 import { ROLES } from '../config/roles.js';
@@ -7,6 +10,21 @@ import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../utils/
 import { notifyPasswordReset } from '../utils/notificationService.js';
 import { logAudit } from '../utils/auditLogger.js';
 import { validatePassword } from '../utils/passwordPolicy.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Reads ADMIN_LOGIN_KEY fresh from .env every call so the server
+// does NOT need a restart after the key is added/changed.
+const getAdminLoginKey = () => {
+  try {
+    const envPath = path.resolve(__dirname, '../..', '.env');
+    const raw = fs.readFileSync(envPath, 'utf8');
+    const match = raw.match(/^ADMIN_LOGIN_KEY=(.+)$/m);
+    return match ? match[1].trim() : process.env.ADMIN_LOGIN_KEY || '';
+  } catch {
+    return process.env.ADMIN_LOGIN_KEY || '';
+  }
+};
 
 const RESET_TTL_MINUTES = 30;
 const hashToken = (token) => crypto.createHash('sha256').update(token).digest('hex');
@@ -49,7 +67,7 @@ export const signup = asyncHandler(async (req, res) => {
 });
 
 export const login = asyncHandler(async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, adminKey } = req.body;
 
   const user = await User.findOne({ email }).select('+password');
   if (!user) throw new ApiError(401, 'Invalid credentials');
@@ -63,12 +81,22 @@ export const login = asyncHandler(async (req, res) => {
   const ok = await user.comparePassword(password);
   if (!ok) throw new ApiError(401, 'Invalid credentials');
 
+  // Extra security layer for admin accounts — key is re-read from
+  // .env at request time so no server restart is needed after changes.
+  if (user.role === ROLES.ADMIN) {
+    const expectedKey = getAdminLoginKey();
+    if (!expectedKey || adminKey !== expectedKey) {
+      throw new ApiError(401, 'Invalid admin security key');
+    }
+  }
+
   user.lastLoginAt = new Date();
   await user.save();
 
   const tokens = buildTokens(user);
   res.json({ user: user.toSafeJSON(), ...tokens });
 });
+
 
 export const refresh = asyncHandler(async (req, res) => {
   const { refreshToken } = req.body;

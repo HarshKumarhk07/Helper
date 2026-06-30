@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
 import api from '../../api/axios.js';
 import { 
@@ -73,98 +73,10 @@ export default function BrandDashboard() {
     );
   }
 
-  // State checks for KYC workflow
-  if (user.kycStatus === 'pending') {
-    return (
-      <div className="min-h-screen pt-28 pb-16 px-4 bg-paper flex items-center justify-center">
-        <div className="max-w-md w-full text-center">
-          <FadeUp>
-            <div className="mx-auto w-16 h-16 rounded-full bg-amber-500/10 text-amber-600 flex items-center justify-center mb-6">
-              <Upload size={28} />
-            </div>
-            <h2 className="text-2xl font-bold text-ink">Submit Company KYC</h2>
-            <p className="text-sm text-ink/75 mt-3 leading-relaxed">
-              Your dashboard access is locked until you submit your company registration and KYC verification documents.
-            </p>
-            <div className="mt-8 flex flex-col gap-3">
-              <Link
-                to="/brand/kyc"
-                className="w-full inline-flex items-center justify-center gap-2 bg-[#6f5cff] text-paper rounded-full py-3 text-xs font-bold uppercase tracking-widest hover:bg-[#6f5cff]/90 transition-all"
-              >
-                Upload KYC Documents <ArrowRight size={14} />
-              </Link>
-              <button
-                onClick={logout}
-                className="w-full inline-flex items-center justify-center gap-2 border border-ink/10 text-ink/80 rounded-full py-3 text-xs font-bold uppercase tracking-widest hover:bg-ink/5 transition-all"
-              >
-                <LogOut size={14} /> Log Out
-              </button>
-            </div>
-          </FadeUp>
-        </div>
-      </div>
-    );
-  }
 
-  if (user.kycStatus === 'submitted') {
-    return (
-      <div className="min-h-screen pt-28 pb-16 px-4 bg-paper flex items-center justify-center">
-        <div className="max-w-md w-full text-center">
-          <FadeUp>
-            <div className="mx-auto w-16 h-16 rounded-full bg-[#6f5cff]/10 text-[#6f5cff] flex items-center justify-center mb-6">
-              <Loader2 className="animate-spin" size={28} />
-            </div>
-            <h2 className="text-2xl font-bold text-ink">Verification Pending</h2>
-            <p className="text-sm text-ink/75 mt-3 leading-relaxed">
-              Your KYC submission has been received and is currently under review by our operations team. We will notify you via email once approved.
-            </p>
-            <div className="mt-8">
-              <button
-                onClick={logout}
-                className="w-full inline-flex items-center justify-center gap-2 border border-ink/10 text-ink/80 rounded-full py-3 text-xs font-bold uppercase tracking-widest hover:bg-ink/5 transition-all"
-              >
-                <LogOut size={14} /> Log Out
-              </button>
-            </div>
-          </FadeUp>
-        </div>
-      </div>
-    );
-  }
-
-  if (user.kycStatus === 'rejected') {
-    return (
-      <div className="min-h-screen pt-28 pb-16 px-4 bg-paper flex items-center justify-center">
-        <div className="max-w-md w-full text-center">
-          <FadeUp>
-            <div className="mx-auto w-16 h-16 rounded-full bg-red-500/10 text-red-600 flex items-center justify-center mb-6">
-              <AlertTriangle size={28} />
-            </div>
-            <h2 className="text-2xl font-bold text-ink">Verification Rejected</h2>
-            <p className="text-sm text-red-600 font-medium mt-2">
-              Reason: {user.kycRejectionReason || 'Documents uploaded were unclear or expired.'}
-            </p>
-            <p className="text-xs text-ink/65 mt-4 leading-relaxed">
-              Please review the feedback reason and submit updated, high-resolution copies of your company documents.
-            </p>
-            <div className="mt-8 flex flex-col gap-3">
-              <Link
-                to="/brand/kyc"
-                className="w-full inline-flex items-center justify-center gap-2 bg-[#6f5cff] text-paper rounded-full py-3 text-xs font-bold uppercase tracking-widest hover:bg-[#6f5cff]/90 transition-all"
-              >
-                Re-submit Documents <ArrowRight size={14} />
-              </Link>
-              <button
-                onClick={logout}
-                className="w-full inline-flex items-center justify-center gap-2 border border-ink/10 text-ink/80 rounded-full py-3 text-xs font-bold uppercase tracking-widest hover:bg-ink/5 transition-all"
-              >
-                <LogOut size={14} /> Log Out
-              </button>
-            </div>
-          </FadeUp>
-        </div>
-      </div>
-    );
+  // Guard: redirect all non-verified brands to the KYC page (which handles all states)
+  if (user.kycStatus !== 'verified') {
+    return <Navigate to="/brand/kyc" replace />;
   }
 
   return (

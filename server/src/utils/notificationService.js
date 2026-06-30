@@ -300,6 +300,26 @@ export const notifyBookingCancelled = ({ user, worker, booking, reason }) =>
       : Promise.resolve({ skipped: true }),
   ]);
 
+export const notifyKycSubmitted = ({ user }) =>
+  Promise.allSettled([
+    sendEmail({
+      to: user?.email,
+      subject: 'Verification in progress · Helper',
+      html: wrapEmail(
+        'Verification form under review',
+        `
+        <p>Hi ${user?.name || 'there'},</p>
+        <p>Thank you for choosing Helper. Your verification form has been received and is currently being reviewed by our team.</p>
+        <p>We will review your documents and get back to you very soon.</p>
+        `
+      ),
+    }),
+    sendSMS({
+      to: user?.phone,
+      body: `Helper: Thank you for choosing us. Your verification form is being reviewed by our team. We will get back to you very soon.`,
+    }),
+  ]);
+
 export const notifyKycApproved = ({ worker }) =>
   Promise.allSettled([
     sendEmail({

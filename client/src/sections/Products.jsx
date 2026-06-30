@@ -17,7 +17,7 @@ export default function Products() {
 
   useEffect(() => {
     listProducts({ limit: 1000 })
-      .then(setProducts)
+      .then((res) => setProducts(res.products || res))
       .catch(() => toast.error('Failed to load products'));
     listProductCategories({ active: 'true' })
       .then(setCategories)
