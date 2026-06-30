@@ -160,7 +160,7 @@ const PHOTOS = [
     rounded: 'rounded-tr-3xl',
   },
   {
-    src: 'https://images.unsplash.com/photo-1562259929-b7e181d8d007?ixlib=rb-4.0.3&auto=format&fit=crop&w=700&q=80',
+    src: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?ixlib=rb-4.0.3&auto=format&fit=crop&w=700&q=80',
     alt: 'Painter refreshing a room',
     rounded: 'rounded-bl-3xl',
   },

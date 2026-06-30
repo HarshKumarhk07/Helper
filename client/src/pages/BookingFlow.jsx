@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { Calendar, Zap, MapPin, CreditCard, Banknote, Plus, FileText, Check, Crosshair, Loader2, Navigation } from 'lucide-react';
+import { Calendar, Zap, MapPin, CreditCard, Banknote, Plus, FileText, Check, Crosshair, Loader2, Navigation, UserCheck, Star } from 'lucide-react';
 import { getService } from '../api/services.js';
 import { listMyAddresses, createAddress } from '../api/addresses.js';
 import { createBooking } from '../api/bookings.js';
@@ -28,6 +28,10 @@ export default function BookingFlow() {
   const [scheduledAt, setScheduledAt] = useState(null);
   const [paymentMode, setPaymentMode] = useState('online');
   const [autoAssign, setAutoAssign] = useState(true);
+  const [selectedWorker, setSelectedWorker] = useState(null);   // { _id, name, avatar, … }
+  const [workers, setWorkers] = useState([]);
+  const [workersLoading, setWorkersLoading] = useState(false);
+  const [workerReviews, setWorkerReviews] = useState({}); // { workerId: [reviews] }
   const [notes, setNotes] = useState('');
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState(null);
@@ -124,7 +128,9 @@ export default function BookingFlow() {
     }
 
     getService(serviceId)
-      .then(setService)
+      .then((svc) => {
+        setService(svc);
+      })
       .catch(() => {
         toast.error('Service not found');
         navigate('/services');
@@ -154,6 +160,21 @@ export default function BookingFlow() {
     script.onerror = () => toast.error('Unable to load Razorpay checkout');
     document.body.appendChild(script);
   }, []);
+
+  // Load workers whenever service (and its category) is resolved
+  useEffect(() => {
+    if (!service || service.isWorkerBooking || serviceId === 'cart') return;
+    const catId = service.category?._id || service.category;
+    if (!catId) return;
+    setWorkersLoading(true);
+    api.get('/users/workers', { params: { category: catId } })
+      .then(({ data }) => {
+        const list = data.workers || [];
+        setWorkers(list);
+      })
+      .catch(() => {})
+      .finally(() => setWorkersLoading(false));
+  }, [service, serviceId]);
 
   const onSaveAddress = async (e) => {
     e.preventDefault();
@@ -414,13 +435,14 @@ export default function BookingFlow() {
       const payload = {
         type: bookingType,
         paymentMode,
-        autoAssign: service.isWorkerBooking ? false : autoAssign,
+        autoAssign: service.isWorkerBooking ? false : (selectedWorker ? false : autoAssign),
       };
       if (service.isWorkerBooking) {
         payload.worker = service._id;
         payload.category = service.category?._id || service.category;
       } else {
         payload.service = service._id;
+        if (selectedWorker) payload.worker = selectedWorker._id;
       }
       if (bookingType === 'scheduled' && scheduledAt) payload.scheduledAt = scheduledAt;
       if (selectedAddressId) payload.addressId = selectedAddressId;
@@ -813,6 +835,140 @@ export default function BookingFlow() {
               </Section>
             </FadeUp>
 
+            {/* ── SELECT PROFESSIONAL ── */}
+            {!service.isWorkerBooking && serviceId !== 'cart' && (
+              <FadeUp delay={0.12}>
+                <Section icon={UserCheck} title="Professional">
+                  {workersLoading ? (
+                    <div className="flex items-center gap-2 text-xs text-black/50">
+                      <Loader2 size={14} className="animate-spin" /> Loading professionals…
+                    </div>
+                  ) : workers.length === 0 ? (
+                    <p className="text-xs text-black/50">No verified professionals found for this category. We'll auto-assign the closest available expert.</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {/* Auto-assign option */}
+                      <button
+                        type="button"
+                        onClick={() => { setSelectedWorker(null); setAutoAssign(true); }}
+                        className={`relative block w-full rounded-2xl border p-4 text-left transition ${
+                          !selectedWorker
+                            ? 'border-black bg-black/[0.03] shadow-sm'
+                            : 'border-black/10 bg-white hover:border-black/30 hover:shadow-sm'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            <div className="text-sm font-medium text-black">Auto-assign nearest pro</div>
+                            <div className="text-xs text-black/55 mt-0.5">We'll match you with the closest available expert</div>
+                          </div>
+                          {!selectedWorker && (
+                            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-black text-white">
+                              <Check size={14} strokeWidth={3} />
+                            </div>
+                          )}
+                        </div>
+                      </button>
+
+                      {/* Worker cards */}
+                      {workers.map((w) => {
+                        const active = selectedWorker?._id === w._id;
+                        const isPrev = w.hasHiredBefore;
+                        return (
+                          <button
+                            key={w._id}
+                            type="button"
+                            onClick={() => { setSelectedWorker(w); setAutoAssign(false); }}
+                            className={`relative block w-full rounded-2xl border p-4 text-left transition ${
+                              active
+                                ? 'border-black bg-black/[0.03] shadow-sm'
+                                : 'border-black/10 bg-white hover:border-black/30 hover:shadow-sm'
+                            }`}
+                          >
+                            <div className="flex items-start gap-3">
+                              {/* Avatar */}
+                              <div className="shrink-0">
+                                {w.avatar ? (
+                                  <img src={w.avatar} alt={w.name}
+                                    className="h-12 w-12 rounded-full object-cover border border-black/10"
+                                    onError={(e) => { e.currentTarget.style.display='none'; }}
+                                  />
+                                ) : (
+                                  <div className="h-12 w-12 rounded-full bg-black/10 flex items-center justify-center text-sm font-bold text-black">
+                                    {w.name?.[0]?.toUpperCase() || '?'}
+                                  </div>
+                                )}
+                              </div>
+
+                              <div className="min-w-0 flex-1">
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <span className="font-medium text-sm text-black">{w.name}</span>
+                                  {isPrev && (
+                                    <span className="rounded-full bg-[#6f5cff]/10 text-[#6f5cff] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider">
+                                      Previously Hired
+                                    </span>
+                                  )}
+                                  {w.isFeatured && (
+                                    <span className="rounded-full bg-amber-100 text-amber-700 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider">
+                                      ★ Featured
+                                    </span>
+                                  )}
+                                </div>
+
+                                {/* Stats row */}
+                                <div className="flex flex-wrap items-center gap-3 mt-1">
+                                  {w.displayRating > 0 && (
+                                    <span className="flex items-center gap-1 text-xs text-black/70">
+                                      <Star size={11} className="fill-amber-400 text-amber-400" />
+                                      <span className="font-semibold">{w.displayRating.toFixed(1)}</span>
+                                    </span>
+                                  )}
+                                  {w.completedJobs > 0 && (
+                                    <span className="text-xs text-black/55">{w.completedJobs} jobs done</span>
+                                  )}
+                                  {w.experienceYears > 0 && (
+                                    <span className="text-xs text-black/55">{w.experienceYears}y exp</span>
+                                  )}
+                                </div>
+
+                                {/* Pricing */}
+                                <div className="mt-1 text-xs text-black/60">
+                                  {w.pricingType === 'hourly'
+                                    ? `₹${w.hourlyRate}/hr`
+                                    : `Fixed ₹${w.fixedPrice}`}
+                                </div>
+
+                                {/* Previously hired review */}
+                                {isPrev && w.previousRating && (
+                                  <div className="mt-2 rounded-xl bg-[#6f5cff]/5 border border-[#6f5cff]/15 px-3 py-2">
+                                    <div className="text-[9px] uppercase tracking-widest text-[#6f5cff] font-bold mb-1">Your Last Review</div>
+                                    <div className="flex items-center gap-1">
+                                      {Array.from({ length: 5 }).map((_, i) => (
+                                        <Star key={i} size={11}
+                                          className={i < w.previousRating ? 'fill-amber-400 text-amber-400' : 'text-black/20'}
+                                        />
+                                      ))}
+                                      <span className="text-[10px] text-black/60 ml-1">{w.previousRating}/5</span>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+
+                              {active && (
+                                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-black text-white ml-auto">
+                                  <Check size={14} strokeWidth={3} />
+                                </div>
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </Section>
+              </FadeUp>
+            )}
+
             <FadeUp delay={0.1}>
               <Section icon={CreditCard} title="Payment">
                 <div className="grid grid-cols-1 gap-2.5">
@@ -840,6 +996,7 @@ export default function BookingFlow() {
                 </label>
               </Section>
             </FadeUp>
+
 
             <FadeUp delay={0.15}>
               <Section icon={FileText} title="Notes" optional>
@@ -901,7 +1058,10 @@ export default function BookingFlow() {
                     }
                     muted={!selectedAddress && !showAddressForm}
                   />
-                  <Row label="Auto-assign" value={autoAssign ? 'Yes' : 'No'} />
+                  <Row label="Auto-assign" value={selectedWorker ? 'No — specific pro selected' : (autoAssign ? 'Yes' : 'No')} />
+                  {selectedWorker && (
+                    <Row label="Professional" value={selectedWorker.name} />
+                  )}
                   <Row label="Payment" value={paymentMode === 'cod' ? 'COD' : 'Online'} />
                 </div>
 
