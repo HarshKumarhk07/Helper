@@ -18,8 +18,20 @@ const serviceSchema = new mongoose.Schema(
     rating: { type: Number, default: 0, min: 0, max: 5 },
     ratingCount: { type: Number, default: 0 },
     tags: [{ type: String }],
+    locations: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Location' }],
     isActive: { type: Boolean, default: true, index: true },
     isFeatured: { type: Boolean, default: false, index: true },
+    coverImage: { type: String, default: '' },
+    includedItems: {
+      type: [
+        new mongoose.Schema({
+          title: { type: String, required: true },
+          description: { type: String, required: true },
+          image: { type: String, default: '' },
+        }, { _id: false })
+      ],
+      default: []
+    }
   },
   { timestamps: true }
 );

@@ -11,3 +11,6 @@ export const updateUser = (id, payload) =>
 
 export const setUserActive = (id, isActive) =>
   api.patch(`/users/${id}/active`, { isActive }).then((r) => r.data.user);
+
+export const getFeaturedWorkersPublic = (params = {}) =>
+  api.get('/users/featured', { params }).then((r) => r.data.workers);

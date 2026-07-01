@@ -49,7 +49,7 @@ export default function BrandPricing() {
           {/* Header */}
           <div className="text-center max-w-2xl mx-auto mb-16">
             <FadeUp>
-              <span className="inline-flex items-center gap-2 rounded-full border border-[#6f5cff]/20 bg-[#6f5cff]/5 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-[#6f5cff]">
+              <span className="inline-flex items-center gap-2 rounded-full border border-[#13294B]/20 bg-[#13294B]/5 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-[#13294B]">
                 Seller Partner Portal
               </span>
               <h1 className="font-display text-4xl sm:text-6xl font-light leading-tight tracking-tightest mt-6 text-ink">
@@ -67,7 +67,7 @@ export default function BrandPricing() {
             <FadeUp delay={0.1}>
               <div className="card-rounded p-6 flex flex-col justify-between h-full bg-white/70 backdrop-blur-md border border-ink/5 hover:border-ink/10 hover:shadow-lg transition-all duration-300">
                 <div>
-                  <div className="text-xs uppercase tracking-widest text-[#6f5cff] font-bold mb-4">Start Selling</div>
+                  <div className="text-xs uppercase tracking-widest text-[#13294B] font-bold mb-4">Start Selling</div>
                   <h3 className="text-lg font-semibold mb-1 text-ink">Registration Fee</h3>
                   <p className="text-xs text-ink/50 mb-6">One-time security and boarding deposit</p>
                   
@@ -78,15 +78,15 @@ export default function BrandPricing() {
 
                   <ul className="space-y-3 text-xs text-ink/75">
                     <li className="flex items-center gap-2">
-                      <CheckCircle2 size={14} className="text-[#6f5cff]" />
+                      <CheckCircle2 size={14} className="text-[#13294B]" />
                       <span>Dedicated brand storefront</span>
                     </li>
                     <li className="flex items-center gap-2">
-                      <CheckCircle2 size={14} className="text-[#6f5cff]" />
+                      <CheckCircle2 size={14} className="text-[#13294B]" />
                       <span>KYC verification check</span>
                     </li>
                     <li className="flex items-center gap-2">
-                      <CheckCircle2 size={14} className="text-[#6f5cff]" />
+                      <CheckCircle2 size={14} className="text-[#13294B]" />
                       <span>Seller analytics dashboard</span>
                     </li>
                   </ul>
@@ -98,7 +98,7 @@ export default function BrandPricing() {
             <FadeUp delay={0.2}>
               <div className="card-rounded p-6 flex flex-col justify-between h-full bg-white/70 backdrop-blur-md border border-ink/5 hover:border-ink/10 hover:shadow-lg transition-all duration-300">
                 <div>
-                  <div className="text-xs uppercase tracking-widest text-[#6f5cff] font-bold mb-4">Your Catalog</div>
+                  <div className="text-xs uppercase tracking-widest text-[#13294B] font-bold mb-4">Your Catalog</div>
                   <h3 className="text-lg font-semibold mb-1 text-ink">Product Listing Fee</h3>
                   <p className="text-xs text-ink/50 mb-6">Standard listing fee per unique product</p>
                   
@@ -109,15 +109,15 @@ export default function BrandPricing() {
 
                   <ul className="space-y-3 text-xs text-ink/75">
                     <li className="flex items-center gap-2">
-                      <CheckCircle2 size={14} className="text-[#6f5cff]" />
+                      <CheckCircle2 size={14} className="text-[#13294B]" />
                       <span>High-resolution media hosting</span>
                     </li>
                     <li className="flex items-center gap-2">
-                      <CheckCircle2 size={14} className="text-[#6f5cff]" />
+                      <CheckCircle2 size={14} className="text-[#13294B]" />
                       <span>Real-time inventory manager</span>
                     </li>
                     <li className="flex items-center gap-2">
-                      <CheckCircle2 size={14} className="text-[#6f5cff]" />
+                      <CheckCircle2 size={14} className="text-[#13294B]" />
                       <span>Automated product SEO tags</span>
                     </li>
                   </ul>
@@ -127,9 +127,9 @@ export default function BrandPricing() {
 
             {/* Platform Commission Card */}
             <FadeUp delay={0.3}>
-              <div className="card-rounded p-6 flex flex-col justify-between h-full bg-[#1a1a1a] text-paper border border-[#1a1a1a] hover:shadow-xl hover:shadow-[#6f5cff]/10 transition-all duration-300">
+              <div className="card-rounded p-6 flex flex-col justify-between h-full bg-[#1a1a1a] text-paper border border-[#1a1a1a] hover:shadow-xl hover:shadow-[#13294B]/10 transition-all duration-300">
                 <div>
-                  <div className="text-xs uppercase tracking-widest text-[#6f5cff] font-bold mb-4">Fair Split</div>
+                  <div className="text-xs uppercase tracking-widest text-[#13294B] font-bold mb-4">Fair Split</div>
                   <h3 className="text-lg font-semibold mb-1 text-paper">Platform Commission</h3>
                   <p className="text-xs text-paper/50 mb-6">Charged only on successful item sales</p>
                   
@@ -140,15 +140,15 @@ export default function BrandPricing() {
 
                   <ul className="space-y-3 text-xs text-paper/85">
                     <li className="flex items-center gap-2">
-                      <CheckCircle2 size={14} className="text-[#6f5cff]" />
+                      <CheckCircle2 size={14} className="text-[#13294B]" />
                       <span>Centralized payment clearing</span>
                     </li>
                     <li className="flex items-center gap-2">
-                      <CheckCircle2 size={14} className="text-[#6f5cff]" />
+                      <CheckCircle2 size={14} className="text-[#13294B]" />
                       <span>Fraud prevention protection</span>
                     </li>
                     <li className="flex items-center gap-2">
-                      <CheckCircle2 size={14} className="text-[#6f5cff]" />
+                      <CheckCircle2 size={14} className="text-[#13294B]" />
                       <span>Automatic buyer invoicing</span>
                     </li>
                   </ul>
@@ -173,7 +173,7 @@ export default function BrandPricing() {
               </div>
               <Link
                 to="/signup?role=brand"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-ink text-paper rounded-full py-3 px-6 text-xs font-bold uppercase tracking-widest whitespace-nowrap hover:bg-[#6f5cff] transition-all duration-300 hover:shadow-lg hover:shadow-[#6f5cff]/20 shrink-0"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-ink text-paper rounded-full py-3 px-6 text-xs font-bold uppercase tracking-widest whitespace-nowrap hover:bg-[#13294B] transition-all duration-300 hover:shadow-lg hover:shadow-[#13294B]/20 shrink-0"
               >
                 Start Selling <ArrowRight size={14} />
               </Link>

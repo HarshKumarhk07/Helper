@@ -2,6 +2,7 @@ import User from '../models/User.js';
 import Booking from '../models/Booking.js';
 import Review from '../models/Review.js';
 import ServiceCategory from '../models/ServiceCategory.js';
+import WorkerService from '../models/WorkerService.js';
 import { ROLES } from '../config/roles.js';
 import { BOOKING_STATUS } from '../config/booking.js';
 import { ApiError, asyncHandler } from '../utils/asyncHandler.js';
@@ -133,14 +134,71 @@ export const setUserActive = asyncHandler(async (req, res) => {
   res.json({ user: user.toSafeJSON() });
 });
 
+export const getFeaturedWorkersPublic = asyncHandler(async (req, res) => {
+  const { category, location } = req.query;
+
+  const filter = {
+    role: ROLES.WORKER,
+    kycStatus: 'verified',
+    isActive: true,
+    isFeatured: true
+  };
+
+  if (category && category !== 'all') {
+    let catId = category;
+    if (!catId.match(/^[a-f0-9]{24}$/)) {
+      const cat = await ServiceCategory.findOne({ slug: category });
+      if (cat) catId = cat._id;
+      else return res.json({ workers: [] });
+    }
+    filter.category = catId;
+  }
+
+  if (location) {
+    filter.$or = [
+      { locations: { $exists: false } },
+      { locations: { $size: 0 } },
+      { locations: location }
+    ];
+  }
+
+  const workers = await User.find(filter)
+    .populate('category', 'name slug')
+    .sort({ ratingAvg: -1, completedJobs: -1 })
+    .limit(6)
+    .lean();
+
+  const publicWorkers = workers.map(w => ({
+    _id: w._id,
+    name: w.name,
+    avatar: w.avatar || w.passportPhoto || '',
+    category: w.category,
+    ratingAvg: w.ratingAvg || 0,
+    ratingCount: w.ratingCount || 0,
+    completedJobs: w.completedJobs || 0
+  }));
+
+  res.json({ workers: publicWorkers });
+});
+
 export const getWorkersForCustomer = asyncHandler(async (req, res) => {
-  const { category, q } = req.query;
+  const { category, q, service, location } = req.query;
 
   const filter = {
     role: ROLES.WORKER,
     kycStatus: 'verified',
     isActive: true,
   };
+
+  // When a specific service is requested, only surface workers who actually
+  // offer that service (via WorkerService), and carry their per-service price.
+  let offeringMap = null;
+  if (service) {
+    const offerings = await WorkerService.find({ service, isActive: true }).lean();
+    if (!offerings.length) return res.json({ workers: [] });
+    filter._id = { $in: offerings.map((o) => o.worker) };
+    offeringMap = new Map(offerings.map((o) => [String(o.worker), o]));
+  }
 
   if (category) {
     let catId = category;
@@ -159,6 +217,22 @@ export const getWorkersForCustomer = asyncHandler(async (req, res) => {
       filter.$or = [
         { name: { $regex: q.trim(), $options: 'i' } },
       ];
+    }
+  }
+
+  if (location) {
+    const locFilter = {
+      $or: [
+        { locations: { $exists: false } },
+        { locations: { $size: 0 } },
+        { locations: location }
+      ]
+    };
+    if (filter.$or) {
+      filter.$and = [{ $or: filter.$or }, locFilter];
+      delete filter.$or;
+    } else {
+      filter.$or = locFilter.$or;
     }
   }
 
@@ -209,6 +283,8 @@ export const getWorkersForCustomer = asyncHandler(async (req, res) => {
       }
     }
 
+    const offering = offeringMap?.get(String(w._id)) || null;
+
     workers.push({
       _id: w._id,
       name: w.name,
@@ -223,6 +299,17 @@ export const getWorkersForCustomer = asyncHandler(async (req, res) => {
       isFeatured: !!w.isFeatured,
       isRecommended: !!w.isRecommended,
       category: w.category,
+      currentStatus: w.currentStatus || 'free',
+      ratingAvg: w.ratingAvg || 0,
+      // Per-service pricing when a specific service was requested (else null).
+      serviceOffering: offering
+        ? {
+            pricingType: offering.pricingType,
+            amount: offering.amount,
+            startingPrice: offering.startingPrice,
+            note: offering.note,
+          }
+        : null,
       displayRating,
       publicRating,
       previousRating,

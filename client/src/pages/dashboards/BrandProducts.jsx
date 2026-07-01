@@ -180,7 +180,7 @@ export default function BrandProducts() {
                 setEditingProduct(null);
                 setShowForm(!showForm);
               }}
-              className="bg-[#6f5cff] text-white rounded-full py-2.5 px-6 text-xs font-bold uppercase tracking-widest hover:bg-[#6f5cff]/90 transition-all text-center"
+              className="bg-[#13294B] text-white rounded-full py-2.5 px-6 text-xs font-bold uppercase tracking-widest hover:bg-[#13294B]/90 transition-all text-center"
             >
               {showForm ? 'Close Editor' : 'Add New Product'}
             </button>
@@ -208,7 +208,7 @@ export default function BrandProducts() {
                           setNewProduct({ ...newProduct, name: e.target.value, slug });
                         }
                       }}
-                      className="w-full bg-sand/30 border border-ink/10 rounded-xl py-2 px-3 text-xs text-ink focus:outline-none focus:border-[#6f5cff]"
+                      className="w-full bg-sand/30 border border-ink/10 rounded-xl py-2 px-3 text-xs text-ink focus:outline-none focus:border-[#13294B]"
                     />
                   </div>
 
@@ -226,7 +226,7 @@ export default function BrandProducts() {
                           setNewProduct({ ...newProduct, slug: e.target.value });
                         }
                       }}
-                      className="w-full bg-sand/30 border border-ink/10 rounded-xl py-2 px-3 text-xs text-ink focus:outline-none focus:border-[#6f5cff]"
+                      className="w-full bg-sand/30 border border-ink/10 rounded-xl py-2 px-3 text-xs text-ink focus:outline-none focus:border-[#13294B]"
                     />
                   </div>
 
@@ -245,7 +245,7 @@ export default function BrandProducts() {
                           setNewProduct({ ...newProduct, price: e.target.value });
                         }
                       }}
-                      className="w-full bg-sand/30 border border-ink/10 rounded-xl py-2 px-3 text-xs text-ink focus:outline-none focus:border-[#6f5cff]"
+                      className="w-full bg-sand/30 border border-ink/10 rounded-xl py-2 px-3 text-xs text-ink focus:outline-none focus:border-[#13294B]"
                     />
                   </div>
 
@@ -264,7 +264,7 @@ export default function BrandProducts() {
                           setNewProduct({ ...newProduct, stock: e.target.value });
                         }
                       }}
-                      className="w-full bg-sand/30 border border-ink/10 rounded-xl py-2 px-3 text-xs text-ink focus:outline-none focus:border-[#6f5cff]"
+                      className="w-full bg-sand/30 border border-ink/10 rounded-xl py-2 px-3 text-xs text-ink focus:outline-none focus:border-[#13294B]"
                     />
                   </div>
 
@@ -280,7 +280,7 @@ export default function BrandProducts() {
                           setNewProduct({ ...newProduct, category: e.target.value });
                         }
                       }}
-                      className="w-full bg-sand/30 border border-ink/10 rounded-xl py-2 px-3 text-xs text-ink focus:outline-none focus:border-[#6f5cff]"
+                      className="w-full bg-sand/30 border border-ink/10 rounded-xl py-2 px-3 text-xs text-ink focus:outline-none focus:border-[#13294B]"
                     >
                       <option value="">Select Category</option>
                       {categories.map((c) => (
@@ -317,7 +317,7 @@ export default function BrandProducts() {
                 </div>
 
                 <div className="mb-6">
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-[#6f5cff] mb-1.5">Detailed Description</label>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-[#13294B] mb-1.5">Detailed Description</label>
                   <textarea
                     required
                     rows="3"
@@ -330,7 +330,7 @@ export default function BrandProducts() {
                         setNewProduct({ ...newProduct, description: e.target.value });
                       }
                     }}
-                    className="w-full bg-sand/30 border border-ink/10 rounded-xl py-2 px-3 text-xs text-ink focus:outline-none focus:border-[#6f5cff]"
+                    className="w-full bg-sand/30 border border-ink/10 rounded-xl py-2 px-3 text-xs text-ink focus:outline-none focus:border-[#13294B]"
                   />
                 </div>
 
@@ -347,7 +347,7 @@ export default function BrandProducts() {
                   </button>
                   <button
                     type="submit"
-                    className="bg-[#6f5cff] text-white rounded-full py-2 px-6 text-xs font-bold uppercase tracking-wider hover:bg-[#6f5cff]/90"
+                    className="bg-[#13294B] text-white rounded-full py-2 px-6 text-xs font-bold uppercase tracking-wider hover:bg-[#13294B]/90"
                   >
                     {editingProduct ? 'Save Changes' : 'Create Listing'}
                   </button>

@@ -324,7 +324,7 @@ export default function Hero() {
                 <div className="mt-6 pt-5 border-t border-ink/8">
                   <Link
                     to="/products"
-                    className="inline-flex items-center gap-1 text-sm font-semibold text-ink hover:text-[#6f5cff] transition-colors group"
+                    className="inline-flex items-center gap-1 text-sm font-semibold text-ink hover:text-[#13294B] transition-colors group"
                   >
                     Our Products
                     <ChevronRight

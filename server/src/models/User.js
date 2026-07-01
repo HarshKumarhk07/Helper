@@ -44,11 +44,26 @@ const userSchema = new mongoose.Schema(
     lastLoginAt: { type: Date },
     // Worker specific fields
     category: { type: mongoose.Schema.Types.ObjectId, ref: 'ServiceCategory', default: null },
+    locations: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Location' }],
     fixedPrice: { type: Number, default: 0 },
     hourlyRate: { type: Number, default: 0 },
     pricingType: { type: String, enum: ['fixed', 'hourly'], default: 'fixed' },
     experienceYears: { type: Number, default: 0 },
+    address: { type: String, trim: true, default: '' },
+    education: { type: String, trim: true, default: '' },
     completedJobs: { type: Number, default: 0 },
+    // Real-time availability for the instant-dispatch matching engine.
+    // free → eligible for new jobs, busy → mid-job, offline → off duty.
+    currentStatus: {
+      type: String,
+      enum: ['free', 'busy', 'offline'],
+      default: 'free',
+      index: true,
+    },
+    // Persisted rolling review average for this worker (recomputed on each new
+    // review). Avoids recomputing from scratch on every customer search.
+    ratingAvg: { type: Number, default: 0 },
+    ratingCount: { type: Number, default: 0 },
     isFeatured: { type: Boolean, default: false },
     isRecommended: { type: Boolean, default: false },
     workerType: { type: String, enum: ['individual', 'company'], default: 'individual' },
@@ -61,6 +76,17 @@ const userSchema = new mongoose.Schema(
     
     // Custom individual commission rate
     commissionRate: { type: Number, min: 0, max: 1, default: null },
+
+    // Per-admin "last seen" timestamps for the dashboard notification badges.
+    // Each key tracks when this admin last opened that section; the badge count
+    // is the number of items newer than the timestamp. Only meaningful on admins.
+    adminSeen: {
+      bookings: { type: Date, default: null },
+      orders: { type: Date, default: null },
+      users: { type: Date, default: null },
+      kyc: { type: Date, default: null },
+      support: { type: Date, default: null },
+    },
 
     // Bumped on logout / password reset / forced sign-out. Tokens carry the
     // version they were issued at; the auth middleware rejects any token

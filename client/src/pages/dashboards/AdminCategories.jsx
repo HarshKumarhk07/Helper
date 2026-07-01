@@ -239,57 +239,7 @@ export default function AdminCategories() {
               />
             </div>
 
-            <div>
-              <Label>Sort order</Label>
-              <input
-                type="number"
-                value={form.sortOrder}
-                onChange={(e) => setForm((f) => ({ ...f, sortOrder: e.target.value }))}
-                className={`${inputClass} tabular-nums`}
-              />
-            </div>
-            <div>
-              <Label>Icon</Label>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {ICONS.map((ic) => (
-                  <button
-                    key={ic}
-                    type="button"
-                    onClick={() => setForm((f) => ({ ...f, icon: ic }))}
-                    className={`rounded-full border px-3 py-1.5 text-xs transition ${
-                      form.icon === ic
-                        ? 'border-ink bg-ink text-paper'
-                        : 'border-ink/20 hover:border-ink/40'
-                    }`}
-                  >
-                    {ic}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div>
-              <Label>Accent color</Label>
-              <div className="mt-2 flex flex-wrap items-center gap-2">
-                {COLORS.map((c) => (
-                  <button
-                    key={c}
-                    type="button"
-                    onClick={() => setForm((f) => ({ ...f, color: c }))}
-                    className={`h-8 w-8 rounded-full ring-2 transition ${
-                      form.color === c ? 'ring-ink' : 'ring-transparent'
-                    }`}
-                    style={{ background: c }}
-                    aria-label={c}
-                  />
-                ))}
-                <input
-                  type="color"
-                  value={form.color}
-                  onChange={(e) => setForm((f) => ({ ...f, color: e.target.value }))}
-                  className="h-8 w-12 cursor-pointer rounded border border-ink/15"
-                />
-              </div>
-            </div>
+
             <div className="md:col-span-2">
               <Label>Category image</Label>
               <div className="mt-2">

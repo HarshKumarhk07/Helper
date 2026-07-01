@@ -1,4 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700;800&display=swap');
+@import url('https://api.fontshare.com/v2/css?f[]=general-sans@200,300,400,500,600,700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -9,7 +10,6 @@
     color-scheme: light;
   }
   html, body, #root {
-    height: 100%;
     width: 100%;
     /* Hard cap horizontal scroll at the root. Any individual section that
        genuinely needs sideways scrolling (a marquee, a snap row) should
@@ -29,8 +29,7 @@
     overflow: hidden;
   }
   body {
-    @apply bg-paper text-ink antialiased;
-    font-family: 'Inter', sans-serif;
+    @apply bg-sand text-ink antialiased font-sans;
   }
   button, input, textarea, select {
     font: inherit;
@@ -52,7 +51,7 @@
   }
 
   .pill-btn-solid {
-    @apply inline-flex items-center justify-center gap-2 rounded-pill bg-ink px-6 py-3 text-sm font-medium tracking-tightish text-paper shadow-md transition-all duration-300 hover:bg-ink/90 hover:shadow-lg hover:-translate-y-0.5;
+    @apply inline-flex items-center justify-center gap-2 rounded-pill bg-brand px-6 py-3 text-sm font-semibold tracking-tightish text-ink shadow-md transition-all duration-300 hover:bg-brand-dark hover:shadow-lg hover:-translate-y-0.5;
   }
 
   .nav-link {

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import {
@@ -7,12 +7,13 @@ import {
   Mail,
   Lock,
   ShieldCheck,
-  User as UserIcon,
   Briefcase,
   Building2,
+  BadgeCheck,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext.jsx';
+import { getRoleHint } from '../api/auth.js';
 import { Field, PrimaryCTA, ErrorBanner } from '../components/auth/AuthFormPrimitives.jsx';
 import GoogleAuthButton from '../components/auth/GoogleAuthButton.jsx';
 import LoadingScreen from '../components/ui/LoadingScreen.jsx';
@@ -37,14 +38,19 @@ const friendlyError = (err) => {
   return msg || 'Login failed. Please try again.';
 };
 
-// Detect if the current email looks like it belongs to an admin
 const isAdminEmail = (email) => email.trim().toLowerCase() === 'admin@helper.com';
+
+// Visual config for the detected-account chip.
+const ROLE_CHIP = {
+  worker: { label: 'Worker account detected', Icon: Briefcase, tone: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
+  brand: { label: 'Brand account detected', Icon: Building2, tone: 'bg-amber-50 text-amber-700 border-amber-200' },
+  admin: { label: 'Admin account detected', Icon: ShieldCheck, tone: 'bg-rose-50 text-rose-700 border-rose-200' },
+};
 
 export default function Login() {
   const { login, logout, isAuthenticated, bootstrapping } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [selectedRole, setSelectedRole] = useState('user'); // 'user' | 'worker' | 'brand'
   const [showPassword, setShowPassword] = useState(false);
   const [showAdminKey, setShowAdminKey] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
@@ -52,28 +58,34 @@ export default function Login() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [suspensionNotice, setSuspensionNotice] = useState('');
+  const [reviewNotice, setReviewNotice] = useState('');
+  const [hintRole, setHintRole] = useState(null);
 
-  const tabs = [
-    { id: 'user', label: 'Customer', icon: <UserIcon size={14} /> },
-    { id: 'worker', label: 'Worker', icon: <Briefcase size={14} /> },
-    { id: 'brand', label: 'Brand', icon: <Building2 size={14} /> },
-  ];
-
-  const handleEmailChange = (v) => {
-    setForm((f) => ({ ...f, email: v }));
-  };
-
-  const handleGoogleSuccess = async ({ user }) => {
-    if (user.role !== 'admin' && user.role !== selectedRole) {
-      await logout();
-      let correctTabName = 'Customer';
-      if (user.role === 'worker') correctTabName = 'Worker';
-      if (user.role === 'brand') correctTabName = 'Brand/Company';
-      const msg = `This account is registered as a ${correctTabName}. Please select the ${correctTabName} tab.`;
-      setError(msg);
-      toast.error(msg);
+  // Detect the account type from the email (worker / brand / admin) so we can
+  // show a hint chip and reveal the admin key field when needed. Debounced.
+  useEffect(() => {
+    const email = form.email.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setHintRole(null);
       return;
     }
+    let alive = true;
+    const t = setTimeout(() => {
+      getRoleHint(email)
+        .then((res) => {
+          if (alive) setHintRole(res?.role || null);
+        })
+        .catch(() => alive && setHintRole(null));
+    }, 400);
+    return () => {
+      alive = false;
+      clearTimeout(t);
+    };
+  }, [form.email]);
+
+  const showAdminKeyField = hintRole === 'admin' || isAdminEmail(form.email);
+
+  const handleGoogleSuccess = () => {
     toast.success('Welcome back');
     navigate(location.state?.from || '/dashboard', { replace: true });
   };
@@ -85,26 +97,20 @@ export default function Login() {
     e.preventDefault();
     setError('');
     setSuspensionNotice('');
+    setReviewNotice('');
     setSubmitting(true);
     try {
-      const adminKey = isAdminEmail(form.email) ? form.adminKey : undefined;
-      const loggedInUser = await login(form.email.trim(), form.password, adminKey);
-
-      // Validate role mapping
-      if (loggedInUser.role !== 'admin' && loggedInUser.role !== selectedRole) {
-        await logout();
-        let correctTabName = 'Customer';
-        if (loggedInUser.role === 'worker') correctTabName = 'Worker';
-        if (loggedInUser.role === 'brand') correctTabName = 'Brand/Company';
-        throw new Error(`This account is registered as a ${correctTabName}. Please select the ${correctTabName} tab.`);
-      }
-
+      const adminKey = showAdminKeyField ? form.adminKey : undefined;
+      await login(form.email.trim(), form.password, adminKey);
       toast.success('Welcome back');
+      // RoleRedirect routes each role to the right dashboard.
       navigate(location.state?.from || '/dashboard', { replace: true });
     } catch (err) {
       const message = friendlyError(err);
       if (err?.response?.status === 403 && /suspend/i.test(message)) {
         setSuspensionNotice(message);
+      } else if (err?.response?.status === 403 && /review|approv|kyc/i.test(message)) {
+        setReviewNotice(message);
       } else {
         setError(message);
         toast.error(message);
@@ -114,13 +120,11 @@ export default function Login() {
     }
   };
 
+  const chip = hintRole ? ROLE_CHIP[hintRole] : null;
 
   return (
     <>
-      <div
-        aria-hidden
-        className="pointer-events-none fixed inset-0 -z-10 bg-paper"
-      />
+      <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 bg-paper" />
       <div
         aria-hidden
         className="pointer-events-none fixed inset-0 -z-10 opacity-70"
@@ -159,22 +163,10 @@ export default function Login() {
               </h1>
               <div className="h-px w-16 bg-gradient-to-r from-ink/40 to-transparent" />
               <p className="max-w-md text-base font-semibold leading-relaxed text-ink/85">
-                Your bookings, orders, and saved looks live in one elegant place. Sign in to
-                pick up where you left off.
+                One sign-in for customers, workers, and brands. We detect your account type
+                automatically — just enter your email and password.
               </p>
             </div>
-
-            <ul className="hidden flex-wrap items-center gap-x-3 gap-y-2 text-xs uppercase tracking-[0.18em] text-ink/70 lg:flex">
-              <li className="inline-flex items-center rounded-full border border-ink/10 px-3 py-1 font-semibold.03]">
-                Secure auth
-              </li>
-              <li className="inline-flex items-center rounded-full border border-ink/10 px-3 py-1 font-semibold.03]">
-                Google sign-in
-              </li>
-              <li className="inline-flex items-center rounded-full border border-ink/10 px-3 py-1 font-semibold.03]">
-                Curated for you
-              </li>
-            </ul>
           </motion.div>
 
           {/* Card column */}
@@ -191,33 +183,9 @@ export default function Login() {
               />
 
               <div className="overflow-hidden rounded-[28px] border border-ink/10 bg-paper/95 shadow-card backdrop-blur-xl">
-                {/* Custom Tab Bar */}
-                <div className="px-6 pt-6 sm:px-8">
-                  <div className="flex justify-between items-center gap-1 bg-[#FAF6F0] p-1 rounded-full border border-[#EDE8E0] w-full">
-                    {tabs.map((tab) => {
-                      const isSelected = selectedRole === tab.id;
-                      return (
-                        <button
-                          key={tab.id}
-                          type="button"
-                          onClick={() => setSelectedRole(tab.id)}
-                          className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-2.5 rounded-full text-[10px] sm:text-xs font-semibold uppercase tracking-wider transition-all duration-300 ${
-                            isSelected
-                              ? 'bg-black text-white shadow-sm'
-                              : 'text-black hover:bg-black/5'
-                          }`}
-                        >
-                          {tab.icon}
-                          <span className="whitespace-nowrap">{tab.label}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div className="px-6 pt-5 pb-1 sm:px-8">
+                <div className="px-6 pt-6 pb-1 sm:px-8 sm:pt-8">
                   <h2 className="text-[26px] font-semibold leading-tight tracking-tight text-ink">
-                    Sign in as {selectedRole === 'brand' ? 'Brand/Company' : selectedRole === 'user' ? 'Customer' : 'Worker'}
+                    Sign in
                   </h2>
                   <p className="mt-1 text-sm text-ink/60">
                     Sign in with your email or continue with Google.
@@ -227,7 +195,6 @@ export default function Login() {
                 <div className="space-y-4 px-6 pb-6 pt-5 sm:px-8 sm:pb-8">
                   <GoogleAuthButton label="Continue with Google" onSuccess={handleGoogleSuccess} />
 
-                  {/* Divider */}
                   <div className="relative flex items-center gap-3 py-1">
                     <div className="h-px flex-1 bg-ink/10" />
                     <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-ink/45">
@@ -241,12 +208,31 @@ export default function Login() {
                       label="Email"
                       type="email"
                       value={form.email}
-                      onChange={handleEmailChange}
+                      onChange={(v) => setForm((f) => ({ ...f, email: v }))}
                       placeholder="you@example.com"
                       autoComplete="email"
                       required
                       leadingIcon={<Mail size={16} />}
                     />
+
+                    {/* Detected-account chip */}
+                    <AnimatePresence>
+                      {chip && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="overflow-hidden"
+                        >
+                          <div className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${chip.tone}`}>
+                            <chip.Icon size={13} />
+                            {chip.label}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
                     <Field
                       label="Password"
                       type={showPassword ? 'text' : 'password'}
@@ -269,9 +255,9 @@ export default function Login() {
                       }
                     />
 
-                    {/* Admin security key — shown only when admin email is detected */}
+                    {/* Admin security key — shown only for admin accounts */}
                     <AnimatePresence>
-                      {isAdminEmail(form.email) && (
+                      {showAdminKeyField && (
                         <motion.div
                           key="admin-key"
                           initial={{ opacity: 0, height: 0 }}
@@ -292,7 +278,7 @@ export default function Login() {
                               onChange={(v) => setForm((f) => ({ ...f, adminKey: v }))}
                               placeholder="Enter admin security key"
                               autoComplete="off"
-                              required={isAdminEmail(form.email)}
+                              required={showAdminKeyField}
                               leadingIcon={<ShieldCheck size={16} />}
                               trailing={
                                 <button
@@ -357,6 +343,12 @@ export default function Login() {
                       Create an account
                     </Link>
                   </div>
+                  <div className="text-center text-xs text-ink/55">
+                    Want to work or sell with us?{' '}
+                    <Link to="/join" className="font-semibold text-ink underline-offset-4 hover:underline">
+                      Join as a pro or brand
+                    </Link>
+                  </div>
                 </div>
               </div>
 
@@ -388,22 +380,51 @@ export default function Login() {
                 <div className="text-[11px] font-medium uppercase tracking-[0.18em] text-ink/55">
                   Account notice
                 </div>
-                <h3 className="text-xl font-semibold text-ink">
-                  Account suspended
-                </h3>
-                <p className="text-sm leading-relaxed text-ink/70">
-                  {suspensionNotice}
-                </p>
+                <h3 className="text-xl font-semibold text-ink">Account suspended</h3>
+                <p className="text-sm leading-relaxed text-ink/70">{suspensionNotice}</p>
               </div>
               <div className="rounded-xl border border-ink/10 bg-ink/[0.02] px-3 py-2 text-xs text-ink/65.04]">
                 For assistance, contact{' '}
-                <span className="font-mono text-ink">
-                  support@helper.com
-                </span>
-                .
+                <span className="font-mono text-ink">support@helper.com</span>.
               </div>
               <button
                 onClick={() => setSuspensionNotice('')}
+                className="w-full rounded-full bg-ink py-2.5 text-sm font-semibold text-paper transition-transform duration-150 hover:opacity-95 active:scale-[0.99]"
+              >
+                Understood
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* KYC Under-Review Notice Modal */}
+      <AnimatePresence>
+        {reviewNotice && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] flex items-center justify-center bg-ink/40 px-4 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.96, opacity: 0, y: 8 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.96, opacity: 0, y: 8 }}
+              transition={{ duration: 0.2 }}
+              className="w-full max-w-md space-y-5 rounded-[24px] border border-ink/10 bg-paper p-7 shadow-card"
+            >
+              <div className="space-y-2">
+                <div className="text-[11px] font-medium uppercase tracking-[0.18em] text-ink/55">
+                  Account notice
+                </div>
+                <h3 className="flex items-center gap-2 text-xl font-semibold text-ink">
+                  <BadgeCheck size={20} /> KYC under review
+                </h3>
+                <p className="text-sm leading-relaxed text-ink/70">{reviewNotice}</p>
+              </div>
+              <button
+                onClick={() => setReviewNotice('')}
                 className="w-full rounded-full bg-ink py-2.5 text-sm font-semibold text-paper transition-transform duration-150 hover:opacity-95 active:scale-[0.99]"
               >
                 Understood

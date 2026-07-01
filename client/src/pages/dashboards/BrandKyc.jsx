@@ -177,7 +177,7 @@ export default function BrandKyc() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-paper">
-        <Loader2 className="animate-spin text-[#6f5cff]" size={32} />
+        <Loader2 className="animate-spin text-[#13294B]" size={32} />
       </div>
     );
   }
@@ -238,7 +238,7 @@ export default function BrandKyc() {
                       value={companyName}
                       onChange={(e) => setCompanyName(e.target.value)}
                       disabled={isReadOnly}
-                      className="w-full bg-sand/30 border border-ink/10 rounded-xl py-2 px-3 text-xs text-ink focus:outline-none focus:border-[#6f5cff] disabled:opacity-60"
+                      className="w-full bg-sand/30 border border-ink/10 rounded-xl py-2 px-3 text-xs text-ink focus:outline-none focus:border-[#13294B] disabled:opacity-60"
                     />
                   </div>
 
@@ -249,7 +249,7 @@ export default function BrandKyc() {
                       value={businessType}
                       onChange={(e) => setBusinessType(e.target.value)}
                       disabled={isReadOnly}
-                      className="w-full bg-sand/30 border border-ink/10 rounded-xl py-2.5 px-3 text-xs text-ink focus:outline-none focus:border-[#6f5cff] disabled:opacity-60"
+                      className="w-full bg-sand/30 border border-ink/10 rounded-xl py-2.5 px-3 text-xs text-ink focus:outline-none focus:border-[#13294B] disabled:opacity-60"
                     >
                       <option value="">Select Entity Type</option>
                       <option value="Sole Proprietorship">Sole Proprietorship</option>
@@ -269,7 +269,7 @@ export default function BrandKyc() {
                       value={companyAddress}
                       onChange={(e) => setCompanyAddress(e.target.value)}
                       disabled={isReadOnly}
-                      className="w-full bg-sand/30 border border-ink/10 rounded-xl py-2 px-3 text-xs text-ink focus:outline-none focus:border-[#6f5cff] disabled:opacity-60"
+                      className="w-full bg-sand/30 border border-ink/10 rounded-xl py-2 px-3 text-xs text-ink focus:outline-none focus:border-[#13294B] disabled:opacity-60"
                     />
                   </div>
                 </div>
@@ -333,7 +333,7 @@ export default function BrandKyc() {
                     <button
                       type="submit"
                       disabled={submitting}
-                      className="bg-[#6f5cff] text-white rounded-full py-2.5 px-6 text-xs font-bold uppercase tracking-wider hover:bg-[#6f5cff]/90 transition-all disabled:opacity-50 flex items-center gap-1.5"
+                      className="bg-[#13294B] text-white rounded-full py-2.5 px-6 text-xs font-bold uppercase tracking-wider hover:bg-[#13294B]/90 transition-all disabled:opacity-50 flex items-center gap-1.5"
                     >
                       {submitting && <Loader2 className="animate-spin" size={12} />}
                       {submitting ? 'Submitting Details...' : 'Submit Verification'}

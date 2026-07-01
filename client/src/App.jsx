@@ -40,6 +40,8 @@ function ScrollToTop() {
 import Home from './pages/Home.jsx';
 import Login from './pages/Login.jsx';
 import Signup from './pages/Signup.jsx';
+import JoinUs from './pages/JoinUs.jsx';
+import JoinApply from './pages/JoinApply.jsx';
 import ForgotPassword from './pages/ForgotPassword.jsx';
 import ResetPassword from './pages/ResetPassword.jsx';
 import NotFound from './pages/NotFound.jsx';
@@ -72,6 +74,7 @@ const AdminFinance = lazy(() => import('./pages/dashboards/AdminFinance.jsx'));
 const AdminPayouts = lazy(() => import('./pages/dashboards/AdminPayouts.jsx'));
 const AdminSettings = lazy(() => import('./pages/dashboards/AdminSettings.jsx'));
 const AdminCategories = lazy(() => import('./pages/dashboards/AdminCategories.jsx'));
+const AdminLocations = lazy(() => import('./pages/dashboards/AdminLocations.jsx'));
 const AdminBrandCategories = lazy(() => import('./pages/dashboards/AdminBrandCategories.jsx'));
 const AdminSupport = lazy(() => import('./pages/dashboards/AdminSupport.jsx'));
 const AdminWallet = lazy(() => import('./pages/dashboards/AdminWallet.jsx'));
@@ -86,6 +89,8 @@ const WorkerJobs = lazy(() => import('./pages/dashboards/WorkerJobs.jsx'));
 const WorkerEarnings = lazy(() => import('./pages/dashboards/WorkerEarnings.jsx'));
 const WorkerKyc = lazy(() => import('./pages/dashboards/WorkerKyc.jsx'));
 const WorkerAvailability = lazy(() => import('./pages/dashboards/WorkerAvailability.jsx'));
+const WorkerServices = lazy(() => import('./pages/dashboards/WorkerServices.jsx'));
+const WorkerPromote = lazy(() => import('./pages/dashboards/WorkerPromote.jsx'));
 
 // User surface
 const UserDashboard = lazy(() => import('./pages/dashboards/UserDashboard.jsx'));
@@ -115,7 +120,7 @@ function PageFallback() {
 
 export default function App() {
   return (
-    <div className="flex min-h-screen flex-col bg-paper text-ink">
+    <div className="flex min-h-screen flex-col bg-sand text-ink">
       <ScrollToTop />
       <Navbar />
       <main className="flex-1 pt-24">
@@ -124,6 +129,8 @@ export default function App() {
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/join" element={<JoinUs />} />
+            <Route path="/join/apply" element={<JoinApply />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
 
@@ -169,6 +176,7 @@ export default function App() {
 
             <Route element={<ProtectedRoute roles={['admin']} />}>
               <Route path="/admin/categories" element={<AdminCategories />} />
+              <Route path="/admin/locations" element={<AdminLocations />} />
               <Route path="/admin/brand-categories" element={<AdminBrandCategories />} />
               {/* /admin/product-categories now redirects to brand-categories — same model */}
               <Route path="/admin/product-categories" element={<AdminBrandCategories />} />
@@ -202,8 +210,10 @@ export default function App() {
               <Route path="/worker/jobs" element={<WorkerJobs />} />
               <Route path="/worker/earnings" element={<WorkerEarnings />} />
               <Route path="/worker/kyc" element={<WorkerKyc />} />
+              <Route path="/worker/services" element={<WorkerServices />} />
               <Route path="/worker/availability" element={<WorkerAvailability />} />
               <Route path="/worker/jobs/:bookingId/nav" element={<WorkerNav />} />
+              <Route path="/worker/promote" element={<WorkerPromote />} />
             </Route>
 
             <Route element={<ProtectedRoute />}>

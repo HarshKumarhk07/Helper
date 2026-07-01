@@ -92,7 +92,7 @@ export default function ProductCard({ product, onFavoriteChange }) {
           the card past its grid cell on small screens. */}
       <div className="mt-3 sm:mt-4 px-1 flex flex-col flex-1 min-w-0">
         <Link to={`/products/${product._id}`} className="block flex-1 min-w-0 group/title">
-          <h3 className="text-[14px] sm:text-base font-semibold text-ink line-clamp-2 leading-tight transition-colors group-hover/title:text-[#6f5cff]">
+          <h3 className="text-[14px] sm:text-base font-semibold text-ink line-clamp-2 leading-tight transition-colors group-hover/title:text-[#13294B]">
             {product.name}
           </h3>
           <p className="mt-1 text-[11px] sm:text-xs text-ink/50 line-clamp-1">{product.description}</p>
@@ -145,7 +145,7 @@ export default function ProductCard({ product, onFavoriteChange }) {
                 onClick={handleAddToCart}
                 disabled={outOfStock}
                 aria-label={outOfStock ? 'Out of stock' : 'Add to cart'}
-                className={`flex w-full sm:w-auto min-w-0 items-center justify-center gap-1.5 text-[11px] sm:text-xs font-bold uppercase tracking-wider sm:tracking-widest text-white bg-ink rounded-full py-2 sm:py-3 px-3 sm:px-5 whitespace-nowrap hover:bg-[#6f5cff] transition-all duration-300 hover:shadow-lg hover:shadow-[#6f5cff]/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-ink`}
+                className={`flex w-full sm:w-auto min-w-0 items-center justify-center gap-1.5 text-[11px] sm:text-xs font-bold uppercase tracking-wider sm:tracking-widest text-white bg-ink rounded-full py-2 sm:py-3 px-3 sm:px-5 whitespace-nowrap hover:bg-[#13294B] transition-all duration-300 hover:shadow-lg hover:shadow-[#13294B]/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-ink`}
               >
                 {outOfStock ? 'Sold out' : 'Add'}
                 <ShoppingCart size={13} className="shrink-0" />

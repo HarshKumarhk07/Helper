@@ -3,6 +3,7 @@ import { useSearchParams, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { listCategories } from '../api/categories.js';
 import { listServices } from '../api/services.js';
+import { useLocation } from '../context/LocationContext.jsx';
 import CategoryChips from '../components/services/CategoryChips.jsx';
 import SkeletonCard from '../components/ui/SkeletonCard.jsx';
 import FadeUp from '../components/ui/FadeUp.jsx';
@@ -10,15 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Clock, Star, ArrowRight, ShieldCheck } from 'lucide-react';
 import { resolveCatalogImage, CATALOG_PLACEHOLDER_IMAGE } from '../lib/catalogImage.js';
 import { formatPrice } from '../lib/booking.js';
-
-const CAT_IMAGES = {
-  'all':                    'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80',
-  'home-repair-maintenance':'https://images.unsplash.com/photo-1621905251918-48416bd8575a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80',
-  'cleaning-pest-control':  'https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80',
-  'appliance-repair':       'https://images.unsplash.com/photo-1626806819282-2c1dc01a5e0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80',
-  'home-improvement':       'https://images.unsplash.com/photo-1581244277943-fe4a9c777189?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80',
-  'moving-installation':    'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80',
-};
+import BestWorkers from '../sections/BestWorkers.jsx';
 
 function ServiceCard({ service }) {
   const img = resolveCatalogImage(service);
@@ -87,6 +80,7 @@ export default function ServicesIndex() {
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState(q);
+  const { location } = useLocation();
 
   useEffect(() => {
     listCategories({ active: 'true' })
@@ -104,12 +98,13 @@ export default function ServicesIndex() {
     const filters = { active: 'true' };
     if (cat !== 'all') filters.category = cat;
     if (q) filters.q = q;
+    if (location?._id) filters.location = location._id;
 
     listServices(filters)
       .then((svcs) => setServices(svcs || []))
       .catch(() => toast.error('Failed to load services'))
       .finally(() => setLoading(false));
-  }, [cat, q]);
+  }, [cat, q, location]);
 
   const onChipChange = (_slug, next) => setParams(next);
 
@@ -121,54 +116,11 @@ export default function ServicesIndex() {
     setParams(next);
   };
 
-  const heading = useMemo(() => {
-    const c = categories.find((x) => x.slug === cat);
-    if (cat === 'all') return 'THE COLLECTION';
-    return c ? c.name : 'SERVICES';
-  }, [cat, categories]);
-
-  // Pick hero image — try to use the admin category image, fall back to CAT_IMAGES map
   const activeCat = categories.find((x) => x.slug === cat);
-  const currentHeroImage =
-    (activeCat?.image) ||
-    CAT_IMAGES[cat] ||
-    CAT_IMAGES['all'];
 
   return (
     <section className="bg-paper min-h-screen">
-      {/* Cinematic Hero Banner */}
-      <div className="relative h-[60vh] min-h-[400px] w-full flex items-center justify-center overflow-hidden bg-ink">
-        <AnimatePresence mode="wait">
-          <motion.img
-            key={currentHeroImage}
-            initial={{ opacity: 0, scale: 1.05 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.8 }}
-            src={currentHeroImage}
-            alt="Category Header"
-            className="absolute inset-0 w-full h-full object-cover object-center opacity-60"
-            onError={(e) => { e.currentTarget.style.opacity = '0'; }}
-          />
-        </AnimatePresence>
-        
-        {/* Dark elegant gradients */}
-        <div className="absolute inset-0 bg-gradient-to-t from-sand via-ink/20 to-ink/40"></div>
-        
-        <div className="relative z-10 container-velora text-center mt-16">
-          <FadeUp>
-            <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full border border-paper/20 bg-ink/40 backdrop-blur-md shadow-xl mb-6">
-              <span className="w-1.5 h-1.5 rounded-full bg-paper animate-pulse"></span>
-              <span className="text-xs font-medium tracking-[0.2em] uppercase text-paper/90">Catalog</span>
-            </div>
-            <h1 className="heading-display text-5xl md:text-7xl lg:text-[80px] text-paper tracking-tight drop-shadow-xl capitalize">
-              {heading}
-            </h1>
-          </FadeUp>
-        </div>
-      </div>
-
-      <div className="container-velora py-16 -mt-20 relative z-20">
+      <div className="container-velora pt-4 pb-8 relative z-20">
         
         {/* Filters Bar */}
         <FadeUp delay={0.2}>
@@ -179,7 +131,7 @@ export default function ServicesIndex() {
             
             <form onSubmit={onSearch} className="relative w-full lg:w-80 flex-shrink-0 group">
               <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                <Search size={16} className="text-ink/40 group-focus-within:text-[#6f5cff] transition-colors" />
+                <Search size={16} className="text-ink/40 group-focus-within:text-[#13294B] transition-colors" />
               </div>
               <input
                 value={search}
@@ -187,12 +139,24 @@ export default function ServicesIndex() {
                 placeholder="Search services..."
                 className="w-full rounded-full border border-ink/10 bg-sand/30 pl-10 pr-24 py-3 text-sm outline-none transition-all focus:border-ink/30 focus:bg-white focus:ring-4 focus:ring-ink/5"
               />
-              <button type="submit" className="absolute right-1.5 top-1.5 bottom-1.5 bg-ink text-paper rounded-full px-5 text-xs font-bold tracking-wide hover:bg-[#6f5cff] hover:shadow-md transition-all">
+              <button type="submit" className="absolute right-1.5 top-1.5 bottom-1.5 bg-ink text-paper rounded-full px-5 text-xs font-bold tracking-wide hover:bg-[#13294B] hover:shadow-md transition-all">
                 Search
               </button>
             </form>
           </div>
         </FadeUp>
+
+        {/* Category Description */}
+        {cat !== 'all' && activeCat?.description && (
+          <FadeUp delay={0.25}>
+            <div className="flex flex-col items-center text-center mb-12 mt-6 px-4">
+              <h2 className="text-3xl font-light font-display tracking-wide text-ink mb-4">{activeCat.name}</h2>
+              <p className="text-sm md:text-base text-ink/60 leading-relaxed max-w-3xl">
+                {activeCat.description}
+              </p>
+            </div>
+          </FadeUp>
+        )}
 
         {/* Helper Certified badge */}
         <FadeUp delay={0.3}>
@@ -225,6 +189,8 @@ export default function ServicesIndex() {
           )}
         </div>
       </div>
+
+      <BestWorkers category={cat !== 'all' ? cat : null} />
     </section>
   );
 }

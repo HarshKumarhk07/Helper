@@ -18,15 +18,22 @@ export default {
         xs: '480px',
       },
       colors: {
-        ink: '#1A1A1A',        // Very dark grey for primary text
-        paper: '#FFFFFF',      // Pure white for backgrounds
-        sand: '#F7F7F8',       // Very light cool grey for sections
-        ash: '#E2E2E2',        // Borders and subtle accents
-        muted: '#737373',      // Muted text
+        // Brand palette — deep navy + golden yellow on warm cream, matching
+        // the Helper logo. `ink` (navy) drives all primary text and dark
+        // surfaces; `brand` (yellow) is the accent / primary CTA.
+        ink: '#13294B',        // Deep navy — primary text + dark surfaces/buttons
+        paper: '#FFFFFF',      // White — cards & text on dark
+        sand: '#F6F1E9',       // Warm cream — page & section backgrounds
+        ash: '#E7DFD1',        // Warm borders and subtle accents
+        muted: '#5C6B82',      // Navy-tinted muted text
+        brand: '#F5C518',      // Golden yellow — accent / primary CTA
+        'brand-dark': '#E0B00E', // Hover/active yellow
+        navy: '#13294B',       // Alias for clarity
+        cream: '#F6F1E9',      // Alias for clarity
       },
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
-        display: ['"Playfair Display"', 'serif'],
+        sans: ['"General Sans"', 'Inter', 'sans-serif'],
+        display: ['"General Sans"', 'Poppins', 'Inter', 'sans-serif'],
         mono: ['Chivo Mono', 'monospace'],
       },
       letterSpacing: {

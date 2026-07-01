@@ -5,6 +5,7 @@ import { listAllOrders, updateOrderNote } from '../../api/orders.js';
 import { formatPrice } from '../../lib/booking.js';
 import RefundModal from '../../components/admin/RefundModal.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
+import useAdminSeen from '../../hooks/useAdminSeen.js';
 
 export default function AdminOrders() {
   const { user } = useAuth();
@@ -15,6 +16,9 @@ export default function AdminOrders() {
   const [refundTarget, setRefundTarget] = useState(null);
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState(null);
+
+  // Clears the dashboard "orders" badge when this page is opened.
+  useAdminSeen('orders');
 
   const load = () => {
     setLoading(true);

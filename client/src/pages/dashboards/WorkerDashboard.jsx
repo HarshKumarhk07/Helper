@@ -20,6 +20,9 @@ export default function WorkerDashboard() {
         <PillButton variant="solid" to="/worker/jobs">
           Open job queue →
         </PillButton>
+        <PillButton variant="solid" to="/worker/services">
+          My services | pricing →
+        </PillButton>
         <PillButton variant="solid" to="/worker/availability">
           Schedule | online →
         </PillButton>
@@ -32,6 +35,15 @@ export default function WorkerDashboard() {
         <PillButton variant="solid" to="/me/profile-edit">
           Edit profile →
         </PillButton>
+        {!user.isFeatured ? (
+          <PillButton variant="solid" to="/worker/promote">
+            Promote profile →
+          </PillButton>
+        ) : (
+          <div className="inline-flex items-center justify-center gap-2 rounded-pill px-5 py-2 text-sm font-medium tracking-tightish border border-brand bg-brand/10 text-brand">
+            ★ Featured status: ACTIVE
+          </div>
+        )}
       </div>
     </DashboardShell>
   );

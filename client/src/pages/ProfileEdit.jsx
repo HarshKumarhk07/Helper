@@ -42,7 +42,10 @@ export default function ProfileEdit() {
     phone: '',
     email: '',
     passportPhoto: '',
+    locations: [],
   });
+
+  const [availableLocations, setAvailableLocations] = useState([]);
 
   const [photoState, setPhotoState] = useState('idle'); // idle | uploading | done
 
@@ -54,7 +57,12 @@ export default function ProfileEdit() {
       // Hide the phone-OTP placeholder email so users can fill in a real one.
       email: isPlaceholderEmail(user.email) ? '' : user.email || '',
       passportPhoto: user.passportPhoto || user.avatar || '',
+      locations: user.locations || [],
     });
+
+    if (user?.role === 'worker') {
+      api.get('/api/locations').then(res => setAvailableLocations(res.data)).catch(console.error);
+    }
   }, [user]);
 
   const emailValid =
@@ -94,6 +102,7 @@ export default function ProfileEdit() {
         name: form.name.trim(),
         phone: form.phone.trim(),
         passportPhoto: form.passportPhoto || '',
+        locations: form.locations || [],
       };
       // Only send email if the user typed one (don't accidentally clear or revert).
       if (form.email.trim()) payload.email = form.email.trim();
@@ -256,6 +265,26 @@ export default function ProfileEdit() {
                 )}
               </div>
             </Section>
+
+            {isWorker && availableLocations.length > 0 && (
+              <Section title="Service Areas">
+                <div className="text-xs text-ink/60 mb-2">Select the areas where you provide services (Hold Ctrl/Cmd to select multiple). Leave empty for everywhere.</div>
+                <select
+                  multiple
+                  className="w-full rounded-xl border-2 border-ink/15 bg-paper px-4 py-2.5 text-sm outline-none focus:border-ink"
+                  value={form.locations}
+                  onChange={(e) => {
+                    const values = Array.from(e.target.selectedOptions, option => option.value);
+                    setForm({ ...form, locations: values });
+                  }}
+                  style={{ minHeight: '120px' }}
+                >
+                  {availableLocations.map(loc => (
+                    <option key={loc._id} value={loc._id}>{loc.name}</option>
+                  ))}
+                </select>
+              </Section>
+            )}
 
             {showKycPanel && (
               <div className="rounded-2xl border-2 border-amber-300 bg-amber-50/70 p-4 text-sm text-amber-900">

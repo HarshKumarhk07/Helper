@@ -277,7 +277,7 @@ export default function ServiceModal({ data, onClose }) {
                       </span>
                       <ArrowRight
                         size={14}
-                        className="shrink-0 text-ink/35 transition-colors group-hover:text-[#6f5cff]"
+                        className="shrink-0 text-ink/35 transition-colors group-hover:text-[#13294B]"
                       />
                     </div>
                   </motion.button>

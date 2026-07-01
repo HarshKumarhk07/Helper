@@ -24,7 +24,7 @@ export default function WorkerCard({ worker }) {
           </span>
         )}
         {worker.isRecommended && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-[#6f5cff] px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider text-white shadow-sm">
+          <span className="inline-flex items-center gap-1 rounded-full bg-[#13294B] px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider text-white shadow-sm">
             Recommended
           </span>
         )}
@@ -68,7 +68,7 @@ export default function WorkerCard({ worker }) {
             <Star size={12} className="fill-amber-400 text-amber-400" />
             <span className="font-semibold text-ink">{worker.displayRating || '—'}</span>
             {worker.hasHiredBefore && (
-              <span className="text-[8px] text-[#6f5cff] font-bold bg-[#6f5cff]/10 px-1.5 py-0.5 rounded-full ml-1.5">
+              <span className="text-[8px] text-[#13294B] font-bold bg-[#13294B]/10 px-1.5 py-0.5 rounded-full ml-1.5">
                 Previously Hired
               </span>
             )}
@@ -79,11 +79,11 @@ export default function WorkerCard({ worker }) {
         <div className="pt-2">
           <div className="text-[9px] uppercase tracking-wider text-ink/50 font-bold mb-1">Pricing Configuration</div>
           <div className="grid grid-cols-2 gap-2 text-center text-xs">
-            <div className={`p-2 rounded-xl border ${worker.pricingType === 'fixed' ? 'border-[#6f5cff] bg-[#6f5cff]/5' : 'border-ink/5 bg-sand/10'}`}>
+            <div className={`p-2 rounded-xl border ${worker.pricingType === 'fixed' ? 'border-[#13294B] bg-[#13294B]/5' : 'border-ink/5 bg-sand/10'}`}>
               <div className="text-[8px] text-ink/50 uppercase">Fixed Price</div>
               <div className="font-bold text-ink">₹{worker.fixedPrice || 0}</div>
             </div>
-            <div className={`p-2 rounded-xl border ${worker.pricingType === 'hourly' ? 'border-[#6f5cff] bg-[#6f5cff]/5' : 'border-ink/5 bg-sand/10'}`}>
+            <div className={`p-2 rounded-xl border ${worker.pricingType === 'hourly' ? 'border-[#13294B] bg-[#13294B]/5' : 'border-ink/5 bg-sand/10'}`}>
               <div className="text-[8px] text-ink/50 uppercase">Hourly Price</div>
               <div className="font-bold text-ink">₹{worker.hourlyRate || 0}/hr</div>
             </div>
@@ -95,7 +95,7 @@ export default function WorkerCard({ worker }) {
       <div className="mt-5 pt-3 border-t border-ink/5">
         <button
           onClick={handleBook}
-          className="w-full inline-flex items-center justify-center gap-1.5 bg-ink text-paper rounded-full py-3 text-xs font-bold uppercase tracking-widest hover:bg-[#6f5cff] hover:shadow-lg transition-all duration-300"
+          className="w-full inline-flex items-center justify-center gap-1.5 bg-ink text-paper rounded-full py-3 text-xs font-bold uppercase tracking-widest hover:bg-[#13294B] hover:shadow-lg transition-all duration-300"
         >
           Book Professional <ArrowRight size={14} />
         </button>

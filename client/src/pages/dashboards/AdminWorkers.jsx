@@ -10,6 +10,7 @@ import {
   rejectKyc,
 } from '../../api/kyc.js';
 import { mediaUrl } from '../../lib/catalogImage.js';
+import useAdminSeen from '../../hooks/useAdminSeen.js';
 
 const STATUS_TABS = [
   { key: 'submitted', label: 'Pending Review' },
@@ -82,6 +83,15 @@ export default function AdminWorkers() {
   const [submitting, setSubmitting] = useState(false);
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState(null);
+
+  // Clears the dashboard "KYC approval" badge on open; returns the previous
+  // visit time so freshly-submitted applications can be flagged as NEW.
+  const previousSeen = useAdminSeen('kyc');
+  const isNew = (w) =>
+    previousSeen &&
+    w.kycStatus === 'submitted' &&
+    w.kycSubmittedAt &&
+    new Date(w.kycSubmittedAt) > previousSeen;
 
   const load = () => {
     setLoading(true);
@@ -216,11 +226,18 @@ export default function AdminWorkers() {
               filtered.map((w) => (
                 <tr
                   key={w._id}
-                  className="transition hover:bg-sand/30:bg-[#18181A]/50"
+                  className={`transition hover:bg-sand/30:bg-[#18181A]/50 ${
+                    isNew(w) ? 'bg-amber-50/70' : ''
+                  }`}
                 >
                   <td className="p-4 text-ink">
                     <div className="flex items-center gap-2">
                       <span className="font-medium text-ink">{w.name}</span>
+                      {isNew(w) && (
+                        <span className="rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-white">
+                          New
+                        </span>
+                      )}
                       {w.role && (
                         <span className="rounded-full bg-ink/8 px-2 py-0.5 text-[10px] uppercase tracking-widest text-ink/60">
                           {w.role}

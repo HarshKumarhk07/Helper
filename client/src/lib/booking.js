@@ -1,6 +1,8 @@
 export const BOOKING_STATUS = {
   PLACED: 'placed',
   ASSIGNED: 'assigned',
+  ACCEPTED: 'accepted',
+  EN_ROUTE: 'en_route',
   IN_PROGRESS: 'in_progress',
   COMPLETED: 'completed',
   CANCELLED: 'cancelled',
@@ -10,6 +12,8 @@ export const BOOKING_STATUS = {
 export const STATUS_LABEL = {
   placed: 'Placed',
   assigned: 'Assigned',
+  accepted: 'Accepted',
+  en_route: 'En route',
   in_progress: 'In progress',
   completed: 'Completed',
   cancelled: 'Cancelled',
@@ -19,6 +23,8 @@ export const STATUS_LABEL = {
 export const STATUS_TONE = {
   placed: 'bg-ash/30 text-ink',
   assigned: 'bg-sand text-ink',
+  accepted: 'bg-indigo-100 text-indigo-900',
+  en_route: 'bg-sky-100 text-sky-900',
   in_progress: 'bg-ink text-paper',
   completed: 'bg-emerald-100 text-emerald-900',
   cancelled: 'bg-red-100 text-red-900',

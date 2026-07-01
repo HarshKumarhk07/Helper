@@ -11,6 +11,7 @@ import {
   XCircle,
   Hourglass,
   Truck,
+  UserCheck,
   ChevronDown,
   ChevronUp,
 } from 'lucide-react';
@@ -31,6 +32,8 @@ import useSocket from '../hooks/useSocket.js';
 const STATUS_BADGE = {
   placed: 'bg-amber-400/15 text-amber-300 ring-amber-400/30',
   assigned: 'bg-sky-400/15 text-sky-300 ring-sky-400/30',
+  accepted: 'bg-indigo-400/15 text-indigo-300 ring-indigo-400/30',
+  en_route: 'bg-sky-400/15 text-sky-300 ring-sky-400/30',
   in_progress: 'bg-emerald-400/15 text-emerald-300 ring-emerald-400/30',
   completed: 'bg-emerald-500/15 text-emerald-300 ring-emerald-500/40',
   cancelled: 'bg-rose-400/15 text-rose-300 ring-rose-400/30',
@@ -38,7 +41,9 @@ const STATUS_BADGE = {
 
 const STATUS_LABEL = {
   placed: 'Placed',
-  assigned: 'Worker en route',
+  assigned: 'Worker assigned',
+  accepted: 'Worker accepted',
+  en_route: 'Worker en route',
   in_progress: 'Service in progress',
   completed: 'Completed',
   cancelled: 'Cancelled',
@@ -46,10 +51,23 @@ const STATUS_LABEL = {
 
 const TIMELINE = [
   { key: 'placed', label: 'Placed', Icon: Hourglass },
-  { key: 'assigned', label: 'On the way', Icon: Truck },
+  { key: 'assigned', label: 'Assigned', Icon: UserCheck },
+  { key: 'en_route', label: 'On the way', Icon: Truck },
   { key: 'in_progress', label: 'In progress', Icon: Clock },
   { key: 'completed', label: 'Completed', Icon: CheckCircle2 },
 ];
+
+// Map a raw booking status onto its timeline step (accepted collapses into the
+// assigned step, cancelled shows as the final step).
+const STATUS_TO_STEP = {
+  placed: 'placed',
+  assigned: 'assigned',
+  accepted: 'assigned',
+  en_route: 'en_route',
+  in_progress: 'in_progress',
+  completed: 'completed',
+  cancelled: 'completed',
+};
 
 // ─── Formatters ───────────────────────────────────────────────────────────────
 
@@ -430,10 +448,10 @@ export default function TrackBooking() {
                 </div>
 
                 {/* Progress timeline */}
-                <ol className="mt-3 grid grid-cols-4 gap-1">
+                <ol className="mt-3 grid grid-cols-5 gap-1">
                   {TIMELINE.map((step) => {
                     const stepIdx = TIMELINE.findIndex((s) => s.key === step.key);
-                    const currIdx = TIMELINE.findIndex((s) => s.key === status);
+                    const currIdx = TIMELINE.findIndex((s) => s.key === (STATUS_TO_STEP[status] || status));
                     const reached = stepIdx <= currIdx;
                     const current = step.key === status;
                     return (

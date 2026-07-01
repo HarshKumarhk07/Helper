@@ -11,5 +11,13 @@ const reviewSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// One review per booking, enforced at the DB level. Partial filter so the
+// unique constraint only applies to booking reviews (product reviews leave
+// booking null and must not collide with each other).
+reviewSchema.index(
+  { booking: 1 },
+  { unique: true, partialFilterExpression: { booking: { $type: 'objectId' } } }
+);
+
 const Review = mongoose.model('Review', reviewSchema);
 export default Review;

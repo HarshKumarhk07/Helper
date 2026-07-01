@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { Search, MessageSquare, Clock, AlertOctagon } from 'lucide-react';
 import DashboardShell from './DashboardShell.jsx';
 import { listAllTickets } from '../../api/support.js';
+import useAdminSeen from '../../hooks/useAdminSeen.js';
 
 const STATUS_BADGE = {
   open: 'bg-amber-100 text-amber-800',
@@ -50,6 +51,9 @@ export default function AdminSupport() {
   const [q, setQ] = useState('');
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState(null);
+
+  // Clears the dashboard "Support queue" badge when this page is opened.
+  useAdminSeen('support');
 
   const load = () => {
     setLoading(true);

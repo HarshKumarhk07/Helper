@@ -129,7 +129,7 @@ export default function CartPage() {
             {hasProducts ? (
               <button
                 onClick={() => navigate('/checkout')}
-                className="w-full rounded-pill bg-ink py-3.5 text-sm font-semibold tracking-wide text-paper shadow-md transition hover:bg-[#6f5cff]"
+                className="w-full rounded-pill bg-ink py-3.5 text-sm font-semibold tracking-wide text-paper shadow-md transition hover:bg-[#13294B]"
               >
                 Proceed to Checkout · ₹{productSubtotal}
               </button>
@@ -138,7 +138,7 @@ export default function CartPage() {
                 {serviceCart.length === 1 ? (
                   <button
                     onClick={() => navigate(`/book/${serviceCart[0].product}`)}
-                    className="flex w-full items-center justify-between gap-2 rounded-pill bg-ink px-5 py-3.5 text-sm font-semibold text-paper transition hover:bg-[#6f5cff] shadow-md"
+                    className="flex w-full items-center justify-between gap-2 rounded-pill bg-ink px-5 py-3.5 text-sm font-semibold text-paper transition hover:bg-[#13294B] shadow-md"
                   >
                     <span className="truncate pr-2">Book {serviceCart[0].name}</span>
                     <span className="shrink-0 tabular-nums opacity-90 font-bold">₹{serviceCart[0].price}</span>
@@ -146,7 +146,7 @@ export default function CartPage() {
                 ) : (
                   <button
                     onClick={() => navigate('/book/cart')}
-                    className="w-full rounded-pill bg-ink py-3.5 text-sm font-semibold tracking-wide text-paper shadow-md transition hover:bg-[#6f5cff]"
+                    className="w-full rounded-pill bg-ink py-3.5 text-sm font-semibold tracking-wide text-paper shadow-md transition hover:bg-[#13294B]"
                   >
                     Book All Services · ₹{serviceSubtotal}
                   </button>
@@ -169,7 +169,7 @@ export default function CartPage() {
                     <span className="text-ink font-medium truncate pr-2">{serviceCart[0].name}</span>
                     <button
                       onClick={() => navigate(`/book/${serviceCart[0].product}`)}
-                      className="text-[10px] bg-ink text-paper px-3 py-1.5 rounded-full font-bold uppercase tracking-wider hover:bg-[#6f5cff] transition-all shrink-0"
+                      className="text-[10px] bg-ink text-paper px-3 py-1.5 rounded-full font-bold uppercase tracking-wider hover:bg-[#13294B] transition-all shrink-0"
                     >
                       Schedule · ₹{serviceCart[0].price}
                     </button>
@@ -186,7 +186,7 @@ export default function CartPage() {
                     </div>
                     <button
                       onClick={() => navigate('/book/cart')}
-                      className="w-full bg-ink text-paper py-2.5 rounded-full text-xs font-bold uppercase tracking-wider hover:bg-[#6f5cff] transition-all shadow-sm"
+                      className="w-full bg-ink text-paper py-2.5 rounded-full text-xs font-bold uppercase tracking-wider hover:bg-[#13294B] transition-all shadow-sm"
                     >
                       Schedule All Services · ₹{serviceSubtotal}
                     </button>

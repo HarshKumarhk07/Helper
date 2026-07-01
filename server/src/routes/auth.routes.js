@@ -7,6 +7,7 @@ import {
   logout,
   forgotPassword,
   resetPassword,
+  roleHint,
 } from '../controllers/authController.js';
 import { googleSignIn } from '../controllers/googleAuthController.js';
 import { requireAuth } from '../middleware/auth.js';
@@ -18,6 +19,7 @@ const router = Router();
 router.post('/signup', validate(signupSchema), signup);
 router.post('/login', validate(loginSchema), login);
 router.post('/refresh', refresh);
+router.get('/role-hint', roleHint);
 // Logout must be authenticated — otherwise the server has no idea whose
 // tokens to revoke, so the call would be a no-op.
 router.post('/logout', requireAuth, logout);

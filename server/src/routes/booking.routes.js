@@ -11,6 +11,12 @@ import {
   assignWorker,
   autoAssign,
   transitionStatus,
+  rejectJob,
+  createQuoteRequest,
+  sendQuote,
+  listQuotes,
+  acceptQuote,
+  rejectQuote,
   getWorkerEarnings,
   getWorkerEarningEntries,
 } from '../controllers/bookingController.js';
@@ -27,6 +33,7 @@ router.use(requireAuth);
 router.get('/worker/earnings', requireRole(ROLES.WORKER), getWorkerEarnings);
 router.get('/worker/earnings/entries', requireRole(ROLES.WORKER), getWorkerEarningEntries);
 router.post('/', validate(createBookingSchema), createBooking);
+router.post('/quote-request', createQuoteRequest);
 router.get('/mine', listMyBookings);
 router.get('/worker/jobs', requireRole(ROLES.WORKER, ROLES.ADMIN), listWorkerJobs);
 router.get('/', requireRole(ROLES.ADMIN), listAllBookings);
@@ -40,5 +47,12 @@ router.post(
 );
 router.post('/:id/auto-assign', requireRole(ROLES.ADMIN), autoAssign);
 router.post('/:id/status', validate(transitionStatusSchema), transitionStatus);
+router.post('/:id/reject', requireRole(ROLES.WORKER), rejectJob);
+
+// Variable pricing / quotes
+router.post('/:id/quote', requireRole(ROLES.WORKER), sendQuote);
+router.get('/:id/quotes', listQuotes);
+router.post('/:id/quotes/:qid/accept', acceptQuote);
+router.post('/:id/quotes/:qid/reject', rejectQuote);
 
 export default router;

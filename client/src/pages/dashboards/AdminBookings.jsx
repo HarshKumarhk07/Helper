@@ -6,6 +6,7 @@ import StatusBadge from '../../components/booking/StatusBadge.jsx';
 import { formatDateTime, formatPrice, BOOKING_STATUS } from '../../lib/booking.js';
 import RefundModal from '../../components/admin/RefundModal.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
+import useAdminSeen from '../../hooks/useAdminSeen.js';
 
 const FILTERS = [
   { key: 'all', label: 'All' },
@@ -27,6 +28,9 @@ export default function AdminBookings() {
   const [refundTarget, setRefundTarget] = useState(null);
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState(null);
+
+  // Clears the dashboard "Open bookings" badge when this page is opened.
+  useAdminSeen('bookings');
 
   const load = () => {
     setLoading(true);

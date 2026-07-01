@@ -112,7 +112,7 @@ export default function Products() {
                     <span className="h-px w-10 bg-ink/15" />
                   </div>
                   <h3 className="heading-display text-3xl md:text-4xl lg:text-5xl text-ink leading-tight">
-                    Featured <span className="italic font-serif text-[#6f5cff]">products</span>
+                    Featured <span className="italic font-serif text-[#13294B]">products</span>
                   </h3>
                   <p className="mt-3 text-ink/55 max-w-lg">
                     Premium equipment, genuine spares, and trusted daily care retail chosen by our experts.

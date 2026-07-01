@@ -20,6 +20,11 @@ export const signupSchema = z.object({
   phone: z.string().optional().default(''),
   password: z.string().min(8).max(128),
   role: z.enum(['user', 'worker', 'brand']).optional().default('user'),
+  // Worker professional details — collected during the worker registration wizard.
+  // Optional here so customer/brand signups (and older clients) are unaffected.
+  experienceYears: z.coerce.number().min(0).max(80).optional(),
+  address: z.string().max(300).optional(),
+  education: z.string().max(200).optional(),
 });
 
 export const loginSchema = z.object({

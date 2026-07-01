@@ -70,9 +70,29 @@ const bookingSchema = new mongoose.Schema(
       index: true,
     },
     assignedAt: { type: Date, default: null },
+    // When the current assignment expires if the worker doesn't accept (15 min).
+    // Cleared once accepted; used by the expiry sweeper to mark jobs "missed".
+    assignmentExpiresAt: { type: Date, default: null },
+    acceptedAt: { type: Date, default: null },
+    enRouteAt: { type: Date, default: null },
     startedAt: { type: Date, default: null },
     completedAt: { type: Date, default: null },
     cancelledAt: { type: Date, default: null },
+    // Log of workers who rejected or missed this job — used to exclude them on
+    // reassignment so a rejected job isn't offered back to the same worker.
+    rejections: {
+      type: [
+        new mongoose.Schema(
+          {
+            worker: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+            reason: { type: String, default: '' },
+            at: { type: Date, default: Date.now },
+          },
+          { _id: false }
+        ),
+      ],
+      default: [],
+    },
     startPin: { type: String, select: false },
     endPin: { type: String, select: false },
     amount: { type: Number, required: true, min: 0 },
@@ -91,6 +111,40 @@ const bookingSchema = new mongoose.Schema(
     refundedAt: { type: Date, default: null },
     notes: { type: String, default: '', maxlength: 500 },
     history: { type: [statusLogSchema], default: [] },
+
+    // ── Variable pricing / quote flow ──────────────────────────────────────
+    // A quote-request booking starts with amount 0 and no confirmed price. The
+    // chosen worker sends one or more quotes; the customer accepts one, which
+    // sets the amount and moves the booking into the normal lifecycle.
+    isQuoteRequest: { type: Boolean, default: false, index: true },
+    quoteStatus: {
+      type: String,
+      enum: ['requested', 'quoted', 'accepted', 'rejected'],
+      default: null,
+    },
+    quoteDetails: {
+      description: { type: String, default: '', maxlength: 1000 },
+      photos: { type: [String], default: [] },
+    },
+    quotes: {
+      type: [
+        new mongoose.Schema(
+          {
+            worker: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+            amount: { type: Number, min: 0, required: true },
+            note: { type: String, default: '', maxlength: 300 },
+            status: {
+              type: String,
+              enum: ['pending', 'accepted', 'rejected'],
+              default: 'pending',
+            },
+            createdAt: { type: Date, default: Date.now },
+          },
+          { _id: true }
+        ),
+      ],
+      default: [],
+    },
   },
   { timestamps: true }
 );

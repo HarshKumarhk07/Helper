@@ -3,8 +3,19 @@ import Booking from '../models/Booking.js';
 import { ROLES } from '../config/roles.js';
 import { TERMINAL_STATUSES } from '../config/booking.js';
 
-export const pickWorkerForCategory = async () => {
-  const workers = await User.find({ role: ROLES.WORKER, isActive: true }).select('_id name');
+export const pickWorkerForCategory = async ({ excludeIds = [] } = {}) => {
+  // Never dispatch to a worker who is mid-job (busy) — $ne also matches legacy
+  // docs with no currentStatus field, so existing workers stay eligible.
+  // excludeIds skips workers who already rejected/missed this job.
+  const query = {
+    role: ROLES.WORKER,
+    isActive: true,
+    currentStatus: { $ne: 'busy' },
+  };
+  if (excludeIds.length) {
+    query._id = { $nin: excludeIds };
+  }
+  const workers = await User.find(query).select('_id name');
   if (workers.length === 0) return null;
 
   const workerIds = workers.map((w) => w._id);

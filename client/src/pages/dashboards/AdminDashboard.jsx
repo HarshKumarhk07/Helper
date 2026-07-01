@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { AlertTriangle, PackageX } from 'lucide-react';
 import DashboardShell from './DashboardShell.jsx';
 import PillButton from '../../components/ui/PillButton.jsx';
-import { getAdminStats } from '../../api/admin.js';
+import { getAdminStats, getAdminBadges } from '../../api/admin.js';
 import { formatPrice } from '../../lib/booking.js';
 import { mediaUrl, CATALOG_PLACEHOLDER_IMAGE } from '../../lib/catalogImage.js';
 import toast from 'react-hot-toast';
@@ -37,11 +37,35 @@ export default function AdminDashboard() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [badges, setBadges] = useState({});
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Notification badges: load on mount, refresh when the tab regains focus, and
+  // poll every 30s so new activity surfaces without a manual refresh. Opening a
+  // section clears its badge server-side (via useAdminSeen on that page), so a
+  // return to the dashboard re-fetches zeros.
+  useEffect(() => {
+    let alive = true;
+    const load = () =>
+      getAdminBadges()
+        .then((b) => {
+          if (alive) setBadges(b);
+        })
+        .catch(() => {});
+    load();
+    const onFocus = () => load();
+    window.addEventListener('focus', onFocus);
+    const id = setInterval(load, 30000);
+    return () => {
+      alive = false;
+      window.removeEventListener('focus', onFocus);
+      clearInterval(id);
+    };
   }, []);
 
   useEffect(() => {
@@ -367,19 +391,19 @@ export default function AdminDashboard() {
 
       <div className="mb-8 space-y-6 sm:mb-10 sm:space-y-8">
         <AdminSection title="Bookings & Orders">
-          <PillButton variant="solid" to="/admin/bookings">
+          <PillButton variant="solid" to="/admin/bookings" badge={badges.bookings}>
             Open bookings →
           </PillButton>
-          <PillButton variant="solid" to="/admin/orders">
+          <PillButton variant="solid" to="/admin/orders" badge={badges.orders}>
             Add admin notes on orders →
           </PillButton>
         </AdminSection>
 
         <AdminSection title="Users & Workers">
-          <PillButton variant="solid" to="/admin/users">
+          <PillButton variant="solid" to="/admin/users" badge={badges.users}>
             Users | roles →
           </PillButton>
-          <PillButton variant="solid" to="/admin/workers">
+          <PillButton variant="solid" to="/admin/workers" badge={badges.kyc}>
             KYC approval →
           </PillButton>
           <PillButton variant="solid" to="/admin/payouts">
@@ -393,6 +417,9 @@ export default function AdminDashboard() {
         <AdminSection title="Catalog & Services">
           <PillButton variant="solid" to="/admin/services">
             Services | pricing →
+          </PillButton>
+          <PillButton variant="solid" to="/admin/locations">
+            Service locations →
           </PillButton>
           <PillButton variant="solid" to="/admin/categories">
             Worker Categories →
@@ -418,7 +445,7 @@ export default function AdminDashboard() {
           <PillButton variant="solid" to="/admin/settings">
             Platform settings →
           </PillButton>
-          <PillButton variant="solid" to="/admin/support">
+          <PillButton variant="solid" to="/admin/support" badge={badges.support}>
             Support queue →
           </PillButton>
           <PillButton variant="solid" to="/admin/audit-logs">

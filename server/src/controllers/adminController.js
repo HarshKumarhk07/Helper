@@ -2,7 +2,8 @@ import Booking from '../models/Booking.js';
 import Order from '../models/Order.js';
 import User from '../models/User.js';
 import Product from '../models/Product.js';
-import { asyncHandler } from '../utils/asyncHandler.js';
+import SupportTicket from '../models/SupportTicket.js';
+import { ApiError, asyncHandler } from '../utils/asyncHandler.js';
 
 // Threshold below which a product is flagged as "low stock" on the admin
 // dashboard. Tuned high enough to give the admin time to restock before
@@ -167,4 +168,64 @@ export const getDashboardStats = asyncHandler(async (req, res) => {
       bookingsCounts: bookingCountsWithDates
     }
   });
+});
+
+// Sections that carry a "new items" notification badge on the admin console.
+// Each maps to one dashboard button and one destination page.
+export const BADGE_KEYS = ['bookings', 'orders', 'users', 'kyc', 'support'];
+
+// Count how many items in each section are newer than the timestamp at which
+// this admin last opened that section. On the very first read a missing "seen"
+// timestamp is initialised to "now" so a fresh install doesn't show the entire
+// backlog as unread — badges start at 0 and only count genuinely new activity.
+export const getAdminBadges = asyncHandler(async (req, res) => {
+  const admin = await User.findById(req.user._id);
+  if (!admin.adminSeen) admin.adminSeen = {};
+
+  const now = new Date();
+  let changed = false;
+  BADGE_KEYS.forEach((key) => {
+    if (!admin.adminSeen[key]) {
+      admin.adminSeen[key] = now;
+      changed = true;
+    }
+  });
+  if (changed) await admin.save();
+
+  const s = admin.adminSeen;
+  const [bookings, orders, users, kyc, support] = await Promise.all([
+    Booking.countDocuments({ createdAt: { $gt: s.bookings } }),
+    Order.countDocuments({ createdAt: { $gt: s.orders } }),
+    User.countDocuments({ role: 'user', createdAt: { $gt: s.users } }),
+    User.countDocuments({
+      role: { $in: ['worker', 'brand'] },
+      kycStatus: 'submitted',
+      kycSubmittedAt: { $gt: s.kyc },
+    }),
+    // A ticket is "new" for the admin when it's awaiting an agent reply and has
+    // had activity since the queue was last opened — the admin's own replies flip
+    // the status to awaiting_user, so those don't re-trigger the badge.
+    SupportTicket.countDocuments({
+      status: { $in: ['open', 'awaiting_agent'] },
+      lastActivityAt: { $gt: s.support },
+    }),
+  ]);
+
+  res.json({ badges: { bookings, orders, users, kyc, support } });
+});
+
+// Mark a section as seen (opened). Returns the PREVIOUS seen timestamp so the
+// destination page can highlight rows that arrived since the admin's last visit.
+export const markAdminSeen = asyncHandler(async (req, res) => {
+  const { key } = req.body || {};
+  if (!BADGE_KEYS.includes(key)) throw new ApiError(400, 'Invalid section key');
+
+  const admin = await User.findById(req.user._id);
+  if (!admin.adminSeen) admin.adminSeen = {};
+  const previousSeen = admin.adminSeen[key] || null;
+
+  admin.adminSeen[key] = new Date();
+  await admin.save();
+
+  res.json({ ok: true, previousSeen });
 });

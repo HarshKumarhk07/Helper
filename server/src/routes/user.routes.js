@@ -10,9 +10,13 @@ import {
   updateMe,
   setUserActive,
   getWorkersForCustomer,
+  getFeaturedWorkersPublic,
 } from '../controllers/userController.js';
 
 const router = Router();
+
+// Public route for homepage featured workers
+router.get('/featured', getFeaturedWorkersPublic);
 
 router.use(requireAuth);
 

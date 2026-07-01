@@ -110,7 +110,7 @@ export default function ProductsIndex() {
             
             <form onSubmit={onSearch} className="relative w-full lg:w-80 flex-shrink-0 group">
               <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                <Search size={16} className="text-ink/40 group-focus-within:text-[#6f5cff] transition-colors" />
+                <Search size={16} className="text-ink/40 group-focus-within:text-[#13294B] transition-colors" />
               </div>
               <input
                 value={search}
@@ -118,7 +118,7 @@ export default function ProductsIndex() {
                 placeholder="Search products..."
                 className="w-full rounded-full border border-ink/10 bg-sand/30 pl-10 pr-24 py-3 text-sm outline-none transition-all focus:border-ink/30 focus:bg-white focus:ring-4 focus:ring-ink/5"
               />
-              <button type="submit" className="absolute right-1.5 top-1.5 bottom-1.5 bg-ink text-paper rounded-full px-5 text-xs font-bold tracking-wide hover:bg-[#6f5cff] hover:shadow-md transition-all">
+              <button type="submit" className="absolute right-1.5 top-1.5 bottom-1.5 bg-ink text-paper rounded-full px-5 text-xs font-bold tracking-wide hover:bg-[#13294B] hover:shadow-md transition-all">
                 Search
               </button>
             </form>

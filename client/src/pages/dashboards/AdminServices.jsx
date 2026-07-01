@@ -12,6 +12,7 @@ import { mediaUrl } from '../../lib/catalogImage.js';
 export default function AdminServices() {
   const [services, setServices] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [locations, setLocations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -19,11 +20,11 @@ export default function AdminServices() {
   const [editingService, setEditingService] = useState(null);
   
   const [newService, setNewService] = useState({
-    name: '', description: '', price: '', category: '', image: '', durationMinutes: ''
+    name: '', description: '', price: '', category: '', image: '', durationMinutes: '', locations: []
   });
 
   const [editForm, setEditForm] = useState({
-    name: '', description: '', price: '', category: '', image: '', durationMinutes: ''
+    name: '', description: '', price: '', category: '', image: '', durationMinutes: '', locations: []
   });
 
   const slugify = (value) =>
@@ -46,6 +47,9 @@ export default function AdminServices() {
     listCategories({ active: 'true' })
       .then(setCategories)
       .catch(() => toast.error('Failed to load categories'));
+    api.get('/api/locations')
+      .then(res => setLocations(res.data))
+      .catch(() => toast.error('Failed to load locations'));
   }, []);
 
   const handleImageUpload = async (e) => {
@@ -112,6 +116,7 @@ export default function AdminServices() {
       category: service.category?._id || service.category || '',
       image: service.image || '',
       durationMinutes: service.durationMinutes || '',
+      locations: service.locations || [],
     });
   };
 
@@ -128,7 +133,8 @@ export default function AdminServices() {
         slug: slugify(editForm.name),
         price: Number(editForm.price),
         category: editForm.category || null,
-        durationMinutes: editForm.durationMinutes ? Number(editForm.durationMinutes) : 60
+        durationMinutes: editForm.durationMinutes ? Number(editForm.durationMinutes) : 60,
+        locations: editForm.locations || []
       };
       const updated = await updateService(editingService._id, payload);
       setServices((current) => current.map((s) => (s._id === updated._id ? updated : s)));
@@ -187,6 +193,24 @@ export default function AdminServices() {
                   {categories.map((category) => (
                     <option key={category._id} value={category._id}>
                       {category.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Service Areas (Hold Ctrl/Cmd to select multiple. Leave empty for everywhere)</label>
+                <select
+                  multiple
+                  className="w-full p-3 border rounded-xl bg-white"
+                  value={newService.locations}
+                  onChange={(e) => {
+                    const values = Array.from(e.target.selectedOptions, option => option.value);
+                    setNewService({ ...newService, locations: values });
+                  }}
+                >
+                  {locations.map((loc) => (
+                    <option key={loc._id} value={loc._id}>
+                      {loc.name}
                     </option>
                   ))}
                 </select>
@@ -318,6 +342,24 @@ export default function AdminServices() {
                   {categories.map((category) => (
                     <option key={category._id} value={category._id}>
                       {category.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Service Areas (Hold Ctrl/Cmd to select multiple. Leave empty for everywhere)</label>
+                <select
+                  multiple
+                  className="w-full p-2 text-sm border rounded-xl bg-white text-ink border-ink/20"
+                  value={editForm.locations}
+                  onChange={(e) => {
+                    const values = Array.from(e.target.selectedOptions, option => option.value);
+                    setEditForm({ ...editForm, locations: values });
+                  }}
+                >
+                  {locations.map((loc) => (
+                    <option key={loc._id} value={loc._id}>
+                      {loc.name}
                     </option>
                   ))}
                 </select>

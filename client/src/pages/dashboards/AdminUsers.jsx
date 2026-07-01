@@ -6,6 +6,7 @@ import FadeUp from '../../components/ui/FadeUp.jsx';
 import DashboardShell from './DashboardShell.jsx';
 import { ShieldAlert, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext.jsx';
+import useAdminSeen from '../../hooks/useAdminSeen.js';
 
 export default function AdminUsers() {
   const { user: currentUser } = useAuth();
@@ -47,6 +48,12 @@ export default function AdminUsers() {
 
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState(null);
+
+  // Clears the dashboard "Users | roles" badge on open; previous visit time is
+  // used to flag newly-registered customers as NEW.
+  const previousSeen = useAdminSeen('users');
+  const isNew = (u) =>
+    previousSeen && u.role === 'user' && u.createdAt && new Date(u.createdAt) > previousSeen;
 
   const load = () => {
     setLoading(true);
@@ -305,8 +312,17 @@ export default function AdminUsers() {
               <tr><td colSpan="7" className="p-4 text-center text-ink">No users found.</td></tr>
             ) : (
               users.map(u => (
-                <tr key={u._id} className="transition hover:bg-sand/30:bg-[#18181A]/50">
-                  <td className="p-4 font-medium text-ink">{u.name}</td>
+                <tr key={u._id} className={`transition hover:bg-sand/30:bg-[#18181A]/50 ${isNew(u) ? 'bg-amber-50/70' : ''}`}>
+                  <td className="p-4 font-medium text-ink">
+                    <span className="inline-flex items-center gap-2">
+                      {u.name}
+                      {isNew(u) && (
+                        <span className="rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-white">
+                          New
+                        </span>
+                      )}
+                    </span>
+                  </td>
                   <td className="p-4 text-ink">{u.email}</td>
                   <td className="p-4">
                     <span className="px-2 py-1 bg-ink/5 rounded text-xs tracking-widest uppercase text-ink">

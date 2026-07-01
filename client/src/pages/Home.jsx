@@ -1,19 +1,21 @@
-import Hero from '../sections/Hero.jsx';
-import Spotlight from '../sections/Spotlight.jsx';
+import HeroCleaning from '../sections/HeroCleaning.jsx';
+import SpacesWeSpecialize from '../sections/SpacesWeSpecialize.jsx';
+import DiscoverServices from '../sections/DiscoverServices.jsx';
 import FeaturedServices from '../sections/FeaturedServices.jsx';
-import Products from '../sections/Products.jsx';
-import Philosophy from '../sections/Philosophy.jsx';
-import WorkerTracking from '../sections/WorkerTracking.jsx';
+import BestWorkers from '../sections/BestWorkers.jsx';
+import ShopCollection from '../sections/ShopCollection.jsx';
+import HomeFAQ from '../sections/HomeFAQ.jsx';
 
 export default function Home() {
   return (
     <>
-      <Hero />
-      <Spotlight />
+      <HeroCleaning />
+      <SpacesWeSpecialize />
+      <DiscoverServices />
       <FeaturedServices />
-      <Products />
-      <Philosophy />
-      <WorkerTracking />
+      <BestWorkers />
+      <ShopCollection />
+      <HomeFAQ />
     </>
   );
 }

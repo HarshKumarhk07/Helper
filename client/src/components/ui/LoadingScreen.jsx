@@ -5,13 +5,13 @@ export default function LoadingScreen() {
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-paper/85 backdrop-blur-md">
       <div className="relative flex items-center justify-center">
         {/* Subtle glow backdrop */}
-        <div className="absolute h-28 w-28 rounded-full bg-[#6f5cff]/10 blur-2xl animate-pulse" />
+        <div className="absolute h-28 w-28 rounded-full bg-[#13294B]/10 blur-2xl animate-pulse" />
         
         {/* Custom premium gradient spinning ring */}
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-          className="h-16 w-16 rounded-full border-[3px] border-transparent border-t-[#6f5cff] border-r-[#6f5cff]/20 border-b-[#6f5cff]/10"
+          className="h-16 w-16 rounded-full border-[3px] border-transparent border-t-[#13294B] border-r-[#13294B]/20 border-b-[#13294B]/10"
           style={{ borderImageSlice: 1 }}
         />
         

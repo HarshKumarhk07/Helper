@@ -103,7 +103,7 @@ export default function ServiceCard({ service }) {
           <div className="text-[9px] sm:text-[10px] uppercase tracking-[0.22em] font-extrabold text-ink/50 mb-1 truncate">
             {service.category?.name || 'Service'}
           </div>
-          <h3 className="text-[14px] sm:text-base font-semibold text-ink line-clamp-2 leading-tight min-h-[2.4em] transition-colors group-hover/title:text-[#6f5cff]">
+          <h3 className="text-[14px] sm:text-base font-semibold text-ink line-clamp-2 leading-tight min-h-[2.4em] transition-colors group-hover/title:text-[#13294B]">
             {service.name}
           </h3>
         </div>
@@ -135,7 +135,7 @@ export default function ServiceCard({ service }) {
               }}
               aria-label="Book"
               title="Book"
-              className="flex flex-1 sm:flex-none min-w-0 items-center justify-center gap-1.5 text-[11px] sm:text-xs font-bold uppercase tracking-wider sm:tracking-widest text-white bg-ink rounded-full py-2 sm:py-3 px-3 sm:px-5 whitespace-nowrap hover:bg-[#6f5cff] transition-all duration-300 hover:shadow-lg hover:shadow-[#6f5cff]/20"
+              className="flex flex-1 sm:flex-none min-w-0 items-center justify-center gap-1.5 text-[11px] sm:text-xs font-bold uppercase tracking-wider sm:tracking-widest text-white bg-ink rounded-full py-2 sm:py-3 px-3 sm:px-5 whitespace-nowrap hover:bg-[#13294B] transition-all duration-300 hover:shadow-lg hover:shadow-[#13294B]/20"
             >
               {/* "Book" label is hidden on mobile (< sm) so the tight cards
                   show just the arrow instead of clipping to "OOK". Desktop

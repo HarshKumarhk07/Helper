@@ -5,6 +5,8 @@ import { ROLES } from '../config/roles.js';
 import {
   listServices,
   getService,
+  getServiceWorkers,
+  getServiceReviews,
   createService,
   updateService,
   deleteService,
@@ -15,6 +17,8 @@ const router = Router();
 
 router.get('/', listServices);
 router.get('/:id', getService);
+router.get('/:id/workers', getServiceWorkers);
+router.get('/:id/reviews', getServiceReviews);
 
 router.use(requireAuth, requireRole(ROLES.ADMIN));
 router.post('/', validate(createServiceSchema), createService);

@@ -45,7 +45,16 @@ const buildTokens = (user) => {
 };
 
 export const signup = asyncHandler(async (req, res) => {
-  const { name, email, phone, password, role = ROLES.USER } = req.body;
+  const {
+    name,
+    email,
+    phone,
+    password,
+    role = ROLES.USER,
+    experienceYears,
+    address,
+    education,
+  } = req.body;
 
   if (![ROLES.USER, ROLES.WORKER, ROLES.BRAND].includes(role)) {
     throw new ApiError(400, 'Invalid role selected');
@@ -54,13 +63,23 @@ export const signup = asyncHandler(async (req, res) => {
   const exists = await User.findOne({ email });
   if (exists) throw new ApiError(409, 'Email already in use');
 
-  const user = await User.create({
+  const doc = {
     name,
     email,
     phone,
     password,
     role,
-  });
+  };
+
+  // Workers submit professional details as part of registration. Only persist
+  // them for the worker role so a customer/brand payload can't set them.
+  if (role === ROLES.WORKER) {
+    if (experienceYears !== undefined) doc.experienceYears = experienceYears;
+    if (address !== undefined) doc.address = String(address).trim();
+    if (education !== undefined) doc.education = String(education).trim();
+  }
+
+  const user = await User.create(doc);
 
   const tokens = buildTokens(user);
   res.status(201).json({ user: user.toSafeJSON(), ...tokens });
@@ -80,6 +99,20 @@ export const login = asyncHandler(async (req, res) => {
 
   const ok = await user.comparePassword(password);
   if (!ok) throw new ApiError(401, 'Invalid credentials');
+
+  // Workers must clear admin KYC review before they can sign in. A brand-new
+  // (pending) or under-review (submitted) worker is held back until an admin
+  // approves — they'll get an email the moment they're cleared. A rejected
+  // worker is still allowed in so they can re-upload the requested documents.
+  if (
+    user.role === ROLES.WORKER &&
+    (user.kycStatus === 'pending' || user.kycStatus === 'submitted')
+  ) {
+    throw new ApiError(
+      403,
+      "Your worker account is under review. You'll be able to sign in once an admin approves your KYC — we'll email you as soon as it's approved."
+    );
+  }
 
   // Extra security layer for admin accounts — key is re-read from
   // .env at request time so no server restart is needed after changes.
@@ -124,6 +157,23 @@ export const refresh = asyncHandler(async (req, res) => {
 
 export const me = asyncHandler(async (req, res) => {
   res.json({ user: req.user.toSafeJSON() });
+});
+
+// Public helper for the login screen: given an email, reveal whether it belongs
+// to a partner/privileged account (worker / brand / admin) so the UI can show a
+// "Worker account detected" hint and prompt for the admin key when needed.
+// Customer and unknown emails return null — we never advertise those.
+export const roleHint = asyncHandler(async (req, res) => {
+  const email = String(req.query?.email || '').trim().toLowerCase();
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.json({ role: null });
+  }
+  const user = await User.findOne({ email }).select('role');
+  const role = user?.role;
+  if ([ROLES.WORKER, ROLES.BRAND, ROLES.ADMIN].includes(role)) {
+    return res.json({ role });
+  }
+  res.json({ role: null });
 });
 
 export const logout = asyncHandler(async (req, res) => {

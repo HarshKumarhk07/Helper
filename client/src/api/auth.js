@@ -8,3 +8,7 @@ export const resetPassword = ({ token, password }) =>
 
 export const googleSignIn = (idToken) =>
   api.post('/auth/google', { idToken }).then((r) => r.data);
+
+// Returns { role } for worker/brand/admin emails, else { role: null }.
+export const getRoleHint = (email) =>
+  api.get('/auth/role-hint', { params: { email } }).then((r) => r.data);

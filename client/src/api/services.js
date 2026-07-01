@@ -6,6 +6,12 @@ export const listServices = (params = {}) =>
 export const getService = (id) =>
   api.get(`/services/${id}`).then((r) => r.data.service);
 
+export const getServiceWorkers = (id) =>
+  api.get(`/services/${id}/workers`).then((r) => r.data.workers);
+
+export const getServiceReviews = (id) =>
+  api.get(`/services/${id}/reviews`).then((r) => r.data.reviews);
+
 export const createService = (payload) =>
   api.post('/services', payload).then((r) => r.data.service);
 

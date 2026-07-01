@@ -257,8 +257,8 @@ export default function ProductDetail() {
                         type="button"
                         onClick={handleBuyNow}
                         disabled={outOfStock}
-                        className={`inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-[#6f5cff] text-white py-4 px-6 text-sm font-semibold tracking-wide shadow-xl transition-all duration-300 hover:bg-[#5a48e6] hover:shadow-2xl hover:-translate-y-1 ${
-                          outOfStock ? 'opacity-50 cursor-not-allowed hover:bg-[#6f5cff] hover:translate-y-0' : ''
+                        className={`inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-[#13294B] text-white py-4 px-6 text-sm font-semibold tracking-wide shadow-xl transition-all duration-300 hover:bg-[#5a48e6] hover:shadow-2xl hover:-translate-y-1 ${
+                          outOfStock ? 'opacity-50 cursor-not-allowed hover:bg-[#13294B] hover:translate-y-0' : ''
                         }`}
                       >
                         <Zap size={18} className="fill-white" />

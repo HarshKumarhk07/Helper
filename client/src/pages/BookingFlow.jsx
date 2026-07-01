@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import { Calendar, Zap, MapPin, CreditCard, Banknote, Plus, FileText, Check, Crosshair, Loader2, Navigation, UserCheck, Star } from 'lucide-react';
 import { getService } from '../api/services.js';
 import { listMyAddresses, createAddress } from '../api/addresses.js';
-import { createBooking } from '../api/bookings.js';
+import { createBooking, createQuoteRequest } from '../api/bookings.js';
 import { validateCoupon } from '../api/coupons.js';
 import { createRazorpayOrder, verifyRazorpayPayment } from '../api/payments.js';
 import { formatPrice } from '../lib/booking.js';
@@ -14,10 +14,12 @@ import FadeUp from '../components/ui/FadeUp.jsx';
 import SlotPicker from '../components/booking/SlotPicker.jsx';
 import RouteMap from '../components/booking/RouteMap.jsx';
 import { useCart } from '../context/CartContext.jsx';
+import { useLocation } from '../context/LocationContext.jsx';
 import api from '../api/axios.js';
 
 export default function BookingFlow() {
   const { serviceId } = useParams();
+  const { location } = useLocation();
   const navigate = useNavigate();
   const { cart, removeFromCart } = useCart();
 
@@ -161,20 +163,37 @@ export default function BookingFlow() {
     document.body.appendChild(script);
   }, []);
 
-  // Load workers whenever service (and its category) is resolved
+  // Load the professionals who offer THIS specific service, along with each
+  // one's own price for it (per-service pricing). Falls back to nothing when
+  // no one has added the service yet — the customer can still auto-assign.
   useEffect(() => {
     if (!service || service.isWorkerBooking || serviceId === 'cart') return;
-    const catId = service.category?._id || service.category;
-    if (!catId) return;
+    const svcId = service._id;
+    if (!svcId) return;
     setWorkersLoading(true);
-    api.get('/users/workers', { params: { category: catId } })
+    const params = { service: svcId };
+    if (location?._id) params.location = location._id;
+
+    api.get('/users/workers', { params })
       .then(({ data }) => {
-        const list = data.workers || [];
-        setWorkers(list);
+        setWorkers(data.workers || []);
       })
       .catch(() => {})
       .finally(() => setWorkersLoading(false));
-  }, [service, serviceId]);
+  }, [service, serviceId, location]);
+
+  // The price actually charged: a selected worker's fixed per-service price
+  // wins; otherwise the catalog base price. (Variable/quote pros aren't
+  // directly bookable yet — see Sprint 4.)
+  const effectiveBasePrice =
+    selectedWorker?.serviceOffering?.pricingType === 'fixed' &&
+    selectedWorker.serviceOffering.amount > 0
+      ? selectedWorker.serviceOffering.amount
+      : service?.price || 0;
+  const effectiveTotal = Math.max(0, effectiveBasePrice - discount);
+
+  // Variable-priced pro selected → this is a quote request, not an instant book.
+  const isQuoteMode = selectedWorker?.serviceOffering?.pricingType === 'variable';
 
   const onSaveAddress = async (e) => {
     e.preventDefault();
@@ -281,7 +300,7 @@ export default function BookingFlow() {
   const handleApplyCoupon = async () => {
     if (!couponCode || !service) return;
     try {
-      const res = await validateCoupon({ code: couponCode, orderValue: service.price, serviceId: service._id });
+      const res = await validateCoupon({ code: couponCode, orderValue: effectiveBasePrice, serviceId: service._id });
       setDiscount(res.discount);
       setAppliedCoupon({ code: couponCode.trim().toUpperCase(), discount: res.discount });
       toast.success('Coupon applied!');
@@ -364,6 +383,24 @@ export default function BookingFlow() {
 
     setSubmitting(true);
     try {
+      // Variable-priced pro → create a quote request instead of an instant
+      // booking. No payment now; the customer pays after accepting the quote.
+      if (isQuoteMode && selectedWorker) {
+        const quotePayload = {
+          service: service._id,
+          worker: selectedWorker._id,
+          type: bookingType,
+          description: notes.trim(),
+        };
+        if (bookingType === 'scheduled' && scheduledAt) quotePayload.scheduledAt = scheduledAt;
+        if (selectedAddressId) quotePayload.addressId = selectedAddressId;
+        else if (inlineAddressPayload) quotePayload.address = inlineAddressPayload;
+        await createQuoteRequest(quotePayload);
+        toast.success("Quote requested — we'll notify you when the pro responds");
+        navigate('/me/bookings');
+        return;
+      }
+
       if (serviceId === 'cart') {
         const serviceCartItems = cart.filter((item) => item.kind === 'service');
         const createdBookings = await Promise.all(
@@ -590,19 +627,19 @@ export default function BookingFlow() {
                       disabled={detectingLocation}
                       className={`relative block w-full rounded-2xl border p-4 text-left transition ${
                         currentLocationActive
-                          ? 'border-emerald-500 bg-emerald-50/60 shadow-sm'
-                          : 'border-emerald-200 bg-emerald-50/30 hover:border-emerald-400 hover:bg-emerald-50/60'
+                          ? 'border-ink bg-ink/[0.03] shadow-sm'
+                          : 'border-ink/10 bg-paper hover:border-ink/30 hover:shadow-sm'
                       } ${detectingLocation ? 'opacity-70 cursor-wait' : ''}`}
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
                             {detectingLocation ? (
-                              <Loader2 size={14} className="animate-spin text-emerald-700" />
+                              <Loader2 size={14} className="animate-spin text-ink" />
                             ) : (
-                              <Crosshair size={14} className="text-emerald-700" />
+                              <Crosshair size={14} className="text-ink" />
                             )}
-                            <span className="text-xs font-semibold uppercase tracking-widest text-emerald-800">
+                            <span className="text-xs font-semibold uppercase tracking-widest text-ink">
                               {detectingLocation ? 'Detecting…' : 'Use my current location'}
                             </span>
                           </div>
@@ -624,7 +661,7 @@ export default function BookingFlow() {
                           )}
                         </div>
                         {currentLocationActive && newAddress.line1 && (
-                          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white">
+                          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-ink text-paper">
                             <Check size={14} strokeWidth={3} />
                           </div>
                         )}
@@ -693,15 +730,15 @@ export default function BookingFlow() {
 
                 {showAddressForm && (
                   <form onSubmit={onSaveAddress} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div className="sm:col-span-2 rounded-2xl border border-black/10 bg-[#0b1220] p-3 text-white">
+                    <div className="sm:col-span-2 rounded-2xl border border-ink/10 bg-paper p-3 text-ink">
                       <div className="grid grid-cols-2 gap-2">
                         <button
                           type="button"
                           onClick={() => setAddressMode('current')}
                           className={`rounded-xl px-3 py-2 text-xs uppercase tracking-widest transition ${
                             addressMode === 'current'
-                              ? 'bg-emerald-500 text-[#04130c]'
-                              : 'bg-white/10 text-white/80 hover:bg-white/15'
+                              ? 'bg-brand text-ink font-bold shadow-sm'
+                              : 'bg-ink/5 text-ink/70 hover:bg-ink/10'
                           }`}
                         >
                           Use Current Location
@@ -711,8 +748,8 @@ export default function BookingFlow() {
                           onClick={() => setAddressMode('manual')}
                           className={`rounded-xl px-3 py-2 text-xs uppercase tracking-widest transition ${
                             addressMode === 'manual'
-                              ? 'bg-sky-500 text-white'
-                              : 'bg-white/10 text-white/80 hover:bg-white/15'
+                              ? 'bg-brand text-ink font-bold shadow-sm'
+                              : 'bg-ink/5 text-ink/70 hover:bg-ink/10'
                           }`}
                         >
                           Enter Manually
@@ -721,18 +758,18 @@ export default function BookingFlow() {
                     </div>
 
                     {addressMode === 'current' && (
-                      <div className="sm:col-span-2 rounded-2xl border border-black/10 bg-black/[0.03] p-4">
+                      <div className="sm:col-span-2 rounded-2xl border border-ink/10 bg-ink/[0.03] p-4">
                         <button
                           type="button"
                           onClick={detectCurrentLocation}
                           disabled={detectingLocation}
-                          className="inline-flex items-center gap-2 rounded-pill bg-black px-4 py-2 text-xs uppercase tracking-widest text-white disabled:opacity-60"
+                          className="inline-flex items-center gap-2 rounded-pill bg-brand px-4 py-2 text-xs font-bold uppercase tracking-widest text-ink transition hover:opacity-90 disabled:opacity-60"
                         >
                           {detectingLocation ? <Loader2 size={13} className="animate-spin" /> : <Crosshair size={13} />}
                           {detectingLocation ? 'Detecting Location...' : 'Detect Current Location'}
                         </button>
                         {newAddress.formattedAddress && (
-                          <p className="mt-3 text-xs text-black/70 break-words">{newAddress.formattedAddress}</p>
+                          <p className="mt-3 text-xs text-ink/70 break-words">{newAddress.formattedAddress}</p>
                         )}
                       </div>
                     )}
@@ -874,11 +911,16 @@ export default function BookingFlow() {
                       {workers.map((w) => {
                         const active = selectedWorker?._id === w._id;
                         const isPrev = w.hasHiredBefore;
+                        const offering = w.serviceOffering;
+                        const isVariable = offering?.pricingType === 'variable';
                         return (
                           <button
                             key={w._id}
                             type="button"
-                            onClick={() => { setSelectedWorker(w); setAutoAssign(false); }}
+                            onClick={() => {
+                              setSelectedWorker(w);
+                              setAutoAssign(false);
+                            }}
                             className={`relative block w-full rounded-2xl border p-4 text-left transition ${
                               active
                                 ? 'border-black bg-black/[0.03] shadow-sm'
@@ -904,7 +946,7 @@ export default function BookingFlow() {
                                 <div className="flex flex-wrap items-center gap-2">
                                   <span className="font-medium text-sm text-black">{w.name}</span>
                                   {isPrev && (
-                                    <span className="rounded-full bg-[#6f5cff]/10 text-[#6f5cff] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider">
+                                    <span className="rounded-full bg-[#13294B]/10 text-[#13294B] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider">
                                       Previously Hired
                                     </span>
                                   )}
@@ -931,17 +973,31 @@ export default function BookingFlow() {
                                   )}
                                 </div>
 
-                                {/* Pricing */}
-                                <div className="mt-1 text-xs text-black/60">
-                                  {w.pricingType === 'hourly'
+                                {/* Pricing — per-service price for this service */}
+                                <div className="mt-1 text-xs font-semibold text-black/70">
+                                  {offering
+                                    ? isVariable
+                                      ? offering.startingPrice > 0
+                                        ? `From ${formatPrice(offering.startingPrice)} · Get a quote`
+                                        : 'Get a quote'
+                                      : `Fixed ${formatPrice(offering.amount)}`
+                                    : w.pricingType === 'hourly'
                                     ? `₹${w.hourlyRate}/hr`
                                     : `Fixed ₹${w.fixedPrice}`}
                                 </div>
+                                {isVariable && offering?.note && (
+                                  <div className="mt-1 text-[11px] text-black/50">{offering.note}</div>
+                                )}
+                                {isVariable && (
+                                  <div className="mt-1 text-[10px] font-bold uppercase tracking-wider text-indigo-600">
+                                    Request a quote →
+                                  </div>
+                                )}
 
                                 {/* Previously hired review */}
                                 {isPrev && w.previousRating && (
-                                  <div className="mt-2 rounded-xl bg-[#6f5cff]/5 border border-[#6f5cff]/15 px-3 py-2">
-                                    <div className="text-[9px] uppercase tracking-widest text-[#6f5cff] font-bold mb-1">Your Last Review</div>
+                                  <div className="mt-2 rounded-xl bg-[#13294B]/5 border border-[#13294B]/15 px-3 py-2">
+                                    <div className="text-[9px] uppercase tracking-widest text-[#13294B] font-bold mb-1">Your Last Review</div>
                                     <div className="flex items-center gap-1">
                                       {Array.from({ length: 5 }).map((_, i) => (
                                         <Star key={i} size={11}
@@ -1090,7 +1146,7 @@ export default function BookingFlow() {
                       Total
                     </span>
                     <span className="heading-display text-2xl text-black md:text-3xl">
-                      {formatPrice(service.price - discount)}
+                      {isQuoteMode ? 'Quote' : formatPrice(effectiveTotal)}
                     </span>
                   </div>
 
@@ -1098,12 +1154,12 @@ export default function BookingFlow() {
                     type="button"
                     onClick={onConfirm}
                     disabled={submitting}
-                    className="mt-5 w-full rounded-pill bg-black px-6 py-3.5 text-sm font-medium uppercase tracking-widest text-white transition hover:bg-black/85 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="mt-5 w-full rounded-pill bg-brand px-6 py-3.5 text-sm font-bold uppercase tracking-widest text-ink transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    {submitting ? 'Confirming…' : 'Confirm booking'}
+                    {submitting ? 'Please wait…' : isQuoteMode ? 'Request quote' : 'Confirm booking'}
                   </button>
                   <p className="mt-3 text-center text-[10px] uppercase tracking-widest text-black/40">
-                    No charge until job is complete
+                    {isQuoteMode ? 'The pro will send a price to accept' : 'No charge until job is complete'}
                   </p>
                 </div>
               </div>
@@ -1141,20 +1197,20 @@ function ChoiceCard({ active, onClick, icon: Icon, title, sub }) {
       onClick={onClick}
       className={`flex min-w-0 items-start gap-3 rounded-2xl border p-3.5 text-left transition ${
         active
-          ? 'border-black bg-black text-white shadow-sm'
-          : 'border-black/15 bg-white text-black hover:border-black/40 hover:shadow-sm'
+          ? 'border-brand bg-brand text-ink shadow-sm'
+          : 'border-ink/15 bg-paper text-ink hover:border-ink/40 hover:shadow-sm'
       }`}
     >
       <span
         className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
-          active ? 'bg-white/15 text-white' : 'bg-black/5 text-black'
+          active ? 'bg-ink/10 text-ink' : 'bg-ink/5 text-ink'
         }`}
       >
         <Icon size={16} />
       </span>
       <span className="min-w-0">
         <span className="block text-sm font-medium">{title}</span>
-        <span className={`block text-[11px] ${active ? 'text-white/70' : 'text-black/55'}`}>
+        <span className={`block text-[11px] ${active ? 'text-ink/70' : 'text-ink/55'}`}>
           {sub}
         </span>
       </span>

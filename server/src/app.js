@@ -30,6 +30,7 @@ import cartRoutes from './routes/cart.routes.js';
 import walletRoutes from './routes/wallet.routes.js';
 import trackingRoutes from './routes/tracking.routes.js';
 import debugRoutes from './routes/debug.routes.js';
+import locationRoutes from './routes/location.routes.js';
 import { notFound, errorHandler } from './middleware/error.js';
 
 const app = express();
@@ -181,6 +182,7 @@ app.use('/api/cart', cartRoutes);
 app.use('/api/wallet', walletRoutes);
 app.use('/api/tracking', trackingRoutes);
 app.use('/api/debug', debugRoutes);
+app.use('/api/locations', locationRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

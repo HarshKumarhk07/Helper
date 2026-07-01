@@ -320,25 +320,31 @@ export const notifyKycSubmitted = ({ user }) =>
     }),
   ]);
 
-export const notifyKycApproved = ({ worker }) =>
-  Promise.allSettled([
+export const notifyKycApproved = ({ worker }) => {
+  const loginUrl = `${(process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/$/, '')}/login`;
+  return Promise.allSettled([
     sendEmail({
       to: worker?.email,
-      subject: 'KYC approved · Welcome to Helper',
+      subject: 'Congratulations · Your KYC is approved',
       html: wrapEmail(
-        'You are verified',
+        'Congratulations — you are verified!',
         `
         <p>Hi ${worker?.name || 'there'},</p>
-        <p>Your KYC has been approved. You can now start receiving job assignments through the Helper worker app.</p>
-        <p style="color:#666;">Make sure your availability is set so dispatch can reach you.</p>
+        <p>Great news — your KYC has been <strong>approved</strong>. You can now access your worker portal and start receiving job assignments through Helper.</p>
+        <p>Simply sign in with the <strong>email and password</strong> you registered with earlier${worker?.email ? ` (<strong>${worker.email}</strong>)` : ''}.</p>
+        <p style="margin:20px 0;">
+          <a href="${loginUrl}" style="display:inline-block;padding:12px 22px;background:#1a1a1a;color:#faf6ef;border-radius:8px;text-decoration:none;font-weight:600;">Sign in to your portal</a>
+        </p>
+        <p style="color:#666;">Tip: set your availability once you're in so dispatch can reach you.</p>
         `
       ),
     }),
     sendSMS({
       to: worker?.phone,
-      body: `Helper: KYC approved. You can start accepting jobs now.`,
+      body: `Helper: Congratulations! Your KYC is approved. Sign in with your registered email & password to access your worker portal.`,
     }),
   ]);
+};
 
 export const notifyKycRejected = ({ worker, reason }) =>
   Promise.allSettled([
@@ -399,6 +405,47 @@ export const notifyBrandRejected = ({ brand, reason }) =>
     sendSMS({
       to: brand?.phone,
       body: `Helper: Brand KYC rejected.${reason ? ' Reason: ' + reason : ''} Re-upload documents in your brand dashboard.`,
+    }),
+  ]);
+
+export const notifyQuoteRequested = ({ worker, user, booking }) =>
+  Promise.allSettled([
+    sendEmail({
+      to: worker?.email,
+      subject: `New quote request · ${booking.code}`,
+      html: wrapEmail(
+        'You have a new quote request',
+        `
+        <p>Hi ${worker?.name || 'there'},</p>
+        <p>${user?.name || 'A customer'} has requested a price quote for a job.</p>
+        ${booking.quoteDetails?.description ? `<p style="color:#555;"><strong>Details:</strong> ${escapeHtml(booking.quoteDetails.description)}</p>` : ''}
+        <p>Open your worker app to review and send a quote.</p>
+        `
+      ),
+    }),
+    sendSMS({
+      to: worker?.phone,
+      body: `Helper: New quote request ${booking.code}. Open the app to send your price.`,
+    }),
+  ]);
+
+export const notifyQuoteSent = ({ user, booking, amount }) =>
+  Promise.allSettled([
+    sendEmail({
+      to: user?.email,
+      subject: `Your quote is ready · ${booking.code}`,
+      html: wrapEmail(
+        'A professional has sent you a quote',
+        `
+        <p>Hi ${user?.name || 'there'},</p>
+        <p>You've received a quote of <strong>${inr(amount)}</strong> for booking <strong>${booking.code}</strong>.</p>
+        <p>Open the app to accept and pay, or decline.</p>
+        `
+      ),
+    }),
+    sendSMS({
+      to: user?.phone,
+      body: `Helper: You've received a quote of ${inr(amount)} for ${booking.code}. Open the app to accept or decline.`,
     }),
   ]);
 

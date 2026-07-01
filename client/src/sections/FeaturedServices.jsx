@@ -32,7 +32,7 @@ export default function FeaturedServices() {
                 <span className="h-px w-10 bg-ink/15" />
               </div>
               <h2 className="heading-display text-3xl md:text-4xl lg:text-5xl text-ink leading-tight">
-                Featured <span className="italic font-serif text-[#6f5cff]">services</span>
+                Featured <span className="italic font-serif text-[#13294B]">services</span>
               </h2>
               <p className="mt-3 text-ink/55 max-w-lg">
                 Hand-picked services delivered by background-verified professionals near you.

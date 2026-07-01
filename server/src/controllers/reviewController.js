@@ -1,6 +1,7 @@
 import Review from '../models/Review.js';
 import Booking from '../models/Booking.js';
 import Service from '../models/Service.js';
+import User from '../models/User.js';
 import { ApiError, asyncHandler } from '../utils/asyncHandler.js';
 
 // Recompute a service's aggregate rating from every review left on a
@@ -16,6 +17,24 @@ const recomputeServiceRating = async (serviceId) => {
   ]);
   await Service.findByIdAndUpdate(serviceId, {
     rating: stats ? Math.round(stats.avg * 10) / 10 : 0,
+    ratingCount: stats ? stats.count : 0,
+  });
+};
+
+// Recompute a worker's persisted rolling rating from every review left on any
+// of their completed bookings. Keeps User.ratingAvg / ratingCount authoritative
+// so customer search doesn't have to recompute per request.
+const recomputeWorkerRating = async (bookingId) => {
+  const booking = await Booking.findById(bookingId).select('worker');
+  if (!booking?.worker) return;
+  const bookings = await Booking.find({ worker: booking.worker }).select('_id');
+  const bookingIds = bookings.map((b) => b._id);
+  const [stats] = await Review.aggregate([
+    { $match: { booking: { $in: bookingIds } } },
+    { $group: { _id: null, avg: { $avg: '$rating' }, count: { $sum: 1 } } },
+  ]);
+  await User.findByIdAndUpdate(booking.worker, {
+    ratingAvg: stats ? Math.round(stats.avg * 10) / 10 : 0,
     ratingCount: stats ? stats.count : 0,
   });
 };
@@ -36,8 +55,9 @@ export const createReview = asyncHandler(async (req, res) => {
 
     const review = await Review.create({ user: req.user._id, booking: bookingId, rating, comment });
 
-    // Roll the new rating into the service's aggregate so the catalog updates.
+    // Roll the new rating into the service AND worker aggregates.
     await recomputeServiceRating(booking.service);
+    await recomputeWorkerRating(bookingId);
 
     return res.status(201).json({ review });
   }
@@ -74,8 +94,15 @@ export const getReviews = asyncHandler(async (req, res) => {
     .skip(skip)
     .limit(limit);
 
+  // Every booking-linked review is a verified booking by construction — flag it
+  // so the UI can show a "Verified booking" badge.
+  const decorated = reviews.map((r) => ({
+    ...r.toObject(),
+    verifiedBooking: !!r.booking,
+  }));
+
   res.json({
-    reviews,
+    reviews: decorated,
     pagination: {
       page,
       limit,

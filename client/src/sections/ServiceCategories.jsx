@@ -62,7 +62,7 @@ export default function ServiceCategories() {
                 <span className="h-px w-10 bg-ink/15" />
               </div>
               <h2 className="heading-display text-3xl md:text-4xl lg:text-5xl text-ink leading-tight">
-                Browse by <span className="italic font-serif text-[#6f5cff]">category</span>
+                Browse by <span className="italic font-serif text-[#13294B]">category</span>
               </h2>
             </div>
             <Link
@@ -98,7 +98,7 @@ export default function ServiceCategories() {
                     </span>
                     <ArrowRight
                       size={14}
-                      className="text-ink/30 transition-all duration-300 group-hover:text-[#6f5cff] group-hover:translate-x-1"
+                      className="text-ink/30 transition-all duration-300 group-hover:text-[#13294B] group-hover:translate-x-1"
                     />
                   </div>
                 </Link>

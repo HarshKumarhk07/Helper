@@ -70,7 +70,7 @@ export default function BrandDashboard() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-paper">
-        <Loader2 className="animate-spin text-[#6f5cff]" size={32} />
+        <Loader2 className="animate-spin text-[#13294B]" size={32} />
       </div>
     );
   }
@@ -97,7 +97,7 @@ export default function BrandDashboard() {
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
             <div>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-[#6f5cff]">Seller Dashboard</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-[#13294B]">Seller Dashboard</span>
               <h1 className="text-3xl font-light mt-1 text-ink">
                 Welcome, <span className="font-semibold">{user.companyName || user.name}</span>
               </h1>
@@ -105,7 +105,7 @@ export default function BrandDashboard() {
             <div className="flex gap-3">
               <Link
                 to="/brand/products"
-                className="inline-flex items-center justify-center gap-2 bg-ink text-paper rounded-full py-2.5 px-5 text-xs font-bold uppercase tracking-wider hover:bg-[#6f5cff] transition-all"
+                className="inline-flex items-center justify-center gap-2 bg-ink text-paper rounded-full py-2.5 px-5 text-xs font-bold uppercase tracking-wider hover:bg-[#13294B] transition-all"
               >
                 <Package size={14} /> Manage Inventory
               </Link>
@@ -123,7 +123,7 @@ export default function BrandDashboard() {
             <div className="p-6 bg-white/80 border border-ink/5 rounded-2xl backdrop-blur-md">
               <div className="flex items-center justify-between mb-4">
                 <span className="text-xs text-ink/65 uppercase tracking-wider">Catalog Products</span>
-                <div className="p-2 rounded-lg bg-[#6f5cff]/10 text-[#6f5cff]">
+                <div className="p-2 rounded-lg bg-[#13294B]/10 text-[#13294B]">
                   <Package size={18} />
                 </div>
               </div>
@@ -145,7 +145,7 @@ export default function BrandDashboard() {
             <div className="p-6 bg-[#1a1a1a] text-paper border border-[#1a1a1a] rounded-2xl">
               <div className="flex items-center justify-between mb-4">
                 <span className="text-xs text-paper/65 uppercase tracking-wider">Verification Badge</span>
-                <div className="p-2 rounded-lg bg-[#6f5cff] text-white">
+                <div className="p-2 rounded-lg bg-[#13294B] text-white">
                   <CheckCircle2 size={18} />
                 </div>
               </div>
@@ -195,7 +195,7 @@ export default function BrandDashboard() {
               </div>
               <Link
                 to="/brand/products"
-                className="w-full inline-flex items-center justify-center gap-2 bg-ink text-paper rounded-full py-3.5 text-xs font-bold uppercase tracking-widest hover:bg-[#6f5cff] transition-all hover:shadow-lg"
+                className="w-full inline-flex items-center justify-center gap-2 bg-ink text-paper rounded-full py-3.5 text-xs font-bold uppercase tracking-widest hover:bg-[#13294B] transition-all hover:shadow-lg"
               >
                 Go to Product Catalogue <ArrowRight size={14} />
               </Link>
