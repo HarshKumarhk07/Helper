@@ -7,11 +7,15 @@ import {
   Mail,
   Lock,
   ShieldCheck,
+  User as UserIcon,
+  Briefcase,
+  Building2,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext.jsx';
 import { Field, PrimaryCTA, ErrorBanner } from '../components/auth/AuthFormPrimitives.jsx';
 import GoogleAuthButton from '../components/auth/GoogleAuthButton.jsx';
+import LoadingScreen from '../components/ui/LoadingScreen.jsx';
 
 const fadeUp = {
   initial: { opacity: 0, y: 12 },
@@ -37,9 +41,10 @@ const friendlyError = (err) => {
 const isAdminEmail = (email) => email.trim().toLowerCase() === 'admin@helper.com';
 
 export default function Login() {
-  const { login, isAuthenticated, bootstrapping } = useAuth();
+  const { login, logout, isAuthenticated, bootstrapping } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [selectedRole, setSelectedRole] = useState('user'); // 'user' | 'worker' | 'brand'
   const [showPassword, setShowPassword] = useState(false);
   const [showAdminKey, setShowAdminKey] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
@@ -48,11 +53,32 @@ export default function Login() {
   const [error, setError] = useState('');
   const [suspensionNotice, setSuspensionNotice] = useState('');
 
+  const tabs = [
+    { id: 'user', label: 'Customer', icon: <UserIcon size={14} /> },
+    { id: 'worker', label: 'Worker', icon: <Briefcase size={14} /> },
+    { id: 'brand', label: 'Brand', icon: <Building2 size={14} /> },
+  ];
+
   const handleEmailChange = (v) => {
     setForm((f) => ({ ...f, email: v }));
   };
 
-  if (bootstrapping) return null;
+  const handleGoogleSuccess = async ({ user }) => {
+    if (user.role !== 'admin' && user.role !== selectedRole) {
+      await logout();
+      let correctTabName = 'Customer';
+      if (user.role === 'worker') correctTabName = 'Worker';
+      if (user.role === 'brand') correctTabName = 'Brand/Company';
+      const msg = `This account is registered as a ${correctTabName}. Please select the ${correctTabName} tab.`;
+      setError(msg);
+      toast.error(msg);
+      return;
+    }
+    toast.success('Welcome back');
+    navigate(location.state?.from || '/dashboard', { replace: true });
+  };
+
+  if (bootstrapping) return <LoadingScreen />;
   if (isAuthenticated) return <Navigate to="/dashboard" replace />;
 
   const onSubmit = async (e) => {
@@ -62,7 +88,17 @@ export default function Login() {
     setSubmitting(true);
     try {
       const adminKey = isAdminEmail(form.email) ? form.adminKey : undefined;
-      await login(form.email.trim(), form.password, adminKey);
+      const loggedInUser = await login(form.email.trim(), form.password, adminKey);
+
+      // Validate role mapping
+      if (loggedInUser.role !== 'admin' && loggedInUser.role !== selectedRole) {
+        await logout();
+        let correctTabName = 'Customer';
+        if (loggedInUser.role === 'worker') correctTabName = 'Worker';
+        if (loggedInUser.role === 'brand') correctTabName = 'Brand/Company';
+        throw new Error(`This account is registered as a ${correctTabName}. Please select the ${correctTabName} tab.`);
+      }
+
       toast.success('Welcome back');
       navigate(location.state?.from || '/dashboard', { replace: true });
     } catch (err) {
@@ -155,9 +191,33 @@ export default function Login() {
               />
 
               <div className="overflow-hidden rounded-[28px] border border-ink/10 bg-paper/95 shadow-card backdrop-blur-xl">
-                <div className="px-6 pt-6 pb-1 sm:px-8 sm:pt-8">
+                {/* Custom Tab Bar */}
+                <div className="px-6 pt-6 sm:px-8">
+                  <div className="flex justify-between items-center gap-1 bg-[#FAF6F0] p-1 rounded-full border border-[#EDE8E0] w-full">
+                    {tabs.map((tab) => {
+                      const isSelected = selectedRole === tab.id;
+                      return (
+                        <button
+                          key={tab.id}
+                          type="button"
+                          onClick={() => setSelectedRole(tab.id)}
+                          className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-2.5 rounded-full text-[10px] sm:text-xs font-semibold uppercase tracking-wider transition-all duration-300 ${
+                            isSelected
+                              ? 'bg-black text-white shadow-sm'
+                              : 'text-black hover:bg-black/5'
+                          }`}
+                        >
+                          {tab.icon}
+                          <span className="whitespace-nowrap">{tab.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="px-6 pt-5 pb-1 sm:px-8">
                   <h2 className="text-[26px] font-semibold leading-tight tracking-tight text-ink">
-                    Welcome back
+                    Sign in as {selectedRole === 'brand' ? 'Brand/Company' : selectedRole === 'user' ? 'Customer' : 'Worker'}
                   </h2>
                   <p className="mt-1 text-sm text-ink/60">
                     Sign in with your email or continue with Google.
@@ -165,7 +225,7 @@ export default function Login() {
                 </div>
 
                 <div className="space-y-4 px-6 pb-6 pt-5 sm:px-8 sm:pb-8">
-                  <GoogleAuthButton label="Continue with Google" />
+                  <GoogleAuthButton label="Continue with Google" onSuccess={handleGoogleSuccess} />
 
                   {/* Divider */}
                   <div className="relative flex items-center gap-3 py-1">

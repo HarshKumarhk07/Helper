@@ -24,6 +24,9 @@ export default function AdminUsers() {
     panNumber: '',
     passportPhoto: '',
     kycStatus: 'pending',
+    companyName: '',
+    companyAddress: '',
+    businessType: '',
   });
 
   const [editForm, setEditForm] = useState({
@@ -37,6 +40,9 @@ export default function AdminUsers() {
     password: '',
     role: 'worker',
     isActive: true,
+    companyName: '',
+    companyAddress: '',
+    businessType: '',
   });
 
   const [page, setPage] = useState(1);
@@ -77,6 +83,9 @@ export default function AdminUsers() {
       password: '',
       role: user.role || 'worker',
       isActive: !!user.isActive,
+      companyName: user.companyName || '',
+      companyAddress: user.companyAddress || '',
+      businessType: user.businessType || '',
     });
   };
 
@@ -93,6 +102,9 @@ export default function AdminUsers() {
       password: '',
       role: 'worker',
       isActive: true,
+      companyName: '',
+      companyAddress: '',
+      businessType: '',
     });
   };
 
@@ -121,6 +133,9 @@ export default function AdminUsers() {
         panNumber: '',
         passportPhoto: '',
         kycStatus: 'pending',
+        companyName: '',
+        companyAddress: '',
+        businessType: '',
       });
       load();
     } catch (err) {
@@ -185,14 +200,19 @@ export default function AdminUsers() {
         managers, and keep user records editable from this panel.
       </div>
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 text-ink">
-        <div className="flex gap-2">
-          {['all', 'user', 'worker'].map(role => (
+        <div className="flex flex-wrap gap-2">
+          {[
+            { label: 'All Users', value: 'all' },
+            { label: 'Customer', value: 'user' },
+            { label: 'Worker', value: 'worker' },
+            { label: 'Brand/Company', value: 'brand' },
+          ].map(f => (
             <button
-              key={role}
-              onClick={() => setRoleFilter(role)}
-              className={`px-3 py-1 text-xs uppercase tracking-widest rounded border transition ${roleFilter === role ? 'bg-ink text-paper border-ink' : 'border-ink/20 text-ink hover:bg-ink/5'}`}
+              key={f.value}
+              onClick={() => setRoleFilter(f.value)}
+              className={`px-3 py-1 text-xs uppercase tracking-widest rounded border transition ${roleFilter === f.value ? 'bg-ink text-paper border-ink' : 'border-ink/20 text-ink hover:bg-ink/5'}`}
             >
-              {role}
+              {f.label}
             </button>
           ))}
         </div>
@@ -210,8 +230,20 @@ export default function AdminUsers() {
               <input required type="email" placeholder="Email Address" className="p-3 border rounded-xl bg-white text-ink placeholder-ink/40 border-ink/20 focus:outline-none focus:border-ink:border-paper/60" value={newUser.email} onChange={(e) => setNewUser({...newUser, email: e.target.value})} />
               <input required placeholder="Phone Number" className="p-3 border rounded-xl bg-white text-ink placeholder-ink/40 border-ink/20 focus:outline-none focus:border-ink:border-paper/60" value={newUser.phone} onChange={(e) => setNewUser({...newUser, phone: e.target.value})} />
               <input required type="password" placeholder="Password" className="p-3 border rounded-xl bg-white text-ink placeholder-ink/40 border-ink/20 focus:outline-none focus:border-ink:border-paper/60" value={newUser.password} onChange={(e) => setNewUser({...newUser, password: e.target.value})} />
-              <input placeholder="Aadhaar Number" inputMode="numeric" maxLength={12} className="p-3 border rounded-xl bg-white text-ink placeholder-ink/40 border-ink/20 focus:outline-none focus:border-ink:border-paper/60" value={newUser.aadhaarNumber} onChange={(e) => setNewUser({...newUser, aadhaarNumber: e.target.value.replace(/\D/g, '').slice(0, 12)})} />
-              <input placeholder="PAN Number" maxLength={10} className="p-3 border rounded-xl bg-white text-ink placeholder-ink/40 border-ink/20 focus:outline-none focus:border-ink:border-paper/60 uppercase" value={newUser.panNumber} onChange={(e) => setNewUser({...newUser, panNumber: e.target.value.toUpperCase().slice(0, 10)})} />
+              
+              {newUser.role !== 'brand' ? (
+                <>
+                  <input placeholder="Aadhaar Number" inputMode="numeric" maxLength={12} className="p-3 border rounded-xl bg-white text-ink placeholder-ink/40 border-ink/20 focus:outline-none focus:border-ink:border-paper/60" value={newUser.aadhaarNumber} onChange={(e) => setNewUser({...newUser, aadhaarNumber: e.target.value.replace(/\D/g, '').slice(0, 12)})} />
+                  <input placeholder="PAN Number" maxLength={10} className="p-3 border rounded-xl bg-white text-ink placeholder-ink/40 border-ink/20 focus:outline-none focus:border-ink:border-paper/60 uppercase" value={newUser.panNumber} onChange={(e) => setNewUser({...newUser, panNumber: e.target.value.toUpperCase().slice(0, 10)})} />
+                </>
+              ) : (
+                <>
+                  <input required placeholder="Company Name" className="p-3 border rounded-xl bg-white text-ink placeholder-ink/40 border-ink/20 focus:outline-none focus:border-ink:border-paper/60" value={newUser.companyName} onChange={(e) => setNewUser({...newUser, companyName: e.target.value})} />
+                  <input required placeholder="Business Type" className="p-3 border rounded-xl bg-white text-ink placeholder-ink/40 border-ink/20 focus:outline-none focus:border-ink:border-paper/60" value={newUser.businessType} onChange={(e) => setNewUser({...newUser, businessType: e.target.value})} />
+                  <input required placeholder="Company Address" className="p-3 border rounded-xl bg-white text-ink placeholder-ink/40 border-ink/20 focus:outline-none focus:border-ink:border-paper/60 md:col-span-2" value={newUser.companyAddress} onChange={(e) => setNewUser({...newUser, companyAddress: e.target.value})} />
+                </>
+              )}
+
               <div className="md:col-span-2 rounded-xl border border-dashed border-ink/20 bg-white p-4">
                 <div className="mb-2 text-xs uppercase tracking-widest text-ink">Passport size photo</div>
                 <div className="flex flex-col gap-3 md:flex-row md:items-center">
@@ -243,6 +275,8 @@ export default function AdminUsers() {
               </select>
               <select className="p-3 border rounded-xl bg-white text-ink border-ink/20 focus:outline-none focus:border-ink:border-paper/60" value={newUser.role} onChange={(e) => setNewUser({...newUser, role: e.target.value})}>
                 <option value="worker">Worker</option>
+                <option value="user">Customer</option>
+                <option value="brand">Brand/Company</option>
                 <option value="admin">Admin</option>
               </select>
             </div>
@@ -276,7 +310,7 @@ export default function AdminUsers() {
                   <td className="p-4 text-ink">{u.email}</td>
                   <td className="p-4">
                     <span className="px-2 py-1 bg-ink/5 rounded text-xs tracking-widest uppercase text-ink">
-                      {u.role}
+                      {u.role === 'user' ? 'Customer' : u.role === 'brand' ? 'Brand/Company' : u.role}
                     </span>
                   </td>
                   <td className="p-4">
@@ -285,9 +319,20 @@ export default function AdminUsers() {
                     </span>
                   </td>
                   <td className="p-4 text-xs leading-6 text-ink">
-                    <div>Aadhaar: {u.aadhaarNumber || 'Not provided'}</div>
-                    <div>PAN: {u.panNumber || 'Not provided'}</div>
-                    <div className="uppercase tracking-widest">{u.role === 'worker' ? 'KYC review enabled' : 'No KYC required'}</div>
+                    {u.role === 'brand' ? (
+                      <>
+                        <div>Company: {u.companyName || 'Not provided'}</div>
+                        <div>Business Type: {u.businessType || 'Not provided'}</div>
+                      </>
+                    ) : (
+                      <>
+                        <div>Aadhaar: {u.aadhaarNumber || 'Not provided'}</div>
+                        <div>PAN: {u.panNumber || 'Not provided'}</div>
+                      </>
+                    )}
+                    <div className="uppercase tracking-widest">
+                      {u.role === 'worker' || u.role === 'brand' ? 'KYC review enabled' : 'No KYC required'}
+                    </div>
                   </td>
                   <td className="p-4">
                     {u.isActive ? (
@@ -367,8 +412,19 @@ export default function AdminUsers() {
               <input required placeholder="Full Name" className="p-3 border rounded-xl bg-transparent border-ink/20 text-ink placeholder-ink/45" value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} />
               <input required type="email" placeholder="Email Address" className="p-3 border rounded-xl bg-transparent border-ink/20 text-ink placeholder-ink/45" value={editForm.email} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} />
               <input placeholder="Phone Number" className="p-3 border rounded-xl bg-transparent border-ink/20 text-ink placeholder-ink/45" value={editForm.phone} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} />
-              <input placeholder="Aadhaar Number" inputMode="numeric" maxLength={12} className="p-3 border rounded-xl bg-transparent border-ink/20 text-ink placeholder-ink/45" value={editForm.aadhaarNumber} onChange={(e) => setEditForm({ ...editForm, aadhaarNumber: e.target.value.replace(/\D/g, '').slice(0, 12) })} />
-              <input placeholder="PAN Number" maxLength={10} className="p-3 border rounded-xl bg-transparent border-ink/20 text-ink placeholder-ink/45 uppercase" value={editForm.panNumber} onChange={(e) => setEditForm({ ...editForm, panNumber: e.target.value.toUpperCase().slice(0, 10) })} />
+              {editForm.role !== 'brand' ? (
+                <>
+                  <input placeholder="Aadhaar Number" inputMode="numeric" maxLength={12} className="p-3 border rounded-xl bg-transparent border-ink/20 text-ink placeholder-ink/45" value={editForm.aadhaarNumber} onChange={(e) => setEditForm({ ...editForm, aadhaarNumber: e.target.value.replace(/\D/g, '').slice(0, 12) })} />
+                  <input placeholder="PAN Number" maxLength={10} className="p-3 border rounded-xl bg-transparent border-ink/20 text-ink placeholder-ink/45 uppercase" value={editForm.panNumber} onChange={(e) => setEditForm({ ...editForm, panNumber: e.target.value.toUpperCase().slice(0, 10) })} />
+                </>
+              ) : (
+                <>
+                  <input required placeholder="Company Name" className="p-3 border rounded-xl bg-transparent border-ink/20 text-ink placeholder-ink/45" value={editForm.companyName} onChange={(e) => setEditForm({ ...editForm, companyName: e.target.value })} />
+                  <input required placeholder="Business Type" className="p-3 border rounded-xl bg-transparent border-ink/20 text-ink placeholder-ink/45" value={editForm.businessType} onChange={(e) => setEditForm({ ...editForm, businessType: e.target.value })} />
+                  <input required placeholder="Company Address" className="p-3 border rounded-xl bg-transparent border-ink/20 text-ink placeholder-ink/45 md:col-span-2" value={editForm.companyAddress} onChange={(e) => setEditForm({ ...editForm, companyAddress: e.target.value })} />
+                </>
+              )}
+
               <div className="md:col-span-2 rounded-xl border border-dashed border-ink/20 bg-transparent p-4">
                 <div className="mb-2 text-xs uppercase tracking-widest text-ink">Passport size photo</div>
                 <div className="flex flex-col gap-3 md:flex-row md:items-center">
@@ -400,7 +456,8 @@ export default function AdminUsers() {
               </select>
               <select className="p-3 border rounded-xl bg-transparent border-ink/20 text-ink" value={editForm.role} onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}>
                 <option value="worker">Worker</option>
-                <option value="user">User</option>
+                <option value="user">Customer</option>
+                <option value="brand">Brand/Company</option>
                 <option value="admin">Admin</option>
               </select>
               <input type="password" placeholder="New Password (optional)" className="p-3 border rounded-xl bg-transparent border-ink/20 text-ink placeholder-ink/45 md:col-span-2" value={editForm.password} onChange={(e) => setEditForm({ ...editForm, password: e.target.value })} />

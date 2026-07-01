@@ -13,6 +13,7 @@ import {
 import { useAuth } from '../context/AuthContext.jsx';
 import { Field, PrimaryCTA, ErrorBanner } from '../components/auth/AuthFormPrimitives.jsx';
 import GoogleAuthButton from '../components/auth/GoogleAuthButton.jsx';
+import LoadingScreen from '../components/ui/LoadingScreen.jsx';
 
 const fadeUp = {
   initial: { opacity: 0, y: 12 },
@@ -75,7 +76,7 @@ export default function Signup() {
     return errs;
   }, [form.email, form.password]);
 
-  if (bootstrapping) return null;
+  if (bootstrapping) return <LoadingScreen />;
   if (isAuthenticated) return <Navigate to="/dashboard" replace />;
 
   const canSubmit =

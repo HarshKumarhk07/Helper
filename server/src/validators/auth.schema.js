@@ -38,6 +38,9 @@ export const adminCreateUserSchema = z.object({
   kycStatus: z.enum(['pending', 'verified', 'rejected']).optional().default('pending'),
   password: z.string().min(8).max(128),
   role: z.enum(['admin', 'worker', 'user', 'brand']),
+  companyName: z.string().min(2).max(120).optional().or(z.literal('')),
+  companyAddress: z.string().min(5).max(300).optional().or(z.literal('')),
+  businessType: z.string().min(2).max(80).optional().or(z.literal('')),
 });
 
 export const adminUpdateUserSchema = z.object({
@@ -52,6 +55,9 @@ export const adminUpdateUserSchema = z.object({
   password: z.string().min(8).max(128).optional().or(z.literal('')),
   role: z.enum(['admin', 'worker', 'user', 'brand']).optional(),
   isActive: z.boolean().optional(),
+  companyName: z.string().min(2).max(120).optional().or(z.literal('')),
+  companyAddress: z.string().min(5).max(300).optional().or(z.literal('')),
+  businessType: z.string().min(2).max(80).optional().or(z.literal('')),
 });
 
 export const updateMeSchema = z.object({

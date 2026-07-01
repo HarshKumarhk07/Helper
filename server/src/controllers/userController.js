@@ -43,7 +43,7 @@ export const listUsers = asyncHandler(async (req, res) => {
 });
 
 export const adminCreateUser = asyncHandler(async (req, res) => {
-  const { name, email, phone, aadhaarNumber, panNumber, passportPhoto, kycStatus, password, role } = req.body;
+  const { name, email, phone, aadhaarNumber, panNumber, passportPhoto, kycStatus, password, role, companyName, companyAddress, businessType } = req.body;
   const exists = await User.findOne({ email });
   if (exists) throw new ApiError(409, 'Email already in use');
   if (password) {
@@ -61,6 +61,9 @@ export const adminCreateUser = asyncHandler(async (req, res) => {
     kycStatus,
     password,
     role,
+    companyName,
+    companyAddress,
+    businessType,
   });
   res.status(201).json({ user: user.toSafeJSON() });
 });
