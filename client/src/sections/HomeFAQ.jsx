@@ -53,7 +53,7 @@ export default function HomeFAQ() {
   return (
     <section className="bg-paper py-20 md:py-32 overflow-hidden relative">
       <div className="container-velora relative z-10">
-        <div className="grid lg:grid-cols-2 gap-0 lg:gap-12 items-center">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
           
           {/* Left Side: Large Image */}
           <FadeUp className="hidden lg:block h-full">
@@ -69,29 +69,42 @@ export default function HomeFAQ() {
           {/* Right Side: Accordion Box */}
           <FadeUp delay={0.1} className="relative z-20">
             {/* On desktop, we pull it slightly to the left over the image */}
-            <div className="bg-[#0A1A2F] text-paper rounded-[2rem] p-8 md:p-12 lg:-ml-16 shadow-2xl border border-paper/10">
-              <h2 className="font-sans text-3xl md:text-4xl font-normal tracking-tight mb-8 uppercase text-white">
+            <div className="bg-[#13294B] text-paper rounded-[2.5rem] p-8 md:p-12 lg:-ml-16 shadow-[0_25px_60px_-15px_rgba(19,41,75,0.4)] border border-white/10">
+              
+              {/* FAQ Section Accent Badges */}
+              <div className="mb-4 flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#F5C518]" />
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/50">
+                  Common Questions
+                </span>
+              </div>
+
+              <h2 className="font-sans text-3xl md:text-4xl font-semibold leading-tight tracking-tight mb-8 text-white uppercase">
                 ALL YOU NEED TO KNOW
               </h2>
 
-              <div className="flex flex-col">
+              <div className="flex flex-col gap-1">
                 {faqs.map((faq) => {
                   const isOpen = openId === faq._id;
                   
                   return (
                     <div 
                       key={faq._id} 
-                      className="border-b border-paper/20 last:border-b-0"
+                      className="border-b border-white/10 last:border-b-0 py-1"
                     >
                       <button
                         onClick={() => toggleOpen(faq._id)}
-                        className="w-full py-5 flex items-center justify-between text-left group"
+                        className="w-full py-4.5 flex items-center justify-between text-left group"
                       >
-                        <span className="text-[15px] md:text-base font-medium pr-8 text-white group-hover:text-brand transition-colors">
+                        <span className={`text-[15px] md:text-base font-semibold pr-8 transition-colors duration-200 ${
+                          isOpen ? 'text-[#F5C518]' : 'text-white/95 group-hover:text-[#FBBF24]'
+                        }`}>
                           {faq.question}
                         </span>
-                        <div className="flex-shrink-0 text-white/70 group-hover:text-brand transition-colors">
-                          {isOpen ? <Minus size={18} /> : <Plus size={18} />}
+                        <div className={`flex-shrink-0 transition-colors duration-200 ${
+                          isOpen ? 'text-[#F5C518]' : 'text-white/40 group-hover:text-[#FBBF24]'
+                        }`}>
+                          {isOpen ? <Minus size={18} strokeWidth={2.5} /> : <Plus size={18} strokeWidth={2.5} />}
                         </div>
                       </button>
 
@@ -101,10 +114,10 @@ export default function HomeFAQ() {
                             initial={{ height: 0, opacity: 0 }}
                             animate={{ height: 'auto', opacity: 1 }}
                             exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.3, ease: 'easeInOut' }}
+                            transition={{ duration: 0.25, ease: 'easeInOut' }}
                             className="overflow-hidden"
                           >
-                            <p className="pb-6 text-sm md:text-base text-white/70 leading-relaxed pr-8">
+                            <p className="pb-5 text-sm md:text-[15px] text-white/80 leading-relaxed pr-8">
                               {faq.answer}
                             </p>
                           </motion.div>
@@ -115,13 +128,6 @@ export default function HomeFAQ() {
                 })}
               </div>
 
-            </div>
-
-            {/* Template button matching the screenshot */}
-            <div className="mt-6 flex justify-end">
-              <button className="bg-ink/10 hover:bg-ink/20 text-ink text-sm font-semibold px-6 py-2 rounded-lg transition-colors">
-                Get template
-              </button>
             </div>
           </FadeUp>
 

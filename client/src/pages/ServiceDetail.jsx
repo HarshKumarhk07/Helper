@@ -12,51 +12,7 @@ import SkeletonCard from '../components/ui/SkeletonCard.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { resolveCatalogImage, CATALOG_PLACEHOLDER_IMAGE } from '../lib/catalogImage.js';
 
-const getCustomServiceImage = (service) => {
-  const name = String(service?.name || '').toLowerCase();
-  const cat = String(service?.category?.name || '').toLowerCase();
-  const slug = String(service?.category?.slug || '').toLowerCase();
 
-  // Custom image synchronization matching SpacesWeSpecialize.jsx exactly
-  if (name.includes('utensil') || name.includes('dish') || name.includes('plate')) {
-    return 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTLQExiMy0xbTowGZcP0LIJr67JayabswnbUZIGmR6sKZ4oL2t_7m8P0z7R&s=10';
-  }
-  if (name.includes('pet') || name.includes('dog') || name.includes('cat') || slug.includes('pet')) {
-    return 'https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?auto=format&fit=crop&q=80&w=300&h=300';
-  }
-  if (name.includes('child') || name.includes('baby') || name.includes('nanny') || name.includes('tuition') || name.includes('class') || name.includes('coaching') || name.includes('education') || name.includes('school')) {
-    return 'https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?auto=format&fit=crop&q=80&w=300&h=300';
-  }
-  if (name.includes('garden') || name.includes('lawn') || name.includes('plant') || name.includes('tree') || name.includes('gardener')) {
-    return 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTjmZI_oTEs9rFP5bvJXfmUQelaey5qWtaF3gBRxmABRQ&s=10';
-  }
-  if (name.includes('cooler')) {
-    return 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT-iMoUvCxEIgYTCorCtddNlu3ep5Gwz-X-SjYWdzLIeA&s=10';
-  }
-  if (name.includes('ac ') || name.includes('air cond') || name.startsWith('ac') || name.includes('appliance') || slug.includes('appliance')) {
-    return 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=300&h=300';
-  }
-  if (name.includes('plumb') || name.includes('leak') || name.includes('tap') || name.includes('pipe') || name.includes('tank') || name.includes('drain')) {
-    return 'https://t4.ftcdn.net/jpg/01/99/81/11/360_F_199811106_Td5Yi9Jbua2w3pUslZoK8EpUxFlPISvc.jpg';
-  }
-  if (name.includes('electric') || name.includes('wiring') || name.includes('fuse') || name.includes('switch') || name.includes('fan') || name.includes('cctv')) {
-    return 'https://img.magnific.com/free-photo/man-electrical-technician-working-switchboard-with-fuses_169016-24062.jpg?semt=ais_hybrid&w=740&q=80';
-  }
-  if (name.includes('deep cleaning') || name.includes('clean') || name.includes('sofa') || name.includes('carpet') || name.includes('pest') || name.includes('control') || name.includes('bug') || name.includes('cockroach') || name.includes('termite') || name.includes('mosquito') || slug.includes('cleaning')) {
-    return 'https://img.magnific.com/free-photo/man-doing-professional-home-cleaning-service_23-2150359025.jpg?semt=ais_hybrid&w=740&q=80';
-  }
-  if (name.includes('car wash') || name.includes('wash') || name.includes('detail') || name.includes('vehicle') || slug.includes('car')) {
-    return 'https://img.magnific.com/free-photo/professional-washer-blue-uniform-washing-luxury-car-with-water-gun-open-air-car-wash_496169-333.jpg';
-  }
-  if (name.includes('carpent') || name.includes('furniture') || name.includes('wood') || name.includes('door') || name.includes('lock') || name.includes('shift') || name.includes('relocat') || name.includes('pack') || name.includes('move') || slug.includes('packers')) {
-    return 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSyuXM7ZRTdg2AnwGytkdkpyK7mN8czrcqGmuQ06p8BItVeY_VkL-IVh6g&s=10';
-  }
-  if (name.includes('paint') || name.includes('waterproof') || name.includes('texture') || slug.includes('painting')) {
-    return 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSUqSQumj2Ue05o3dyeDsCpAb_Icyr-xgEoQgXJHh_cg-n_k13K4STeAAg&s=10';
-  }
-
-  return '';
-};
 
 const getServiceMetadata = (svcName, categoryName) => {
   const nameLower = (svcName || '').toLowerCase();
@@ -261,7 +217,7 @@ export default function ServiceDetail() {
     );
   }
 
-  const coverImage = getCustomServiceImage(service) || service.coverImage || resolveCatalogImage(service);
+  const coverImage = resolveCatalogImage(service);
 
   return (
     <div className="bg-paper flex flex-col min-h-screen">

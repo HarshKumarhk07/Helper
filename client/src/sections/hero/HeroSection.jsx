@@ -70,13 +70,8 @@ export default function HeroSection() {
         {/* 3. Bottom Content with padding */}
         <div className="px-6 flex flex-col">
           {/* Stats / Trust Strip */}
-          <div className="mt-2 mb-6">
+          <div className="mt-2 mb-2">
             <TrustStrip />
-          </div>
-
-          {/* Living Room Image & Floating Cards (Original HeroRight stacked below) */}
-          <div className="w-full mt-0">
-            <HeroRight />
           </div>
         </div>
 
