@@ -13,9 +13,10 @@ import { listServices } from '../../api/services.js';
 import { mediaUrl } from '../../lib/catalogImage.js';
 
 const NAV = [
-  { to: '/services', label: 'Services' },
-  { to: '/products', label: 'Products' },
-  { to: '/join', label: 'Join us' },
+  { to: '/services', label: 'Services', hasChevron: true },
+  { to: '/services', label: 'Categories' },
+  { to: '/join', label: 'Become a Professional' },
+  { to: '/#stats-bar', label: 'About Us' },
 ];
 
 // Hero-mode nav links shown only on homepage before scrolling.
@@ -72,7 +73,7 @@ export default function Navbar() {
   // scrolled past the hero area. Threshold of 80px prevents a jarring flip
   // from a tiny accidental scroll — the headline is still fully visible at 80px.
   const isHome = routerLocation.pathname === '/';
-  const heroMode = isHome && !scrolled;
+  const heroMode = false;
   const iconCls = heroMode ? 'text-hero-dark/70 hover:text-hero-dark' : 'text-ink/80 hover:text-ink';
   const activeNavLinks = heroMode ? HERO_NAV : NAV;
 
@@ -177,20 +178,20 @@ export default function Navbar() {
       }`}
     >
       <div
-        className="w-full max-w-[1400px] py-4 px-6 md:px-10"
+        className="w-full max-w-[1400px] py-3 md:py-4 px-4 md:px-10"
       >
-        <div className="flex items-center justify-between gap-4 w-full h-full relative">
+        <div className="flex items-center justify-between gap-2.5 w-full h-full relative">
           
           {/* Logo (Left) */}
           <Link
             to="/"
-            className="flex-shrink-0 flex items-center gap-2 group mr-6"
+            className="flex-shrink-0 flex items-center gap-1 group mr-2 md:mr-6"
           >
             <span className="transition-all">
               <img
                 src="/HELPER LOGO 02.png"
                 alt="Helper"
-                className="w-auto object-contain transition-all h-12 max-w-[150px]"
+                className="w-auto object-contain transition-all h-9 md:h-12 max-w-[110px] md:max-w-[150px]"
               />
             </span>
           </Link>
@@ -222,20 +223,9 @@ export default function Navbar() {
             })}
           </nav>
 
-          {/* Mobile Menu Button */}
-          <div className="md:hidden">
-            <button
-              type="button"
-              className={`${iconCls} transition-colors flex items-center`}
-              aria-label="menu"
-              onClick={() => setOpen((o) => !o)}
-            >
-              {open ? <X size={24} strokeWidth={1.5} /> : <Menu size={24} strokeWidth={1.5} />}
-            </button>
-          </div>
 
           {/* Right Actions */}
-          <div className="flex flex-1 items-center justify-end gap-3 md:gap-4">
+          <div className="flex flex-1 items-center justify-end gap-2.5 md:gap-4">
             {/* Select Location */}
             <button
               type="button"
@@ -519,6 +509,18 @@ export default function Navbar() {
                 )}
               </div>
             )}
+            
+            {/* Mobile Menu Button */}
+            <div className="md:hidden flex items-center ml-1">
+              <button
+                type="button"
+                className={`${iconCls} transition-colors flex items-center`}
+                aria-label="menu"
+                onClick={() => setOpen((o) => !o)}
+              >
+                {open ? <X size={24} strokeWidth={1.5} /> : <Menu size={24} strokeWidth={1.5} />}
+              </button>
+            </div>
           </div>
         </div>
 

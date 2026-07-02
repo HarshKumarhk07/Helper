@@ -58,6 +58,8 @@ const CartPage = lazy(() => import('./pages/CartPage.jsx'));
 const CheckoutPage = lazy(() => import('./pages/CheckoutPage.jsx'));
 const Favorites = lazy(() => import('./pages/Favorites.jsx'));
 const ProfileEdit = lazy(() => import('./pages/ProfileEdit.jsx'));
+const TermsAndConditions = lazy(() => import('./pages/TermsAndConditions.jsx'));
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy.jsx'));
 
 // Admin/manager surface
 const AdminDashboard = lazy(() => import('./pages/dashboards/AdminDashboard.jsx'));
@@ -133,6 +135,8 @@ export default function App() {
             <Route path="/join/apply" element={<JoinApply />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/terms" element={<TermsAndConditions />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
 
             <Route path="/services" element={<ServicesIndex />} />
             <Route path="/services/:id" element={<ServiceDetail />} />

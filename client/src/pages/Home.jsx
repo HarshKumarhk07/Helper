@@ -10,8 +10,8 @@ export default function Home() {
   return (
     <>
       <HeroSection />
-      <SpacesWeSpecialize />
       <DiscoverServices />
+      <SpacesWeSpecialize />
       <FeaturedServices />
       <BestWorkers />
       <ShopCollection />

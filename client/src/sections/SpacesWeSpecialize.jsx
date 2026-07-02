@@ -18,27 +18,23 @@ import FadeUp from '../components/ui/FadeUp.jsx';
 
 /* ── Card data ── */
 const SERVICES_LIST = [
-  { icon: Utensils, title: 'Utensils cleaning' },
-  { icon: Heart, title: 'Pet care' },
-  { icon: Baby, title: 'Childcare' },
-  { icon: Leaf, title: 'Gardener' },
-  { icon: Fan, title: 'AC service' },
-  { icon: Wind, title: 'Cooler cleaning' },
-  { icon: Wrench, title: 'Plumber' },
-  { icon: Zap, title: 'Electrician' },
-  { icon: Sparkles, title: 'Deep Cleaning' },
-  { icon: Droplets, title: 'Car Washing' },
-  { icon: Hammer, title: 'Carpenter' },
-  { icon: Paintbrush, title: 'Painting' },
+  { icon: Utensils, title: 'Utensils cleaning', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTLQExiMy0xbTowGZcP0LIJr67JayabswnbUZIGmR6sKZ4oL2t_7m8P0z7R&s=10' },
+  { icon: Heart, title: 'Pet care', img: 'https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?auto=format&fit=crop&q=80&w=300&h=300' },
+  { icon: Baby, title: 'Childcare', img: 'https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?auto=format&fit=crop&q=80&w=300&h=300' },
+  { icon: Leaf, title: 'Gardener', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTjmZI_oTEs9rFP5bvJXfmUQelaey5qWtaF3gBRxmABRQ&s=10' },
+  { icon: Fan, title: 'AC service', img: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=300&h=300' },
+  { icon: Wind, title: 'Cooler cleaning', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT-iMoUvCxEIgYTCorCtddNlu3ep5Gwz-X-SjYWdzLIeA&s=10' },
+  { icon: Wrench, title: 'Plumber', img: 'https://t4.ftcdn.net/jpg/01/99/81/11/360_F_199811106_Td5Yi9Jbua2w3pUslZoK8EpUxFlPISvc.jpg' },
+  { icon: Zap, title: 'Electrician', img: 'https://img.magnific.com/free-photo/man-electrical-technician-working-switchboard-with-fuses_169016-24062.jpg?semt=ais_hybrid&w=740&q=80' },
+  { icon: Sparkles, title: 'Deep Cleaning', img: 'https://img.magnific.com/free-photo/man-doing-professional-home-cleaning-service_23-2150359025.jpg?semt=ais_hybrid&w=740&q=80' },
+  { icon: Droplets, title: 'Car Washing', img: 'https://img.magnific.com/free-photo/professional-washer-blue-uniform-washing-luxury-car-with-water-gun-open-air-car-wash_496169-333.jpg' },
+  { icon: Hammer, title: 'Carpenter', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSyuXM7ZRTdg2AnwGytkdkpyK7mN8czrcqGmuQ06p8BItVeY_VkL-IVh6g&s=10' },
+  { icon: Paintbrush, title: 'Painting', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSUqSQumj2Ue05o3dyeDsCpAb_Icyr-xgEoQgXJHh_cg-n_k13K4STeAAg&s=10' },
 ];
-
-/* ── Two bottom showcase images ── */
-const IMG_LEFT = '/hc1.jpg';
-const IMG_RIGHT = '/hc2.webp';
 
 export default function SpacesWeSpecialize() {
   return (
-    <section className="bg-paper">
+    <section className="bg-[#FAFBFB]">
       <div className="container-velora py-16 md:py-24">
         {/* ── Top row: heading + CTA ── */}
         <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-end">
@@ -84,45 +80,37 @@ export default function SpacesWeSpecialize() {
           </FadeUp>
         </div>
 
-        {/* ── Services Grid (Small Horizontal Cards) ── */}
-        <div className="mt-14 grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+        {/* ── Services Grid (Premium Vertical Cards) ── */}
+        <div className="mt-14 grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-4 md:gap-5">
           {SERVICES_LIST.map((s, i) => (
             <FadeUp key={s.title} delay={i * 0.04}>
               <Link 
                 to={`/services?q=${encodeURIComponent(s.title)}`} 
-                className="flex items-center gap-3.5 rounded-[16px] bg-paper p-3.5 transition-all duration-300 hover:shadow-md group"
+                className="flex flex-col bg-white border border-slate-100 rounded-2xl p-1.5 sm:p-2.5 shadow-[0_4px_20px_rgba(15,23,42,0.02)] hover:shadow-[0_12px_30px_rgba(19,41,75,0.06)] hover:border-[#13294B]/10 hover:-translate-y-1 transition-all duration-300 group"
               >
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sand/80 text-ink/70 transition-colors group-hover:bg-brand group-hover:text-ink">
-                  <s.icon size={18} strokeWidth={2} />
+                {/* Image frame */}
+                <div className="relative aspect-square w-full rounded-xl overflow-hidden mb-1.5 sm:mb-2.5 bg-slate-50 shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)]">
+                  <img
+                    src={s.img}
+                    alt={s.title}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    onError={(e) => {
+                      // Fallback image in case Unsplash fails to load
+                      e.currentTarget.src = 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&q=80&w=300&h=300';
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/5 via-transparent to-transparent opacity-60" />
                 </div>
-                <span className="text-sm font-semibold text-ink/90 group-hover:text-ink">
-                  {s.title}
-                </span>
+                
+                {/* Title block */}
+                <div className="w-full text-center py-1 sm:py-1.5 bg-slate-50 rounded-lg border border-slate-100 transition-colors duration-300 group-hover:bg-[#E8F5F1] group-hover:border-[#C6E8DB] flex items-center justify-center min-h-[32px] sm:min-h-[40px]">
+                  <span className="text-[8px] xs:text-[9.5px] sm:text-xs font-bold uppercase tracking-wider text-slate-600 group-hover:text-[#103D2E] px-0.5 block whitespace-normal leading-tight text-center">
+                    {s.title}
+                  </span>
+                </div>
               </Link>
             </FadeUp>
           ))}
-        </div>
-
-        {/* ── Two showcase images ── */}
-        <div className="mt-14 grid gap-5 sm:grid-cols-2">
-          <FadeUp delay={0.05}>
-            <div className="overflow-hidden rounded-[22px]">
-              <img
-                src={IMG_LEFT}
-                alt="Professional cleaning team at work"
-                className="h-72 w-full object-cover transition duration-500 hover:scale-105 sm:h-80 lg:h-96"
-              />
-            </div>
-          </FadeUp>
-          <FadeUp delay={0.12}>
-            <div className="overflow-hidden rounded-[22px]">
-              <img
-                src={IMG_RIGHT}
-                alt="Cleaning professional in workspace"
-                className="h-72 w-full object-cover transition duration-500 hover:scale-105 sm:h-80 lg:h-96"
-              />
-            </div>
-          </FadeUp>
         </div>
       </div>
     </section>

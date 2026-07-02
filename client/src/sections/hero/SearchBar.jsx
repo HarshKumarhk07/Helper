@@ -24,7 +24,7 @@ export default function SearchBar() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="mt-8 flex flex-col lg:flex-row items-stretch bg-white rounded-2xl shadow-lg p-2 lg:p-2.5 gap-2 lg:gap-0"
+      className="lg:mt-8 flex flex-col lg:flex-row items-stretch bg-white rounded-2xl shadow-lg p-3 lg:p-2.5 gap-2 lg:gap-0"
       style={{ border: `1px solid ${C.border}99` }}
     >
       {/* Location Field */}

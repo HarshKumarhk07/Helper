@@ -63,8 +63,10 @@ export default function Footer() {
           <div className="uppercase tracking-wider">
             © {year} HELPER — UNIFIED OPERATIONS
           </div>
-          <div>
-            Powered by advanced tracking | seamless booking.
+          <div className="flex items-center gap-4">
+            <Link to="/terms" className="hover:text-[#F5C518] transition-colors uppercase tracking-wider">Terms</Link>
+            <span className="text-paper/20">|</span>
+            <Link to="/privacy" className="hover:text-[#F5C518] transition-colors uppercase tracking-wider">Privacy Policy</Link>
           </div>
         </div>
 
