@@ -30,6 +30,24 @@ export default {
         'brand-dark': '#E0B00E', // Hover/active yellow
         navy: '#13294B',       // Alias for clarity
         cream: '#F6F1E9',      // Alias for clarity
+        // Hero-section scoped palette (does NOT override global brand colors)
+        'hero-blue': '#2F5FF6',
+        'hero-dark': '#0B0F19',
+        'hero-gray': '#6B7280',
+        'hero-bg': '#F7F8FA',
+        'hero-green': '#16A34A',
+        'hero-green-light': '#DCFCE7',
+        'hero-star': '#FACC15',
+        'hero-border': '#E5E7EB',
+        'hero-orange': '#F59E0B',
+        // Service-section scoped palette
+        'service-bg-start': '#EBF3FF',
+        'service-bg-end': '#FFF9E6',
+        'service-badge-blue': '#E8EEFF',
+        'service-badge-amber': '#FEF3C7',
+        'service-blue': '#2F5FF6',
+        'service-amber': '#F5B400',
+        'service-dark': '#0B1220',
       },
       fontFamily: {
         sans: ['"General Sans"', 'Inter', 'sans-serif'],

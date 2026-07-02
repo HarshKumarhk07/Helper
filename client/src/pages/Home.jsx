@@ -1,4 +1,4 @@
-import HeroCleaning from '../sections/HeroCleaning.jsx';
+import HeroSection from '../sections/hero/HeroSection.jsx';
 import SpacesWeSpecialize from '../sections/SpacesWeSpecialize.jsx';
 import DiscoverServices from '../sections/DiscoverServices.jsx';
 import FeaturedServices from '../sections/FeaturedServices.jsx';
@@ -9,7 +9,7 @@ import HomeFAQ from '../sections/HomeFAQ.jsx';
 export default function Home() {
   return (
     <>
-      <HeroCleaning />
+      <HeroSection />
       <SpacesWeSpecialize />
       <DiscoverServices />
       <FeaturedServices />

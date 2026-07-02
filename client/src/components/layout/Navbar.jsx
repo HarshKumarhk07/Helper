@@ -1,5 +1,5 @@
 import { Link, useNavigate, useLocation as useRouterLocation } from 'react-router-dom';
-import { Search, Heart, ShoppingBag, User as UserIcon, Menu, X, MapPin, ChevronDown } from 'lucide-react';
+import { Search, Heart, ShoppingBag, User as UserIcon, Menu, X, MapPin, ChevronDown, Bell } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -16,6 +16,15 @@ const NAV = [
   { to: '/services', label: 'Services' },
   { to: '/products', label: 'Products' },
   { to: '/join', label: 'Join us' },
+];
+
+// Hero-mode nav links shown only on homepage before scrolling.
+// All map to existing routes — no 404 risk.
+const HERO_NAV = [
+  { to: '/services', label: 'Services', hasChevron: true },
+  { to: '/services', label: 'Categories' },
+  { to: '/join', label: 'Become a Professional' },
+  { to: '/#stats-bar', label: 'About Us' },
 ];
 
 const PANEL_BY_ROLE = {
@@ -59,15 +68,17 @@ export default function Navbar() {
   const panelPath = PANEL_BY_ROLE[user?.role] || '/dashboard';
   const panelLabel = PANEL_LABEL_BY_ROLE[user?.role] || 'Dashboard';
 
-  // Transparent navbar when on the home page and user hasn't scrolled yet.
-  // Once they scroll past the hero, or on any other page, it becomes solid white.
+  // White navbar with hero-specific links when on homepage and user hasn't
+  // scrolled past the hero area. Threshold of 80px prevents a jarring flip
+  // from a tiny accidental scroll — the headline is still fully visible at 80px.
   const isHome = routerLocation.pathname === '/';
   const heroMode = isHome && !scrolled;
-  const iconCls = heroMode ? 'text-paper/90 hover:text-paper' : 'text-ink/80 hover:text-ink';
+  const iconCls = heroMode ? 'text-hero-dark/70 hover:text-hero-dark' : 'text-ink/80 hover:text-ink';
+  const activeNavLinks = heroMode ? HERO_NAV : NAV;
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
+      setScrolled(window.scrollY > 80);
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
@@ -161,7 +172,7 @@ export default function Navbar() {
     <header
       className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 flex justify-center w-full ${
         heroMode
-          ? 'bg-transparent border-b border-transparent shadow-none'
+          ? 'bg-white border-b border-hero-border shadow-sm'
           : 'bg-paper border-b border-ink/10 shadow-[0_2px_15px_rgba(0,0,0,0.06)]'
       }`}
     >
@@ -186,23 +197,24 @@ export default function Navbar() {
 
           {/* Desktop Navigation */}
           <nav className="hidden min-w-0 items-center gap-6 md:flex flex-1">
-            {NAV.map((n) => {
+            {activeNavLinks.map((n) => {
               const active = isNavActive(n.to);
               return (
                 <Link
-                  key={n.to}
+                  key={n.label}
                   to={n.to}
-                  className={`no-underline text-sm font-medium tracking-tightish transition-colors duration-300 relative ${
+                  className={`no-underline text-sm font-medium tracking-tightish transition-colors duration-300 relative flex items-center gap-1 ${
                     heroMode
-                      ? active ? 'text-paper' : 'text-paper/70 hover:text-paper'
+                      ? active ? 'text-hero-dark' : 'text-hero-dark/60 hover:text-hero-dark'
                       : active ? 'text-[#13294B]' : 'text-[#13294B]/60 hover:text-[#13294B]'
                   }`}
                 >
                   {n.label}
-                  {active && (
+                  {n.hasChevron && <ChevronDown size={13} strokeWidth={2} className="opacity-50" />}
+                  {active && !heroMode && (
                     <motion.div
                       layoutId="nav-indicator"
-                      className={`absolute -bottom-1 left-0 right-0 h-0.5 rounded-full ${heroMode ? 'bg-paper' : 'bg-[#13294B]'}`}
+                      className="absolute -bottom-1 left-0 right-0 h-0.5 rounded-full bg-[#13294B]"
                     />
                   )}
                 </Link>
@@ -228,17 +240,21 @@ export default function Navbar() {
             <button
               type="button"
               onClick={openLocationModal}
-              className={`hidden md:inline-flex items-center gap-2 max-w-[200px] pr-3 mr-1 border-r transition-colors ${heroMode ? 'border-paper/25' : 'border-ink/10'} ${iconCls}`}
+              className={`hidden md:inline-flex items-center gap-2 rounded-full border px-3 py-1.5 transition-colors ${
+                heroMode
+                  ? 'border-hero-border bg-white hover:bg-hero-bg text-hero-dark/70 hover:text-hero-dark'
+                  : 'border-ink/10 pr-3 mr-1 border-r ' + iconCls
+              }`}
               aria-label="Select location"
             >
-              <MapPin size={16} strokeWidth={1.75} className={`shrink-0 ${heroMode ? 'text-brand' : 'text-[#13294B]'}`} />
+              <MapPin size={16} strokeWidth={1.75} className={`shrink-0 ${heroMode ? 'text-[#13294B]' : 'text-[#13294B]'}`} />
               <span
                 className="text-sm font-medium tracking-tightish truncate max-w-[160px]"
                 title={location?.address || location?.label || 'Select Location'}
               >
                 {location?.label || 'Select Location'}
               </span>
-              <ChevronDown size={14} strokeWidth={1.75} className={`shrink-0 ${heroMode ? 'text-paper/50' : 'text-ink/40'}`} />
+              <ChevronDown size={14} strokeWidth={1.75} className={`shrink-0 ${heroMode ? 'text-hero-dark/40' : 'text-ink/40'}`} />
             </button>
 
             {/* Mobile: compact pin */}
@@ -248,7 +264,7 @@ export default function Navbar() {
               className={`md:hidden inline-flex items-center justify-center transition-colors ${iconCls}`}
               aria-label="Select location"
             >
-              <MapPin size={20} strokeWidth={1.5} className={heroMode ? 'text-paper' : 'text-[#13294B]'} />
+              <MapPin size={20} strokeWidth={1.5} className={heroMode ? 'text-hero-dark' : 'text-[#13294B]'} />
             </button>
 
             <div className="flex items-center relative">
@@ -260,12 +276,12 @@ export default function Navbar() {
                       searchValue.length > 0
                         ? 'bg-paper border-ink/10'
                         : heroMode
-                        ? 'bg-paper/20 backdrop-blur-md border-paper/30'
+                        ? 'bg-hero-bg border-hero-border'
                         : 'bg-ink/5 border-ink/10'
                     }`}
                   >
                     <Search size={16} className={`shrink-0 transition-colors ${
-                      searchValue.length > 0 ? 'text-ink/50' : heroMode ? 'text-paper/80' : 'text-ink/50'
+                      searchValue.length > 0 ? 'text-ink/50' : heroMode ? 'text-hero-dark/50' : 'text-ink/50'
                     }`} />
                     <input
                       ref={searchInputRef}
@@ -276,7 +292,7 @@ export default function Navbar() {
                         searchValue.length > 0
                           ? 'text-ink placeholder:text-ink/40'
                           : heroMode
-                          ? 'text-paper placeholder:text-paper/70'
+                          ? 'text-hero-dark placeholder:text-hero-dark/40'
                           : 'text-ink placeholder:text-ink/40'
                       }`}
                     />
@@ -423,6 +439,7 @@ export default function Navbar() {
               </div>
             </div>
 
+            {/* Favorites */}
             <button onClick={() => navigate('/favorites')} className={`relative hidden md:inline-flex transition-colors ${iconCls}`} aria-label="favorites">
               <Heart size={20} strokeWidth={1.5} />
               {favorites.length > 0 && (
@@ -432,17 +449,28 @@ export default function Navbar() {
               )}
             </button>
 
-            <Link to="/cart" className={`relative inline-flex transition-colors ${iconCls}`} aria-label="bag">
-              <ShoppingBag size={20} strokeWidth={1.5} />
-              {cart.length > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-ink px-1 text-[10px] font-bold text-paper border border-paper">
-                  {cart.length}
-                </span>
-              )}
-            </Link>
+            {/* Bell / Notifications — shown in hero mode, cart icon on other pages */}
+            {heroMode ? (
+              <button
+                className="relative hidden md:inline-flex items-center justify-center transition-colors text-hero-dark/70 hover:text-hero-dark"
+                aria-label="notifications"
+                /* TODO: wire to real notification state/context */
+              >
+                <Bell size={20} strokeWidth={1.5} />
+              </button>
+            ) : (
+              <Link to="/cart" className={`relative inline-flex transition-colors ${iconCls}`} aria-label="bag">
+                <ShoppingBag size={20} strokeWidth={1.5} />
+                {cart.length > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-ink px-1 text-[10px] font-bold text-paper border border-paper">
+                    {cart.length}
+                  </span>
+                )}
+              </Link>
+            )}
 
             {isAuthenticated ? (
-              <div className={`hidden md:flex items-center gap-3 lg:gap-4 pl-3 lg:pl-4 border-l shrink-0 ${heroMode ? 'border-paper/25' : 'border-ink/10'}`}>
+              <div className={`hidden md:flex items-center gap-3 lg:gap-4 pl-3 lg:pl-4 border-l shrink-0 ${heroMode ? 'border-hero-border' : 'border-ink/10'}`}>
                 {(user?.passportPhoto || user?.avatar) && (
                   <Link to={panelPath} className="shrink-0" aria-label={panelLabel}>
                     <img
@@ -457,7 +485,7 @@ export default function Navbar() {
                 )}
                 <Link
                   to={panelPath}
-                  className={`hidden lg:inline-block text-sm font-medium transition-colors whitespace-nowrap ${heroMode ? 'text-paper/80 hover:text-paper' : 'text-ink/70 hover:text-ink'}`}
+                  className={`hidden lg:inline-block text-sm font-medium transition-colors whitespace-nowrap ${heroMode ? 'text-hero-dark/70 hover:text-hero-dark' : 'text-ink/70 hover:text-ink'}`}
                 >
                   {panelLabel}
                 </Link>
@@ -468,7 +496,7 @@ export default function Navbar() {
                   }}
                   className={`whitespace-nowrap shrink-0 inline-flex items-center justify-center gap-2 rounded-pill px-4 py-1.5 text-xs font-medium tracking-tightish transition-all duration-300 ${
                     heroMode
-                      ? 'border border-paper/30 bg-paper/15 backdrop-blur-md text-paper hover:bg-paper hover:text-ink'
+                      ? 'border border-[#13294B] bg-white text-[#13294B] hover:bg-[#13294B]/5'
                       : 'pill-btn !py-1.5 !px-4'
                   }`}
                 >
@@ -476,10 +504,19 @@ export default function Navbar() {
                 </button>
               </div>
             ) : (
-              <div className={`hidden md:flex items-center pl-4 border-l ${heroMode ? 'border-paper/25' : 'border-ink/10'}`}>
-                <Link to="/login" aria-label="account" className={`inline-flex transition-colors ${iconCls}`}>
-                  <UserIcon size={20} strokeWidth={1.5} />
-                </Link>
+              <div className={`hidden md:flex items-center ${heroMode ? '' : 'pl-4 border-l border-ink/10'}`}>
+                {heroMode ? (
+                  <Link
+                    to="/login"
+                    className="inline-flex items-center justify-center rounded-full border border-[#13294B] bg-white px-5 py-2 text-sm font-bold text-[#13294B] hover:bg-[#13294B]/5 transition-colors whitespace-nowrap"
+                  >
+                    Sign in
+                  </Link>
+                ) : (
+                  <Link to="/login" aria-label="account" className={`inline-flex transition-colors ${iconCls}`}>
+                    <UserIcon size={20} strokeWidth={1.5} />
+                  </Link>
+                )}
               </div>
             )}
           </div>

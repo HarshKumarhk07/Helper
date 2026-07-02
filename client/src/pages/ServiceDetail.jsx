@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { ArrowUpRight, Star, CheckCircle2, UserCircle2 } from 'lucide-react';
+import { ArrowUpRight, Star, CheckCircle2, UserCircle2, Target, Shield, ShieldCheck, Home, Clock, Bug, Zap, Wrench, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
+import ServiceDetailHero from '../sections/services/ServiceDetailHero.jsx';
 
 import { getService, getServiceWorkers, getServiceReviews } from '../api/services.js';
 import { formatPrice } from '../lib/booking.js';
@@ -10,6 +11,142 @@ import FadeUp from '../components/ui/FadeUp.jsx';
 import SkeletonCard from '../components/ui/SkeletonCard.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { resolveCatalogImage, CATALOG_PLACEHOLDER_IMAGE } from '../lib/catalogImage.js';
+
+const getServiceMetadata = (svcName, categoryName) => {
+  const nameLower = (svcName || '').toLowerCase();
+  
+  const avatars = [
+    'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=80&h=80',
+    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=80&h=80',
+    'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=80&h=80',
+  ];
+
+  const firstSpaceIdx = svcName.indexOf(' ');
+  let titlePrimary = svcName;
+  let titleAccent = '';
+  if (firstSpaceIdx > 0) {
+    titlePrimary = svcName.substring(0, firstSpaceIdx);
+    titleAccent = svcName.substring(firstSpaceIdx + 1);
+  }
+
+  if (nameLower.includes('pest control')) {
+    return {
+      categoryLabel: categoryName || 'Cleaning & Pest Control',
+      categoryIcon: <ShieldCheck />,
+      titlePrimary: 'Pest',
+      titleAccent: 'Control',
+      features: [
+        { icon: <Target />, label: 'Targeted Treatment' },
+        { icon: <ShieldCheck />, label: 'Safe & Eco-friendly' },
+        { icon: <Home />, label: 'Indoor & Outdoor' },
+        { icon: <Clock />, label: 'Long Lasting Protection' },
+      ],
+      trustCards: {
+        topRight: { icon: <Shield />, title: 'Safe for Families & Pets', subtext: 'Non-toxic & eco-friendly solutions' },
+        bottomLeft: { icon: <Bug />, title: 'Effective on All Pests', subtext: 'Mosquitoes, ants, cockroaches, termites & more' },
+      },
+      avatars,
+    };
+  }
+
+  if (nameLower.includes('home cleaning') || nameLower.includes('deep cleaning')) {
+    return {
+      categoryLabel: categoryName || 'Cleaning & Pest Control',
+      categoryIcon: <Sparkles />,
+      titlePrimary: 'Home',
+      titleAccent: 'Cleaning',
+      features: [
+        { icon: <Sparkles />, label: 'Deep Sanitisation' },
+        { icon: <ShieldCheck />, label: 'Verified Cleaners' },
+        { icon: <Home />, label: 'Complete Dusting' },
+        { icon: <Clock />, label: 'Flexible Booking' },
+      ],
+      trustCards: {
+        topRight: { icon: <Shield />, title: 'Fully Bonded & Insured', subtext: 'Complete safety peace-of-mind' },
+        bottomLeft: { icon: <Sparkles />, title: 'Premium Cleaning Agent', subtext: '100% biodegradable eco-materials' },
+      },
+      avatars,
+    };
+  }
+
+  if (nameLower.includes('ac repair') || nameLower.includes('air conditioning')) {
+    return {
+      categoryLabel: categoryName || 'Appliance Repair',
+      categoryIcon: <Zap />,
+      titlePrimary: 'AC Repair',
+      titleAccent: '& Service',
+      features: [
+        { icon: <Zap />, label: 'Cooling Diagnosis' },
+        { icon: <ShieldCheck />, label: 'Certified Techs' },
+        { icon: <Home />, label: 'Filter Cleaning' },
+        { icon: <Clock />, label: 'Same-day Service' },
+      ],
+      trustCards: {
+        topRight: { icon: <Shield />, title: 'Cooling Performance', subtext: 'Full gas-charge and coil service' },
+        bottomLeft: { icon: <Zap />, title: 'Energy Savings', subtext: 'Optimize system for lower bills' },
+      },
+      avatars,
+    };
+  }
+
+  if (nameLower.includes('electrician') || nameLower.includes('electrical')) {
+    return {
+      categoryLabel: categoryName || 'Home Repair & Maintenance',
+      categoryIcon: <Wrench />,
+      titlePrimary: 'Certified',
+      titleAccent: 'Electrician',
+      features: [
+        { icon: <Zap />, label: 'Wiring Check' },
+        { icon: <ShieldCheck />, label: 'Safety First' },
+        { icon: <Wrench />, label: 'Expert Fixing' },
+        { icon: <Clock />, label: 'Quick Turnaround' },
+      ],
+      trustCards: {
+        topRight: { icon: <Shield />, title: 'Certified Electricians', subtext: '100% background verified experts' },
+        bottomLeft: { icon: <Zap />, title: 'Complete Safety Check', subtext: 'Advanced surge & wiring diagnostic' },
+      },
+      avatars,
+    };
+  }
+
+  if (nameLower.includes('plumber') || nameLower.includes('plumbing')) {
+    return {
+      categoryLabel: categoryName || 'Home Repair & Maintenance',
+      categoryIcon: <Wrench />,
+      titlePrimary: 'Professional',
+      titleAccent: 'Plumber',
+      features: [
+        { icon: <Wrench />, label: 'Leak Detection' },
+        { icon: <ShieldCheck />, label: 'Guaranteed Fit' },
+        { icon: <Home />, label: 'Pipe Sealing' },
+        { icon: <Clock />, label: 'On-time Arrival' },
+      ],
+      trustCards: {
+        topRight: { icon: <Shield />, title: 'Leak-free Guarantee', subtext: 'Premium plumbing materials used' },
+        bottomLeft: { icon: <Wrench />, title: 'Full Bathroom Support', subtext: 'Tap, sink & pipe replacements' },
+      },
+      avatars,
+    };
+  }
+
+  return {
+    categoryLabel: categoryName || 'Signature Service',
+    categoryIcon: <Sparkles />,
+    titlePrimary,
+    titleAccent,
+    features: [
+      { icon: <ShieldCheck />, label: 'Verified Professionals' },
+      { icon: <Clock />, label: 'On-Time Arrival' },
+      { icon: <Home />, label: 'Premium Quality' },
+      { icon: <Zap />, label: 'Same-Day Service' },
+    ],
+    trustCards: {
+      topRight: { icon: <Shield />, title: 'Quality Guarantee', subtext: '100% satisfaction promised' },
+      bottomLeft: { icon: <Sparkles />, title: 'Premium Services', subtext: 'High-grade eco-friendly tools & methods' },
+    },
+    avatars,
+  };
+};
 
 export default function ServiceDetail() {
   const { id } = useParams();
@@ -83,59 +220,21 @@ export default function ServiceDetail() {
   return (
     <div className="bg-paper flex flex-col min-h-screen">
       
-      {/* ── Hero Section (Navy Blue) ── */}
-      <section className="bg-ink text-paper pt-36 pb-20 md:pt-40 md:pb-28 rounded-b-[3rem] -mt-24 relative z-10">
-        <div className="container-velora flex flex-col items-center text-center mb-16 md:mb-24">
-          
-          <FadeUp>
-            <div className="text-xs font-semibold uppercase tracking-widest text-brand mb-4">
-              {service.category?.name || 'SIGNATURE SERVICE'}
-            </div>
-          </FadeUp>
-
-          <FadeUp delay={0.1}>
-            <h1 className="font-sans text-[clamp(2.5rem,6vw,5.5rem)] font-bold leading-[1.05] tracking-tightest mb-6 max-w-4xl">
-              {service.name}
-            </h1>
-            <p className="text-base md:text-lg font-normal text-paper/70 leading-relaxed max-w-2xl mx-auto mb-10">
-              {service.description || 'Consistent, safe, and detail-focused cleaning that makes your space feel lighter, fresher, and fully yours again.'}
-            </p>
-          </FadeUp>
-
-          <FadeUp delay={0.2} className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link 
-              to="/services"
-              className="rounded-full border border-paper/20 px-8 py-4 text-sm font-semibold hover:bg-paper/10 transition-colors"
-            >
-              Go back to services
-            </Link>
-            <button 
-              onClick={startBooking}
-              className="inline-flex items-center gap-3 rounded-full bg-brand px-8 py-4 text-sm font-bold text-ink transition duration-300 hover:bg-brand-dark"
-            >
-              <span>Book service — {formatPrice(service.price)}</span>
-              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-ink text-paper shrink-0">
-                <ArrowUpRight size={15} strokeWidth={2.5} />
-              </span>
-            </button>
-          </FadeUp>
-          
-        </div>
-
-        {/* ── Full Width Cover Image ── */}
-        <div className="container-velora relative z-20 px-4 md:px-8">
-          <FadeUp delay={0.3}>
-            <div className="w-full h-64 md:h-[500px] overflow-hidden rounded-[2.5rem] shadow-2xl border-4 border-paper bg-paper">
-              <img 
-                src={coverImage} 
-                alt={service.name}
-                className="w-full h-full object-cover"
-                onError={(e) => { e.currentTarget.src = CATALOG_PLACEHOLDER_IMAGE }}
-              />
-            </div>
-          </FadeUp>
-        </div>
-      </section>
+      {/* ── Custom Dynamic Service Hero Section ── */}
+      <ServiceDetailHero
+        categoryLabel={getServiceMetadata(service.name, service.category?.name).categoryLabel}
+        categoryIcon={getServiceMetadata(service.name, service.category?.name).categoryIcon}
+        titlePrimary={getServiceMetadata(service.name, service.category?.name).titlePrimary}
+        titleAccent={getServiceMetadata(service.name, service.category?.name).titleAccent}
+        description={service.description || 'Consistent, safe, and detail-focused cleaning that makes your space feel lighter, fresher, and fully yours again.'}
+        features={getServiceMetadata(service.name, service.category?.name).features}
+        price={service.price}
+        coverImage={coverImage}
+        trustCards={getServiceMetadata(service.name, service.category?.name).trustCards}
+        avatars={getServiceMetadata(service.name, service.category?.name).avatars}
+        onBook={startBooking}
+        backLinkHref="/services"
+      />
 
       {/* ── What's Included Section ── */}
       <section className="container-velora py-24 md:py-32">
