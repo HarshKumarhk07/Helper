@@ -9,6 +9,38 @@
   :root {
     color-scheme: light;
   }
+
+  /* Premium Custom Scrollbar styling */
+  /* Firefox support */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(19, 41, 75, 0.7) transparent;
+  }
+
+  /* Webkit support (Chrome, Safari, newer Edge, Opera) */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: rgba(19, 41, 75, 0.7);
+    border-radius: 9999px;
+    border: 2.5px solid transparent;
+    background-clip: padding-box;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: #13294B;
+  }
+
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
   html, body, #root {
     width: 100%;
     /* Hard cap horizontal scroll at the root. Any individual section that
@@ -91,7 +123,7 @@
   /* Custom scrollbar for drawer */
   .drawer-scroll {
     scrollbar-width: thin;
-    scrollbar-color: rgba(26, 26, 26, 0.2) transparent;
+    scrollbar-color: rgba(19, 41, 75, 0.7) transparent;
   }
 
   .drawer-scroll::-webkit-scrollbar {
@@ -103,14 +135,14 @@
   }
 
   .drawer-scroll::-webkit-scrollbar-thumb {
-    background-color: rgba(26, 26, 26, 0.2);
-    border-radius: 3px;
-    border: 2px solid transparent;
-    background-clip: content-box;
+    background-color: rgba(19, 41, 75, 0.7);
+    border-radius: 9999px;
+    border: 1.5px solid transparent;
+    background-clip: padding-box;
   }
 
   .drawer-scroll::-webkit-scrollbar-thumb:hover {
-    background-color: rgba(26, 26, 26, 0.3);
+    background-color: #13294B;
   }
 }
 
