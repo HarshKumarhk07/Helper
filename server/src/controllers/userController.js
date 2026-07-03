@@ -7,11 +7,14 @@ import { ROLES } from '../config/roles.js';
 import { BOOKING_STATUS } from '../config/booking.js';
 import { ApiError, asyncHandler } from '../utils/asyncHandler.js';
 import { validatePassword } from '../utils/passwordPolicy.js';
+import { notifyUserDeleted } from '../utils/notificationService.js';
 
 export const listUsers = asyncHandler(async (req, res) => {
-  const { role, q } = req.query;
+  const { role, q, kycStatus, isActive } = req.query;
   const filter = {};
   if (role) filter.role = role;
+  if (kycStatus) filter.kycStatus = kycStatus;
+  if (isActive !== undefined) filter.isActive = isActive === 'true';
   if (q) filter.$or = [
     { name: { $regex: q, $options: 'i' } },
     { email: { $regex: q, $options: 'i' } },
@@ -332,4 +335,33 @@ export const getWorkersForCustomer = asyncHandler(async (req, res) => {
   });
 
   res.json({ workers });
+});
+
+export const deleteUser = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  // Prevent administrators from deleting their own account.
+  if (String(req.user._id) === String(id)) {
+    throw new ApiError(400, 'Admin cannot delete their own account');
+  }
+
+  const user = await User.findById(id);
+  if (!user) throw new ApiError(404, 'User not found');
+
+  const { email, name, role } = user;
+
+  // Perform deletion
+  await User.findByIdAndDelete(id);
+
+  // If the user is a worker, also clean up their WorkerServices
+  if (role === ROLES.WORKER) {
+    await WorkerService.deleteMany({ worker: id });
+  }
+
+  // Send email notification regarding account deletion.
+  await notifyUserDeleted({ email, name }).catch((err) => {
+    console.error(`[deleteUser] Failed to send deletion email to ${email}:`, err);
+  });
+
+  res.json({ message: 'User deleted successfully' });
 });

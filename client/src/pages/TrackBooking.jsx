@@ -153,7 +153,7 @@ export default function TrackBooking() {
           });
         })
         .catch(() => null);
-    }, 15_000);
+    }, 5_000);
     return () => clearInterval(id);
   }, [bookingId]);
 

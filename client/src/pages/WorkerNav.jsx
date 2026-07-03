@@ -87,9 +87,11 @@ export default function WorkerNav() {
   }, []);
 
   // ── Fetch tracking state from REST on mount ───────────────────────────────
-  const refresh = useCallback(() => {
-    setLoading(true);
-    return getTrackingState(bookingId)
+  const refresh = useCallback((showSpinner = true) => {
+    if (showSpinner) setLoading(true);
+    const coords = localWorkerPosRef.current;
+    const params = coords ? { lat: coords.lat, lng: coords.lng, accuracy: coords.accuracy } : {};
+    return getTrackingState(bookingId, params)
       .then((data) => {
         console.debug('[WorkerNav] tracking state loaded', {
           bookingId,
@@ -105,7 +107,9 @@ export default function WorkerNav() {
         toast.error(err?.response?.data?.message || 'Job not available');
         navigate('/worker/jobs');
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (showSpinner) setLoading(false);
+      });
   }, [bookingId, navigate]);
 
   useEffect(() => {
@@ -116,7 +120,9 @@ export default function WorkerNav() {
   useEffect(() => {
     if (!bookingId) return;
     const id = setInterval(() => {
-      getTrackingState(bookingId)
+      const coords = localWorkerPosRef.current;
+      const params = coords ? { lat: coords.lat, lng: coords.lng, accuracy: coords.accuracy } : {};
+      getTrackingState(bookingId, params)
         .then((data) => {
           setState((prev) => {
             // Merge new data but KEEP localWorkerPos if it's more recent
@@ -128,7 +134,7 @@ export default function WorkerNav() {
           });
         })
         .catch(() => null);
-    }, 15_000);
+    }, 5_000);
     return () => clearInterval(id);
   }, [bookingId]);
 
@@ -232,6 +238,32 @@ export default function WorkerNav() {
   ]);
 
   // ── Actions ──────────────────────────────────────────────────────────────
+  const handleAccept = async () => {
+    setWorking(true);
+    try {
+      await transitionStatus(bookingId, 'accepted', 'Accepted by worker');
+      toast.success('Job accepted!');
+      refresh(false);
+    } catch (err) {
+      toast.error(err?.response?.data?.error || 'Could not accept job');
+    } finally {
+      setWorking(false);
+    }
+  };
+
+  const handleStartTravel = async () => {
+    setWorking(true);
+    try {
+      await transitionStatus(bookingId, 'en_route', 'On the way');
+      toast.success('Started travel!');
+      refresh(false);
+    } catch (err) {
+      toast.error(err?.response?.data?.error || 'Could not start travel');
+    } finally {
+      setWorking(false);
+    }
+  };
+
   const handleStart = async () => {
     const pin = window.prompt('Enter the 6-digit Start PIN from the customer:');
     if (!pin) return;
@@ -239,7 +271,7 @@ export default function WorkerNav() {
     try {
       await transitionStatus(bookingId, 'in_progress', 'Started on site', pin);
       toast.success('Job started!');
-      refresh();
+      refresh(false);
     } catch (err) {
       toast.error(err?.response?.data?.error || 'Could not start job');
     } finally {
@@ -258,7 +290,7 @@ export default function WorkerNav() {
     try {
       await transitionStatus(bookingId, 'completed', 'Service completed', pin);
       toast.success('Job completed!');
-      refresh();
+      refresh(false);
     } catch (err) {
       toast.error(err?.response?.data?.error || 'Could not complete job');
     } finally {
@@ -451,27 +483,49 @@ export default function WorkerNav() {
           </>
           )}
 
-          {/* Action buttons — always visible so PIN entry stays accessible even when collapsed */}
+          {/* Action buttons — dynamically rendered based on status */}
           {!finished && (
-            <div className="mt-4 grid grid-cols-2 gap-2">
-              <button
-                onClick={handleStart}
-                disabled={working || inProgress || status !== 'assigned'}
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-emerald-500 px-4 py-2.5 text-xs uppercase tracking-widest text-[#04130c] transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                <Play size={13} /> Start with PIN
-              </button>
-              <button
-                onClick={handleComplete}
-                disabled={working || !inProgress || !booking?.endPin}
-                title={booking?.endPin ? 'Enter the customer end PIN to complete the job' : 'End PIN is not available for this booking yet'}
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-sky-500 px-4 py-2.5 text-xs uppercase tracking-widest text-white transition hover:bg-sky-400 disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                <CheckCircle2 size={13} /> Complete with PIN
-              </button>
-              {inProgress && (
-                <div className={`col-span-2 text-center text-[10px] uppercase tracking-widest ${booking?.endPin ? 'text-sky-300/80' : 'text-amber-300'}`}>
-                  {booking?.endPin ? 'End PIN required before completion' : 'End PIN missing for this booking'}
+            <div className="mt-4 flex flex-col gap-2">
+              {status === 'assigned' && (
+                <button
+                  onClick={handleAccept}
+                  disabled={working}
+                  className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-emerald-500 px-4 py-2.5 text-xs uppercase tracking-widest text-[#04130c] transition hover:bg-emerald-400 disabled:opacity-40"
+                >
+                  <Play size={13} /> Accept Job
+                </button>
+              )}
+              {status === 'accepted' && (
+                <button
+                  onClick={handleStartTravel}
+                  disabled={working}
+                  className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-sky-500 px-4 py-2.5 text-xs uppercase tracking-widest text-white transition hover:bg-sky-400 disabled:opacity-40"
+                >
+                  <Navigation size={13} /> Start travel (En route)
+                </button>
+              )}
+              {status === 'en_route' && (
+                <button
+                  onClick={handleStart}
+                  disabled={working}
+                  className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-emerald-500 px-4 py-2.5 text-xs uppercase tracking-widest text-[#04130c] transition hover:bg-emerald-400 disabled:opacity-40"
+                >
+                  <Play size={13} /> Start job (Enter PIN)
+                </button>
+              )}
+              {status === 'in_progress' && (
+                <button
+                  onClick={handleComplete}
+                  disabled={working || !booking?.hasEndPin}
+                  title={booking?.hasEndPin ? 'Enter the customer end PIN to complete the job' : 'End PIN is not available for this booking yet'}
+                  className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-sky-500 px-4 py-2.5 text-xs uppercase tracking-widest text-white transition hover:bg-sky-400 disabled:opacity-40"
+                >
+                  <CheckCircle2 size={13} /> Complete job (Enter PIN)
+                </button>
+              )}
+              {status === 'in_progress' && (
+                <div className="text-center text-[10px] uppercase tracking-widest text-sky-300/80">
+                  {booking?.hasEndPin ? 'End PIN required before completion' : 'End PIN missing for this booking'}
                 </div>
               )}
             </div>

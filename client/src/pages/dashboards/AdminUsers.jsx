@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import api from '../../api/axios.js';
-import { listUsers, adminCreateUser, updateUser, setUserActive } from '../../api/users.js';
+import { listUsers, adminCreateUser, updateUser, setUserActive, deleteUser } from '../../api/users.js';
 import FadeUp from '../../components/ui/FadeUp.jsx';
 import DashboardShell from './DashboardShell.jsx';
 import { ShieldAlert, ShieldCheck } from 'lucide-react';
@@ -170,6 +170,25 @@ export default function AdminUsers() {
       load();
     } catch (err) {
       toast.error(err?.response?.data?.error || 'Failed to update user status');
+    }
+  };
+
+  const handleDeleteUser = async (user) => {
+    const isSelf = currentUser?._id === user._id;
+    if (isSelf) {
+      toast.error("You can't delete your own account");
+      return;
+    }
+
+    const ok = window.confirm(`Are you sure you want to delete the user "${user.name || ''}" (${user.email})? This action cannot be undone and will notify them via email.`);
+    if (!ok) return;
+
+    try {
+      await deleteUser(user._id);
+      toast.success('User deleted successfully');
+      load();
+    } catch (err) {
+      toast.error(err?.response?.data?.error || 'Failed to delete user');
     }
   };
 
@@ -379,6 +398,14 @@ export default function AdminUsers() {
                           </button>
                         );
                       })()}
+                      {currentUser?._id !== u._id && (
+                        <button
+                          onClick={() => handleDeleteUser(u)}
+                          className="text-xs tracking-widest uppercase text-red-600 hover:underline text-left"
+                        >
+                          Delete
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

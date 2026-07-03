@@ -89,7 +89,12 @@ export function AuthProvider({ children }) {
     api
       .get('/auth/me')
       .then(({ data }) => setUser(data.user))
-      .catch(() => clearTokens())
+      .catch((err) => {
+        const status = err?.response?.status;
+        if (status === 401 || status === 403) {
+          clearTokens();
+        }
+      })
       .finally(() => setBootstrapping(false));
   }, []);
 

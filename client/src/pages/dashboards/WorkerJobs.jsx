@@ -303,10 +303,10 @@ export default function WorkerJobs() {
                       </button>
                     )}
 
-                    {(b.status === BOOKING_STATUS.EN_ROUTE || b.status === BOOKING_STATUS.IN_PROGRESS) && (
+                    {(b.status === BOOKING_STATUS.ASSIGNED || b.status === BOOKING_STATUS.ACCEPTED || b.status === BOOKING_STATUS.EN_ROUTE || b.status === BOOKING_STATUS.IN_PROGRESS) && (
                       <Link
                         to={`/worker/jobs/${b._id}/nav`}
-                        className="inline-flex items-center gap-1 rounded-full bg-sky-500 px-4 py-1.5 text-xs uppercase tracking-widest text-white hover:bg-sky-400"
+                        className="inline-flex items-center gap-1 rounded-full bg-[#13294B] px-4 py-1.5 text-xs uppercase tracking-widest text-white hover:bg-[#13294B]/90"
                       >
                         Open navigation →
                       </Link>

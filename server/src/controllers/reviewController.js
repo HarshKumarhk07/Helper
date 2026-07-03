@@ -66,8 +66,10 @@ export const createReview = asyncHandler(async (req, res) => {
 });
 
 export const getReviews = asyncHandler(async (req, res) => {
-  const { workerId, serviceId, productId } = req.query;
+  const { workerId, serviceId, productId, userId } = req.query;
   const filter = {};
+
+  if (userId) filter.user = userId;
 
   if (workerId) {
     const bookings = await Booking.find({ worker: workerId }).select('_id');
@@ -89,7 +91,15 @@ export const getReviews = asyncHandler(async (req, res) => {
   const totalPages = Math.ceil(totalRecords / limit);
 
   const reviews = await Review.find(filter)
-    .populate('user', 'name')
+    .populate('user', 'name avatar')
+    .populate({
+      path: 'booking',
+      populate: [
+        { path: 'service', select: 'name image' },
+        { path: 'worker', select: 'name avatar' }
+      ]
+    })
+    .populate('product', 'name image')
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit);

@@ -562,6 +562,24 @@ export const notifySupportTicketReplied = ({ user, ticket, replyText, fromAgent 
       : Promise.resolve({ skipped: true }),
   ]);
 
+export const notifyUserDeleted = ({ email, name }) => {
+  return sendEmail({
+    to: email,
+    subject: 'Account Deleted · Helper',
+    html: wrapEmail(
+      'Account Deletion Notice',
+      `
+      <p>Hi ${name || 'there'},</p>
+      <p>This is to inform you that your registered Helper account (email: <strong>${email}</strong>) has been deleted by an administrator.</p>
+      <p>If you did not request this or believe it is a mistake, please reach out to our support team.</p>
+      <br/>
+      <p>Best regards,</p>
+      <p>The Helper Team</p>
+      `
+    ),
+  });
+};
+
 const escapeHtml = (s) =>
   String(s || '')
     .replace(/&/g, '&amp;')

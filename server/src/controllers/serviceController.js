@@ -70,9 +70,18 @@ export const getServiceWorkers = asyncHandler(async (req, res) => {
   const workerServices = await WorkerService.find({ 
     service: req.params.id, 
     isActive: true 
-  }).populate('worker', 'name phone avatar ratingAvg ratingCount isRecommended');
+  }).populate({
+    path: 'worker',
+    select: 'name phone avatar ratingAvg ratingCount isRecommended kycStatus isActive'
+  });
   
-  res.json({ workers: workerServices });
+  const filtered = workerServices.filter(ws => 
+    ws.worker && 
+    ws.worker.kycStatus === 'verified' && 
+    ws.worker.isActive === true
+  );
+  
+  res.json({ workers: filtered });
 });
 
 export const getServiceReviews = asyncHandler(async (req, res) => {

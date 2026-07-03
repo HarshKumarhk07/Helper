@@ -3,9 +3,11 @@ import { ApiError, asyncHandler } from '../utils/asyncHandler.js';
 import { ROLES } from '../config/roles.js';
 import { getRoute, buildEta } from '../utils/routing.js';
 import { geocodeAddress } from '../utils/geocoding.js';
+import WorkerAvailability from '../models/WorkerAvailability.js';
 import {
   getCachedWorkerLocation,
   getCachedBookingRoute,
+  setCachedWorkerLocation,
 } from '../sockets/index.js';
 
 const hasCoords = (lat, lng) =>
@@ -65,7 +67,54 @@ export const getTrackingState = asyncHandler(async (req, res) => {
 
   let workerLocation = null;
   if (booking.worker?._id) {
-    workerLocation = getCachedWorkerLocation(booking.worker._id);
+    const qLat = parseFloat(req.query.lat);
+    const qLng = parseFloat(req.query.lng);
+    const isOwnWorker = String(booking.worker._id) === me;
+
+    if (hasCoords(qLat, qLng) && isOwnWorker) {
+      workerLocation = {
+        lat: qLat,
+        lng: qLng,
+        accuracy: req.query.accuracy ? parseFloat(req.query.accuracy) : null,
+        at: new Date().toISOString(),
+        workerId: String(booking.worker._id),
+      };
+      // Cache this immediately in the socket manager
+      setCachedWorkerLocation(booking.worker._id, workerLocation);
+      
+      // Update database availability last location asynchronously
+      WorkerAvailability.updateOne(
+        { worker: booking.worker._id },
+        {
+          $set: {
+            lastSeenAt: new Date(),
+            online: true,
+            lastLocation: {
+              lat: qLat,
+              lng: qLng,
+              accuracy: req.query.accuracy ? parseFloat(req.query.accuracy) : null,
+              at: new Date(),
+            },
+          },
+        }
+      ).catch((err) => console.error('[tracking] failed to update worker availability location:', err.message));
+    } else {
+      // Look up cached socket location
+      workerLocation = getCachedWorkerLocation(booking.worker._id);
+      if (!workerLocation) {
+        // Fall back to database last location
+        const avail = await WorkerAvailability.findOne({ worker: booking.worker._id }).lean();
+        if (avail?.lastLocation?.lat != null && avail?.lastLocation?.lng != null) {
+          workerLocation = {
+            lat: avail.lastLocation.lat,
+            lng: avail.lastLocation.lng,
+            accuracy: avail.lastLocation.accuracy,
+            at: avail.lastLocation.at ? avail.lastLocation.at.toISOString() : new Date().toISOString(),
+            workerId: String(booking.worker._id),
+          };
+        }
+      }
+    }
   }
 
   console.debug('[tracking] coordinates', {
@@ -116,6 +165,8 @@ export const getTrackingState = asyncHandler(async (req, res) => {
       address: booking.address,
       startPin: isOwner || isPrivileged ? booking.startPin : undefined,
       endPin: isOwner || isPrivileged ? booking.endPin : undefined,
+      hasStartPin: !!booking.startPin,
+      hasEndPin: !!booking.endPin,
     },
     destination: dest,
     workerLocation,

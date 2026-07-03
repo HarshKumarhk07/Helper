@@ -1,4 +1,5 @@
 import ProductCategory from '../models/ProductCategory.js';
+import Product from '../models/Product.js';
 import { ApiError, asyncHandler } from '../utils/asyncHandler.js';
 
 const slugify = (s) =>
@@ -12,7 +13,21 @@ export const listProductCategories = asyncHandler(async (req, res) => {
   const filter = {};
   if (req.query.active === 'true') filter.isActive = true;
   const categories = await ProductCategory.find(filter).sort({ sortOrder: 1, createdAt: 1 });
-  res.json({ categories });
+  
+  // Count matching active products for each category
+  const categoriesWithCount = await Promise.all(
+    categories.map(async (cat) => {
+      const productCount = await Product.countDocuments({
+        category: cat.name,
+        isActive: true,
+      });
+      const catObj = cat.toObject();
+      catObj.productCount = productCount;
+      return catObj;
+    })
+  );
+
+  res.json({ categories: categoriesWithCount });
 });
 
 export const createProductCategory = asyncHandler(async (req, res) => {

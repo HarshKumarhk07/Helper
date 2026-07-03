@@ -13,11 +13,9 @@ export default function RefundModal({
   onRefunded,
 }) {
   const grossAmount = type === 'booking' ? reference?.amount : reference?.totalAmount;
-  const razorpayEligible =
-    !!reference?.razorpayPaymentId && reference?.paymentStatus === 'paid';
   const alreadyRefunded = reference?.paymentStatus === 'refunded';
+  const channel = 'wallet';
 
-  const [channel, setChannel] = useState(razorpayEligible ? 'razorpay' : 'wallet');
   const [amount, setAmount] = useState(grossAmount || 0);
   const [reason, setReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -26,23 +24,8 @@ export default function RefundModal({
     if (alreadyRefunded) {
       return { ok: false, message: 'This record is already marked as refunded.' };
     }
-    if (channel === 'razorpay') {
-      if (!reference?.razorpayPaymentId) {
-        return {
-          ok: false,
-          message:
-            'No Razorpay payment captured for this reference. Switch to wallet credit to record this refund.',
-        };
-      }
-      if (reference?.paymentStatus !== 'paid') {
-        return {
-          ok: false,
-          message: `Razorpay refunds require a paid payment (current: ${reference?.paymentStatus || 'unknown'}).`,
-        };
-      }
-    }
     return { ok: true };
-  }, [channel, reference, alreadyRefunded]);
+  }, [alreadyRefunded]);
 
   const handleSubmit = async () => {
     if (!eligibility.ok) return;
@@ -107,38 +90,12 @@ export default function RefundModal({
           </button>
         </div>
 
-        {/* Channel selector */}
-        <div className="mt-5 grid grid-cols-2 gap-2 rounded-pill border border-ink/15 p-1">
-          <button
-            type="button"
-            onClick={() => setChannel('razorpay')}
-            disabled={!razorpayEligible}
-            title={!razorpayEligible ? 'Needs an online Razorpay payment' : undefined}
-            className={`inline-flex items-center justify-center gap-2 rounded-pill px-3 py-1.5 text-xs uppercase tracking-widest transition disabled:cursor-not-allowed disabled:opacity-50 ${
-              channel === 'razorpay'
-                ? 'bg-ink text-paper'
-                : 'text-ink/70 hover:text-ink:text-paper'
-            }`}
-          >
-            <CreditCard size={12} /> Razorpay refund
-          </button>
-          <button
-            type="button"
-            onClick={() => setChannel('wallet')}
-            className={`inline-flex items-center justify-center gap-2 rounded-pill px-3 py-1.5 text-xs uppercase tracking-widest transition ${
-              channel === 'wallet'
-                ? 'bg-ink text-paper'
-                : 'text-ink/70 hover:text-ink:text-paper'
-            }`}
-          >
-            <Wallet size={12} /> Credit to wallet
-          </button>
-        </div>
-
-        <div className="mt-3 text-xs text-ink/60">
-          {channel === 'razorpay'
-            ? 'Funds go back to the original payment method (typically 5–7 business days).'
-            : "Funds appear in the customer's Helper wallet immediately. Works on COD too."}
+        {/* Channel Indicator (Wallet only) */}
+        <div className="mt-5 rounded-xl border border-ink/10 bg-ink/5 p-4 text-xs text-ink/75">
+          <div className="flex items-center gap-2 font-semibold uppercase tracking-wider mb-1">
+            <Wallet size={14} className="text-[#13294B]" /> Credit to wallet
+          </div>
+          Funds appear in the customer's Helper wallet immediately. Works on COD too.
         </div>
 
         {!eligibility.ok ? (
@@ -206,18 +163,10 @@ export default function RefundModal({
               <button
                 onClick={handleSubmit}
                 disabled={submitting}
-                className={`inline-flex items-center gap-2 rounded-full px-5 py-2 text-xs uppercase tracking-widest text-white transition disabled:opacity-50 ${
-                  channel === 'razorpay'
-                    ? 'bg-red-600 hover:bg-red-700'
-                    : 'bg-green-600 hover:bg-green-700'
-                }`}
+                className="inline-flex items-center gap-2 rounded-full px-5 py-2 text-xs uppercase tracking-widest text-white transition disabled:opacity-50 bg-[#13294B] hover:bg-[#13294B]/90"
               >
-                {channel === 'razorpay' ? <Banknote size={14} /> : <Wallet size={14} />}
-                {submitting
-                  ? 'Processing…'
-                  : channel === 'razorpay'
-                  ? `Refund ${inr(amount)}`
-                  : `Credit ${inr(amount)} to wallet`}
+                <Wallet size={14} />
+                {submitting ? 'Processing…' : `Credit ${inr(amount)} to wallet`}
               </button>
             </div>
           </>

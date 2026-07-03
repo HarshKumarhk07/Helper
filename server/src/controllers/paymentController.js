@@ -5,7 +5,8 @@ import Order from '../models/Order.js';
 import Booking from '../models/Booking.js';
 import Coupon from '../models/Coupon.js';
 import User from '../models/User.js';
-import { recordOrderHistory } from '../utils/ecommerce.js';
+import { recordOrderHistory, applyOrderStatusTimestamps } from '../utils/ecommerce.js';
+import Product from '../models/Product.js';
 import { logAudit } from '../utils/auditLogger.js';
 import { notifyBookingCancelled, notifyOrderStatus } from '../utils/notificationService.js';
 import { recordCouponUsage } from './couponController.js';
@@ -117,6 +118,8 @@ export const refundPayment = asyncHandler(async (req, res) => {
   }
   if (!target) throw new ApiError(404, 'Reference not found');
 
+  const originalStatus = target.status;
+
   if (target.paymentStatus === 'refunded') {
     throw new ApiError(409, 'Already refunded');
   }
@@ -206,6 +209,20 @@ export const refundPayment = asyncHandler(async (req, res) => {
     }
   }
 
+  if (type === 'order' || type === 'ecommerce') {
+    if (refundAmt >= grossAmount && target.status !== 'cancelled') {
+      target.status = 'cancelled';
+      applyOrderStatusTimestamps(target, 'cancelled');
+      
+      // Return reserved stock
+      for (const item of target.items) {
+        if (item.product) {
+          await Product.findByIdAndUpdate(item.product, { $inc: { stock: item.quantity } });
+        }
+      }
+    }
+  }
+
   if (type === 'booking') {
     await target.save();
     const buyer = await User.findById(target.user);
@@ -224,12 +241,12 @@ export const refundPayment = asyncHandler(async (req, res) => {
   } else {
     recordOrderHistory(
       target,
-      target.status,
+      originalStatus,
       target.status,
       req.user?._id || null,
       `${
         refundChannel === 'wallet' ? 'Wallet credit' : 'Razorpay refund'
-      } of ${inr(refundAmt)}${reason ? ` (${reason})` : ''}`
+      } of ${inr(refundAmt)}${reason ? ` (${reason})` : ''}${target.status === 'cancelled' ? ' (Order Cancelled)' : ''}`
     );
     await target.save();
     const buyer = await User.findById(target.user);

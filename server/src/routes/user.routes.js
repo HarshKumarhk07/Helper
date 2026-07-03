@@ -11,6 +11,7 @@ import {
   setUserActive,
   getWorkersForCustomer,
   getFeaturedWorkersPublic,
+  deleteUser,
 } from '../controllers/userController.js';
 
 const router = Router();
@@ -37,5 +38,6 @@ router.patch(
   adminUpdateUser
 );
 router.patch('/:id/active', requireRole(ROLES.ADMIN), setUserActive);
+router.delete('/:id', requireRole(ROLES.ADMIN), deleteUser);
 
 export default router;

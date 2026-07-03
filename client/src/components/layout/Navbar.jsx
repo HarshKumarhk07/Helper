@@ -14,7 +14,7 @@ import { mediaUrl } from '../../lib/catalogImage.js';
 
 const NAV = [
   { to: '/services', label: 'Services', hasChevron: true },
-  { to: '/services', label: 'Categories' },
+  { to: '/products', label: 'Products' },
   { to: '/join', label: 'Become a Professional' },
   { to: '/#stats-bar', label: 'About Us' },
 ];
@@ -23,7 +23,7 @@ const NAV = [
 // All map to existing routes — no 404 risk.
 const HERO_NAV = [
   { to: '/services', label: 'Services', hasChevron: true },
-  { to: '/services', label: 'Categories' },
+  { to: '/products', label: 'Products' },
   { to: '/join', label: 'Become a Professional' },
   { to: '/#stats-bar', label: 'About Us' },
 ];
@@ -66,6 +66,42 @@ export default function Navbar() {
   const searchInputRef = useRef(null);
   const debounceTimer = useRef(null);
 
+  const [services, setServices] = useState([]);
+  const [loadingServices, setLoadingServices] = useState(false);
+  const [isServicesDropdownOpen, setIsServicesDropdownOpen] = useState(false);
+  const [mobileServicesOpen, setMobileServicesOpen] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    setLoadingServices(true);
+    listServices({ active: 'true' })
+      .then((data) => {
+        if (active) {
+          setServices(data || []);
+        }
+      })
+      .catch((err) => {
+        console.error('Error fetching services for dropdown:', err);
+      })
+      .finally(() => {
+        if (active) {
+          setLoadingServices(false);
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const groupedServices = services.reduce((acc, svc) => {
+    const catName = svc.category?.name || 'Other';
+    if (!acc[catName]) {
+      acc[catName] = [];
+    }
+    acc[catName].push(svc);
+    return acc;
+  }, {});
+
   const panelPath = PANEL_BY_ROLE[user?.role] || '/dashboard';
   const panelLabel = PANEL_LABEL_BY_ROLE[user?.role] || 'Dashboard';
 
@@ -75,7 +111,11 @@ export default function Navbar() {
   const isHome = routerLocation.pathname === '/';
   const heroMode = false;
   const iconCls = heroMode ? 'text-hero-dark/70 hover:text-hero-dark' : 'text-ink/80 hover:text-ink';
-  const activeNavLinks = heroMode ? HERO_NAV : NAV;
+  const isWorkerOrAdmin = user && (user.role === 'worker' || user.role === 'admin');
+  const baseLinks = heroMode ? HERO_NAV : NAV;
+  const activeNavLinks = isWorkerOrAdmin
+    ? baseLinks.filter((n) => n.label !== 'Become a Professional')
+    : baseLinks;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -197,9 +237,102 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden min-w-0 items-center gap-6 md:flex flex-1">
+          <nav className="hidden min-w-0 items-center gap-4 lg:gap-6 lg:flex shrink-0">
             {activeNavLinks.map((n) => {
               const active = isNavActive(n.to);
+              
+              if (n.hasChevron) {
+                return (
+                  <div
+                    key={n.label}
+                    className="relative py-2"
+                    onMouseEnter={() => setIsServicesDropdownOpen(true)}
+                    onMouseLeave={() => setIsServicesDropdownOpen(false)}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => navigate(n.to)}
+                      className={`no-underline text-sm font-medium tracking-tightish transition-colors duration-300 relative flex items-center gap-1 bg-transparent border-0 cursor-pointer ${
+                        heroMode
+                          ? active ? 'text-hero-dark' : 'text-hero-dark/60 hover:text-hero-dark'
+                          : active ? 'text-[#13294B]' : 'text-[#13294B]/60 hover:text-[#13294B]'
+                      }`}
+                    >
+                      {n.label}
+                      <ChevronDown
+                        size={13}
+                        strokeWidth={2}
+                        className={`opacity-50 transition-transform duration-300 ${
+                          isServicesDropdownOpen ? 'rotate-180 text-[#13294B]' : ''
+                        }`}
+                      />
+                      {active && !heroMode && (
+                        <motion.div
+                          layoutId="nav-indicator"
+                          className="absolute -bottom-1 left-0 right-0 h-0.5 rounded-full bg-[#13294B]"
+                        />
+                      )}
+                    </button>
+                    
+                    <AnimatePresence>
+                      {isServicesDropdownOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 12 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 12 }}
+                          transition={{ duration: 0.2 }}
+                          className="absolute left-0 lg:left-1/2 lg:-translate-x-1/2 top-full mt-1 w-[460px] bg-paper/95 backdrop-blur-md border border-ink/10 rounded-2xl shadow-xl z-50 p-5"
+                        >
+                          {loadingServices ? (
+                            <div className="flex flex-col gap-2 p-2">
+                              <div className="h-4 bg-ink/5 rounded w-1/3 skeleton" />
+                              <div className="h-3 bg-ink/5 rounded w-2/3 skeleton" />
+                              <div className="h-3 bg-ink/5 rounded w-1/2 skeleton" />
+                            </div>
+                          ) : services.length === 0 ? (
+                            <div className="text-sm text-ink/55 p-2">No services available</div>
+                          ) : (
+                            <>
+                              <div className="grid grid-cols-2 gap-x-6 gap-y-4 max-h-[320px] overflow-y-auto pr-1">
+                                {Object.entries(groupedServices).map(([catName, svcs]) => (
+                                  <div key={catName} className="space-y-1.5 min-w-0">
+                                    <div className="text-[10px] font-bold uppercase tracking-widest text-ink/40 mb-1 truncate">
+                                      {catName}
+                                    </div>
+                                    <ul className="space-y-1">
+                                      {svcs.map((svc) => (
+                                        <li key={svc._id} className="truncate">
+                                          <Link
+                                            to={`/services/${svc._id}`}
+                                            onClick={() => setIsServicesDropdownOpen(false)}
+                                            className="block text-xs font-semibold text-ink/80 hover:text-ink hover:translate-x-1 transition-all duration-200"
+                                          >
+                                            {svc.name}
+                                          </Link>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                ))}
+                              </div>
+                              <div className="border-t border-ink/5 mt-4 pt-3 flex justify-between items-center text-xs">
+                                <Link
+                                  to="/services"
+                                  className="text-ink font-semibold hover:text-ink/80 transition-colors"
+                                  onClick={() => setIsServicesDropdownOpen(false)}
+                                >
+                                  View All Services →
+                                </Link>
+                              </div>
+                            </>
+                          )}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                );
+              }
+
               return (
                 <Link
                   key={n.label}
@@ -211,7 +344,6 @@ export default function Navbar() {
                   }`}
                 >
                   {n.label}
-                  {n.hasChevron && <ChevronDown size={13} strokeWidth={2} className="opacity-50" />}
                   {active && !heroMode && (
                     <motion.div
                       layoutId="nav-indicator"
@@ -225,12 +357,12 @@ export default function Navbar() {
 
 
           {/* Right Actions */}
-          <div className="flex flex-1 items-center justify-end gap-2.5 md:gap-4">
+          <div className="flex grow shrink-0 items-center justify-end gap-2.5 lg:gap-4">
             {/* Select Location */}
             <button
               type="button"
               onClick={openLocationModal}
-              className={`hidden md:inline-flex items-center gap-2 rounded-full border px-3 py-1.5 transition-colors ${
+              className={`hidden lg:inline-flex items-center gap-2 rounded-full border px-3 py-1.5 transition-colors ${
                 heroMode
                   ? 'border-hero-border bg-white hover:bg-hero-bg text-hero-dark/70 hover:text-hero-dark'
                   : 'border-ink/10 pr-3 mr-1 border-r ' + iconCls
@@ -239,7 +371,7 @@ export default function Navbar() {
             >
               <MapPin size={16} strokeWidth={1.75} className={`shrink-0 ${heroMode ? 'text-[#13294B]' : 'text-[#13294B]'}`} />
               <span
-                className="text-sm font-medium tracking-tightish truncate max-w-[160px]"
+                className="text-sm font-medium tracking-tightish truncate max-w-[100px] lg:max-w-[160px]"
                 title={location?.address || location?.label || 'Select Location'}
               >
                 {location?.label || 'Select Location'}
@@ -251,7 +383,7 @@ export default function Navbar() {
             <button
               type="button"
               onClick={openLocationModal}
-              className={`md:hidden inline-flex items-center justify-center transition-colors ${iconCls}`}
+              className={`lg:hidden inline-flex items-center justify-center transition-colors ${iconCls}`}
               aria-label="Select location"
             >
               <MapPin size={20} strokeWidth={1.5} className={heroMode ? 'text-hero-dark' : 'text-[#13294B]'} />
@@ -259,7 +391,7 @@ export default function Navbar() {
 
             <div className="flex items-center relative">
               {/* Desktop Search - Always Visible */}
-              <div className="hidden md:block relative mr-2">
+              <div className="hidden lg:block relative mr-2">
                   <form
                     onSubmit={handleSearchSubmit}
                     className={`flex items-center gap-2 rounded-full border px-3 py-1.5 shadow-sm transition-all duration-300 ${
@@ -278,7 +410,7 @@ export default function Navbar() {
                       value={searchValue}
                       onChange={(e) => setSearchValue(e.target.value)}
                       placeholder="Search services, products, workers..."
-                      className={`min-w-0 w-[140px] lg:w-[220px] xl:w-[300px] bg-transparent text-sm outline-none font-medium transition-colors ${
+                      className={`min-w-0 w-[110px] lg:w-[200px] xl:w-[300px] bg-transparent text-sm outline-none font-medium transition-colors ${
                         searchValue.length > 0
                           ? 'text-ink placeholder:text-ink/40'
                           : heroMode
@@ -344,7 +476,7 @@ export default function Navbar() {
               </div>
 
               {/* Mobile Search */}
-              <div className="md:hidden flex items-center">
+              <div className="lg:hidden flex items-center">
                 {searchOpen ? (
                   <motion.div
                     initial={{ opacity: 0, y: -4 }}
@@ -430,7 +562,7 @@ export default function Navbar() {
             </div>
 
             {/* Favorites */}
-            <button onClick={() => navigate('/favorites')} className={`relative hidden md:inline-flex transition-colors ${iconCls}`} aria-label="favorites">
+            <button onClick={() => navigate('/favorites')} className={`relative hidden lg:inline-flex transition-colors ${iconCls}`} aria-label="favorites">
               <Heart size={20} strokeWidth={1.5} />
               {favorites.length > 0 && (
                 <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-ink px-1 text-[10px] font-bold text-paper border border-paper">
@@ -442,7 +574,7 @@ export default function Navbar() {
             {/* Bell / Notifications — shown in hero mode, cart icon on other pages */}
             {heroMode ? (
               <button
-                className="relative hidden md:inline-flex items-center justify-center transition-colors text-hero-dark/70 hover:text-hero-dark"
+                className="relative hidden lg:inline-flex items-center justify-center transition-colors text-hero-dark/70 hover:text-hero-dark"
                 aria-label="notifications"
                 /* TODO: wire to real notification state/context */
               >
@@ -460,7 +592,7 @@ export default function Navbar() {
             )}
 
             {isAuthenticated ? (
-              <div className={`hidden md:flex items-center gap-3 lg:gap-4 pl-3 lg:pl-4 border-l shrink-0 ${heroMode ? 'border-hero-border' : 'border-ink/10'}`}>
+              <div className={`hidden lg:flex items-center gap-3 lg:gap-4 pl-3 lg:pl-4 border-l shrink-0 ${heroMode ? 'border-hero-border' : 'border-ink/10'}`}>
                 {(user?.passportPhoto || user?.avatar) && (
                   <Link to={panelPath} className="shrink-0" aria-label={panelLabel}>
                     <img
@@ -494,7 +626,7 @@ export default function Navbar() {
                 </button>
               </div>
             ) : (
-              <div className={`hidden md:flex items-center ${heroMode ? '' : 'pl-4 border-l border-ink/10'}`}>
+              <div className={`hidden lg:flex items-center ${heroMode ? '' : 'pl-4 border-l border-ink/10'}`}>
                 {heroMode ? (
                   <Link
                     to="/login"
@@ -511,7 +643,7 @@ export default function Navbar() {
             )}
             
             {/* Mobile Menu Button */}
-            <div className="md:hidden flex items-center ml-1">
+            <div className="lg:hidden flex items-center ml-1">
               <button
                 type="button"
                 className={`${iconCls} transition-colors flex items-center`}
@@ -613,8 +745,88 @@ export default function Navbar() {
                   {/* Main Navigation */}
                   <nav className="px-3 py-4 space-y-1">
                     <div className="text-[11px] font-semibold uppercase tracking-widest text-ink px-3 py-2">Navigation</div>
-                    {NAV.map((n) => {
+                    {activeNavLinks.map((n) => {
                       const active = isNavActive(n.to);
+                      
+                      if (n.hasChevron) {
+                        return (
+                          <div key={n.label} className="w-full flex flex-col">
+                            <button
+                              type="button"
+                              onClick={() => setMobileServicesOpen(!mobileServicesOpen)}
+                              className={`no-underline w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 bg-transparent border-0 cursor-pointer ${
+                                active
+                                  ? 'text-ink bg-ink/8'
+                                  : 'text-ink hover:text-ink hover:bg-ink/5'
+                              }`}
+                            >
+                              <div className="flex items-center gap-3">
+                                <span className={`h-1.5 w-1.5 rounded-full transition-all ${active ? 'bg-ink' : 'bg-ink/30'}`} />
+                                {n.label}
+                              </div>
+                              <ChevronDown
+                                size={16}
+                                className={`transition-transform duration-300 ${
+                                  mobileServicesOpen ? 'rotate-180 text-ink' : 'text-ink/40'
+                                }`}
+                              />
+                            </button>
+                            
+                            <AnimatePresence initial={false}>
+                              {mobileServicesOpen && (
+                                <motion.div
+                                  initial={{ height: 0, opacity: 0 }}
+                                  animate={{ height: 'auto', opacity: 1 }}
+                                  exit={{ height: 0, opacity: 0 }}
+                                  transition={{ duration: 0.2 }}
+                                  className="overflow-hidden pl-7 pr-3 space-y-2 mt-1"
+                                >
+                                  <Link
+                                    to="/services"
+                                    onClick={() => {
+                                      setOpen(false);
+                                      setMobileServicesOpen(false);
+                                    }}
+                                    className="block py-1 text-xs font-bold text-[#13294B] hover:underline"
+                                  >
+                                    View All Services
+                                  </Link>
+                                  
+                                  {loadingServices ? (
+                                    <div className="py-2 text-xs text-ink/40">Loading services...</div>
+                                  ) : services.length === 0 ? (
+                                    <div className="py-2 text-xs text-ink/40">No services available</div>
+                                  ) : (
+                                    Object.entries(groupedServices).map(([catName, svcs]) => (
+                                      <div key={catName} className="py-1">
+                                        <div className="text-[10px] font-bold uppercase tracking-widest text-ink/40 py-1 truncate">
+                                          {catName}
+                                        </div>
+                                        <div className="pl-2 border-l border-ink/5 space-y-1.5">
+                                          {svcs.map((svc) => (
+                                            <Link
+                                              key={svc._id}
+                                              to={`/services/${svc._id}`}
+                                              onClick={() => {
+                                                setOpen(false);
+                                                setMobileServicesOpen(false);
+                                              }}
+                                              className="block py-1 text-xs text-ink/75 hover:text-ink truncate font-medium"
+                                            >
+                                              {svc.name}
+                                            </Link>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    ))
+                                  )}
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+                          </div>
+                        );
+                      }
+
                       return (
                         <Link
                           key={n.to}
@@ -635,7 +847,6 @@ export default function Navbar() {
                       );
                     })}
                   </nav>
-
                   {/* Location */}
                   <div className="px-3 py-2 mt-2">
                     <button

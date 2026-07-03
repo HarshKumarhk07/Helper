@@ -55,6 +55,10 @@ export const getCachedWorkerLocation = (workerId) =>
 export const getCachedBookingRoute = (bookingId) =>
   bookingRoutes.get(String(bookingId)) || null;
 
+export const setCachedWorkerLocation = (workerId, data) => {
+  workerLocations.set(String(workerId), data);
+};
+
 // Compute and broadcast a fresh route for a booking, but only when the worker
 // has actually moved meaningfully or enough time has passed.
 async function recomputeBookingRoute({ io, bookingId, workerLocation }) {

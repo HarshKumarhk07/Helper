@@ -11,6 +11,9 @@ export default function UserDashboard() {
         <PillButton variant="solid" to="/me/bookings">
           My bookings →
         </PillButton>
+        <PillButton variant="solid" to="/me/reviews">
+          My reviews →
+        </PillButton>
         <PillButton variant="solid" to="/me/orders">
           My orders →
         </PillButton>

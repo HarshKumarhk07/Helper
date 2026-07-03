@@ -97,6 +97,7 @@ const WorkerPromote = lazy(() => import('./pages/dashboards/WorkerPromote.jsx'))
 // User surface
 const UserDashboard = lazy(() => import('./pages/dashboards/UserDashboard.jsx'));
 const UserBookings = lazy(() => import('./pages/dashboards/UserBookings.jsx'));
+const UserReviews = lazy(() => import('./pages/dashboards/UserReviews.jsx'));
 const UserOrders = lazy(() => import('./pages/dashboards/UserOrders.jsx'));
 const UserOrderDetail = lazy(() => import('./pages/dashboards/UserOrderDetail.jsx'));
 const UserAddresses = lazy(() => import('./pages/dashboards/UserAddresses.jsx'));
@@ -223,6 +224,7 @@ export default function App() {
             <Route element={<ProtectedRoute />}>
               <Route path="/me" element={<UserDashboard />} />
               <Route path="/me/bookings" element={<UserBookings />} />
+              <Route path="/me/reviews" element={<UserReviews />} />
               <Route path="/me/orders" element={<UserOrders />} />
               <Route path="/me/orders/:id" element={<UserOrderDetail />} />
               <Route path="/me/addresses" element={<UserAddresses />} />

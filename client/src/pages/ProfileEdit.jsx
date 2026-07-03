@@ -61,7 +61,7 @@ export default function ProfileEdit() {
     });
 
     if (user?.role === 'worker') {
-      api.get('/api/locations').then(res => setAvailableLocations(res.data)).catch(console.error);
+      api.get('/locations').then(res => setAvailableLocations(res.data)).catch(console.error);
     }
   }, [user]);
 

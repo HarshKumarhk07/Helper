@@ -38,7 +38,7 @@ export default function WorkerLocationEmitter({ workerId, activeJobs, onLocation
 
   // Derive a stable job-ids string to use as effect dependency
   const trackableIds = (activeJobs || [])
-    .filter((j) => j.status === 'assigned' || j.status === 'in_progress')
+    .filter((j) => ['assigned', 'accepted', 'en_route', 'in_progress'].includes(j.status))
     .map((j) => j._id)
     .sort()
     .join(',');

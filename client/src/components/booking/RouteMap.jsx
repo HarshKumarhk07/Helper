@@ -181,11 +181,19 @@ export default function RouteMap({
 
   // Build polyline array for Leaflet.
   const polyline = useMemo(() => {
-    if (!route?.coordinates?.length) return null;
+    if (!route?.coordinates?.length) {
+      if (validWorker && validDestination) {
+        return [
+          [validWorker.lat, validWorker.lng],
+          [validDestination.lat, validDestination.lng]
+        ];
+      }
+      return null;
+    }
     const pts = route.coordinates.map((p) => [p.lat, p.lng]);
     console.debug('[RouteMap] polyline built', pts.length, 'points');
     return pts;
-  }, [route?.coordinates]);
+  }, [route?.coordinates, validWorker, validDestination]);
 
   // Initial center for the MapContainer (only used on first mount).
   const initialCenter = useMemo(() => {

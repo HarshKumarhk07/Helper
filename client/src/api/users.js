@@ -14,3 +14,6 @@ export const setUserActive = (id, isActive) =>
 
 export const getFeaturedWorkersPublic = (params = {}) =>
   api.get('/users/featured', { params }).then((r) => r.data.workers);
+
+export const deleteUser = (id) =>
+  api.delete(`/users/${id}`).then((r) => r.data);

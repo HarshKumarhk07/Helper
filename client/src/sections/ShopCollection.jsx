@@ -97,7 +97,7 @@ export default function ShopCollection() {
               return (
                 <Link
                   key={category._id}
-                  to={`/products?category=${category._id}`}
+                  to={`/products?category=${encodeURIComponent(category.name)}`}
                   className={`relative flex-shrink-0 w-[180px] md:w-[220px] h-[240px] md:h-[280px] rounded-[1.5rem] md:rounded-[2rem] overflow-hidden group snap-start border border-ink/5 ${
                     isDark ? 'bg-ink' : 'bg-sand'
                   }`}

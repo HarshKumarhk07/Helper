@@ -114,9 +114,6 @@ export const getCustomServiceImage = (item) => {
 };
 
 export const resolveCatalogImage = (item, fallback = CATALOG_PLACEHOLDER_IMAGE) => {
-  const customImg = getCustomServiceImage(item);
-  if (customImg) return customImg;
-
   if (typeof item === 'string') {
     return resolveCandidate(item) || fallback;
   }
@@ -137,6 +134,10 @@ export const resolveCatalogImage = (item, fallback = CATALOG_PLACEHOLDER_IMAGE) 
     const resolved = resolveCandidate(candidate);
     if (resolved) return resolved;
   }
+
+  // Fallback to keyword-based custom images if no uploaded image is found
+  const customImg = getCustomServiceImage(item);
+  if (customImg) return customImg;
 
   return fallback;
 };

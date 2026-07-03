@@ -47,7 +47,7 @@ export default function AdminServices() {
     listCategories({ active: 'true' })
       .then(setCategories)
       .catch(() => toast.error('Failed to load categories'));
-    api.get('/api/locations')
+    api.get('/locations')
       .then(res => setLocations(res.data))
       .catch(() => toast.error('Failed to load locations'));
   }, []);

@@ -55,7 +55,7 @@ export default function AdminBookings() {
   useEffect(load, [filter, page]);
 
   useEffect(() => {
-    listUsers({ role: 'worker' })
+    listUsers({ role: 'worker', limit: 200, kycStatus: 'verified', isActive: 'true' })
       .then((res) => setWorkers(res.users || res))
       .catch(() => {});
   }, []);
