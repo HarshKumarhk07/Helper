@@ -422,10 +422,10 @@ export default function AdminDashboard() {
             Service locations →
           </PillButton>
           <PillButton variant="solid" to="/admin/categories">
-            Worker Categories →
+            Service Categories →
           </PillButton>
           <PillButton variant="solid" to="/admin/brand-categories">
-            Brand Categories →
+            Product Categories →
           </PillButton>
           <PillButton variant="solid" to="/admin/products">
             Inventory control →

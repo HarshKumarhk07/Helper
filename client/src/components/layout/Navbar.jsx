@@ -10,10 +10,12 @@ import LocationModal from '../location/LocationModal.jsx';
 import { motion, AnimatePresence } from 'framer-motion';
 import { listProducts } from '../../api/products.js';
 import { listServices } from '../../api/services.js';
+import { listCategories } from '../../api/categories.js';
 import { mediaUrl } from '../../lib/catalogImage.js';
 
 const NAV = [
   { to: '/services', label: 'Services', hasChevron: true },
+  { to: '/services', label: 'Categories', hasChevron: true, isCategoryDropdown: true },
   { to: '/products', label: 'Products' },
   { to: '/join', label: 'Become a Professional' },
   { to: '/#stats-bar', label: 'About Us' },
@@ -23,6 +25,7 @@ const NAV = [
 // All map to existing routes — no 404 risk.
 const HERO_NAV = [
   { to: '/services', label: 'Services', hasChevron: true },
+  { to: '/services', label: 'Categories', hasChevron: true, isCategoryDropdown: true },
   { to: '/products', label: 'Products' },
   { to: '/join', label: 'Become a Professional' },
   { to: '/#stats-bar', label: 'About Us' },
@@ -71,6 +74,11 @@ export default function Navbar() {
   const [isServicesDropdownOpen, setIsServicesDropdownOpen] = useState(false);
   const [mobileServicesOpen, setMobileServicesOpen] = useState(false);
 
+  const [categories, setCategories] = useState([]);
+  const [loadingCategories, setLoadingCategories] = useState(false);
+  const [isCategoriesDropdownOpen, setIsCategoriesDropdownOpen] = useState(false);
+  const [mobileCategoriesOpen, setMobileCategoriesOpen] = useState(false);
+
   useEffect(() => {
     let active = true;
     setLoadingServices(true);
@@ -88,6 +96,23 @@ export default function Navbar() {
           setLoadingServices(false);
         }
       });
+
+    setLoadingCategories(true);
+    listCategories({ active: 'true' })
+      .then((data) => {
+        if (active) {
+          setCategories(data || []);
+        }
+      })
+      .catch((err) => {
+        console.error('Error fetching categories for dropdown:', err);
+      })
+      .finally(() => {
+        if (active) {
+          setLoadingCategories(false);
+        }
+      });
+
     return () => {
       active = false;
     };
@@ -241,6 +266,76 @@ export default function Navbar() {
             {activeNavLinks.map((n) => {
               const active = isNavActive(n.to);
               
+              if (n.isCategoryDropdown) {
+                return (
+                  <div
+                    key={n.label}
+                    className="relative py-2"
+                    onMouseEnter={() => setIsCategoriesDropdownOpen(true)}
+                    onMouseLeave={() => setIsCategoriesDropdownOpen(false)}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => navigate('/services')}
+                      className={`no-underline text-sm font-medium tracking-tightish transition-colors duration-300 relative flex items-center gap-1 bg-transparent border-0 cursor-pointer ${
+                        heroMode
+                          ? active ? 'text-hero-dark' : 'text-hero-dark/60 hover:text-hero-dark'
+                          : active ? 'text-[#13294B]' : 'text-[#13294B]/60 hover:text-[#13294B]'
+                      }`}
+                    >
+                      {n.label}
+                      <ChevronDown
+                        size={13}
+                        strokeWidth={2}
+                        className={`opacity-50 transition-transform duration-300 ${
+                          isCategoriesDropdownOpen ? 'rotate-180 text-[#13294B]' : ''
+                        }`}
+                      />
+                      {active && !heroMode && (
+                        <motion.div
+                          layoutId="nav-indicator"
+                          className="absolute -bottom-1 left-0 right-0 h-0.5 rounded-full bg-[#13294B]"
+                        />
+                      )}
+                    </button>
+                    
+                    <AnimatePresence>
+                      {isCategoriesDropdownOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 12 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 12 }}
+                          transition={{ duration: 0.2 }}
+                          className="absolute left-0 lg:left-1/2 lg:-translate-x-1/2 top-full mt-1 w-[260px] bg-paper/95 backdrop-blur-md border border-ink/10 rounded-2xl shadow-xl z-50 p-4"
+                        >
+                          {loadingCategories ? (
+                            <div className="flex flex-col gap-2 p-2">
+                              <div className="h-4 bg-ink/5 rounded w-1/2 skeleton animate-pulse" />
+                              <div className="h-3 bg-ink/5 rounded w-2/3 skeleton animate-pulse" />
+                            </div>
+                          ) : categories.length === 0 ? (
+                            <div className="text-sm text-ink/55 p-2">No categories available</div>
+                          ) : (
+                            <div className="flex flex-col gap-1.5 max-h-[300px] overflow-y-auto">
+                              {categories.map((cat) => (
+                                <Link
+                                  key={cat._id}
+                                  to={`/services?cat=${cat.slug}`}
+                                  onClick={() => setIsCategoriesDropdownOpen(false)}
+                                  className="block text-xs font-semibold text-[#13294B]/80 hover:text-[#13294B] hover:translate-x-1 transition-all duration-200 py-1"
+                                >
+                                  {cat.name}
+                                </Link>
+                              ))}
+                            </div>
+                          )}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                );
+              }
+
               if (n.hasChevron) {
                 return (
                   <div
@@ -748,6 +843,76 @@ export default function Navbar() {
                     {activeNavLinks.map((n) => {
                       const active = isNavActive(n.to);
                       
+                      if (n.isCategoryDropdown) {
+                        return (
+                          <div key={n.label} className="w-full flex flex-col">
+                            <button
+                              type="button"
+                              onClick={() => setMobileCategoriesOpen(!mobileCategoriesOpen)}
+                              className={`no-underline w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 bg-transparent border-0 cursor-pointer ${
+                                active
+                                  ? 'text-ink bg-ink/8'
+                                  : 'text-ink hover:text-ink hover:bg-ink/5'
+                              }`}
+                            >
+                              <div className="flex items-center gap-3">
+                                <span className={`h-1.5 w-1.5 rounded-full transition-all ${active ? 'bg-ink' : 'bg-ink/30'}`} />
+                                {n.label}
+                              </div>
+                              <ChevronDown
+                                size={16}
+                                className={`transition-transform duration-300 ${
+                                  mobileCategoriesOpen ? 'rotate-180 text-ink' : 'text-ink/40'
+                                }`}
+                              />
+                            </button>
+                            
+                            <AnimatePresence initial={false}>
+                              {mobileCategoriesOpen && (
+                                <motion.div
+                                  initial={{ height: 0, opacity: 0 }}
+                                  animate={{ height: 'auto', opacity: 1 }}
+                                  exit={{ height: 0, opacity: 0 }}
+                                  transition={{ duration: 0.2 }}
+                                  className="overflow-hidden pl-7 pr-3 space-y-2 mt-1"
+                                >
+                                  <Link
+                                    to="/services"
+                                    onClick={() => {
+                                      setOpen(false);
+                                      setMobileCategoriesOpen(false);
+                                    }}
+                                    className="block py-1 text-xs font-bold text-[#13294B] hover:underline"
+                                  >
+                                    View All Categories
+                                  </Link>
+                                  
+                                  {loadingCategories ? (
+                                    <div className="py-2 text-xs text-ink/40 animate-pulse">Loading categories...</div>
+                                  ) : categories.length === 0 ? (
+                                    <div className="py-2 text-xs text-ink/40">No categories available</div>
+                                  ) : (
+                                    categories.map((cat) => (
+                                      <Link
+                                        key={cat._id}
+                                        to={`/services?cat=${cat.slug}`}
+                                        onClick={() => {
+                                          setOpen(false);
+                                          setMobileCategoriesOpen(false);
+                                        }}
+                                        className="block py-1 text-xs font-semibold text-ink/80 hover:text-ink hover:translate-x-1 transition-all duration-200"
+                                      >
+                                        {cat.name}
+                                      </Link>
+                                    ))
+                                  )}
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+                          </div>
+                        );
+                      }
+
                       if (n.hasChevron) {
                         return (
                           <div key={n.label} className="w-full flex flex-col">
