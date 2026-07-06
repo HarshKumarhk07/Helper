@@ -2,13 +2,21 @@ import Booking from '../models/Booking.js';
 import User from '../models/User.js';
 import { BOOKING_STATUS, ASSIGNMENT_TTL_MS } from '../config/booking.js';
 import { pickWorkerForCategory } from './assignment.js';
-import { notifyWorkerAssigned } from './notificationService.js';
+import { notifyWorkerAssigned, sendBookingNotificationOnce } from './notificationService.js';
 
 // Try to (re)assign a placed booking to an eligible worker who hasn't already
 // rejected or missed it. Mutates + saves the booking. Returns the worker, or
 // null when nobody is available (booking stays placed for admin to handle).
 export const reassignBooking = async (booking) => {
+  if (booking.status === BOOKING_STATUS.CANCELLED ||
+      booking.paymentStatus === 'refunded' ||
+      booking.paymentStatus === 'failed' ||
+      booking.paymentStatus === 'cancelled') {
+    return null;
+  }
+
   if (booking.status !== BOOKING_STATUS.PLACED) return null;
+
   const excludeIds = (booking.rejections || [])
     .map((r) => String(r.worker))
     .filter(Boolean);
@@ -16,25 +24,39 @@ export const reassignBooking = async (booking) => {
   const worker = await pickWorkerForCategory({ excludeIds });
   if (!worker) return null;
 
-  booking.worker = worker._id;
-  booking.assignedAt = new Date();
-  booking.assignmentExpiresAt = new Date(Date.now() + ASSIGNMENT_TTL_MS);
-  booking.status = BOOKING_STATUS.ASSIGNED;
-  booking.history.push({
-    from: BOOKING_STATUS.PLACED,
-    to: BOOKING_STATUS.ASSIGNED,
-    note: 'Auto-reassigned',
-  });
-  await booking.save();
+  const updatedBooking = await Booking.findOneAndUpdate(
+    {
+      _id: booking._id,
+      status: BOOKING_STATUS.PLACED,
+      worker: null,
+      paymentStatus: 'paid'
+    },
+    {
+      $set: {
+        worker: worker._id,
+        assignedAt: new Date(),
+        assignmentExpiresAt: new Date(Date.now() + ASSIGNMENT_TTL_MS),
+        status: BOOKING_STATUS.ASSIGNED
+      },
+      $push: {
+        history: {
+          from: BOOKING_STATUS.PLACED,
+          to: BOOKING_STATUS.ASSIGNED,
+          note: 'Auto-reassigned',
+        }
+      }
+    },
+    { new: true, select: '+startPin' }
+  );
 
-  // startPin is select:false — reload it for the notification.
-  const withPin = await Booking.findById(booking._id).select('+startPin');
-  const user = await User.findById(booking.user);
-  notifyWorkerAssigned({
+  if (!updatedBooking) return null;
+
+  const user = await User.findById(updatedBooking.user);
+  await sendBookingNotificationOnce(updatedBooking._id, 'workerAssigned', notifyWorkerAssigned, {
     user,
     worker,
-    booking: withPin,
-    startPin: withPin?.startPin,
+    booking: updatedBooking,
+    startPin: updatedBooking.startPin,
   }).catch(() => {});
 
   return worker;

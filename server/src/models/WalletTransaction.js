@@ -61,6 +61,22 @@ const walletTransactionSchema = new mongoose.Schema(
 
 walletTransactionSchema.index({ user: 1, createdAt: -1 });
 
+// Prevent duplicate wallet credits for the same refund reference.
+// The partial filter limits the uniqueness constraint to refund transactions only,
+// so other sources (admin_credit, promo, etc.) are not affected.
+walletTransactionSchema.index(
+  { source: 1, referenceModel: 1, referenceId: 1 },
+  {
+    unique: true,
+    sparse: true,
+    partialFilterExpression: {
+      source: 'refund',
+      referenceId: { $type: 'objectId' },
+    },
+    name: 'wallet_refund_idempotency',
+  }
+);
+
 const WalletTransaction = mongoose.model(
   'WalletTransaction',
   walletTransactionSchema

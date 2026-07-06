@@ -1,5 +1,6 @@
 import { BrevoClient } from '@getbrevo/brevo';
 import twilio from 'twilio';
+import Booking from '../models/Booking.js';
 
 const isBlank = (v) => v === undefined || v === null || String(v).trim() === '';
 
@@ -199,6 +200,27 @@ export const notifyBookingPlaced = ({ user, booking }) =>
     sendSMS({
       to: user?.phone,
       body: `Helper: Booking ${booking.code} confirmed for ${inr(booking.amount)}. We'll assign a worker shortly.`,
+    }),
+  ]);
+
+export const notifyPaymentFailed = ({ user, booking }) =>
+  Promise.allSettled([
+    sendEmail({
+      to: user?.email,
+      subject: `Payment failed · ${booking?.code || 'your booking'}`,
+      html: wrapEmail(
+        'Payment could not be verified',
+        `
+        <p>Hi ${user?.name || 'there'},</p>
+        <p>We were unable to verify your payment for booking <strong>${booking?.code || ''}</strong>.</p>
+        <p>Please try again. If the amount was debited from your account, it will be automatically reversed within 5–7 business days.</p>
+        <p style="margin-top:20px;color:#555;">If you continue to experience issues, please contact our support team with your booking reference.</p>
+        `
+      ),
+    }),
+    sendSMS({
+      to: user?.phone,
+      body: `Helper: Payment for booking ${booking?.code || ''} could not be verified. Please retry or contact support.`,
     }),
   ]);
 
@@ -592,3 +614,18 @@ export const notificationStatus = () => ({
   email: !!getBrevoClient(),
   sms: !!getSmsClient(),
 });
+
+// Idempotent notification wrapper
+export const sendBookingNotificationOnce = async (bookingId, notificationKey, notifyFn, args) => {
+  const updateKey = `sentNotifications.${notificationKey}`;
+  const booking = await Booking.findOneAndUpdate(
+    { _id: bookingId, [updateKey]: { $ne: true } },
+    { $set: { [updateKey]: true } },
+    { new: true }
+  );
+  if (!booking) {
+    console.log(`[notification] Duplicate skipped for booking=${bookingId} key=${notificationKey}`);
+    return null;
+  }
+  return notifyFn(args);
+};

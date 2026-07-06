@@ -101,7 +101,7 @@ const bookingSchema = new mongoose.Schema(
     paymentMode: { type: String, enum: PAYMENT_MODE_LIST, default: PAYMENT_MODE.COD },
     paymentStatus: {
       type: String,
-      enum: ['pending', 'paid', 'refunded', 'failed'],
+      enum: ['pending', 'paid', 'refunded', 'failed', 'cancelled', 'refund_pending'],
       default: 'pending',
     },
     razorpayOrderId: { type: String, default: null },
@@ -111,6 +111,16 @@ const bookingSchema = new mongoose.Schema(
     refundedAt: { type: Date, default: null },
     notes: { type: String, default: '', maxlength: 500 },
     history: { type: [statusLogSchema], default: [] },
+    autoAssign: { type: Boolean, default: false },
+    sentNotifications: {
+      bookingPlaced: { type: Boolean, default: false },
+      workerAssigned: { type: Boolean, default: false },
+      jobStarted: { type: Boolean, default: false },
+      jobCompleted: { type: Boolean, default: false },
+      bookingCancelled: { type: Boolean, default: false },
+      quoteRequested: { type: Boolean, default: false },
+      quoteSent: { type: Boolean, default: false },
+    },
 
     // ── Variable pricing / quote flow ──────────────────────────────────────
     // A quote-request booking starts with amount 0 and no confirmed price. The

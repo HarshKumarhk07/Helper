@@ -3,6 +3,16 @@ import { BOOKING_STATUS, canTransition } from '../config/booking.js';
 import { ROLES } from '../config/roles.js';
 
 export const assertBookingTransition = ({ booking, to, pin, role, userId }) => {
+  if (booking.paymentStatus === 'failed' || booking.paymentStatus === 'cancelled') {
+    if (to !== BOOKING_STATUS.CANCELLED) {
+      throw new ApiError(400, 'Only cancellation is allowed for failed or cancelled payments');
+    }
+  }
+
+  if (to === BOOKING_STATUS.ASSIGNED && booking.paymentStatus !== 'paid') {
+    throw new ApiError(400, 'Workers can only be assigned after successful payment');
+  }
+
   const isOwner = String(booking.user) === String(userId);
   const isWorker = booking.worker && String(booking.worker) === String(userId);
   const isAdmin = role === ROLES.ADMIN;

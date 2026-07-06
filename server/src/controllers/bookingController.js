@@ -28,7 +28,9 @@ import {
   notifyBookingCancelled,
   notifyQuoteRequested,
   notifyQuoteSent,
+  sendBookingNotificationOnce,
 } from '../utils/notificationService.js';
+import { performBookingRefund } from './paymentController.js';
 
 const recordHistory = (booking, from, to, by, note) => {
   booking.history.push({ from, to, by: by?._id || by, note: note || '' });
@@ -53,12 +55,18 @@ const populateBooking = (q) =>
 // doesn't need to see leaking from the booking row:
 //  - worker.phone / worker.email: worker PII; reach via in-app messaging
 //  - history: internal user IDs and status transitions (audit trail)
+//  - rejections: internal worker assignment history
+//  - razorpay*: payment gateway IDs have no client utility
 // Note: startPin / endPin are intentionally preserved — the customer
 // shares them with the worker to start/complete the job, so the UI must
 // render them. They're only generated server-side and never reused.
 const sanitizeBookingForOwner = (booking) => {
   const obj = booking?.toObject ? booking.toObject() : { ...booking };
   delete obj.history;
+  delete obj.rejections;
+  delete obj.razorpayPaymentId;
+  delete obj.razorpayOrderId;
+  delete obj.razorpayRefundId;
   if (obj.worker && typeof obj.worker === 'object') {
     delete obj.worker.phone;
     delete obj.worker.email;
@@ -243,43 +251,13 @@ export const createBooking = asyncHandler(async (req, res) => {
     ],
   });
 
-  let assignedWorker = null;
   if (resolvedWorkerId) {
-    assignedWorker = await User.findById(resolvedWorkerId);
-  }
-
-  if (assignedWorker) {
-    booking.worker = assignedWorker._id;
-    booking.assignedAt = new Date();
-    booking.assignmentExpiresAt = new Date(Date.now() + ASSIGNMENT_TTL_MS);
-    booking.status = BOOKING_STATUS.ASSIGNED;
-    recordHistory(booking, BOOKING_STATUS.PLACED, BOOKING_STATUS.ASSIGNED, req.user, 'Assigned to selected worker');
+    booking.worker = resolvedWorkerId;
     await booking.save();
-  } else if (autoAssign) {
-    const worker = await pickWorkerForCategory();
-    if (worker) {
-      // For scheduled bookings, refuse auto-assign if it conflicts with an existing job
-      if (booking.scheduledAt) {
-        const conflict = await checkBookingConflict({
-          workerId: worker._id,
-          scheduledAt: booking.scheduledAt,
-          durationMinutes: serviceDuration,
-        });
-        if (!conflict) {
-          assignedWorker = worker;
-        }
-      } else {
-        assignedWorker = worker;
-      }
-      if (assignedWorker) {
-        booking.worker = assignedWorker._id;
-        booking.assignedAt = new Date();
-        booking.assignmentExpiresAt = new Date(Date.now() + ASSIGNMENT_TTL_MS);
-        booking.status = BOOKING_STATUS.ASSIGNED;
-        recordHistory(booking, BOOKING_STATUS.PLACED, BOOKING_STATUS.ASSIGNED, req.user, 'Auto-assigned');
-        await booking.save();
-      }
-    }
+  }
+  if (autoAssign) {
+    booking.autoAssign = true;
+    await booking.save();
   }
 
   logAudit({
@@ -290,15 +268,7 @@ export const createBooking = asyncHandler(async (req, res) => {
     changes: { code: { from: null, to: booking.code }, amount: { from: null, to: booking.amount } },
   });
 
-  notifyBookingPlaced({ user: req.user, booking });
-  if (assignedWorker) {
-    notifyWorkerAssigned({
-      user: req.user,
-      worker: assignedWorker,
-      booking,
-      startPin: booking.startPin,
-    });
-  }
+  await sendBookingNotificationOnce(booking._id, 'bookingPlaced', notifyBookingPlaced, { user: req.user, booking }).catch(() => {});
 
   if (appliedCouponCode) {
     await recordCouponUsage({ couponCode: appliedCouponCode, userId: req.user._id });
@@ -360,7 +330,13 @@ export const listAllBookings = asyncHandler(async (req, res) => {
 
 export const listWorkerJobs = asyncHandler(async (req, res) => {
   const { status } = req.query;
-  const filter = { worker: req.user._id };
+  const filter = {
+    worker: req.user._id,
+    $or: [
+      { paymentStatus: 'paid' },
+      { isQuoteRequest: true, quoteStatus: 'requested' }
+    ]
+  };
   if (status) filter.status = status;
   const bookings = await populateBooking(
     Booking.find(filter).sort({ scheduledAt: 1, createdAt: -1 }).limit(200)
@@ -468,7 +444,7 @@ export const createQuoteRequest = asyncHandler(async (req, res) => {
   });
 
   logAudit({ req, action: 'quote_requested', resource: 'booking', resourceId: booking._id });
-  notifyQuoteRequested({ worker, user: req.user, booking }).catch(() => {});
+  await sendBookingNotificationOnce(booking._id, 'quoteRequested', notifyQuoteRequested, { worker, user: req.user, booking }).catch(() => {});
 
   res.status(201).json({ booking: await populateBooking(Booking.findById(booking._id)) });
 });
@@ -497,7 +473,7 @@ export const sendQuote = asyncHandler(async (req, res) => {
   await booking.save();
 
   const customer = await User.findById(booking.user);
-  notifyQuoteSent({ user: customer, booking, amount }).catch(() => {});
+  await sendBookingNotificationOnce(booking._id, 'quoteSent', notifyQuoteSent, { user: customer, booking, amount }).catch(() => {});
 
   res.status(201).json({ booking: await populateBooking(Booking.findById(booking._id)) });
 });
@@ -532,13 +508,10 @@ export const acceptQuote = asyncHandler(async (req, res) => {
   booking.amount = quote.amount;
   booking.quoteStatus = 'accepted';
   booking.worker = quote.worker;
-  booking.status = BOOKING_STATUS.ACCEPTED;
-  booking.acceptedAt = new Date();
-  booking.assignmentExpiresAt = null;
-  booking.history.push({ from: BOOKING_STATUS.PLACED, to: BOOKING_STATUS.ACCEPTED, by: req.user._id, note: `Quote accepted: ${quote.amount}` });
+  // Keep status as PLACED. Defer worker busy / ACCEPTED transition until checkout payment.
+  booking.history.push({ from: BOOKING_STATUS.PLACED, to: BOOKING_STATUS.PLACED, by: req.user._id, note: `Quote accepted: ${quote.amount}` });
   await booking.save();
 
-  await User.updateOne({ _id: quote.worker }, { currentStatus: 'busy' });
   logAudit({ req, action: 'quote_accepted', resource: 'booking', resourceId: booking._id });
 
   res.json({ booking: await populateBooking(Booking.findById(booking._id)) });
@@ -597,6 +570,19 @@ export const getBooking = asyncHandler(async (req, res) => {
     }
   }
 
+  // Strip fields that have no client utility and could leak internal state.
+  // Admins see everything; owners/workers get a sanitized view.
+  if (!isPrivileged) {
+    delete bObj.rejections;
+    delete bObj.razorpayPaymentId;
+    delete bObj.razorpayOrderId;
+    delete bObj.razorpayRefundId;
+    if (!isOwner) {
+      // Workers never need the booking history (internal IDs, status log).
+      delete bObj.history;
+    }
+  }
+
   res.json({ booking: bObj });
 });
 
@@ -604,14 +590,15 @@ export const assignWorker = asyncHandler(async (req, res) => {
   const { workerId } = req.body;
   const worker = await User.findOne({ _id: workerId, role: ROLES.WORKER, isActive: true });
   if (!worker) throw new ApiError(404, 'Active worker not found');
-
-  const booking = await Booking.findById(req.params.id).select('+startPin +endPin');
-  if (!booking) throw new ApiError(404, 'Booking not found');
-  if (booking.status !== BOOKING_STATUS.PLACED && booking.status !== BOOKING_STATUS.ASSIGNED) {
-    throw new ApiError(409, 'Booking cannot be assigned in its current status');
-  }
   if (worker.kycStatus !== 'verified') {
     throw new ApiError(400, 'Worker is not KYC-verified');
+  }
+
+  const booking = await Booking.findById(req.params.id);
+  if (!booking) throw new ApiError(404, 'Booking not found');
+
+  if (booking.paymentStatus !== 'paid') {
+    throw new ApiError(400, 'Workers can only be assigned after successful payment');
   }
 
   if (booking.scheduledAt) {
@@ -628,67 +615,118 @@ export const assignWorker = asyncHandler(async (req, res) => {
 
   const previousWorker = booking.worker ? String(booking.worker) : null;
   const wasPlaced = booking.status === BOOKING_STATUS.PLACED;
-  booking.worker = worker._id;
-  booking.assignedAt = new Date();
-  booking.assignmentExpiresAt = new Date(Date.now() + ASSIGNMENT_TTL_MS);
-  booking.status = BOOKING_STATUS.ASSIGNED;
-  if (wasPlaced) {
-    recordHistory(booking, BOOKING_STATUS.PLACED, BOOKING_STATUS.ASSIGNED, req.user, `Assigned to ${worker.name}`);
-  } else {
-    recordHistory(booking, BOOKING_STATUS.ASSIGNED, BOOKING_STATUS.ASSIGNED, req.user, `Reassigned to ${worker.name}`);
+
+  const updatedBooking = await Booking.findOneAndUpdate(
+    {
+      _id: req.params.id,
+      status: { $in: [BOOKING_STATUS.PLACED, BOOKING_STATUS.ASSIGNED] },
+      paymentStatus: 'paid'
+    },
+    {
+      $set: {
+        worker: worker._id,
+        assignedAt: new Date(),
+        assignmentExpiresAt: new Date(Date.now() + ASSIGNMENT_TTL_MS),
+        status: BOOKING_STATUS.ASSIGNED
+      },
+      $push: {
+        history: {
+          from: booking.status,
+          to: BOOKING_STATUS.ASSIGNED,
+          by: req.user._id,
+          note: wasPlaced ? `Assigned to ${worker.name}` : `Reassigned to ${worker.name}`
+        }
+      }
+    },
+    { new: true, select: '+startPin +endPin' }
+  );
+
+  if (!updatedBooking) {
+    throw new ApiError(409, 'Booking has already been assigned or status has changed');
   }
-  await booking.save();
 
   logAudit({
     req,
     action: 'assign_worker',
     resource: 'booking',
-    resourceId: booking._id,
+    resourceId: updatedBooking._id,
     changes: {
       worker: { from: previousWorker, to: String(worker._id) },
       status: { from: wasPlaced ? BOOKING_STATUS.PLACED : BOOKING_STATUS.ASSIGNED, to: BOOKING_STATUS.ASSIGNED },
     },
   });
 
-  const populatedUser = await User.findById(booking.user);
-  notifyWorkerAssigned({
+  const populatedUser = await User.findById(updatedBooking.user);
+  await sendBookingNotificationOnce(updatedBooking._id, 'workerAssigned', notifyWorkerAssigned, {
     user: populatedUser,
     worker,
-    booking,
-    startPin: booking.startPin,
-  });
+    booking: updatedBooking,
+    startPin: updatedBooking.startPin,
+  }).catch(() => {});
 
-  res.json({ booking: await populateBooking(Booking.findById(booking._id)) });
+  res.json({ booking: await populateBooking(Booking.findById(updatedBooking._id)) });
 });
 
 export const autoAssign = asyncHandler(async (req, res) => {
-  const booking = await Booking.findById(req.params.id).select('+startPin +endPin');
+  const booking = await Booking.findById(req.params.id);
   if (!booking) throw new ApiError(404, 'Booking not found');
   if (booking.status !== BOOKING_STATUS.PLACED) {
     throw new ApiError(409, 'Auto-assign only allowed when booking is placed');
   }
+  if (booking.paymentStatus !== 'paid') {
+    throw new ApiError(400, 'Workers can only be assigned after successful payment');
+  }
+
   const worker = await pickWorkerForCategory();
   if (!worker) throw new ApiError(404, 'No available worker');
 
-  booking.worker = worker._id;
-  booking.assignedAt = new Date();
-  booking.assignmentExpiresAt = new Date(Date.now() + ASSIGNMENT_TTL_MS);
-  booking.status = BOOKING_STATUS.ASSIGNED;
-  recordHistory(booking, BOOKING_STATUS.PLACED, BOOKING_STATUS.ASSIGNED, req.user, 'Auto-assigned');
-  await booking.save();
+  const updatedBooking = await Booking.findOneAndUpdate(
+    {
+      _id: req.params.id,
+      status: BOOKING_STATUS.PLACED,
+      worker: null,
+      paymentStatus: 'paid'
+    },
+    {
+      $set: {
+        worker: worker._id,
+        assignedAt: new Date(),
+        assignmentExpiresAt: new Date(Date.now() + ASSIGNMENT_TTL_MS),
+        status: BOOKING_STATUS.ASSIGNED
+      },
+      $push: {
+        history: {
+          from: BOOKING_STATUS.PLACED,
+          to: BOOKING_STATUS.ASSIGNED,
+          by: req.user._id,
+          note: 'Auto-assigned'
+        }
+      }
+    },
+    { new: true, select: '+startPin +endPin' }
+  );
+
+  if (!updatedBooking) {
+    throw new ApiError(409, 'Booking has already been assigned or status has changed');
+  }
 
   logAudit({
     req,
     action: 'auto_assign_worker',
     resource: 'booking',
-    resourceId: booking._id,
+    resourceId: updatedBooking._id,
     changes: { worker: { from: null, to: String(worker._id) } },
   });
 
-  const populatedUser = await User.findById(booking.user);
-  notifyWorkerAssigned({ user: populatedUser, worker, booking, startPin: booking.startPin });
+  const populatedUser = await User.findById(updatedBooking.user);
+  await sendBookingNotificationOnce(updatedBooking._id, 'workerAssigned', notifyWorkerAssigned, {
+    user: populatedUser,
+    worker,
+    booking: updatedBooking,
+    startPin: updatedBooking.startPin,
+  }).catch(() => {});
 
-  res.json({ booking: await populateBooking(Booking.findById(booking._id)) });
+  res.json({ booking: await populateBooking(Booking.findById(updatedBooking._id)) });
 });
 
 export const transitionStatus = asyncHandler(async (req, res) => {
@@ -741,19 +779,32 @@ export const transitionStatus = asyncHandler(async (req, res) => {
   const populatedWorker = booking.worker ? await User.findById(booking.worker) : null;
 
   if (to === BOOKING_STATUS.IN_PROGRESS) {
-    notifyJobStarted({ user: populatedUser, booking, endPin: booking.endPin });
+    await sendBookingNotificationOnce(booking._id, 'jobStarted', notifyJobStarted, {
+      user: populatedUser,
+      booking,
+      endPin: booking.endPin,
+    }).catch(() => {});
   } else if (to === BOOKING_STATUS.COMPLETED) {
     createEarningForBooking(booking).catch((err) =>
       console.error('[earnings] failed to create:', err.message)
     );
-    notifyJobCompleted({ user: populatedUser, booking });
-  } else if (to === BOOKING_STATUS.CANCELLED) {
-    notifyBookingCancelled({
+    await sendBookingNotificationOnce(booking._id, 'jobCompleted', notifyJobCompleted, {
       user: populatedUser,
-      worker: populatedWorker,
       booking,
-      reason: note,
-    });
+    }).catch(() => {});
+  } else if (to === BOOKING_STATUS.CANCELLED) {
+    if (booking.paymentStatus === 'paid') {
+      await performBookingRefund(booking, note, req.user._id).catch(() => {});
+    } else {
+      booking.paymentStatus = 'cancelled';
+      await booking.save();
+      await sendBookingNotificationOnce(booking._id, 'bookingCancelled', notifyBookingCancelled, {
+        user: populatedUser,
+        worker: populatedWorker,
+        booking,
+        reason: note,
+      }).catch(() => {});
+    }
   }
 
   res.json({ booking: await populateBooking(Booking.findById(booking._id)) });

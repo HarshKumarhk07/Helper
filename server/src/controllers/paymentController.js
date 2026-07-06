@@ -8,9 +8,11 @@ import User from '../models/User.js';
 import { recordOrderHistory, applyOrderStatusTimestamps } from '../utils/ecommerce.js';
 import Product from '../models/Product.js';
 import { logAudit } from '../utils/auditLogger.js';
-import { notifyBookingCancelled, notifyOrderStatus } from '../utils/notificationService.js';
+import { notifyBookingCancelled, notifyOrderStatus, notifyWorkerAssigned, notifyPaymentFailed, sendBookingNotificationOnce } from '../utils/notificationService.js';
 import { recordCouponUsage } from './couponController.js';
 import { creditWallet } from '../utils/wallet.js';
+import { reassignBooking } from '../utils/dispatch.js';
+import { BOOKING_STATUS, ASSIGNMENT_TTL_MS } from '../config/booking.js';
 
 let razorpay;
 try {
@@ -76,11 +78,91 @@ export const verifyRazorpayPayment = asyncHandler(async (req, res) => {
       }
 
     } else if (type === 'booking') {
-      await Booking.findByIdAndUpdate(referenceId, {
+      const booking = await Booking.findById(referenceId);
+      if (!booking) throw new ApiError(404, 'Booking not found');
+      if (booking.paymentStatus === 'paid') {
+        return res.json({ message: 'Payment already verified' });
+      }
+
+      const updateData = {
         paymentStatus: 'paid',
         razorpayOrderId: razorpay_order_id,
         razorpayPaymentId: razorpay_payment_id,
-      });
+      };
+
+      let workerToNotify = null;
+      let shouldAutoAssign = false;
+
+      if (booking.isQuoteRequest && booking.quoteStatus === 'accepted') {
+        updateData.status = BOOKING_STATUS.ACCEPTED;
+        updateData.acceptedAt = new Date();
+        workerToNotify = await User.findById(booking.worker);
+      } else if (booking.worker) {
+        const worker = await User.findById(booking.worker);
+        if (worker && worker.kycStatus === 'verified' && worker.isActive) {
+          updateData.status = BOOKING_STATUS.ASSIGNED;
+          updateData.assignedAt = new Date();
+          updateData.assignmentExpiresAt = new Date(Date.now() + ASSIGNMENT_TTL_MS);
+          workerToNotify = worker;
+        } else {
+          updateData.worker = null;
+          if (booking.autoAssign) {
+            shouldAutoAssign = true;
+          }
+        }
+      } else if (booking.autoAssign) {
+        shouldAutoAssign = true;
+      }
+
+      const updatedBooking = await Booking.findOneAndUpdate(
+        {
+          _id: referenceId,
+          paymentStatus: { $ne: 'paid' }
+        },
+        {
+          $set: updateData,
+          $push: {
+            history: {
+              from: BOOKING_STATUS.PLACED,
+              to: updateData.status || BOOKING_STATUS.PLACED,
+              note: booking.isQuoteRequest && booking.quoteStatus === 'accepted'
+                ? 'Quote payment verified'
+                : (updateData.status === BOOKING_STATUS.ASSIGNED ? 'Assigned to selected worker' : 'Payment verified')
+            }
+          }
+        },
+        { new: true }
+      );
+
+      if (updatedBooking) {
+        if (booking.isQuoteRequest && booking.quoteStatus === 'accepted' && updatedBooking.worker) {
+          await User.updateOne({ _id: updatedBooking.worker }, { currentStatus: 'busy' });
+        }
+
+        const user = await User.findById(updatedBooking.user);
+        if (workerToNotify) {
+          await sendBookingNotificationOnce(updatedBooking._id, 'workerAssigned', notifyWorkerAssigned, {
+            user,
+            worker: workerToNotify,
+            booking: updatedBooking,
+            startPin: updatedBooking.startPin,
+          }).catch(() => {});
+        } else if (shouldAutoAssign) {
+          await reassignBooking(updatedBooking).catch(() => null);
+        }
+
+        logAudit({
+          req,
+          action: 'payment_verified',
+          resource: 'booking',
+          resourceId: updatedBooking._id,
+          changes: {
+            paymentStatus: { from: 'pending', to: 'paid' },
+            razorpayOrderId: { from: null, to: razorpay_order_id },
+            razorpayPaymentId: { from: null, to: razorpay_payment_id },
+          },
+        });
+      }
     } else if (type === 'featured_worker') {
       await User.findByIdAndUpdate(referenceId, {
         isFeatured: true,
@@ -90,12 +172,117 @@ export const verifyRazorpayPayment = asyncHandler(async (req, res) => {
 
     res.json({ message: 'Payment verified successfully' });
   } else {
+    // Log every failed verification attempt — could indicate replay attack or client bug.
+    logAudit({
+      req,
+      action: 'payment_signature_invalid',
+      resource: type || 'unknown',
+      resourceId: referenceId || null,
+      status: 'failure',
+      errorMessage: 'Razorpay HMAC signature mismatch',
+    });
+    // Best-effort: notify the customer that their payment could not be verified.
+    if (type === 'booking' && referenceId) {
+      try {
+        const failedBooking = await Booking.findById(referenceId).select('user code');
+        if (failedBooking) {
+          const failedUser = await User.findById(failedBooking.user).select('name email phone');
+          if (failedUser) notifyPaymentFailed({ user: failedUser, booking: failedBooking }).catch(() => {});
+        }
+      } catch (_) { /* best-effort */ }
+    }
     throw new ApiError(400, 'Invalid payment signature');
   }
 });
 
 const inr = (n) =>
   `₹${Number(n || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
+
+export const performBookingRefund = async (booking, reason, performedBy) => {
+  // Atomically claim the refund lock. If another process already set
+  // refund_pending or refunded, this returns null and we skip.
+  const locked = await Booking.findOneAndUpdate(
+    { _id: booking._id, paymentStatus: 'paid' },
+    { $set: { paymentStatus: 'refund_pending' } },
+    { new: false } // return old doc so we can confirm it was 'paid'
+  );
+  if (!locked) {
+    return { skipped: true, reason: 'Already refunded, refund pending, or not paid' };
+  }
+
+  // Re-read the booking from the locked doc to have razorpayPaymentId etc.
+  const liveBooking = await Booking.findById(booking._id);
+  if (!liveBooking || !liveBooking.razorpayPaymentId) {
+    // Payment ID missing — cannot refund via gateway; fall back to wallet below.
+  }
+
+  const refundAmt = liveBooking?.amount ?? booking.amount;
+  let refund = null;
+  let refundChannel = 'razorpay';
+
+  if (razorpay && liveBooking?.razorpayPaymentId) {
+    try {
+      refund = await razorpay.payments.refund(liveBooking.razorpayPaymentId, {
+        amount: Math.round(refundAmt * 100),
+        notes: { reason: String(reason || 'Booking cancelled').slice(0, 250) },
+      });
+      await Booking.findByIdAndUpdate(booking._id, {
+        $set: {
+          razorpayRefundId: refund.id,
+          refundAmount: refundAmt,
+          refundedAt: new Date(),
+          paymentStatus: 'refunded',
+        },
+      });
+      refundChannel = 'razorpay';
+    } catch (err) {
+      console.error('[refund] Razorpay refund failed, falling back to wallet:', err.message);
+      refundChannel = 'wallet';
+    }
+  } else {
+    refundChannel = 'wallet';
+  }
+
+  if (refundChannel === 'wallet') {
+    try {
+      await creditWallet({
+        userId: liveBooking?.user ?? booking.user,
+        amount: refundAmt,
+        source: 'refund',
+        referenceModel: 'Booking',
+        referenceId: booking._id,
+        note: (reason && String(reason).trim()) || `Refund for cancelled booking ${liveBooking?.code ?? booking.code}`,
+        performedBy: performedBy || booking.user,
+      });
+      await Booking.findByIdAndUpdate(booking._id, {
+        $set: {
+          refundAmount: refundAmt,
+          refundedAt: new Date(),
+          paymentStatus: 'refunded',
+        },
+      });
+    } catch (walletErr) {
+      console.error('[refund] Wallet fallback refund failed:', walletErr.message);
+      // Revert to paid so the refund can be retried.
+      await Booking.findByIdAndUpdate(booking._id, { $set: { paymentStatus: 'paid' } });
+      throw walletErr;
+    }
+  }
+
+  // Notify customer using the freshest booking data
+  const bookingRef = liveBooking ?? booking;
+  const buyer = await User.findById(bookingRef.user);
+  if (buyer) {
+    await sendBookingNotificationOnce(booking._id, 'bookingCancelled', notifyBookingCancelled, {
+      user: buyer,
+      worker: null,
+      booking: bookingRef,
+      reason: `Booking cancelled. Refund of ${inr(refundAmt)} initiated via ${refundChannel}. ${reason || ''}`.trim(),
+    }).catch(() => {});
+  }
+
+  return { success: true, channel: refundChannel, amount: refundAmt };
+};
 
 export const refundPayment = asyncHandler(async (req, res) => {
   const { type, referenceId, amount, reason, target: refundTargetType } = req.body;
@@ -111,6 +298,14 @@ export const refundPayment = asyncHandler(async (req, res) => {
   let target;
   if (type === 'booking') {
     target = await Booking.findById(referenceId);
+    if (!target) throw new ApiError(404, 'Reference not found');
+    const result = await performBookingRefund(target, reason, req.user._id);
+    return res.json({
+      ok: true,
+      channel: result.channel,
+      refund: result.success ? { amount: result.amount } : null,
+      booking: target
+    });
   } else if (type === 'order' || type === 'ecommerce') {
     target = await Order.findById(referenceId);
   } else {

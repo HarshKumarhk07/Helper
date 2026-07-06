@@ -94,16 +94,9 @@ export const getReviews = asyncHandler(async (req, res) => {
     .populate('user', 'name avatar')
     .populate({
       path: 'booking',
-      select: 'service worker',
       populate: [
-        {
-          path: 'service',
-          select: 'name image'
-        },
-        {
-          path: 'worker',
-          select: 'name avatar'
-        }
+        { path: 'service', select: 'name image' },
+        { path: 'worker', select: 'name avatar' }
       ]
     })
     .populate('product', 'name image')
@@ -114,34 +107,8 @@ export const getReviews = asyncHandler(async (req, res) => {
   // Every booking-linked review is a verified booking by construction — flag it
   // so the UI can show a "Verified booking" badge.
   const decorated = reviews.map((r) => ({
-    _id: r._id,
-    rating: r.rating,
-    comment: r.comment,
-    createdAt: r.createdAt,
+    ...r.toObject(),
     verifiedBooking: !!r.booking,
-
-    user: r.user
-      ? {
-        _id: r.user._id,
-        name: r.user.name,
-        avatar: r.user.avatar,
-      }
-      : null,
-
-    booking: r.booking
-      ? {
-        service: r.booking.service,
-        worker: r.booking.worker,
-      }
-      : null,
-
-    product: r.product
-      ? {
-        _id: r.product._id,
-        name: r.product.name,
-        image: r.product.image,
-      }
-      : null,
   }));
 
   res.json({
