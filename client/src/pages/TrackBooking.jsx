@@ -26,6 +26,7 @@ import {
 } from '../lib/socket.js';
 import { getTrackingState } from '../api/tracking.js';
 import useSocket from '../hooks/useSocket.js';
+import { getWorkerName, getWorkerAvatar, getWorkerExperience } from '../lib/booking.js';
 
 // ─── Status display config ────────────────────────────────────────────────────
 
@@ -428,12 +429,30 @@ export default function TrackBooking() {
 
                 {/* Worker + address row */}
                 <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-3">
-                  <div className="min-w-0">
-                    <div className="text-[10px] uppercase tracking-widest text-paper/50">
-                      {state.booking.service?.name || 'Service'}
-                    </div>
-                    <div className="mt-0.5 text-sm font-semibold truncate">
-                      {state.booking.worker?.name || 'Awaiting assignment'}
+                  <div className="min-w-0 flex items-center gap-3">
+                    {getWorkerAvatar(state.booking.worker) ? (
+                      <img
+                        src={getWorkerAvatar(state.booking.worker)}
+                        alt={getWorkerName(state.booking.worker)}
+                        className="h-10 w-10 rounded-full object-cover border border-white/10"
+                      />
+                    ) : (
+                      <div className="h-10 w-10 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold text-white">
+                        {getWorkerName(state.booking.worker)?.[0]?.toUpperCase()}
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <div className="text-[10px] uppercase tracking-widest text-paper/50">
+                        {state.booking.service?.name || 'Service'}
+                      </div>
+                      <div className="mt-0.5 text-sm font-semibold truncate text-white">
+                        {getWorkerName(state.booking.worker)}
+                      </div>
+                      {getWorkerExperience(state.booking.worker) && (
+                        <div className="text-[10px] text-paper/60">
+                          {getWorkerExperience(state.booking.worker)}
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div className="text-right text-xs min-w-0">
@@ -448,7 +467,7 @@ export default function TrackBooking() {
                 </div>
 
                 {/* Progress timeline */}
-                <ol className="mt-3 grid grid-cols-5 gap-1">
+                <ol className="mt-4 flex overflow-x-auto gap-2 pb-2 scrollbar-none -mx-2 px-2 shrink-0">
                   {TIMELINE.map((step) => {
                     const stepIdx = TIMELINE.findIndex((s) => s.key === step.key);
                     const currIdx = TIMELINE.findIndex((s) => s.key === (STATUS_TO_STEP[status] || status));
@@ -457,12 +476,12 @@ export default function TrackBooking() {
                     return (
                       <li
                         key={step.key}
-                        className={`rounded-lg px-2 py-1 text-center text-[9px] uppercase tracking-widest ${
+                        className={`rounded-lg px-3 py-1.5 text-center text-[10px] whitespace-nowrap uppercase tracking-widest shrink-0 transition-all ${
                           current
-                            ? 'bg-sky-400/20 text-sky-300 ring-1 ring-sky-400/40'
+                            ? 'bg-sky-500/35 text-sky-200 ring-1 ring-sky-400/60 font-bold'
                             : reached
-                            ? 'bg-emerald-400/10 text-emerald-300/80'
-                            : 'bg-white/5 text-paper/35'
+                            ? 'bg-emerald-500/20 text-emerald-300'
+                            : 'bg-white/5 text-paper/40'
                         }`}
                       >
                         {step.label}
@@ -470,6 +489,28 @@ export default function TrackBooking() {
                     );
                   })}
                 </ol>
+
+                {/* PIN cards */}
+                {(state.booking.startPin || state.booking.endPin) && (
+                  <div className="mt-4 grid grid-cols-2 gap-3 text-xs text-white">
+                    {state.booking.startPin && (
+                      <div className="rounded-xl border border-white/10 bg-white/5 p-3 flex flex-col items-center">
+                        <div className="text-paper/50 text-[10px] uppercase tracking-widest font-semibold mb-1">Start PIN</div>
+                        <div className="font-mono text-xl font-bold tracking-wider text-sky-400">
+                          {state.booking.startPin}
+                        </div>
+                      </div>
+                    )}
+                    {state.booking.endPin && (
+                      <div className="rounded-xl border border-white/10 bg-white/5 p-3 flex flex-col items-center">
+                        <div className="text-paper/50 text-[10px] uppercase tracking-widest font-semibold mb-1">End PIN</div>
+                        <div className="font-mono text-xl font-bold tracking-wider text-emerald-400">
+                          {state.booking.endPin}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </>
             )}
           </div>

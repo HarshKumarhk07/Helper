@@ -7,7 +7,7 @@ import { listMyAddresses, createAddress } from '../api/addresses.js';
 import { createBooking, createQuoteRequest } from '../api/bookings.js';
 import { validateCoupon } from '../api/coupons.js';
 import { createRazorpayOrder, verifyRazorpayPayment } from '../api/payments.js';
-import { formatPrice } from '../lib/booking.js';
+import { formatPrice, getWorkerName, getWorkerAvatar, getWorkerExperience } from '../lib/booking.js';
 import { geocodeAddressText, hasValidCoords, reverseGeocodeCoordinates } from '../lib/geocoding.js';
 import PillButton from '../components/ui/PillButton.jsx';
 import FadeUp from '../components/ui/FadeUp.jsx';
@@ -25,20 +25,53 @@ export default function BookingFlow() {
 
   const [service, setService] = useState(null);
   const [addresses, setAddresses] = useState([]);
-  const [selectedAddressId, setSelectedAddressId] = useState('');
-  const [bookingType, setBookingType] = useState('instant');
-  const [scheduledAt, setScheduledAt] = useState(null);
-  const [paymentMode, setPaymentMode] = useState('online');
-  const [autoAssign, setAutoAssign] = useState(true);
+  const [selectedAddressId, setSelectedAddressId] = useState(() => {
+    return sessionStorage.getItem('bf_selectedAddressId') || '';
+  });
+  const [bookingType, setBookingType] = useState(() => {
+    return sessionStorage.getItem('bf_bookingType') || 'instant';
+  });
+  const [scheduledAt, setScheduledAt] = useState(() => {
+    return sessionStorage.getItem('bf_scheduledAt') || null;
+  });
+  const [paymentMode, setPaymentMode] = useState(() => {
+    return sessionStorage.getItem('bf_paymentMode') || 'online';
+  });
+  const [autoAssign, setAutoAssign] = useState(() => {
+    const saved = sessionStorage.getItem('bf_autoAssign');
+    return saved !== null ? saved === 'true' : true;
+  });
   const [selectedWorker, setSelectedWorker] = useState(null);   // { _id, name, avatar, … }
   const [workers, setWorkers] = useState([]);
   const [workersLoading, setWorkersLoading] = useState(false);
   const [workerReviews, setWorkerReviews] = useState({}); // { workerId: [reviews] }
-  const [notes, setNotes] = useState('');
-  const [couponCode, setCouponCode] = useState('');
-  const [appliedCoupon, setAppliedCoupon] = useState(null);
-  const [discount, setDiscount] = useState(0);
+  const [notes, setNotes] = useState(() => {
+    return sessionStorage.getItem('bf_notes') || '';
+  });
+  const [couponCode, setCouponCode] = useState(() => {
+    return sessionStorage.getItem('bf_couponCode') || '';
+  });
+  const [appliedCoupon, setAppliedCoupon] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem('bf_appliedCoupon');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [discount, setDiscount] = useState(() => {
+    return parseFloat(sessionStorage.getItem('bf_discount') || '0');
+  });
   const [submitting, setSubmitting] = useState(false);
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [pendingBooking, setPendingBooking] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem('bf_pendingBooking');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [addressMode, setAddressMode] = useState('current');
   const [detectingLocation, setDetectingLocation] = useState(false);
@@ -78,6 +111,68 @@ export default function BookingFlow() {
   };
 
   useEffect(() => {
+    sessionStorage.setItem('bf_selectedAddressId', selectedAddressId);
+  }, [selectedAddressId]);
+
+  useEffect(() => {
+    sessionStorage.setItem('bf_bookingType', bookingType);
+  }, [bookingType]);
+
+  useEffect(() => {
+    if (scheduledAt) sessionStorage.setItem('bf_scheduledAt', scheduledAt);
+    else sessionStorage.removeItem('bf_scheduledAt');
+  }, [scheduledAt]);
+
+  useEffect(() => {
+    sessionStorage.setItem('bf_paymentMode', paymentMode);
+  }, [paymentMode]);
+
+  useEffect(() => {
+    sessionStorage.setItem('bf_autoAssign', String(autoAssign));
+  }, [autoAssign]);
+
+  useEffect(() => {
+    sessionStorage.setItem('bf_notes', notes);
+  }, [notes]);
+
+  useEffect(() => {
+    if (pendingBooking) sessionStorage.setItem('bf_pendingBooking', JSON.stringify(pendingBooking));
+    else sessionStorage.removeItem('bf_pendingBooking');
+  }, [pendingBooking]);
+
+  useEffect(() => {
+    sessionStorage.setItem('bf_couponCode', couponCode);
+  }, [couponCode]);
+
+  useEffect(() => {
+    if (appliedCoupon) {
+      sessionStorage.setItem('bf_appliedCoupon', JSON.stringify(appliedCoupon));
+      sessionStorage.setItem('bf_discount', String(discount));
+    } else {
+      sessionStorage.removeItem('bf_appliedCoupon');
+      sessionStorage.removeItem('bf_discount');
+    }
+  }, [appliedCoupon, discount]);
+
+  // Reset pending booking if the user edits any option fields
+  useEffect(() => {
+    setPendingBooking(null);
+  }, [selectedAddressId, bookingType, scheduledAt, notes, appliedCoupon, selectedWorker]);
+
+  const clearSessionStorage = () => {
+    sessionStorage.removeItem('bf_selectedAddressId');
+    sessionStorage.removeItem('bf_bookingType');
+    sessionStorage.removeItem('bf_scheduledAt');
+    sessionStorage.removeItem('bf_paymentMode');
+    sessionStorage.removeItem('bf_autoAssign');
+    sessionStorage.removeItem('bf_notes');
+    sessionStorage.removeItem('bf_pendingBooking');
+    sessionStorage.removeItem('bf_couponCode');
+    sessionStorage.removeItem('bf_appliedCoupon');
+    sessionStorage.removeItem('bf_discount');
+  };
+
+  useEffect(() => {
     const query = new URLSearchParams(window.location.search);
     const isWorker = query.get('type') === 'worker';
 
@@ -97,7 +192,9 @@ export default function BookingFlow() {
             durationMinutes: 60,
             category: worker.category || { name: 'Direct Professional Booking' },
             isWorkerBooking: true,
+            pricingType: worker.pricingType,
           });
+          setSelectedWorker(worker);
         })
         .catch((err) => {
           toast.error('Failed to load worker profile');
@@ -193,7 +290,10 @@ export default function BookingFlow() {
   const effectiveTotal = Math.max(0, effectiveBasePrice - discount);
 
   // Variable-priced pro selected → this is a quote request, not an instant book.
-  const isQuoteMode = selectedWorker?.serviceOffering?.pricingType === 'variable';
+  const isQuoteMode =
+    service?.isWorkerBooking
+      ? service.pricingType === 'variable'
+      : selectedWorker?.serviceOffering?.pricingType === 'variable';
 
   const onSaveAddress = async (e) => {
     e.preventDefault();
@@ -298,7 +398,8 @@ export default function BookingFlow() {
   };
 
   const handleApplyCoupon = async () => {
-    if (!couponCode || !service) return;
+    if (!couponCode || !service || couponLoading) return;
+    setCouponLoading(true);
     try {
       const res = await validateCoupon({ code: couponCode, orderValue: effectiveBasePrice, serviceId: service._id });
       setDiscount(res.discount);
@@ -308,6 +409,8 @@ export default function BookingFlow() {
       toast.error(err?.response?.data?.error || 'Invalid coupon');
       setDiscount(0);
       setAppliedCoupon(null);
+    } finally {
+      setCouponLoading(false);
     }
   };
 
@@ -387,11 +490,13 @@ export default function BookingFlow() {
       // booking. No payment now; the customer pays after accepting the quote.
       if (isQuoteMode && selectedWorker) {
         const quotePayload = {
-          service: service._id,
           worker: selectedWorker._id,
           type: bookingType,
           description: notes.trim(),
         };
+        if (service && !service.isWorkerBooking) {
+          quotePayload.service = service._id;
+        }
         if (bookingType === 'scheduled' && scheduledAt) quotePayload.scheduledAt = scheduledAt;
         if (selectedAddressId) quotePayload.addressId = selectedAddressId;
         else if (inlineAddressPayload) quotePayload.address = inlineAddressPayload;
@@ -486,7 +591,14 @@ export default function BookingFlow() {
       else if (inlineAddressPayload) payload.address = inlineAddressPayload;
       if (notes.trim()) payload.notes = notes.trim();
       if (appliedCoupon?.code) payload.couponCode = appliedCoupon.code;
-      const booking = await createBooking(payload);
+
+      let booking = pendingBooking;
+      if (!booking) {
+        booking = await createBooking(payload);
+        if (paymentMode === 'online') {
+          setPendingBooking(booking);
+        }
+      }
 
       if (paymentMode === 'online') {
         const rpOrder = await createRazorpayOrder({
@@ -503,6 +615,7 @@ export default function BookingFlow() {
           description: `Booking: ${service.name}`,
           order_id: rpOrder.id,
           handler: async function (response) {
+            setSubmitting(true);
             try {
               await verifyRazorpayPayment({
                 ...response,
@@ -510,9 +623,12 @@ export default function BookingFlow() {
                 type: 'booking',
               });
               toast.success('Payment successful | Booking Confirmed!');
+              clearSessionStorage();
               navigate('/me/bookings');
             } catch {
               toast.error('Payment verification failed');
+            } finally {
+              setSubmitting(false);
             }
           },
           prefill: {
@@ -531,6 +647,7 @@ export default function BookingFlow() {
       }
 
       toast.success(`Booked — ${booking.code}`);
+      clearSessionStorage();
       navigate('/me/bookings');
     } catch (err) {
       const data = err?.response?.data;
@@ -930,21 +1047,21 @@ export default function BookingFlow() {
                             <div className="flex items-start gap-3">
                               {/* Avatar */}
                               <div className="shrink-0">
-                                {w.avatar ? (
-                                  <img src={w.avatar} alt={w.name}
+                                {getWorkerAvatar(w) ? (
+                                  <img src={getWorkerAvatar(w)} alt={getWorkerName(w)}
                                     className="h-12 w-12 rounded-full object-cover border border-black/10"
                                     onError={(e) => { e.currentTarget.style.display='none'; }}
                                   />
                                 ) : (
                                   <div className="h-12 w-12 rounded-full bg-black/10 flex items-center justify-center text-sm font-bold text-black">
-                                    {w.name?.[0]?.toUpperCase() || '?'}
+                                    {getWorkerName(w)?.[0]?.toUpperCase() || '?'}
                                   </div>
                                 )}
                               </div>
 
                               <div className="min-w-0 flex-1">
                                 <div className="flex flex-wrap items-center gap-2">
-                                  <span className="font-medium text-sm text-black">{w.name}</span>
+                                  <span className="font-medium text-sm text-black">{getWorkerName(w)}</span>
                                   {isPrev && (
                                     <span className="rounded-full bg-[#13294B]/10 text-[#13294B] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider">
                                       Previously Hired
@@ -968,8 +1085,8 @@ export default function BookingFlow() {
                                   {w.completedJobs > 0 && (
                                     <span className="text-xs text-black/55">{w.completedJobs} jobs done</span>
                                   )}
-                                  {w.experienceYears > 0 && (
-                                    <span className="text-xs text-black/55">{w.experienceYears}y exp</span>
+                                  {(w.experienceYears > 0 || getWorkerExperience(w)) && (
+                                    <span className="text-xs text-black/55">{w.experienceYears || getWorkerExperience(w)}</span>
                                   )}
                                 </div>
 
@@ -1025,6 +1142,32 @@ export default function BookingFlow() {
               </FadeUp>
             )}
 
+            {!service.isWorkerBooking && serviceId !== 'cart' && (
+              <FadeUp delay={0.13}>
+                <Section icon={UserCheck} title="Auto-Assign">
+                  <label className="flex items-start gap-2.5 rounded-2xl border border-black/10 bg-white p-3.5 text-sm text-black transition hover:border-black/20 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={autoAssign}
+                      onChange={(e) => {
+                        setAutoAssign(e.target.checked);
+                        if (e.target.checked) {
+                          setSelectedWorker(null);
+                        }
+                      }}
+                      className="mt-0.5 h-4 w-4 shrink-0 rounded border-black/30 accent-black"
+                    />
+                    <span>
+                      <span className="block font-medium">Auto-assign nearest pro</span>
+                      <span className="block text-xs text-black/60">
+                        We&apos;ll match you with the closest available expert
+                      </span>
+                    </span>
+                  </label>
+                </Section>
+              </FadeUp>
+            )}
+
             <FadeUp delay={0.1}>
               <Section icon={CreditCard} title="Payment">
                 <div className="grid grid-cols-1 gap-2.5">
@@ -1036,20 +1179,6 @@ export default function BookingFlow() {
                     sub="Card · UPI · Wallet · Netbanking"
                   />
                 </div>
-                <label className="mt-4 flex items-start gap-2.5 rounded-2xl border border-black/10 bg-white p-3.5 text-sm text-black transition hover:border-black/20">
-                  <input
-                    type="checkbox"
-                    checked={autoAssign}
-                    onChange={(e) => setAutoAssign(e.target.checked)}
-                    className="mt-0.5 h-4 w-4 shrink-0 rounded border-black/30 accent-black"
-                  />
-                  <span>
-                    <span className="block font-medium">Auto-assign nearest pro</span>
-                    <span className="block text-xs text-black/60">
-                      We&apos;ll match you with the closest available expert
-                    </span>
-                  </span>
-                </label>
               </Section>
             </FadeUp>
 
@@ -1129,8 +1258,11 @@ export default function BookingFlow() {
                       onChange={setCouponCode} 
                       placeholder="Enter code" 
                       className="!py-2 !px-3"
+                      disabled={couponLoading}
                     />
-                    <PillButton variant="solid" onClick={handleApplyCoupon} className="!py-2 !px-4">Apply</PillButton>
+                    <PillButton variant="solid" onClick={handleApplyCoupon} className="!py-2 !px-4" disabled={couponLoading}>
+                      {couponLoading ? 'Applying...' : 'Apply'}
+                    </PillButton>
                   </div>
                   {appliedCoupon && (
                     <div className="mt-3 text-xs font-medium text-green-600 bg-green-50 px-3 py-2 rounded-xl flex items-center justify-between">
@@ -1159,7 +1291,11 @@ export default function BookingFlow() {
                     {submitting ? 'Please wait…' : isQuoteMode ? 'Request quote' : 'Confirm booking'}
                   </button>
                   <p className="mt-3 text-center text-[10px] uppercase tracking-widest text-black/40">
-                    {isQuoteMode ? 'The pro will send a price to accept' : 'No charge until job is complete'}
+                    {isQuoteMode
+                      ? 'The pro will send a price to accept'
+                      : paymentMode === 'online'
+                      ? 'Your payment has been received securely.'
+                      : "You'll pay after the service is completed."}
                   </p>
                 </div>
               </div>

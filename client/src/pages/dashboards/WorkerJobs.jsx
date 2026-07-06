@@ -39,6 +39,7 @@ export default function WorkerJobs() {
   const [quoteTarget, setQuoteTarget] = useState(null);
   const [quoteAmount, setQuoteAmount] = useState('');
   const [quoteNote, setQuoteNote] = useState('');
+  const [expandedNotes, setExpandedNotes] = useState({});
 
   const isQuoteReq = (b) => b.isQuoteRequest && b.quoteStatus !== 'accepted';
 
@@ -245,13 +246,79 @@ export default function WorkerJobs() {
                       )}
                     </div>
                     {quoteReq && b.quoteDetails?.description && (
-                      <div>Request: {b.quoteDetails.description}</div>
+                      <div className="break-words mt-1">
+                        <strong className="font-semibold text-ink/80">Request:</strong>{' '}
+                        <span className="text-ink/70">
+                          {b.quoteDetails.description.length > 80 && !expandedNotes[`req_${b._id}`] ? (
+                            <>
+                              {b.quoteDetails.description.substring(0, 80)}...{' '}
+                              <button
+                                type="button"
+                                onClick={() => setExpandedNotes(prev => ({ ...prev, [`req_${b._id}`]: true }))}
+                                className="text-brand font-semibold hover:underline inline-block text-xs"
+                              >
+                                Read More
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              {b.quoteDetails.description}
+                              {b.quoteDetails.description.length > 80 && (
+                                <>
+                                  {' '}
+                                  <button
+                                    type="button"
+                                    onClick={() => setExpandedNotes(prev => ({ ...prev, [`req_${b._id}`]: false }))}
+                                    className="text-brand font-semibold hover:underline inline-block text-xs"
+                                  >
+                                    Read Less
+                                  </button>
+                                </>
+                              )}
+                            </>
+                          )}
+                        </span>
+                      </div>
                     )}
                     {quoteReq && latestQuote && (
-                      <div>Your quote: {formatPrice(latestQuote.amount)} ({latestQuote.status})</div>
+                      <div className="mt-1"><strong className="font-semibold text-ink/80">Your quote:</strong> {formatPrice(latestQuote.amount)} ({latestQuote.status})</div>
                     )}
-                    {b.scheduledAt && <div>Scheduled: {formatDateTime(b.scheduledAt)}</div>}
-                    {!masked && b.notes && <div>Notes: {b.notes}</div>}
+                    {b.scheduledAt && <div className="mt-1"><strong className="font-semibold text-ink/80">Scheduled:</strong> {formatDateTime(b.scheduledAt)}</div>}
+                    {!masked && b.notes && (
+                      <div className="break-words mt-1">
+                        <strong className="font-semibold text-ink/80">Notes:</strong>{' '}
+                        <span className="text-ink/70">
+                          {b.notes.length > 80 && !expandedNotes[`note_${b._id}`] ? (
+                            <>
+                              {b.notes.substring(0, 80)}...{' '}
+                              <button
+                                type="button"
+                                onClick={() => setExpandedNotes(prev => ({ ...prev, [`note_${b._id}`]: true }))}
+                                className="text-brand font-semibold hover:underline inline-block text-xs"
+                              >
+                                Read More
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              {b.notes}
+                              {b.notes.length > 80 && (
+                                <>
+                                  {' '}
+                                  <button
+                                    type="button"
+                                    onClick={() => setExpandedNotes(prev => ({ ...prev, [`note_${b._id}`]: false }))}
+                                    className="text-brand font-semibold hover:underline inline-block text-xs"
+                                  >
+                                    Read Less
+                                  </button>
+                                </>
+                              )}
+                            </>
+                          )}
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Stage-specific actions */}

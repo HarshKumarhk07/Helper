@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowUpRight, MapPin, Clock } from 'lucide-react';
 import StatusBadge from './StatusBadge.jsx';
-import { formatDateTime, formatPrice } from '../../lib/booking.js';
+import { formatDateTime, formatPrice, getWorkerName } from '../../lib/booking.js';
 
 export default function BookingCard({ booking, footer }) {
+  const [expandedNotes, setExpandedNotes] = useState(false);
   const svc = booking.service || {};
   return (
     <div className="card-rounded transition hover:-translate-y-1 hover:shadow-soft">
@@ -47,22 +49,55 @@ export default function BookingCard({ booking, footer }) {
             )}
             {/* Show customer, notes and assigned worker when available */}
             {booking.user && (
-              <span className="inline-flex items-center gap-2">
-                <strong className="text-ink/80">Customer:</strong>
-                <span className="text-ink/70">{booking.user?.name} {booking.user?.phone ? `· ${booking.user?.phone}` : booking.user?.email || ''}</span>
-              </span>
+              <div className="flex flex-wrap items-start gap-x-2 gap-y-0.5 break-words">
+                <strong className="text-ink/80 shrink-0">Customer:</strong>
+                <span className="text-ink/70">
+                  {booking.user?.name} {booking.user?.phone ? `· ${booking.user?.phone}` : booking.user?.email || ''}
+                </span>
+              </div>
             )}
             {booking.notes && (
-              <span className="inline-flex items-center gap-2">
-                <strong className="text-ink/80">Notes:</strong>
-                <span className="text-ink/70">{booking.notes}</span>
-              </span>
+              <div className="flex flex-wrap items-start gap-x-2 gap-y-0.5 break-words">
+                <strong className="text-ink/80 shrink-0">Notes:</strong>
+                <span className="text-ink/70">
+                  {booking.notes.length > 80 && !expandedNotes ? (
+                    <>
+                      {booking.notes.substring(0, 80)}...{' '}
+                      <button
+                        type="button"
+                        onClick={() => setExpandedNotes(true)}
+                        className="text-brand font-semibold hover:underline inline-block"
+                      >
+                        Read More
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      {booking.notes}
+                      {booking.notes.length > 80 && (
+                        <>
+                          {' '}
+                          <button
+                            type="button"
+                            onClick={() => setExpandedNotes(false)}
+                            className="text-brand font-semibold hover:underline inline-block"
+                          >
+                            Read Less
+                          </button>
+                        </>
+                      )}
+                    </>
+                  )}
+                </span>
+              </div>
             )}
             {booking.worker && (
-              <span className="inline-flex items-center gap-2">
-                <strong className="text-ink/80">Assigned:</strong>
-                <span className="text-ink/70">{booking.worker?.name} {booking.worker?.phone ? `· ${booking.worker?.phone}` : ''}</span>
-              </span>
+              <div className="flex flex-wrap items-start gap-x-2 gap-y-0.5 break-words">
+                <strong className="text-ink/80 shrink-0">Assigned:</strong>
+                <span className="text-ink/70">
+                  {getWorkerName(booking.worker)} {booking.worker?.phone ? `· ${booking.worker?.phone}` : ''}
+                </span>
+              </div>
             )}
           </div>
         </div>

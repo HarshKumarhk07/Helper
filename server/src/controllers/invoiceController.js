@@ -94,7 +94,7 @@ export const generateInvoice = asyncHandler(async (req, res) => {
   } else {
     // booking
     doc
-      .text(data.service.name, 50, y)
+      .text(data.service?.name || `Direct Professional Service (${data.code})`, 50, y)
       .text('1', 280, y, { width: 90, align: 'right' })
       .text(`Rs. ${data.amount.toFixed(2)}`, 370, y, { width: 90, align: 'right' })
       .text(`Rs. ${data.amount.toFixed(2)}`, 470, y, { width: 90, align: 'right' });

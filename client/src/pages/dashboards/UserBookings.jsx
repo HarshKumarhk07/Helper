@@ -31,6 +31,7 @@ export default function UserBookings() {
   const [loading, setLoading] = useState(true);
   const [trackingBooking, setTrackingBooking] = useState(null);
   const [reviewBooking, setReviewBooking] = useState(null);
+  const [actionLoadingId, setActionLoadingId] = useState(null); // 'cancel_id', 'invoice_id', 'pay_id'
 
   const load = () => {
     setLoading(true);
@@ -54,12 +55,67 @@ export default function UserBookings() {
   }, []);
 
   const cancel = async (booking) => {
+    if (actionLoadingId) return;
+    setActionLoadingId(`cancel_${booking._id}`);
     try {
       await transitionStatus(booking._id, 'cancelled', 'Cancelled by customer');
       toast.success(`Cancelled ${booking.code}`);
       load();
     } catch (err) {
       toast.error(err?.response?.data?.error || 'Could not cancel');
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  const payBooking = async (bk) => {
+    if (actionLoadingId) return;
+    setActionLoadingId(`pay_${bk._id}`);
+    try {
+      const rp = await createRazorpayOrder({ amount: bk.amount, receipt: bk.code, type: 'booking' });
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_xxxx',
+        amount: rp.amount,
+        currency: rp.currency,
+        name: 'Helper',
+        description: `Booking: ${bk.service?.name || bk.code}`,
+        order_id: rp.id,
+        handler: async (response) => {
+          setActionLoadingId(`pay_${bk._id}`);
+          try {
+            await verifyRazorpayPayment({ ...response, referenceId: bk._id, type: 'booking' });
+            toast.success('Payment successful — booking confirmed!');
+            load();
+          } catch {
+            toast.error('Payment verification failed');
+          } finally {
+            setActionLoadingId(null);
+          }
+        },
+        theme: { color: '#111111' },
+      };
+      const rzp = new window.Razorpay(options);
+      rzp.on('payment.failed', () => {
+        toast.error('Payment canceled or failed');
+        setActionLoadingId(null);
+      });
+      rzp.open();
+    } catch (err) {
+      toast.error('Failed to initiate payment');
+      setActionLoadingId(null);
+    }
+  };
+
+  const handleDownloadInvoice = async (type, id, filename) => {
+    if (actionLoadingId) return;
+    setActionLoadingId(`invoice_${id}`);
+    try {
+      await downloadInvoice(type, id, filename);
+      toast.success('Invoice download started');
+    } catch {
+      toast.error('Failed to download invoice');
+    } finally {
+      setActionLoadingId(null);
     }
   };
 
@@ -140,9 +196,9 @@ export default function UserBookings() {
                 booking={b}
                 footer={
                   b.isQuoteRequest && b.quoteStatus !== 'accepted' ? (
-                    <QuotePanel booking={b} onChanged={load} />
+                    <QuotePanel booking={b} onChanged={load} payBooking={payBooking} actionLoadingId={actionLoadingId} />
                   ) : ['placed', 'assigned', 'accepted', 'en_route', 'in_progress'].includes(b.status) ? (
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
                       {['assigned', 'accepted', 'en_route', 'in_progress'].includes(b.status) && (
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="inline-flex items-center gap-1 rounded-full bg-black px-2.5 py-1 text-[10px] uppercase tracking-widest text-white">
@@ -163,22 +219,34 @@ export default function UserBookings() {
                         </div>
                       )}
                       
+                      {b.paymentMode === 'online' && b.paymentStatus === 'pending' && (
+                        <button
+                          onClick={() => payBooking(b)}
+                          disabled={actionLoadingId !== null}
+                          className="rounded bg-[#F5C518] px-3.5 py-1.5 text-xs font-semibold uppercase tracking-widest text-black hover:bg-[#F5C518]/90 transition disabled:opacity-50"
+                        >
+                          {actionLoadingId === `pay_${b._id}` ? 'Retrying...' : 'Retry Payment'}
+                        </button>
+                      )}
+
                       {['placed', 'assigned', 'accepted'].includes(b.status) && (
                         <button
                           onClick={() => cancel(b)}
-                          className="ml-auto text-xs uppercase tracking-widest text-red-700 hover:underline"
+                          disabled={actionLoadingId !== null}
+                          className="ml-auto text-xs uppercase tracking-widest text-red-700 hover:underline disabled:opacity-50"
                         >
-                          Cancel booking
+                          {actionLoadingId === `cancel_${b._id}` ? 'Cancelling...' : 'Cancel booking'}
                         </button>
                       )}
                     </div>
                   ) : b.status === 'completed' ? (
                     <div className="flex justify-end gap-4 items-center">
                       <button
-                        onClick={() => downloadInvoice('booking', b._id, `Invoice_BOOKING_${b.code}.pdf`)}
-                        className="text-xs uppercase tracking-widest text-ink/70 hover:text-ink transition:text-paper"
+                        onClick={() => handleDownloadInvoice('booking', b._id, `Invoice_BOOKING_${b.code}.pdf`)}
+                        disabled={actionLoadingId !== null}
+                        className="text-xs uppercase tracking-widest text-ink/70 hover:text-ink transition disabled:opacity-50"
                       >
-                        Download PDF
+                        {actionLoadingId === `invoice_${b._id}` ? 'Downloading...' : 'Download PDF'}
                       </button>
                       <button
                         onClick={() => setReviewBooking(b)}
@@ -208,42 +276,17 @@ export default function UserBookings() {
 
 // Panel shown on a quote-request booking: waiting state, or the pro's quote
 // with Accept (→ pay) / Decline.
-function QuotePanel({ booking, onChanged }) {
+function QuotePanel({ booking, onChanged, payBooking, actionLoadingId }) {
   const [busy, setBusy] = useState(false);
   const pending = (booking.quotes || []).filter((q) => q.status === 'pending');
   const quote = pending[pending.length - 1];
 
-  const pay = async (bk) => {
-    const rp = await createRazorpayOrder({ amount: bk.amount, receipt: bk.code, type: 'booking' });
-    const options = {
-      key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_xxxx',
-      amount: rp.amount,
-      currency: rp.currency,
-      name: 'Helper',
-      description: `Booking: ${bk.service?.name || bk.code}`,
-      order_id: rp.id,
-      handler: async (response) => {
-        try {
-          await verifyRazorpayPayment({ ...response, referenceId: bk._id, type: 'booking' });
-          toast.success('Payment successful — booking confirmed!');
-          onChanged();
-        } catch {
-          toast.error('Payment verification failed');
-        }
-      },
-      theme: { color: '#111111' },
-    };
-    const rzp = new window.Razorpay(options);
-    rzp.on('payment.failed', () => toast.error('Payment canceled or failed'));
-    rzp.open();
-  };
-
   const accept = async () => {
-    if (!quote) return;
+    if (!quote || busy || actionLoadingId) return;
     setBusy(true);
     try {
       const updated = await acceptQuote(booking._id, quote._id);
-      await pay(updated);
+      await payBooking(updated);
     } catch (err) {
       toast.error(err?.response?.data?.error || 'Could not accept quote');
     } finally {
@@ -252,7 +295,7 @@ function QuotePanel({ booking, onChanged }) {
   };
 
   const decline = async () => {
-    if (!quote) return;
+    if (!quote || busy || actionLoadingId) return;
     setBusy(true);
     try {
       await rejectQuote(booking._id, quote._id);

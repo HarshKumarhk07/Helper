@@ -6,6 +6,10 @@ export const getLocations = async (req, res) => {
     if (req.user?.role !== 'admin') {
       filter.isActive = true;
     }
+    const { q } = req.query;
+    if (q) {
+      filter.name = { $regex: String(q).trim(), $options: 'i' };
+    }
     const locations = await Location.find(filter).sort({ name: 1 });
     res.json(locations);
   } catch (error) {

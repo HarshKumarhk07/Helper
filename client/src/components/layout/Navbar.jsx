@@ -466,7 +466,7 @@ export default function Navbar() {
             >
               <MapPin size={16} strokeWidth={1.75} className={`shrink-0 ${heroMode ? 'text-[#13294B]' : 'text-[#13294B]'}`} />
               <span
-                className="text-sm font-medium tracking-tightish truncate max-w-[100px] lg:max-w-[160px]"
+                className="text-sm font-medium tracking-tightish truncate max-w-[200px] lg:max-w-[300px]"
                 title={location?.address || location?.label || 'Select Location'}
               >
                 {location?.label || 'Select Location'}

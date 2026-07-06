@@ -13,6 +13,7 @@ export const pickWorkerForCategory = async ({ excludeIds = [] } = {}) => {
   const query = {
     role: ROLES.WORKER,
     isActive: true,
+    kycStatus: 'verified',
     currentStatus: { $ne: 'busy' },
   };
   if (excludeIds.length) {

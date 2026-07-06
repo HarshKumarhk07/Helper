@@ -44,8 +44,16 @@ export default function UserOrders() {
         {loading ? (
           <div className="skeleton h-32 w-full" />
         ) : orders.length === 0 ? (
-          <div className="rounded-card border border-ink/10 bg-sand/40 p-10 text-center text-sm">
-            No orders found.
+          <div className="rounded-card border border-black/10 bg-sand/40 p-12 text-center text-sm text-black">
+            <div className="text-black/70 mb-4">
+              No orders found. Check out our collections of home care and service products!
+            </div>
+            <Link
+              to="/products"
+              className="inline-flex items-center gap-1.5 rounded-full bg-black px-5 py-2 text-xs font-bold uppercase tracking-widest text-white transition hover:bg-black/85"
+            >
+              Browse Products
+            </Link>
           </div>
         ) : (
           orders.map((order, i) => (

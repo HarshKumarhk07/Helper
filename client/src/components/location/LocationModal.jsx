@@ -12,15 +12,16 @@ export default function LocationModal() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (modalOpen) {
-      setQuery('');
-      setLoading(true);
-      api.get('/locations')
+    if (!modalOpen) return;
+    setLoading(true);
+    const delayDebounce = setTimeout(() => {
+      api.get(`/locations?q=${encodeURIComponent(query)}`)
         .then(res => setLocations(res.data.filter(l => l.isActive)))
         .catch(() => toast.error('Failed to load locations'))
         .finally(() => setLoading(false));
-    }
-  }, [modalOpen]);
+    }, 200);
+    return () => clearTimeout(delayDebounce);
+  }, [query, modalOpen]);
 
   const handlePickLocation = (loc) => {
     setLocation({
@@ -33,9 +34,7 @@ export default function LocationModal() {
     closeLocationModal();
   };
 
-  const filteredLocations = locations.filter(loc =>
-    loc.name.toLowerCase().includes(query.toLowerCase())
-  );
+  const filteredLocations = locations;
 
   return (
     <AnimatePresence>

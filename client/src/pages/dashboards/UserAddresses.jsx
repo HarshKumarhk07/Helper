@@ -102,12 +102,14 @@ export default function UserAddresses() {
           </div>
           <h1 className="heading-display text-4xl md:text-6xl">SAVED PLACES.</h1>
         </div>
-        <button
-          onClick={() => (showForm ? cancelForm() : startNew())}
-          className="pill-btn-solid text-sm"
-        >
-          {showForm ? 'Cancel' : 'Add New'}
-        </button>
+        {!showForm && (
+          <button
+            onClick={startNew}
+            className="pill-btn-solid text-sm"
+          >
+            Add New
+          </button>
+        )}
       </div>
 
       {showForm && (
@@ -120,27 +122,27 @@ export default function UserAddresses() {
               <select
                 value={form.label}
                 onChange={(e) => setForm({ ...form, label: e.target.value })}
-                className="p-3 border border-ink/20 rounded-xl bg-transparent focus:border-ink outline-none"
+                className="w-full rounded-pill border border-black/15 bg-white px-4 py-2.5 text-sm text-black outline-none transition focus:border-black focus:shadow-sm"
               >
                 <option value="home">Home</option>
                 <option value="work">Work</option>
                 <option value="other">Other</option>
               </select>
-              <input required placeholder="Line 1" className="p-3 border border-ink/20 rounded-xl bg-transparent focus:border-ink outline-none" value={form.line1} onChange={(e) => setForm({ ...form, line1: e.target.value })} />
-              <input placeholder="Line 2 (Optional)" className="p-3 border border-ink/20 rounded-xl bg-transparent focus:border-ink outline-none" value={form.line2} onChange={(e) => setForm({ ...form, line2: e.target.value })} />
-              <input required placeholder="City" className="p-3 border border-ink/20 rounded-xl bg-transparent focus:border-ink outline-none" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
-              <input required placeholder="State" className="p-3 border border-ink/20 rounded-xl bg-transparent focus:border-ink outline-none" value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} />
-              <input required placeholder="Pincode" className="p-3 border border-ink/20 rounded-xl bg-transparent focus:border-ink outline-none" value={form.pincode} onChange={(e) => setForm({ ...form, pincode: e.target.value })} />
+              <input required placeholder="Line 1" className="w-full rounded-pill border border-black/15 bg-white px-4 py-2.5 text-sm text-black placeholder:text-black/40 outline-none transition focus:border-black focus:shadow-sm" value={form.line1} onChange={(e) => setForm({ ...form, line1: e.target.value })} />
+              <input placeholder="Line 2 (Optional)" className="w-full rounded-pill border border-black/15 bg-white px-4 py-2.5 text-sm text-black placeholder:text-black/40 outline-none transition focus:border-black focus:shadow-sm" value={form.line2} onChange={(e) => setForm({ ...form, line2: e.target.value })} />
+              <input required placeholder="City" className="w-full rounded-pill border border-black/15 bg-white px-4 py-2.5 text-sm text-black placeholder:text-black/40 outline-none transition focus:border-black focus:shadow-sm" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
+              <input required placeholder="State" className="w-full rounded-pill border border-black/15 bg-white px-4 py-2.5 text-sm text-black placeholder:text-black/40 outline-none transition focus:border-black focus:shadow-sm" value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} />
+              <input required placeholder="Pincode" className="w-full rounded-pill border border-black/15 bg-white px-4 py-2.5 text-sm text-black placeholder:text-black/40 outline-none transition focus:border-black focus:shadow-sm" value={form.pincode} onChange={(e) => setForm({ ...form, pincode: e.target.value })} />
             </div>
-            <label className="flex items-center gap-2 mb-6">
+            <label className="flex items-center gap-2 mb-6 cursor-pointer">
               <input type="checkbox" checked={form.isDefault} onChange={(e) => setForm({ ...form, isDefault: e.target.checked })} />
               <span className="text-sm">Set as default</span>
             </label>
             <div className="flex gap-3">
-              <button type="submit" className="pill-btn-solid">
+              <button type="submit" className="pill-btn-solid h-11 text-sm">
                 {editingId ? 'Save Changes' : 'Save Address'}
               </button>
-              <button type="button" onClick={cancelForm} className="pill-btn text-sm">
+              <button type="button" onClick={cancelForm} className="pill-btn h-11 text-sm">
                 Cancel
               </button>
             </div>

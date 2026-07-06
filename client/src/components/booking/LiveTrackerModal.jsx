@@ -8,6 +8,7 @@ import {
   leaveBookingRoom,
   socket,
 } from '../../lib/socket.js';
+import { formatPrice, getWorkerName, getWorkerAvatar, getWorkerExperience } from '../../lib/booking.js';
 import { getTrackingState } from '../../api/tracking.js';
 import useSocket from '../../hooks/useSocket.js';
 
@@ -130,10 +131,27 @@ export default function LiveTrackerModal({ booking, onClose }) {
               {connected ? 'Live' : 'Reconnecting'}
             </span>
           </div>
-          <p className="mt-1 text-sm text-paper/65">
-            {booking.worker?.name
-              ? `${booking.worker.name} is on the way for ${booking.service?.name}`
-              : `Worker is on the way for ${booking.service?.name}`}
+          <div className="mt-2 flex items-center gap-3 border-b border-white/10 pb-3">
+            {getWorkerAvatar(booking.worker) ? (
+              <img
+                src={getWorkerAvatar(booking.worker)}
+                alt={getWorkerName(booking.worker)}
+                className="h-10 w-10 rounded-full object-cover border border-white/10"
+              />
+            ) : (
+              <div className="h-10 w-10 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold text-white">
+                {getWorkerName(booking.worker)?.[0]?.toUpperCase()}
+              </div>
+            )}
+            <div>
+              <div className="text-sm font-semibold text-white">{getWorkerName(booking.worker)}</div>
+              {getWorkerExperience(booking.worker) && (
+                <div className="text-[10px] text-paper/50">{getWorkerExperience(booking.worker)}</div>
+              )}
+            </div>
+          </div>
+          <p className="mt-3 text-sm text-paper/65">
+            {getWorkerName(booking.worker)} is on the way for {booking.service?.name || 'your service'}
           </p>
 
           <div className="mt-4 grid grid-cols-3 gap-3 text-center">

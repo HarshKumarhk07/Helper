@@ -148,7 +148,7 @@ export default function UserSupport() {
           onClick={() => setShowForm((v) => !v)}
           className="inline-flex items-center gap-2 rounded-full bg-ink px-4 py-2 text-xs uppercase tracking-widest text-paper transition hover:opacity-90"
         >
-          <Plus size={14} /> {showForm ? 'Cancel' : 'New ticket'}
+          {!showForm && <Plus size={14} />} {showForm ? 'Cancel' : 'New ticket'}
         </button>
       </div>
 

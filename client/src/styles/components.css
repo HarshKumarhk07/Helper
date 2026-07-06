@@ -3,11 +3,11 @@
 }
 
 .pill-btn {
-  @apply inline-flex items-center justify-center gap-2 rounded-pill border border-ink/80 bg-transparent px-5 py-2.5 text-sm font-medium tracking-tightish text-ink transition hover:bg-ink hover:text-paper;
+  @apply inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-pill border border-ink/80 bg-transparent px-3.5 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-medium tracking-tightish text-ink transition hover:bg-ink hover:text-paper whitespace-nowrap shrink-0;
 }
 
 .pill-btn-solid {
-  @apply inline-flex items-center justify-center gap-2 rounded-pill bg-ink px-5 py-2.5 text-sm font-medium tracking-tightish text-paper transition hover:bg-ink/90;
+  @apply inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-pill bg-ink px-3.5 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-medium tracking-tightish text-paper transition hover:bg-ink/90 whitespace-nowrap shrink-0;
 }
 
 .nav-link {

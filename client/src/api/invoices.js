@@ -5,7 +5,7 @@ export const downloadInvoice = async (type, id, filename) => {
     responseType: 'blob',
   });
   
-  const url = window.URL.createObjectURL(new Blob([response.data]));
+  const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
   const anchor = document.createElement('a');
   anchor.href = url;
   anchor.download = filename;

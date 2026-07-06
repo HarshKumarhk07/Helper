@@ -280,7 +280,13 @@ export const createBooking = asyncHandler(async (req, res) => {
 export const listMyBookings = asyncHandler(async (req, res) => {
   const { status } = req.query;
   const filter = { user: req.user._id };
-  if (status) filter.status = status;
+  if (status) {
+    if (status === 'placed') {
+      filter.status = { $in: ['placed', 'assigned'] };
+    } else {
+      filter.status = status;
+    }
+  }
   // PINs are select:false by default. We surface them here so the customer
   // can read their own Start/End PIN in the tracker modal and dictate it to
   // the worker on site. History is still dropped to keep the wire lean.
@@ -293,7 +299,13 @@ export const listMyBookings = asyncHandler(async (req, res) => {
 export const listAllBookings = asyncHandler(async (req, res) => {
   const { status, paymentStatus, worker, user, category } = req.query;
   const filter = {};
-  if (status) filter.status = status;
+  if (status) {
+    if (status === 'placed') {
+      filter.status = { $in: ['placed', 'assigned'] };
+    } else {
+      filter.status = status;
+    }
+  }
   if (paymentStatus) filter.paymentStatus = paymentStatus;
   if (worker) filter.worker = worker;
   if (user) filter.user = user;
