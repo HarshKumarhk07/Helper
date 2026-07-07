@@ -20,3 +20,6 @@ export const cancelMyOrder = (id) =>
 
 export const updateOrderNote = (id, note) =>
   api.patch(`/orders/${id}/note`, { note }).then((r) => r.data.order);
+
+export const deleteMyOrder = (id) =>
+  api.delete(`/orders/${id}`).then((r) => r.data);

@@ -1,16 +1,40 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { listMyOrders, cancelMyOrder } from '../../api/orders.js';
 import { downloadInvoice } from '../../api/invoices.js';
 import FadeUp from '../../components/ui/FadeUp.jsx';
 import { formatDateTime, formatPrice } from '../../lib/booking.js';
+import { useCart } from '../../context/CartContext.jsx';
 
 export default function UserOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedOrderId, setExpandedOrderId] = useState(null);
   const [cancelling, setCancelling] = useState(null);
+  const navigate = useNavigate();
+  const { addToCart } = useCart();
+
+  const handleOrderAgain = async (order) => {
+    try {
+      sessionStorage.setItem('reorder_source_id', order._id);
+      for (const item of order.items) {
+        const prod = {
+          _id: item.product,
+          name: item.name,
+          price: item.price,
+          kind: 'product',
+        };
+        for (let q = 0; q < item.quantity; q++) {
+          await addToCart(prod);
+        }
+      }
+      toast.success('Items added to cart!');
+      navigate('/cart');
+    } catch {
+      toast.error('Failed to add items to cart');
+    }
+  };
 
   useEffect(() => {
     listMyOrders()
@@ -64,8 +88,32 @@ export default function UserOrders() {
                     {order.orderId}
                   </div>
                   <div className="font-bold text-lg">Total: {formatPrice(order.totalAmount)}</div>
-                  <div className="text-xs text-ink/70 mt-1">Status: {order.status.toUpperCase()}</div>
-                  <div className="text-xs text-ink/70 mt-1">Payment: {order.paymentMode?.toUpperCase()} · {order.paymentStatus?.toUpperCase()}</div>
+                  <div className="flex flex-wrap items-center gap-2 mt-1.5">
+                    {order.status === 'cancelled' ? (
+                      <span className="inline-flex items-center rounded bg-red-100 dark:bg-red-950/30 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-red-700 dark:text-red-400">
+                        Cancelled
+                      </span>
+                    ) : order.status === 'delivered' ? (
+                      <span className="inline-flex items-center rounded bg-green-100 dark:bg-green-950/30 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-green-700 dark:text-green-400">
+                        Delivered
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center rounded bg-sky-100 dark:bg-sky-950/30 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-sky-700 dark:text-sky-400">
+                        {order.status}
+                      </span>
+                    )}
+
+                    {order.status !== 'cancelled' && order.paymentStatus === 'pending' && order.paymentMode === 'online' ? (
+                      <span className="inline-flex items-center gap-1.5 rounded bg-amber-100 dark:bg-amber-950/30 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-800 dark:text-amber-400">
+                        <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                        Payment Pending
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center rounded bg-ink/5 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-ink/70">
+                        Payment: {order.paymentMode} · {order.paymentStatus}
+                      </span>
+                    )}
+                  </div>
                   {order.couponCode && (
                     <div className="text-xs text-green-700 mt-1">Coupon: {order.couponCode} • Saved ₹{order.discountAmount || 0}</div>
                   )}
@@ -84,6 +132,15 @@ export default function UserOrders() {
                     >
                       {expandedOrderId === order._id ? 'Hide timeline' : 'Quick timeline'}
                     </button>
+                    {order.paymentStatus === 'pending' && order.paymentMode === 'online' && (
+                      <button
+                        type="button"
+                        onClick={() => handleOrderAgain(order)}
+                        className="inline-flex items-center gap-2 rounded-full bg-[#F5C518] px-4 py-1.5 text-xs uppercase font-bold tracking-widest text-black transition hover:bg-[#F5C518]/90"
+                      >
+                        Order Again
+                      </button>
+                    )}
                     {order.status === 'placed' && (
                       <button
                         type="button"

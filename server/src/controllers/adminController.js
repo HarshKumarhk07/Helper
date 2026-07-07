@@ -11,18 +11,40 @@ import { ApiError, asyncHandler } from '../utils/asyncHandler.js';
 const LOW_STOCK_THRESHOLD = 5;
 
 export const getDashboardStats = asyncHandler(async (req, res) => {
-  const totalBookings = await Booking.countDocuments();
-  const totalOrders = await Order.countDocuments();
+  const totalBookings = await Booking.countDocuments({
+    $or: [
+      { paymentMode: { $ne: 'online' } },
+      { paymentStatus: 'paid' },
+      { isQuoteRequest: true }
+    ]
+  });
+  const totalOrders = await Order.countDocuments({
+    $or: [
+      { paymentMode: { $ne: 'online' } },
+      { paymentStatus: 'paid' }
+    ]
+  });
   const totalUsers = await User.countDocuments({ role: 'user' });
   const totalWorkers = await User.countDocuments({ role: 'worker' });
 
-  const recentBookings = await Booking.find()
+  const recentBookings = await Booking.find({
+    $or: [
+      { paymentMode: { $ne: 'online' } },
+      { paymentStatus: 'paid' },
+      { isQuoteRequest: true }
+    ]
+  })
     .sort({ createdAt: -1 })
     .limit(5)
     .populate('user', 'name')
     .populate('service', 'name price');
 
-  const recentOrders = await Order.find()
+  const recentOrders = await Order.find({
+    $or: [
+      { paymentMode: { $ne: 'online' } },
+      { paymentStatus: 'paid' }
+    ]
+  })
     .sort({ createdAt: -1 })
     .limit(5)
     .populate('user', 'name');
@@ -194,8 +216,21 @@ export const getAdminBadges = asyncHandler(async (req, res) => {
 
   const s = admin.adminSeen;
   const [bookings, orders, users, kyc, support] = await Promise.all([
-    Booking.countDocuments({ createdAt: { $gt: s.bookings } }),
-    Order.countDocuments({ createdAt: { $gt: s.orders } }),
+    Booking.countDocuments({
+      createdAt: { $gt: s.bookings },
+      $or: [
+        { paymentMode: { $ne: 'online' } },
+        { paymentStatus: 'paid' },
+        { isQuoteRequest: true }
+      ]
+    }),
+    Order.countDocuments({
+      createdAt: { $gt: s.orders },
+      $or: [
+        { paymentMode: { $ne: 'online' } },
+        { paymentStatus: 'paid' }
+      ]
+    }),
     User.countDocuments({ role: 'user', createdAt: { $gt: s.users } }),
     User.countDocuments({
       role: { $in: ['worker', 'brand'] },

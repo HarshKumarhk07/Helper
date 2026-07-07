@@ -3,7 +3,8 @@ import toast from 'react-hot-toast';
 import { listMyAddresses, createAddress, updateAddress, deleteAddress } from '../../api/addresses.js';
 import FadeUp from '../../components/ui/FadeUp.jsx';
 import PillButton from '../../components/ui/PillButton.jsx';
-import { Trash2, AlertTriangle, Edit2 } from 'lucide-react';
+import { Trash2, AlertTriangle, Edit2, Crosshair, Loader2 } from 'lucide-react';
+import { reverseGeocodeCoordinates } from '../../lib/geocoding.js';
 
 const EMPTY_FORM = {
   label: 'home',
@@ -13,6 +14,8 @@ const EMPTY_FORM = {
   state: '',
   pincode: '',
   isDefault: false,
+  lat: null,
+  lng: null,
 };
 
 export default function UserAddresses() {
@@ -41,6 +44,51 @@ export default function UserAddresses() {
     setShowForm(true);
   };
 
+  const [detectingLocation, setDetectingLocation] = useState(false);
+
+  const detectCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error('Geolocation is not supported on this device');
+      return;
+    }
+
+    setDetectingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      async ({ coords }) => {
+        try {
+          const resolved = await reverseGeocodeCoordinates(
+            coords.latitude,
+            coords.longitude
+          );
+          setForm((prev) => ({
+            ...prev,
+            line1: resolved.line1 || prev.line1,
+            line2: resolved.line2 || prev.line2,
+            city: resolved.city || prev.city,
+            state: resolved.state || prev.state,
+            pincode: resolved.pincode || prev.pincode,
+            lat: resolved.lat,
+            lng: resolved.lng,
+          }));
+          toast.success('Location detected');
+        } catch (err) {
+          toast.error('Could not convert current location into address');
+        } finally {
+          setDetectingLocation(false);
+        }
+      },
+      (err) => {
+        setDetectingLocation(false);
+        const message =
+          err?.code === err.PERMISSION_DENIED
+            ? 'Location permission denied. Please allow location access.'
+            : 'Could not detect current location';
+        toast.error(message);
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+    );
+  };
+
   const startEdit = (addr) => {
     setEditingId(addr._id);
     setForm({
@@ -51,6 +99,8 @@ export default function UserAddresses() {
       state: addr.state || '',
       pincode: addr.pincode || '',
       isDefault: !!addr.isDefault,
+      lat: addr.lat || null,
+      lng: addr.lng || null,
     });
     setShowForm(true);
   };
@@ -115,9 +165,27 @@ export default function UserAddresses() {
       {showForm && (
         <FadeUp>
           <form onSubmit={handleSave} className="card-rounded p-6 mb-8 bg-sand/30">
-            <h3 className="heading-display text-xl mb-4">
-              {editingId ? 'EDIT ADDRESS' : 'NEW ADDRESS'}
-            </h3>
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-5">
+              <h3 className="heading-display text-xl">
+                {editingId ? 'EDIT ADDRESS' : 'NEW ADDRESS'}
+              </h3>
+              <button
+                type="button"
+                onClick={detectCurrentLocation}
+                disabled={detectingLocation}
+                className="inline-flex items-center justify-center gap-1.5 rounded-pill border border-ink bg-white px-4 py-2 text-xs font-semibold text-ink shadow-sm transition hover:bg-ink hover:text-paper disabled:opacity-50"
+              >
+                {detectingLocation ? (
+                  <>
+                    <Loader2 size={13} className="animate-spin" /> Detecting...
+                  </>
+                ) : (
+                  <>
+                    <Crosshair size={13} /> Use Current Location
+                  </>
+                )}
+              </button>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <select
                 value={form.label}

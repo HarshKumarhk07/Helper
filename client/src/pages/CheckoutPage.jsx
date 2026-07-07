@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useCart } from '../context/CartContext.jsx';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { createOrder } from '../api/orders.js';
+import { createOrder, deleteMyOrder } from '../api/orders.js';
 import { createRazorpayOrder, verifyRazorpayPayment } from '../api/payments.js';
 import { validateCoupon } from '../api/coupons.js';
 import { getProduct } from '../api/products.js';
@@ -218,12 +218,22 @@ export default function CheckoutPage() {
             });
             toast.success('Payment successful | Order placed!');
             uniqueProductIds.forEach((productId) => removeFromCart(productId));
+            const oldOrderId = sessionStorage.getItem('reorder_source_id');
+            if (oldOrderId) {
+              await deleteMyOrder(oldOrderId).catch(() => null);
+              sessionStorage.removeItem('reorder_source_id');
+            }
             navigate('/me/orders');
           } catch (err) {
             toast.error('Payment verification failed');
           }
         },
-        theme: { color: "#111111" }
+        theme: { color: "#111111" },
+        modal: {
+          ondismiss: function () {
+            setLoading(false);
+          }
+        }
       };
       const rzp = new window.Razorpay(options);
       rzp.on('payment.failed', function () {

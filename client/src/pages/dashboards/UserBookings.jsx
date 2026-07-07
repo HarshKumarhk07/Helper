@@ -92,6 +92,11 @@ export default function UserBookings() {
             setActionLoadingId(null);
           }
         },
+        modal: {
+          ondismiss: () => {
+            setActionLoadingId(null);
+          }
+        },
         theme: { color: '#111111' },
       };
       const rzp = new window.Razorpay(options);

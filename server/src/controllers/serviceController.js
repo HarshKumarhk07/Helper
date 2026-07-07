@@ -51,11 +51,26 @@ export const listServices = asyncHandler(async (req, res) => {
     }
   }
 
-  const parsedLimit = limit ? parseInt(limit, 10) : 500;
-  const services = await Service.find(filter)
+  let services = await Service.find(filter)
     .populate('category', 'name slug icon color')
-    .sort({ isFeatured: -1, rating: -1, createdAt: -1 })
-    .limit(parsedLimit);
+    .sort({ isFeatured: -1, rating: -1, createdAt: -1 });
+
+  if (q) {
+    const queryLower = q.trim().toLowerCase();
+    services.sort((a, b) => {
+      const aName = (a.name || '').toLowerCase();
+      const bName = (b.name || '').toLowerCase();
+      const aStarts = aName.startsWith(queryLower);
+      const bStarts = bName.startsWith(queryLower);
+      if (aStarts && !bStarts) return -1;
+      if (!aStarts && bStarts) return 1;
+      return 0;
+    });
+  }
+
+  const parsedLimit = limit ? parseInt(limit, 10) : 500;
+  services = services.slice(0, parsedLimit);
+
   res.json({ services });
 });
 

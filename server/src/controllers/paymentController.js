@@ -8,7 +8,7 @@ import User from '../models/User.js';
 import { recordOrderHistory, applyOrderStatusTimestamps } from '../utils/ecommerce.js';
 import Product from '../models/Product.js';
 import { logAudit } from '../utils/auditLogger.js';
-import { notifyBookingCancelled, notifyOrderStatus, notifyWorkerAssigned, notifyPaymentFailed, sendBookingNotificationOnce } from '../utils/notificationService.js';
+import { notifyOrderPlaced, notifyBookingPlaced, notifyBookingCancelled, notifyOrderStatus, notifyWorkerAssigned, notifyPaymentFailed, sendBookingNotificationOnce } from '../utils/notificationService.js';
 import { recordCouponUsage } from './couponController.js';
 import { creditWallet } from '../utils/wallet.js';
 import { reassignBooking } from '../utils/dispatch.js';
@@ -68,6 +68,9 @@ export const verifyRazorpayPayment = asyncHandler(async (req, res) => {
       order.razorpayPaymentId = razorpay_payment_id;
       recordOrderHistory(order, order.status, order.status, req.user?._id || null, 'Payment verified');
       await order.save();
+
+      const user = await User.findById(order.user);
+      notifyOrderPlaced({ user, order });
 
       if (order.couponCode) {
         await Coupon.findOneAndUpdate(
@@ -140,6 +143,9 @@ export const verifyRazorpayPayment = asyncHandler(async (req, res) => {
         }
 
         const user = await User.findById(updatedBooking.user);
+        // Send bookingPlaced notification once payment is verified
+        await sendBookingNotificationOnce(updatedBooking._id, 'bookingPlaced', notifyBookingPlaced, { user, booking: updatedBooking }).catch(() => {});
+
         if (workerToNotify) {
           await sendBookingNotificationOnce(updatedBooking._id, 'workerAssigned', notifyWorkerAssigned, {
             user,
@@ -298,14 +304,6 @@ export const refundPayment = asyncHandler(async (req, res) => {
   let target;
   if (type === 'booking') {
     target = await Booking.findById(referenceId);
-    if (!target) throw new ApiError(404, 'Reference not found');
-    const result = await performBookingRefund(target, reason, req.user._id);
-    return res.json({
-      ok: true,
-      channel: result.channel,
-      refund: result.success ? { amount: result.amount } : null,
-      booking: target
-    });
   } else if (type === 'order' || type === 'ecommerce') {
     target = await Order.findById(referenceId);
   } else {
@@ -396,12 +394,13 @@ export const refundPayment = asyncHandler(async (req, res) => {
 
   target.refundAmount = refundAmt;
   target.refundedAt = new Date();
-  // Only flip paymentStatus to 'refunded' on a full refund, or when there was a payment to begin with.
-  // Wallet credits on COD/unpaid records keep the payment status untouched.
-  if (refundChannel === 'razorpay' || target.paymentStatus === 'paid') {
-    if (refundAmt >= grossAmount) {
-      target.paymentStatus = 'refunded';
-    }
+  // Full refund → always flip to 'refunded' regardless of the previous paymentStatus.
+  // The admin explicitly chose to issue this refund, so we honour it.
+  if (refundAmt >= grossAmount) {
+    target.paymentStatus = 'refunded';
+  } else if (refundChannel === 'razorpay' || target.paymentStatus === 'paid') {
+    // Partial razorpay or partial on a paid record: keep as 'paid' (partial refund).
+    // For wallet partial credits on unpaid records, leave paymentStatus untouched.
   }
 
   if (type === 'order' || type === 'ecommerce') {

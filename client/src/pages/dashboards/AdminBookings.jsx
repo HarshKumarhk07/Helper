@@ -249,7 +249,13 @@ export default function AdminBookings() {
                     )}
                     {isAdmin && b.paymentStatus !== 'refunded' && (
                       <button
-                        onClick={() => setRefundTarget(b)}
+                        onClick={() => {
+                          if (b.status !== 'cancelled') {
+                            toast.error('Please cancel the booking first before issuing a refund.');
+                            return;
+                          }
+                          setRefundTarget(b);
+                        }}
                         className="rounded-pill border border-red-300 px-3 py-1 text-[10px] uppercase tracking-widest text-red-700 hover:bg-red-50:bg-red-400/10"
                       >
                         Issue Refund

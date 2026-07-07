@@ -155,20 +155,27 @@ export const listMyOrders = asyncHandler(async (req, res) => {
 export const cancelMyOrder = asyncHandler(async (req, res) => {
   const order = await Order.findById(req.params.id);
   if (!order) throw new ApiError(404, 'Order not found');
-  if (String(order.user) !== String(req.user._id)) {
+
+  const isOwner = String(order.user) === String(req.user._id);
+  const isAdmin = req.user.role === 'admin';
+  if (!isOwner && !isAdmin) {
     throw new ApiError(403, 'Forbidden');
   }
-  if (order.status !== 'placed') {
+
+  if (!isAdmin && order.status !== 'placed') {
     throw new ApiError(
       409,
       `Order is already ${order.status} and can no longer be cancelled here. Please contact support.`
     );
   }
+  if (isAdmin && order.status === 'cancelled') {
+    throw new ApiError(409, 'Order is already cancelled');
+  }
 
   const from = order.status;
   order.status = 'cancelled';
   applyOrderStatusTimestamps(order, 'cancelled');
-  recordOrderHistory(order, from, 'cancelled', req.user, 'Cancelled by customer');
+  recordOrderHistory(order, from, 'cancelled', req.user, isAdmin ? 'Cancelled by admin' : 'Cancelled by customer');
   await order.save();
 
   // Return reserved stock now that the order isn't going through.
@@ -196,10 +203,17 @@ export const listAllOrders = asyncHandler(async (req, res) => {
   const limit = Math.max(1, Math.min(100, parseInt(req.query.limit) || 10));
   const skip = (page - 1) * limit;
 
-  const totalRecords = await Order.countDocuments();
+  const filter = {
+    $or: [
+      { paymentMode: { $ne: 'online' } },
+      { paymentStatus: { $in: ['paid', 'refunded'] } }
+    ]
+  };
+
+  const totalRecords = await Order.countDocuments(filter);
   const totalPages = Math.ceil(totalRecords / limit);
 
-  const orders = await Order.find()
+  const orders = await Order.find(filter)
     .populate('user', 'name email')
     .sort({ createdAt: -1 })
     .skip(skip)
@@ -292,4 +306,23 @@ export const updateOrderNote = asyncHandler(async (req, res) => {
   });
 
   res.json({ order });
+});
+
+export const deleteMyOrder = asyncHandler(async (req, res) => {
+  const order = await Order.findById(req.params.id);
+  if (!order) throw new ApiError(404, 'Order not found');
+  if (String(order.user) !== String(req.user._id)) {
+    throw new ApiError(403, 'Forbidden');
+  }
+
+  if (order.status === 'placed' && order.paymentStatus === 'pending') {
+    for (const item of order.items) {
+      if (item.product) {
+        await Product.findByIdAndUpdate(item.product, { $inc: { stock: item.quantity } });
+      }
+    }
+  }
+
+  await Order.findByIdAndDelete(order._id);
+  res.json({ success: true });
 });

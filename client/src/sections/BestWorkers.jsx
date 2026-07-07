@@ -8,7 +8,7 @@ const DUMMY_WORKERS = [
   {
     _id: '1',
     name: 'Sneha Sharma',
-    avatar: 'https://images.unsplash.com/photo-1573600073955-f15b3b6cae46?auto=format&fit=crop&q=80&w=400',
+    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=400',
     category: { name: 'Deep Cleaning' },
     ratingAvg: 4.9,
     completedJobs: 142

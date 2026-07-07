@@ -26,24 +26,25 @@ export default function DiscoverServices() {
 
   return (
     <section className="bg-paper py-20 md:py-32 overflow-hidden">
-      <div className="container-velora mb-16">
+      <div className="container-velora mb-12 md:mb-16">
         {/* Header */}
-        <div className="grid gap-10 lg:grid-cols-[1fr,2fr]">
+        <div className="max-w-3xl">
           <FadeUp>
-            <div className="text-xs font-bold uppercase tracking-widest text-ink/40">
-              OUR SERVICES
+            <div className="flex items-center gap-3 mb-4">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-ink/45">
+                Our Services
+              </span>
+              <span className="h-px w-10 bg-ink/15" />
             </div>
           </FadeUp>
           <FadeUp delay={0.1}>
-            <div>
-              <h2 className="font-sans text-[clamp(2.5rem,6vw,4.5rem)] font-normal leading-[1.05] tracking-tightest text-ink mb-6">
-                Discover our services<br />
-                and how we do it better.
-              </h2>
-              <p className="text-base text-ink/60 leading-relaxed max-w-xl">
-                We help people live and work in cleaner, healthier spaces with dependable, professional cleaning always tailored to what you need.
-              </p>
-            </div>
+            <h2 className="font-sans text-[clamp(2.5rem,6vw,4.5rem)] font-normal leading-[1.05] tracking-tightest text-ink mb-6">
+              Discover our services<br />
+              and how we do it better.
+            </h2>
+            <p className="text-base text-ink/60 leading-relaxed max-w-xl">
+              We help people live and work in cleaner, healthier spaces with dependable, professional cleaning always tailored to what you need.
+            </p>
           </FadeUp>
         </div>
       </div>

@@ -268,7 +268,9 @@ export const createBooking = asyncHandler(async (req, res) => {
     changes: { code: { from: null, to: booking.code }, amount: { from: null, to: booking.amount } },
   });
 
-  await sendBookingNotificationOnce(booking._id, 'bookingPlaced', notifyBookingPlaced, { user: req.user, booking }).catch(() => {});
+  if (booking.paymentMode !== PAYMENT_MODE.ONLINE || booking.paymentStatus === 'paid') {
+    await sendBookingNotificationOnce(booking._id, 'bookingPlaced', notifyBookingPlaced, { user: req.user, booking }).catch(() => {});
+  }
 
   if (appliedCouponCode) {
     await recordCouponUsage({ couponCode: appliedCouponCode, userId: req.user._id });
@@ -306,7 +308,15 @@ export const listAllBookings = asyncHandler(async (req, res) => {
       filter.status = status;
     }
   }
-  if (paymentStatus) filter.paymentStatus = paymentStatus;
+  if (paymentStatus) {
+    filter.paymentStatus = paymentStatus;
+  } else {
+    filter.$or = [
+      { paymentMode: { $ne: 'online' } },
+      { paymentStatus: { $in: ['paid', 'cancelled', 'refunded'] } },
+      { isQuoteRequest: true }
+    ];
+  }
   if (worker) filter.worker = worker;
   if (user) filter.user = user;
   if (category) filter.category = category;
@@ -805,18 +815,17 @@ export const transitionStatus = asyncHandler(async (req, res) => {
       booking,
     }).catch(() => {});
   } else if (to === BOOKING_STATUS.CANCELLED) {
-    if (booking.paymentStatus === 'paid') {
-      await performBookingRefund(booking, note, req.user._id).catch(() => {});
-    } else {
+    // Don't auto-refund — let admin issue refund explicitly via the refund button.
+    if (booking.paymentStatus !== 'paid' && booking.paymentStatus !== 'refunded') {
       booking.paymentStatus = 'cancelled';
-      await booking.save();
-      await sendBookingNotificationOnce(booking._id, 'bookingCancelled', notifyBookingCancelled, {
-        user: populatedUser,
-        worker: populatedWorker,
-        booking,
-        reason: note,
-      }).catch(() => {});
     }
+    await booking.save();
+    await sendBookingNotificationOnce(booking._id, 'bookingCancelled', notifyBookingCancelled, {
+      user: populatedUser,
+      worker: populatedWorker,
+      booking,
+      reason: note,
+    }).catch(() => {});
   }
 
   res.json({ booking: await populateBooking(Booking.findById(booking._id)) });

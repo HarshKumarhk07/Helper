@@ -559,6 +559,11 @@ export default function BookingFlow() {
               contact: '9999999999',
             },
             theme: { color: '#111111' },
+            modal: {
+              ondismiss: function () {
+                setSubmitting(false);
+              }
+            },
           };
           const rzp = new window.Razorpay(options);
           rzp.on('payment.failed', function () {
@@ -637,6 +642,11 @@ export default function BookingFlow() {
             contact: '9999999999',
           },
           theme: { color: '#111111' },
+          modal: {
+            ondismiss: function () {
+              setSubmitting(false);
+            }
+          },
         };
         const rzp = new window.Razorpay(options);
         rzp.on('payment.failed', function () {

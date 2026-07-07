@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { sanitizeInput } from '../utils/sanitizer.js';
 
 const mediaUrl = z
   .string()
@@ -14,55 +15,58 @@ const mediaUrl = z
   .optional()
   .or(z.literal(''));
 
+const emailSchema = z.preprocess((val) => sanitizeInput(val), z.string().email().toLowerCase());
+const passwordSchema = z.preprocess((val) => sanitizeInput(val), z.string().min(8).max(128));
+const loginPasswordSchema = z.preprocess((val) => sanitizeInput(val), z.string().min(1));
+const optionalAdminKeySchema = z.preprocess((val) => val ? sanitizeInput(val) : undefined, z.string().optional());
+
 export const signupSchema = z.object({
-  name: z.string().min(2).max(80),
-  email: z.string().email().toLowerCase(),
-  phone: z.string().optional().default(''),
-  password: z.string().min(8).max(128),
+  name: z.string().trim().min(2).max(80),
+  email: emailSchema,
+  phone: z.string().trim().optional().default(''),
+  password: passwordSchema,
   role: z.enum(['user', 'worker', 'brand']).optional().default('user'),
-  // Worker professional details — collected during the worker registration wizard.
-  // Optional here so customer/brand signups (and older clients) are unaffected.
   experienceYears: z.coerce.number().min(0).max(80).optional(),
-  address: z.string().max(300).optional(),
-  education: z.string().max(200).optional(),
+  address: z.string().trim().max(300).optional(),
+  education: z.string().trim().max(200).optional(),
 });
 
 export const loginSchema = z.object({
-  email: z.string().email().toLowerCase(),
-  password: z.string().min(1),
-  adminKey: z.string().optional(),
+  email: emailSchema,
+  password: loginPasswordSchema,
+  adminKey: optionalAdminKeySchema,
 });
 
 export const adminCreateUserSchema = z.object({
-  name: z.string().min(2).max(80),
-  email: z.string().email().toLowerCase(),
-  phone: z.string().optional().default(''),
+  name: z.string().trim().min(2).max(80),
+  email: emailSchema,
+  phone: z.string().trim().optional().default(''),
   aadhaarNumber: z.string().trim().regex(/^\d{12}$/).optional().or(z.literal('')),
   panNumber: z.string().trim().regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/i).optional().or(z.literal('')),
   passportPhoto: mediaUrl,
   kycStatus: z.enum(['pending', 'verified', 'rejected']).optional().default('pending'),
-  password: z.string().min(8).max(128),
+  password: passwordSchema,
   role: z.enum(['admin', 'worker', 'user', 'brand']),
-  companyName: z.string().min(2).max(120).optional().or(z.literal('')),
-  companyAddress: z.string().min(5).max(300).optional().or(z.literal('')),
-  businessType: z.string().min(2).max(80).optional().or(z.literal('')),
+  companyName: z.string().trim().min(2).max(120).optional().or(z.literal('')),
+  companyAddress: z.string().trim().min(5).max(300).optional().or(z.literal('')),
+  businessType: z.string().trim().min(2).max(80).optional().or(z.literal('')),
 });
 
 export const adminUpdateUserSchema = z.object({
-  name: z.string().min(2).max(80).optional(),
-  email: z.string().email().toLowerCase().optional(),
-  phone: z.string().max(20).optional().or(z.literal('')),
+  name: z.string().trim().min(2).max(80).optional(),
+  email: z.preprocess((val) => val ? sanitizeInput(val) : undefined, z.string().email().toLowerCase().optional()),
+  phone: z.string().trim().max(20).optional().or(z.literal('')),
   aadhaarNumber: z.string().trim().regex(/^\d{12}$/).optional().or(z.literal('')),
   panNumber: z.string().trim().regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/i).optional().or(z.literal('')),
   passportPhoto: mediaUrl,
   kycStatus: z.enum(['pending', 'verified', 'rejected']).optional(),
   avatar: mediaUrl,
-  password: z.string().min(8).max(128).optional().or(z.literal('')),
+  password: z.preprocess((val) => val ? sanitizeInput(val) : undefined, z.string().min(8).max(128).optional().or(z.literal(''))),
   role: z.enum(['admin', 'worker', 'user', 'brand']).optional(),
   isActive: z.boolean().optional(),
-  companyName: z.string().min(2).max(120).optional().or(z.literal('')),
-  companyAddress: z.string().min(5).max(300).optional().or(z.literal('')),
-  businessType: z.string().min(2).max(80).optional().or(z.literal('')),
+  companyName: z.string().trim().min(2).max(120).optional().or(z.literal('')),
+  companyAddress: z.string().trim().min(5).max(300).optional().or(z.literal('')),
+  businessType: z.string().trim().min(2).max(80).optional().or(z.literal('')),
 });
 
 export const updateMeSchema = z.object({

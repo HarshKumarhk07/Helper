@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import DashboardShell from './DashboardShell.jsx';
-import { listAllOrders, updateOrderNote } from '../../api/orders.js';
+import { listAllOrders, updateOrderNote, cancelMyOrder } from '../../api/orders.js';
 import { formatPrice } from '../../lib/booking.js';
 import RefundModal from '../../components/admin/RefundModal.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -16,6 +16,17 @@ export default function AdminOrders() {
   const [refundTarget, setRefundTarget] = useState(null);
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState(null);
+
+  const handleCancelOrder = async (id) => {
+    if (!window.confirm('Are you sure you want to cancel this order?')) return;
+    try {
+      const updated = await cancelMyOrder(id);
+      setOrders((current) => current.map((order) => (order._id === id ? updated : order)));
+      toast.success('Order cancelled successfully');
+    } catch {
+      toast.error('Failed to cancel order');
+    }
+  };
 
   // Clears the dashboard "orders" badge when this page is opened.
   useAdminSeen('orders');
@@ -92,12 +103,28 @@ export default function AdminOrders() {
                     </span>
                   </div>
                   {isAdmin && order.paymentStatus !== 'refunded' && (
-                    <button
-                      onClick={() => setRefundTarget(order)}
-                      className="mt-2 inline-flex items-center gap-1 rounded-full border border-red-300 px-3 py-1 text-xs uppercase tracking-widest text-red-600 hover:bg-red-50:bg-red-400/10"
-                    >
-                      Issue Refund
-                    </button>
+                    <div className="mt-2 flex flex-col md:items-end gap-2">
+                      {order.status !== 'cancelled' && (
+                        <button
+                          onClick={() => handleCancelOrder(order._id)}
+                          className="inline-flex items-center gap-1 rounded-full border border-red-300 px-3 py-1 text-xs uppercase tracking-widest text-red-600 hover:bg-red-50:bg-red-400/10"
+                        >
+                          Cancel Order
+                        </button>
+                      )}
+                      <button
+                        onClick={() => {
+                          if (order.status !== 'cancelled') {
+                            toast.error('Please cancel the order first before issuing a refund.');
+                            return;
+                          }
+                          setRefundTarget(order);
+                        }}
+                        className="inline-flex items-center gap-1 rounded-full border border-blue-300 px-3 py-1 text-xs uppercase tracking-widest text-blue-600 hover:bg-blue-50:bg-blue-400/10"
+                      >
+                        Issue Refund
+                      </button>
+                    </div>
                   )}
                   {order.paymentStatus === 'refunded' && order.refundAmount > 0 && (
                     <div className="mt-2 text-xs text-red-600">

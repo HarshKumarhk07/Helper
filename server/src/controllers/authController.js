@@ -10,6 +10,7 @@ import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../utils/
 import { notifyPasswordReset } from '../utils/notificationService.js';
 import { logAudit } from '../utils/auditLogger.js';
 import { validatePassword } from '../utils/passwordPolicy.js';
+import { sanitizeInput } from '../utils/sanitizer.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -164,7 +165,7 @@ export const me = asyncHandler(async (req, res) => {
 // "Worker account detected" hint and prompt for the admin key when needed.
 // Customer and unknown emails return null — we never advertise those.
 export const roleHint = asyncHandler(async (req, res) => {
-  const email = String(req.query?.email || '').trim().toLowerCase();
+  const email = sanitizeInput(String(req.query?.email || '')).toLowerCase();
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return res.json({ role: null });
   }
@@ -188,7 +189,7 @@ export const logout = asyncHandler(async (req, res) => {
 });
 
 export const forgotPassword = asyncHandler(async (req, res) => {
-  const email = String(req.body?.email || '').trim().toLowerCase();
+  const email = sanitizeInput(String(req.body?.email || '')).toLowerCase();
   // Always respond with the same envelope to avoid leaking which emails are registered.
   const generic = { ok: true, message: 'If that email is registered, a reset link has been sent.' };
 
@@ -240,7 +241,8 @@ export const resetPassword = asyncHandler(async (req, res) => {
   if (!password || typeof password !== 'string') {
     throw new ApiError(400, 'Password is required');
   }
-  const check = validatePassword(password);
+  const sanitizedPassword = sanitizeInput(password);
+  const check = validatePassword(sanitizedPassword);
   if (!check.ok) throw new ApiError(400, check.message);
 
   const tokenHash = hashToken(token);
@@ -255,7 +257,7 @@ export const resetPassword = asyncHandler(async (req, res) => {
   const user = await User.findById(record.user).select('+password');
   if (!user) throw new ApiError(404, 'Account not found');
 
-  user.password = password; // pre-save hook hashes it
+  user.password = sanitizedPassword; // pre-save hook hashes it
   // A password reset must invalidate every active session — bump the
   // token version so any previously-issued access/refresh tokens are
   // rejected by the auth middleware.

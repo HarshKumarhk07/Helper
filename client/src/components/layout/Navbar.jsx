@@ -53,8 +53,21 @@ export default function Navbar() {
 
   // Active link by pathname — '/services' stays highlighted on filtered
   // (/services?cat=...) and detail (/services/:id) pages alike.
-  const isNavActive = (to) => {
+  const isNavActive = (item) => {
+    const to = item.to;
     if (to === '/') return routerLocation.pathname === '/';
+
+    const isServicePath = routerLocation.pathname === '/services' || routerLocation.pathname.startsWith('/services/');
+    const hasCategoryQuery = new URLSearchParams(routerLocation.search).has('cat');
+
+    if (item.isCategoryDropdown) {
+      return isServicePath && hasCategoryQuery;
+    }
+
+    if (to === '/services') {
+      return isServicePath && !hasCategoryQuery;
+    }
+
     return (
       routerLocation.pathname === to ||
       routerLocation.pathname.startsWith(`${to}/`)
@@ -262,9 +275,9 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden min-w-0 items-center gap-4 lg:gap-6 lg:flex shrink-0">
+          <nav className="hidden min-w-0 items-center gap-3 xl:gap-6 lg:flex shrink-0">
             {activeNavLinks.map((n) => {
-              const active = isNavActive(n.to);
+              const active = isNavActive(n);
               
               if (n.isCategoryDropdown) {
                 return (
@@ -452,7 +465,7 @@ export default function Navbar() {
 
 
           {/* Right Actions */}
-          <div className="flex grow shrink-0 items-center justify-end gap-2.5 lg:gap-4">
+          <div className="flex grow shrink-0 items-center justify-end gap-2 xl:gap-4">
             {/* Select Location */}
             <button
               type="button"
@@ -466,7 +479,7 @@ export default function Navbar() {
             >
               <MapPin size={16} strokeWidth={1.75} className={`shrink-0 ${heroMode ? 'text-[#13294B]' : 'text-[#13294B]'}`} />
               <span
-                className="text-sm font-medium tracking-tightish truncate max-w-[200px] lg:max-w-[300px]"
+                className="text-sm font-medium tracking-tightish truncate max-w-[120px] xl:max-w-[240px]"
                 title={location?.address || location?.label || 'Select Location'}
               >
                 {location?.label || 'Select Location'}
@@ -505,7 +518,7 @@ export default function Navbar() {
                       value={searchValue}
                       onChange={(e) => setSearchValue(e.target.value)}
                       placeholder="Search services, products, workers..."
-                      className={`min-w-0 w-[110px] lg:w-[200px] xl:w-[300px] bg-transparent text-sm outline-none font-medium transition-colors ${
+                      className={`min-w-0 w-[110px] lg:w-[120px] xl:w-[240px] focus:lg:w-[180px] focus:xl:w-[300px] bg-transparent text-sm outline-none font-medium transition-all duration-300 ${
                         searchValue.length > 0
                           ? 'text-ink placeholder:text-ink/40'
                           : heroMode
@@ -702,7 +715,7 @@ export default function Navbar() {
                 )}
                 <Link
                   to={panelPath}
-                  className={`hidden lg:inline-block text-sm font-medium transition-colors whitespace-nowrap ${heroMode ? 'text-hero-dark/70 hover:text-hero-dark' : 'text-ink/70 hover:text-ink'}`}
+                  className={`hidden xl:inline-block text-sm font-medium transition-colors whitespace-nowrap ${heroMode ? 'text-hero-dark/70 hover:text-hero-dark' : 'text-ink/70 hover:text-ink'}`}
                 >
                   {panelLabel}
                 </Link>
@@ -841,7 +854,7 @@ export default function Navbar() {
                   <nav className="px-3 py-4 space-y-1">
                     <div className="text-[11px] font-semibold uppercase tracking-widest text-ink px-3 py-2">Navigation</div>
                     {activeNavLinks.map((n) => {
-                      const active = isNavActive(n.to);
+                      const active = isNavActive(n);
                       
                       if (n.isCategoryDropdown) {
                         return (
