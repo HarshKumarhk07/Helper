@@ -198,7 +198,7 @@ export const cancelMyOrder = asyncHandler(async (req, res) => {
     changes: { status: { from, to: 'cancelled' } },
   });
 
-  notifyOrderStatus({ user: req.user, order, previousStatus: from });
+  notifyOrderStatus({ user: req.user, order, status: 'cancelled' });
 
   res.json({ order });
 });

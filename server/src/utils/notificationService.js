@@ -475,23 +475,28 @@ export const notifyOrderPlaced = ({ user, order }) =>
   Promise.allSettled([
     sendEmail({
       to: user?.email,
-      subject: `Order placed · ${order.code || order._id}`,
+      subject: `Order placed · ${order.orderId || order._id}`,
       html: wrapEmail(
         'Order received',
         `
         <p>Hi ${user?.name || 'there'},</p>
         <p>We've received your order.</p>
         <table style="width:100%;border-collapse:collapse;margin:14px 0;">
-          <tr><td style="padding:6px 0;color:#666;">Order ID</td><td><strong>${order.code || order._id}</strong></td></tr>
+          <tr><td style="padding:6px 0;color:#666;">Order ID</td><td><strong>${order.orderId || order._id}</strong></td></tr>
           <tr><td style="padding:6px 0;color:#666;">Total</td><td><strong>${inr(order.totalAmount || order.total)}</strong></td></tr>
           <tr><td style="padding:6px 0;color:#666;">Payment</td><td>${order.paymentMode || order.paymentStatus}</td></tr>
         </table>
+        
+        <p><strong>Items Ordered:</strong></p>
+        <ul style="padding-left: 20px; margin: 10px 0; font-size: 14px; color: #333;">
+          ${(order.items || []).map(item => `<li>${item.name} x ${item.quantity}</li>`).join('')}
+        </ul>
         `
       ),
     }),
     sendSMS({
       to: user?.phone,
-      body: `Helper: Order ${order.code || order._id} placed for ${inr(order.totalAmount || order.total)}.`,
+      body: `Helper: Order ${order.orderId || order._id} placed for ${inr(order.totalAmount || order.total)}.`,
     }),
   ]);
 
@@ -499,15 +504,22 @@ export const notifyOrderStatus = ({ user, order, status }) =>
   Promise.allSettled([
     sendEmail({
       to: user?.email,
-      subject: `Order ${status} · ${order.code || order._id}`,
+      subject: `Order ${status} · ${order.orderId || order._id}`,
       html: wrapEmail(
         `Order ${status}`,
-        `<p>Order <strong>${order.code || order._id}</strong> is now <strong>${status}</strong>.</p>`
+        `
+        <p>Order <strong>${order.orderId || order._id}</strong> is now <strong>${status}</strong>.</p>
+        
+        <p><strong>Items:</strong></p>
+        <ul style="padding-left: 20px; margin: 10px 0; font-size: 14px; color: #333;">
+          ${(order.items || []).map(item => `<li>${item.name} x ${item.quantity}</li>`).join('')}
+        </ul>
+        `
       ),
     }),
     sendSMS({
       to: user?.phone,
-      body: `Helper: Order ${order.code || order._id} is now ${status}.`,
+      body: `Helper: Order ${order.orderId || order._id} is now ${status}.`,
     }),
   ]);
 
