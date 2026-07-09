@@ -84,7 +84,7 @@ export default function ServiceCategories() {
             return (
               <FadeUp key={cat.slug} delay={i * 0.06}>
                 <Link
-                  to={`/services?cat=${cat.slug}`}
+                  to={`/categories/${cat.slug}`}
                   className="group block rounded-2xl border border-ink/8 bg-paper p-5 md:p-6 shadow-soft hover:shadow-card hover:border-ink/15 hover:-translate-y-1 transition-all duration-300"
                 >
                   <div

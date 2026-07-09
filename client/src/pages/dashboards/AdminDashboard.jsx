@@ -409,6 +409,9 @@ export default function AdminDashboard() {
           <PillButton variant="solid" to="/admin/workers" badge={badges.kyc}>
             KYC approval →
           </PillButton>
+          <PillButton variant="solid" to="/admin/car-kyc" badge={badges.carKyc}>
+            Car KYC approval →
+          </PillButton>
           <PillButton variant="solid" to="/admin/payouts">
             Worker payouts →
           </PillButton>

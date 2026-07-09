@@ -98,4 +98,18 @@ export const uploadKyc = multer({
   fileFilter: imageFileFilter,
 });
 
+const carFileFilter = (req, file, cb) => {
+  const allowedMimes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
+  if (!allowedMimes.includes(file.mimetype)) {
+    return cb(new Error('Only JPG, PNG, and PDF formats are allowed for document uploads.'), false);
+  }
+  cb(null, true);
+};
+
+export const uploadCarKyc = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: carFileFilter,
+});
+
 export { cloudinary };

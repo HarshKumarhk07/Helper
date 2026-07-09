@@ -34,7 +34,7 @@ export default function WorksAroundYou() {
                   around you
                 </h2>
                 <p className="mt-5 max-w-md text-sm leading-relaxed text-paper/70">
-                  Our expert pros handle the work so you can focus on what matters — scheduled to
+                  Our expert professionals handle the work so you can focus on what matters — scheduled to
                   fit your day, not the other way round.
                 </p>
 

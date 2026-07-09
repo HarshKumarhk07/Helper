@@ -1,6 +1,7 @@
 import { BrevoClient } from '@getbrevo/brevo';
 import twilio from 'twilio';
 import Booking from '../models/Booking.js';
+import CarServiceKYC from '../models/CarServiceKYC.js';
 
 const isBlank = (v) => v === undefined || v === null || String(v).trim() === '';
 
@@ -641,3 +642,146 @@ export const sendBookingNotificationOnce = async (bookingId, notificationKey, no
   }
   return notifyFn(args);
 };
+
+export const notifyCarBookingPlaced = async ({ professional, customer, trip, booking }) => {
+  let carNumber = 'N/A';
+  try {
+    const kyc = await CarServiceKYC.findOne({ professional: professional._id, status: 'approved' });
+    if (kyc) carNumber = kyc.carNumber;
+  } catch (err) {
+    console.error('[notification] Failed to fetch car number for KYC details:', err.message);
+  }
+
+  return Promise.allSettled([
+    sendEmail({
+      to: professional?.email,
+      subject: `New car trip seat booked · Helper`,
+      html: wrapEmail(
+        'New seat booking',
+        `
+        <p>Hi ${professional?.name || 'there'},</p>
+        <p>A customer (${customer?.name || 'User'}) has booked seats on your trip from <strong>${trip.source}</strong> to <strong>${trip.destination}</strong>.</p>
+        <p><strong>Seats Booked:</strong></p>
+        <ul>
+          ${booking.seatsOutbound > 0 ? `<li>Outbound: ${booking.seatsOutbound} seat(s)</li>` : ''}
+          ${booking.seatsReturn > 0 ? `<li>Return: ${booking.seatsReturn} seat(s)</li>` : ''}
+        </ul>
+        <br/>
+        <p>Best regards,</p>
+        <p>The Helper Team</p>
+        `
+      ),
+    }),
+    sendSMS({
+      to: professional?.phone,
+      body: `Helper: New seat booking for your trip ${trip.source} -> ${trip.destination}. Check your dashboard.`,
+    }),
+    sendEmail({
+      to: customer?.email,
+      subject: `Your car trip booking is confirmed! · Helper`,
+      html: wrapEmail(
+        'Trip Booking Confirmed',
+        `
+        <p>Hi ${customer?.name || 'there'},</p>
+        <p>Your car trip booking has been successfully confirmed and paid! Here are your booking and trip details:</p>
+        
+        <table style="width: 100%; border-collapse: collapse; margin: 15px 0; text-align: left;">
+          <tr style="background-color: #f8f9fa;">
+            <th style="padding: 8px; border: 1px solid #dee2e6; width: 30%;">Booking ID</th>
+            <td style="padding: 8px; border: 1px solid #dee2e6;">${booking._id}</td>
+          </tr>
+          <tr>
+            <th style="padding: 8px; border: 1px solid #dee2e6;">Route</th>
+            <td style="padding: 8px; border: 1px solid #dee2e6;"><strong>${escapeHtml(trip.source)}</strong> to <strong>${escapeHtml(trip.destination)}</strong></td>
+          </tr>
+          <tr style="background-color: #f8f9fa;">
+            <th style="padding: 8px; border: 1px solid #dee2e6;">Departure Time</th>
+            <td style="padding: 8px; border: 1px solid #dee2e6;">${new Date(trip.departureTime).toLocaleString()}</td>
+          </tr>
+          ${trip.returnTime ? `
+          <tr>
+            <th style="padding: 8px; border: 1px solid #dee2e6;">Return Departure Time</th>
+            <td style="padding: 8px; border: 1px solid #dee2e6;">${new Date(trip.returnTime).toLocaleString()}</td>
+          </tr>
+          ` : ''}
+          <tr style="background-color: #f8f9fa;">
+            <th style="padding: 8px; border: 1px solid #dee2e6;">Seats Booked</th>
+            <td style="padding: 8px; border: 1px solid #dee2e6;">
+              ${booking.seatsOutbound > 0 ? `Outbound: ${booking.seatsOutbound} seat(s)<br/>` : ''}
+              ${booking.seatsReturn > 0 ? `Return: ${booking.seatsReturn} seat(s)` : ''}
+            </td>
+          </tr>
+          <tr>
+            <th style="padding: 8px; border: 1px solid #dee2e6;">Vehicle Plate Number</th>
+            <td style="padding: 8px; border: 1px solid #dee2e6;">${escapeHtml(carNumber)}</td>
+          </tr>
+          <tr style="background-color: #f8f9fa;">
+            <th style="padding: 8px; border: 1px solid #dee2e6;">Driver</th>
+            <td style="padding: 8px; border: 1px solid #dee2e6;">${escapeHtml(professional?.name)} (${escapeHtml(professional?.phone)})</td>
+          </tr>
+          <tr>
+            <th style="padding: 8px; border: 1px solid #dee2e6;">Total Paid</th>
+            <td style="padding: 8px; border: 1px solid #dee2e6;"><strong>₹${booking.totalAmount}</strong></td>
+          </tr>
+        </table>
+
+        <p>Please arrive at the starting point 15 minutes before the departure time. Contact your driver if you need help finding the vehicle.</p>
+        <p>Have a safe and comfortable trip!</p>
+        <br/>
+        <p>Best regards,</p>
+        <p>The Helper Team</p>
+        `
+      ),
+    }),
+    sendSMS({
+      to: customer?.phone,
+      body: `Helper: Your booking from ${trip.source} to ${trip.destination} is confirmed. Vehicle: ${carNumber}. Driver: ${professional?.name}.`,
+    }),
+  ]);
+};
+
+export const notifyCarBookingCancelled = ({ professional, customer, trip, booking }) =>
+  Promise.allSettled([
+    sendEmail({
+      to: professional?.email,
+      subject: `Car trip booking cancelled by customer · Helper`,
+      html: wrapEmail(
+        'Seat booking cancelled',
+        `
+        <p>Hi ${professional?.name || 'there'},</p>
+        <p>Customer ${customer?.name || 'User'} has cancelled their seat booking for your trip from <strong>${escapeHtml(trip.source)}</strong> to <strong>${escapeHtml(trip.destination)}</strong>.</p>
+        <p>The seats have been added back to your available pool.</p>
+        <br/>
+        <p>Best regards,</p>
+        <p>The Helper Team</p>
+        `
+      ),
+    }),
+    sendSMS({
+      to: professional?.phone,
+      body: `Helper: Booking cancelled for your trip ${trip.source} -> ${trip.destination} by customer.`,
+    }),
+  ]);
+
+export const notifyCarTripCancelled = ({ customer, professional, trip }) =>
+  Promise.allSettled([
+    sendEmail({
+      to: customer?.email,
+      subject: `Car trip cancelled by driver · Helper`,
+      html: wrapEmail(
+        'Trip Cancelled Notice',
+        `
+        <p>Hi ${customer?.name || 'there'},</p>
+        <p>We regret to inform you that your scheduled trip from <strong>${escapeHtml(trip.source)}</strong> to <strong>${escapeHtml(trip.destination)}</strong> on ${new Date(trip.departureTime).toLocaleString()} has been cancelled by the driver (${professional?.name}).</p>
+        <p>A full refund has been initiated to your original payment method.</p>
+        <br/>
+        <p>Best regards,</p>
+        <p>The Helper Team</p>
+        `
+      ),
+    }),
+    sendSMS({
+      to: customer?.phone,
+      body: `Helper: Your trip ${trip.source} -> ${trip.destination} has been cancelled by the driver. A full refund has been initiated.`,
+    }),
+  ]);

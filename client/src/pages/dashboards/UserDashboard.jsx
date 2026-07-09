@@ -29,7 +29,9 @@ export default function UserDashboard() {
         <PillButton variant="solid" to="/me/wallet">
           Wallet →
         </PillButton>
-        <PillButton to="/services">Browse services</PillButton>
+        <PillButton variant="solid" to="/services">
+          Browse services →
+        </PillButton>
         <PillButton variant="solid" to="/me/profile-edit">
           Edit my profile →
         </PillButton>

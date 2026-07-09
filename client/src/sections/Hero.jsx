@@ -266,7 +266,7 @@ export default function Hero() {
   const handleTileClick = (tile) => {
     const modal = SUBCATEGORY_ENTRIES[tile.label];
     if (modal) setModalData(modal);
-    else navigate(`/services?cat=${tile.slug}`);
+    else navigate(`/categories/${tile.slug}`);
   };
 
   return (

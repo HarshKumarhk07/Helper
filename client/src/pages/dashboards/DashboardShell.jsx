@@ -25,6 +25,7 @@ export default function DashboardShell({ eyebrow, title, children, slices }) {
     navItems = [
       { to: '/me', label: 'Dashboard' },
       { to: '/me/bookings', label: 'My Bookings' },
+      { to: '/me/car-bookings', label: 'Car Bookings' },
       { to: '/me/orders', label: 'My Orders' },
       { to: '/me/addresses', label: 'Saved Addresses' },
       { to: '/me/wallet', label: 'My Wallet' },
@@ -39,6 +40,7 @@ export default function DashboardShell({ eyebrow, title, children, slices }) {
       { to: '/worker/earnings', label: 'Earnings' },
       { to: '/worker/availability', label: 'Availability' },
       { to: '/worker/services', label: 'My Services' },
+      { to: '/worker/car-service', label: 'Car Service' },
       { to: '/worker/kyc', label: 'KYC Verification' }
     ];
   } else if (role === 'admin') {
@@ -51,6 +53,7 @@ export default function DashboardShell({ eyebrow, title, children, slices }) {
       { to: '/admin/services', label: 'Services' },
       { to: '/admin/categories', label: 'Categories' },
       { to: '/admin/workers', label: 'Workers' },
+      { to: '/admin/car-kyc', label: 'Car Service KYC' },
       { to: '/admin/users', label: 'Users' },
       { to: '/admin/coupons', label: 'Coupons' },
       { to: '/admin/payouts', label: 'Payouts' },

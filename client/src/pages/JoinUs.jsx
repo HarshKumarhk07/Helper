@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -11,6 +12,7 @@ import {
   Package,
   ArrowRight,
 } from 'lucide-react';
+import JoinApply from './JoinApply.jsx';
 
 const WORKER_POINTS = [
   { Icon: Wallet, title: 'Earn on your terms', body: 'Set your own price per service — fixed or quote-based. Keep the majority; transparent commission.' },
@@ -32,10 +34,22 @@ const STEPS = [
 ];
 
 export default function JoinUs() {
+  const [role, setRole] = useState('worker');
+
+  const scrollToForm = (roleType) => {
+    setRole(roleType);
+    const element = document.getElementById('hero-apply-form');
+    if (element) {
+      const yOffset = -100; // Offset for navbar
+      const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    }
+  };
+
   return (
     <div className="bg-paper text-ink">
       {/* Hero */}
-      <section className="relative overflow-hidden">
+      <section className="relative overflow-hidden border-b border-ink/5 bg-sand/10">
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0 -z-10 opacity-70"
@@ -44,28 +58,57 @@ export default function JoinUs() {
               'radial-gradient(60rem 60rem at 12% 0%, rgba(26,26,26,0.06), transparent 60%), radial-gradient(50rem 50rem at 100% 100%, rgba(26,26,26,0.05), transparent 55%)',
           }}
         />
-        <div className="container-velora py-16 md:py-24">
-          <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55 }} className="max-w-3xl">
-            <span className="inline-flex items-center gap-2 rounded-full border border-ink/15 bg-paper/80 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-ink/90">
-              Partner with Helper
-            </span>
-            <h1 className="mt-6 font-display text-[clamp(2.4rem,6vw,4.5rem)] font-light leading-[1.02] tracking-tightest">
-              Grow your work.
-              <span className="mt-1 block font-semibold">Join Helper.</span>
-            </h1>
-            <p className="mt-6 max-w-xl text-lg font-medium leading-relaxed text-ink/80">
-              Whether you're a skilled professional looking for steady work or a brand ready to reach
-              more customers — Helper gives you the platform, the trust, and the tools.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link to="/join/apply?role=worker" className="inline-flex items-center gap-2 rounded-full bg-ink px-6 py-3 text-sm font-semibold text-paper transition hover:opacity-90">
-                <Briefcase size={16} /> Join as a professional
-              </Link>
-              <Link to="/join/apply?role=brand" className="inline-flex items-center gap-2 rounded-full border border-ink/20 px-6 py-3 text-sm font-semibold text-ink transition hover:bg-ink/5">
-                <Building2 size={16} /> Register your brand
-              </Link>
+        <div className="container-velora py-16 md:py-24 px-6 md:px-10">
+          <div className="grid gap-12 lg:grid-cols-2 lg:gap-16 items-center">
+            {/* Left Column — Value Proposition */}
+            <motion.div
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.55 }}
+              className="flex flex-col justify-center text-left"
+            >
+              <span className="self-start inline-flex items-center gap-2 rounded-full border border-ink/15 bg-paper/80 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-ink/90">
+                Partner with Helper
+              </span>
+              <h1 className="mt-6 font-display text-[clamp(2.4rem,6vw,4.2rem)] font-light leading-[1.02] tracking-tightest">
+                Grow your work.
+                <span className="mt-1 block font-semibold">Join Helper.</span>
+              </h1>
+              <p className="mt-6 max-w-xl text-base md:text-lg font-normal leading-relaxed text-ink/75">
+                Whether you're a skilled professional looking for steady work or a brand ready to reach
+                more customers — Helper gives you the platform, the trust, and the tools to succeed.
+              </p>
+
+              {/* Interactive Form Toggles in Hero */}
+              <div className="mt-8 flex flex-wrap gap-3">
+                <button
+                  onClick={() => setRole('worker')}
+                  className={`inline-flex items-center gap-2 rounded-full px-5 py-3 text-xs font-semibold uppercase tracking-wider transition duration-300 cursor-pointer shadow-sm ${
+                    role === 'worker'
+                      ? 'bg-ink text-paper'
+                      : 'border border-ink/20 bg-paper/50 text-ink/80 hover:bg-ink/5'
+                  }`}
+                >
+                  <Briefcase size={14} /> Join as a professional
+                </button>
+                <button
+                  onClick={() => setRole('brand')}
+                  className={`inline-flex items-center gap-2 rounded-full px-5 py-3 text-xs font-semibold uppercase tracking-wider transition duration-300 cursor-pointer shadow-sm ${
+                    role === 'brand'
+                      ? 'bg-ink text-paper'
+                      : 'border border-ink/20 bg-paper/50 text-ink/80 hover:bg-ink/5'
+                  }`}
+                >
+                  <Building2 size={14} /> Register your brand
+                </button>
+              </div>
+            </motion.div>
+
+            {/* Right Column — Integrated KYC / Apply Form */}
+            <div id="hero-apply-form" className="w-full flex justify-center lg:justify-end scroll-mt-28">
+              <JoinApply inline={true} role={role} setRole={setRole} />
             </div>
-          </motion.div>
+          </div>
         </div>
       </section>
 
@@ -88,9 +131,12 @@ export default function JoinUs() {
           ))}
         </div>
         <div className="mt-6">
-          <Link to="/join/apply?role=worker" className="inline-flex items-center gap-2 text-sm font-semibold text-ink underline-offset-4 hover:underline">
+          <button
+            onClick={() => scrollToForm('worker')}
+            className="inline-flex items-center gap-2 text-sm font-semibold text-ink underline underline-offset-4 hover:opacity-85 cursor-pointer"
+          >
             Apply as a professional <ArrowRight size={15} />
-          </Link>
+          </button>
         </div>
       </section>
 
@@ -114,9 +160,12 @@ export default function JoinUs() {
             ))}
           </div>
           <div className="mt-6 flex flex-wrap items-center gap-4">
-            <Link to="/join/apply?role=brand" className="inline-flex items-center gap-2 text-sm font-semibold text-ink underline-offset-4 hover:underline">
+            <button
+              onClick={() => scrollToForm('brand')}
+              className="inline-flex items-center gap-2 text-sm font-semibold text-ink underline underline-offset-4 hover:opacity-85 cursor-pointer"
+            >
               Register your brand <ArrowRight size={15} />
-            </Link>
+            </button>
             <Link to="/brand/pricing" className="text-sm font-medium text-[#13294B] underline-offset-4 hover:underline">
               View brand pricing & commission
             </Link>
@@ -143,12 +192,18 @@ export default function JoinUs() {
             <p className="mt-1 text-sm text-paper/70">It takes a few minutes. Verification is usually within 24 hours.</p>
           </div>
           <div className="flex flex-wrap gap-3">
-            <Link to="/join/apply?role=worker" className="inline-flex items-center gap-2 rounded-full bg-paper px-5 py-2.5 text-sm font-semibold text-ink transition hover:opacity-90">
-              <Briefcase size={16} /> Join as pro
-            </Link>
-            <Link to="/join/apply?role=brand" className="inline-flex items-center gap-2 rounded-full border border-paper/30 px-5 py-2.5 text-sm font-semibold text-paper transition hover:bg-paper/10">
+            <button
+              onClick={() => scrollToForm('worker')}
+              className="inline-flex items-center gap-2 rounded-full bg-paper px-5 py-2.5 text-sm font-semibold text-ink transition hover:opacity-90 cursor-pointer"
+            >
+              <Briefcase size={16} /> Join as professional
+            </button>
+            <button
+              onClick={() => scrollToForm('brand')}
+              className="inline-flex items-center gap-2 rounded-full border border-paper/30 px-5 py-2.5 text-sm font-semibold text-paper transition hover:bg-paper/10 cursor-pointer"
+            >
               <Building2 size={16} /> Join as brand
-            </Link>
+            </button>
           </div>
         </div>
       </section>

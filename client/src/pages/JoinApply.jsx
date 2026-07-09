@@ -54,11 +54,13 @@ const KYC_FIELDS = [
 ];
 const WORKER_STEPS = ['Account', 'Details', 'Verify'];
 
-export default function JoinApply() {
+export default function JoinApply({ inline = false, role: customRole, setRole: customSetRole }) {
   const { signup, logout, isAuthenticated, bootstrapping } = useAuth();
   const navigate = useNavigate();
   const query = new URLSearchParams(window.location.search);
-  const [role, setRole] = useState(query.get('role') === 'brand' ? 'brand' : 'worker');
+  const [internalRole, setInternalRole] = useState(query.get('role') === 'brand' ? 'brand' : 'worker');
+  const role = customRole !== undefined ? customRole : internalRole;
+  const setRole = customSetRole !== undefined ? customSetRole : setInternalRole;
 
   const [step, setStep] = useState(0);
   const [form, setForm] = useState({ name: '', email: '', phone: '', password: '' });
@@ -86,7 +88,40 @@ export default function JoinApply() {
   }, [form.email, form.password]);
 
   if (bootstrapping) return <LoadingScreen />;
-  if (isAuthenticated && !skipRedirect.current) return <Navigate to="/dashboard" replace />;
+
+  if (isAuthenticated && !skipRedirect.current) {
+    return (
+      <div className="w-full max-w-[520px] mx-auto text-center p-8 bg-paper/95 rounded-[28px] border border-ink/10 shadow-card">
+        <div className="flex justify-center mb-4">
+          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 text-amber-700">
+            <UserIcon size={24} />
+          </span>
+        </div>
+        <h3 className="text-xl font-semibold text-ink mb-2">Already signed in</h3>
+        <p className="text-sm text-ink/65 mb-6 leading-relaxed">
+          You are currently signed in. To apply as a professional or register a brand, you must register with another ID. Please sign out first.
+        </p>
+        <div className="flex flex-col gap-3">
+          <button
+            onClick={() => {
+              logout().then(() => {
+                toast.success('Signed out. You can now apply.');
+              });
+            }}
+            className="w-full rounded-full bg-ink py-3 text-sm font-semibold text-paper hover:opacity-90 transition cursor-pointer"
+          >
+            Sign out & register new account
+          </button>
+          <Link
+            to="/dashboard"
+            className="w-full rounded-full border border-ink/15 py-3 text-sm font-semibold text-ink/75 hover:bg-ink/5 transition text-center"
+          >
+            Go to dashboard
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   const isWorker = role === 'worker';
 
@@ -216,225 +251,239 @@ export default function JoinApply() {
     navigate('/', { replace: true });
   };
 
-  return (
-    <>
-      <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 bg-paper" />
-      <div
-        aria-hidden
-        className="pointer-events-none fixed inset-0 -z-10 opacity-70"
-        style={{
-          backgroundImage:
-            'radial-gradient(60rem 60rem at 12% 0%, rgba(26,26,26,0.06), transparent 60%), radial-gradient(50rem 50rem at 100% 100%, rgba(26,26,26,0.05), transparent 55%)',
-        }}
-      />
+  const innerCard = (
+    <motion.div
+      initial={inline ? {} : { opacity: 0, y: 16 }}
+      animate={inline ? {} : { opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+      className="w-full max-w-[520px]"
+    >
+      <div className="overflow-hidden rounded-[28px] border border-ink/10 bg-paper/95 shadow-card backdrop-blur-xl">
+        <div className="px-6 pt-6 pb-1 sm:px-8 sm:pt-8">
+          <div className="text-[11px] font-medium uppercase tracking-[0.18em] text-ink/55">Join Helper</div>
+          <h2 className="mt-1 text-[26px] font-semibold leading-tight tracking-tight text-ink">
+            {step === 0 && (isWorker ? 'Apply as a professional' : 'Register your brand')}
+            {step === 1 && 'Your professional details'}
+            {step === 2 && 'Identity verification'}
+          </h2>
 
-      <section className="relative flex min-h-[100dvh] items-center justify-center px-4 sm:px-6" style={{ paddingTop: 'calc(6rem + env(safe-area-inset-top))', paddingBottom: 'calc(2.5rem + env(safe-area-inset-bottom))' }}>
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-          className="w-full max-w-[520px]"
-        >
-          <div className="overflow-hidden rounded-[28px] border border-ink/10 bg-paper/95 shadow-card backdrop-blur-xl">
-            <div className="px-6 pt-6 pb-1 sm:px-8 sm:pt-8">
-              <div className="text-[11px] font-medium uppercase tracking-[0.18em] text-ink/55">Join Helper</div>
-              <h2 className="mt-1 text-[26px] font-semibold leading-tight tracking-tight text-ink">
-                {step === 0 && (isWorker ? 'Apply as a professional' : 'Register your brand')}
-                {step === 1 && 'Your professional details'}
-                {step === 2 && 'Identity verification'}
-              </h2>
+          {/* Role toggle (only on step 0) */}
+          {step === 0 && (
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => switchRole('worker')}
+                className={`inline-flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2.5 text-xs font-semibold transition ${
+                  isWorker ? 'border-ink bg-ink text-paper' : 'border-ink/15 bg-sand/20 text-ink/75 hover:bg-sand/40'
+                }`}
+              >
+                <Briefcase size={14} /> Professional / Worker
+              </button>
+              <button
+                type="button"
+                onClick={() => switchRole('brand')}
+                className={`inline-flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2.5 text-xs font-semibold transition ${
+                  !isWorker ? 'border-ink bg-ink text-paper' : 'border-ink/15 bg-sand/20 text-ink/75 hover:bg-sand/40'
+                }`}
+              >
+                <Building2 size={14} /> Brand / Company
+              </button>
+            </div>
+          )}
 
-              {/* Role toggle (only on step 0) */}
-              {step === 0 && (
-                <div className="mt-4 grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => switchRole('worker')}
-                    className={`inline-flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2.5 text-xs font-semibold transition ${
-                      isWorker ? 'border-ink bg-ink text-paper' : 'border-ink/15 bg-sand/20 text-ink/75 hover:bg-sand/40'
-                    }`}
-                  >
-                    <Briefcase size={14} /> Professional / Worker
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => switchRole('brand')}
-                    className={`inline-flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2.5 text-xs font-semibold transition ${
-                      !isWorker ? 'border-ink bg-ink text-paper' : 'border-ink/15 bg-sand/20 text-ink/75 hover:bg-sand/40'
-                    }`}
-                  >
-                    <Building2 size={14} /> Brand / Company
-                  </button>
+          {/* Worker step indicator */}
+          {isWorker && (
+            <div className="mt-4 flex items-center gap-2">
+              {WORKER_STEPS.map((label, i) => (
+                <div key={label} className="flex flex-1 items-center gap-2">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold transition ${
+                        i < step ? 'bg-emerald-500 text-white' : i === step ? 'bg-ink text-paper' : 'bg-ink/10 text-ink/50'
+                      }`}
+                    >
+                      {i < step ? <Check size={13} /> : i + 1}
+                    </span>
+                    <span className={`hidden text-[11px] font-semibold uppercase tracking-wider sm:inline ${i === step ? 'text-ink' : 'text-ink/45'}`}>
+                      {label}
+                    </span>
+                  </div>
+                  {i < WORKER_STEPS.length - 1 && <div className="h-px flex-1 bg-ink/10" />}
                 </div>
-              )}
+              ))}
+            </div>
+          )}
+        </div>
 
-              {/* Worker step indicator */}
-              {isWorker && (
-                <div className="mt-4 flex items-center gap-2">
-                  {WORKER_STEPS.map((label, i) => (
-                    <div key={label} className="flex flex-1 items-center gap-2">
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold transition ${
-                            i < step ? 'bg-emerald-500 text-white' : i === step ? 'bg-ink text-paper' : 'bg-ink/10 text-ink/50'
-                          }`}
-                        >
-                          {i < step ? <Check size={13} /> : i + 1}
-                        </span>
-                        <span className={`hidden text-[11px] font-semibold uppercase tracking-wider sm:inline ${i === step ? 'text-ink' : 'text-ink/45'}`}>
-                          {label}
-                        </span>
-                      </div>
-                      {i < WORKER_STEPS.length - 1 && <div className="h-px flex-1 bg-ink/10" />}
-                    </div>
-                  ))}
+        {/* STEP 0 — account */}
+        {step === 0 && (
+          <form onSubmit={onSubmitAccount} className="space-y-4 px-6 pb-6 pt-5 sm:px-8 sm:pb-8">
+            <Field label="Full name" type="text" value={form.name} onChange={(v) => setForm((f) => ({ ...f, name: v }))} placeholder="First and last name" autoComplete="name" required leadingIcon={<UserIcon size={16} />} />
+            <Field label="Email" type="email" value={form.email} onChange={(v) => setForm((f) => ({ ...f, email: v }))} placeholder="you@example.com" autoComplete="email" required leadingIcon={<Mail size={16} />} error={!!fieldErrors.email} helper={fieldErrors.email} />
+            <Field label="Phone" helper="We notify you here about your application" type="tel" value={form.phone} onChange={(v) => setForm((f) => ({ ...f, phone: v }))} placeholder="+91 XXXXX XXXXX" autoComplete="tel" leadingIcon={<Phone size={16} />} />
+
+            {!isWorker && (
+              <>
+                <Field label="Company name" type="text" value={brandForm.companyName} onChange={(v) => setBrandForm((f) => ({ ...f, companyName: v }))} placeholder="Your registered company name" required leadingIcon={<Building2 size={16} />} />
+                <Field label="Business type" type="text" value={brandForm.businessType} onChange={(v) => setBrandForm((f) => ({ ...f, businessType: v }))} placeholder="e.g. Appliances, Cleaning supplies" leadingIcon={<Briefcase size={16} />} />
+                <div className="space-y-1.5">
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-ink/65">Company address</label>
+                  <textarea value={brandForm.companyAddress} onChange={(e) => setBrandForm((f) => ({ ...f, companyAddress: e.target.value }))} rows={2} required placeholder="Registered business address" className="w-full resize-none rounded-xl border border-ink/15 bg-transparent p-3 text-sm focus:border-ink focus:outline-none" />
+                </div>
+                <p className="text-[10px] text-ink/50">
+                  See our transparent{' '}
+                  <Link to="/brand/pricing" className="font-semibold text-[#13294B] underline">Brand Pricing & Commission</Link>.
+                </p>
+              </>
+            )}
+
+            <div className="space-y-2">
+              <Field label="Password" type={showPassword ? 'text' : 'password'} value={form.password} onChange={(v) => setForm((f) => ({ ...f, password: v }))} placeholder="Minimum 8 characters" autoComplete="new-password" required leadingIcon={<Lock size={16} />} error={!!fieldErrors.password} helper={fieldErrors.password}
+                trailing={
+                  <button type="button" onClick={() => setShowPassword((v) => !v)} className="text-ink/45 transition-colors hover:text-ink" tabIndex={-1}>
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                }
+              />
+              {form.password && (
+                <div className="flex items-center gap-2">
+                  <div className="grid h-1.5 flex-1 grid-cols-5 gap-1">
+                    {[0, 1, 2, 3, 4].map((i) => (
+                      <span key={i} className={`rounded-full transition-colors duration-300 ${strength.score > i ? strengthBar[Math.min(strength.score, strengthBar.length - 1)] : 'bg-ink/10'}`} />
+                    ))}
+                  </div>
+                  <span className="w-16 text-right text-[10px] font-medium uppercase tracking-[0.16em] text-ink/55">{strength.label}</span>
                 </div>
               )}
             </div>
 
-            {/* STEP 0 — account */}
-            {step === 0 && (
-              <form onSubmit={onSubmitAccount} className="space-y-4 px-6 pb-6 pt-5 sm:px-8 sm:pb-8">
-                <Field label="Full name" type="text" value={form.name} onChange={(v) => setForm((f) => ({ ...f, name: v }))} placeholder="First and last name" autoComplete="name" required leadingIcon={<UserIcon size={16} />} />
-                <Field label="Email" type="email" value={form.email} onChange={(v) => setForm((f) => ({ ...f, email: v }))} placeholder="you@example.com" autoComplete="email" required leadingIcon={<Mail size={16} />} error={!!fieldErrors.email} helper={fieldErrors.email} />
-                <Field label="Phone" helper="We notify you here about your application" type="tel" value={form.phone} onChange={(v) => setForm((f) => ({ ...f, phone: v }))} placeholder="+91 XXXXX XXXXX" autoComplete="tel" leadingIcon={<Phone size={16} />} />
+            <label className="group flex cursor-pointer select-none items-start gap-2 pt-1">
+              <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="mt-0.5 h-4 w-4 accent-ink" />
+              <span className="text-xs leading-relaxed text-ink/65">
+                I agree to the{' '}
+                <Link to="/terms" className="font-medium text-ink underline-offset-4 hover:underline">Terms</Link> and{' '}
+                <Link to="/privacy" className="font-medium text-ink underline-offset-4 hover:underline">Privacy Policy</Link>.
+              </span>
+            </label>
 
-                {!isWorker && (
-                  <>
-                    <Field label="Company name" type="text" value={brandForm.companyName} onChange={(v) => setBrandForm((f) => ({ ...f, companyName: v }))} placeholder="Your registered company name" required leadingIcon={<Building2 size={16} />} />
-                    <Field label="Business type" type="text" value={brandForm.businessType} onChange={(v) => setBrandForm((f) => ({ ...f, businessType: v }))} placeholder="e.g. Appliances, Cleaning supplies" leadingIcon={<Briefcase size={16} />} />
-                    <div className="space-y-1.5">
-                      <label className="block text-[10px] font-bold uppercase tracking-wider text-ink/65">Company address</label>
-                      <textarea value={brandForm.companyAddress} onChange={(e) => setBrandForm((f) => ({ ...f, companyAddress: e.target.value }))} rows={2} required placeholder="Registered business address" className="w-full resize-none rounded-xl border border-ink/15 bg-transparent p-3 text-sm focus:border-ink focus:outline-none" />
+            {error && <ErrorBanner>{error}</ErrorBanner>}
+
+            <PrimaryCTA loading={submitting} label={isWorker ? 'Continue' : 'Create brand account'} disabled={!accountValid} />
+
+            <div className="border-t border-ink/10 pt-5 text-center text-sm text-ink/75">
+              Already registered?{' '}
+              <Link to="/login" className="font-semibold text-ink underline-offset-4 hover:underline">Sign in</Link>
+            </div>
+          </form>
+        )}
+
+        {/* STEP 1 — professional details (worker) */}
+        {step === 1 && (
+          <form onSubmit={goToKyc} className="space-y-4 px-6 pb-6 pt-5 sm:px-8 sm:pb-8">
+            <Field label="Years of working experience" type="number" value={proForm.experienceYears} onChange={(v) => setProForm((f) => ({ ...f, experienceYears: v.replace(/[^\d]/g, '').slice(0, 2) }))} placeholder="e.g. 5" required leadingIcon={<Briefcase size={16} />} />
+            <div className="space-y-1.5">
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-ink/65">Residential address</label>
+              <div className="relative">
+                <span className="pointer-events-none absolute left-3 top-3 text-ink/45"><MapPin size={16} /></span>
+                <textarea value={proForm.address} onChange={(e) => setProForm((f) => ({ ...f, address: e.target.value }))} placeholder="House / street, area, city, state, pincode" rows={3} required className="w-full resize-none rounded-xl border border-ink/15 bg-transparent py-3 pl-10 pr-3 text-sm focus:border-ink focus:outline-none" />
+              </div>
+            </div>
+            <Field label="Education" helper="Optional" type="text" value={proForm.education} onChange={(v) => setProForm((f) => ({ ...f, education: v }))} placeholder="e.g. High school, ITI, Diploma" leadingIcon={<GraduationCap size={16} />} />
+
+            {error && <ErrorBanner>{error}</ErrorBanner>}
+
+            <div className="flex items-center gap-3 pt-1">
+              <button type="button" onClick={() => { setError(''); setStep(0); }} className="inline-flex items-center gap-1.5 rounded-full border border-ink/15 px-4 py-2.5 text-sm font-semibold text-ink/75 transition hover:bg-ink/5">
+                <ArrowLeft size={15} /> Back
+              </button>
+              <div className="flex-1"><PrimaryCTA label="Continue" disabled={!detailsValid} /></div>
+            </div>
+          </form>
+        )}
+
+        {/* STEP 2 — KYC (worker) */}
+        {step === 2 && (
+          <form onSubmit={onSubmitWorker} className="space-y-5 px-6 pb-6 pt-5 sm:px-8 sm:pb-8">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-ink/65">Aadhaar number</label>
+                <input inputMode="numeric" maxLength={12} value={aadhaarNumber} onChange={(e) => setAadhaarNumber(e.target.value.replace(/\D/g, '').slice(0, 12))} placeholder="12-digit Aadhaar" className="mt-2 w-full rounded-xl border border-ink/15 bg-transparent p-3 text-sm focus:border-ink focus:outline-none" />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-ink/65">PAN number</label>
+                <input maxLength={10} value={panNumber} onChange={(e) => setPanNumber(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10))} placeholder="ABCDE1234F" className="mt-2 w-full rounded-xl border border-ink/15 bg-transparent p-3 text-sm uppercase focus:border-ink focus:outline-none" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              {KYC_FIELDS.map(({ key, label, required }) => {
+                const preview = previews[key];
+                const isPdfPreview = preview === 'pdf';
+                return (
+                  <div key={key} className="flex flex-col rounded-2xl border-2 border-dashed border-ink/20 p-3">
+                    <div className="mb-2 flex items-center justify-between text-[10px] uppercase tracking-wider text-ink/60">
+                      <span>{label} {required && <span className="text-red-500">*</span>}</span>
+                      <Upload size={12} />
                     </div>
-                    <p className="text-[10px] text-ink/50">
-                      See our transparent{' '}
-                      <Link to="/brand/pricing" className="font-semibold text-[#13294B] underline">Brand Pricing & Commission</Link>.
-                    </p>
-                  </>
-                )}
-
-                <div className="space-y-2">
-                  <Field label="Password" type={showPassword ? 'text' : 'password'} value={form.password} onChange={(v) => setForm((f) => ({ ...f, password: v }))} placeholder="Minimum 8 characters" autoComplete="new-password" required leadingIcon={<Lock size={16} />} error={!!fieldErrors.password} helper={fieldErrors.password}
-                    trailing={
-                      <button type="button" onClick={() => setShowPassword((v) => !v)} className="text-ink/45 transition-colors hover:text-ink" tabIndex={-1}>
-                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                      </button>
-                    }
-                  />
-                  {form.password && (
-                    <div className="flex items-center gap-2">
-                      <div className="grid h-1.5 flex-1 grid-cols-5 gap-1">
-                        {[0, 1, 2, 3, 4].map((i) => (
-                          <span key={i} className={`rounded-full transition-colors duration-300 ${strength.score > i ? strengthBar[Math.min(strength.score, strengthBar.length - 1)] : 'bg-ink/10'}`} />
-                        ))}
-                      </div>
-                      <span className="w-16 text-right text-[10px] font-medium uppercase tracking-[0.16em] text-ink/55">{strength.label}</span>
-                    </div>
-                  )}
-                </div>
-
-                <label className="group flex cursor-pointer select-none items-start gap-2 pt-1">
-                  <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="mt-0.5 h-4 w-4 accent-ink" />
-                  <span className="text-xs leading-relaxed text-ink/65">
-                    I agree to the{' '}
-                    <Link to="/terms" className="font-medium text-ink underline-offset-4 hover:underline">Terms</Link> and{' '}
-                    <Link to="/privacy" className="font-medium text-ink underline-offset-4 hover:underline">Privacy Policy</Link>.
-                  </span>
-                </label>
-
-                {error && <ErrorBanner>{error}</ErrorBanner>}
-
-                <PrimaryCTA loading={submitting} label={isWorker ? 'Continue' : 'Create brand account'} disabled={!accountValid} />
-
-                <div className="border-t border-ink/10 pt-5 text-center text-sm text-ink/75">
-                  Already registered?{' '}
-                  <Link to="/login" className="font-semibold text-ink underline-offset-4 hover:underline">Sign in</Link>
-                </div>
-              </form>
-            )}
-
-            {/* STEP 1 — professional details (worker) */}
-            {step === 1 && (
-              <form onSubmit={goToKyc} className="space-y-4 px-6 pb-6 pt-5 sm:px-8 sm:pb-8">
-                <Field label="Years of working experience" type="number" value={proForm.experienceYears} onChange={(v) => setProForm((f) => ({ ...f, experienceYears: v.replace(/[^\d]/g, '').slice(0, 2) }))} placeholder="e.g. 5" required leadingIcon={<Briefcase size={16} />} />
-                <div className="space-y-1.5">
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-ink/65">Residential address</label>
-                  <div className="relative">
-                    <span className="pointer-events-none absolute left-3 top-3 text-ink/45"><MapPin size={16} /></span>
-                    <textarea value={proForm.address} onChange={(e) => setProForm((f) => ({ ...f, address: e.target.value }))} placeholder="House / street, area, city, state, pincode" rows={3} required className="w-full resize-none rounded-xl border border-ink/15 bg-transparent py-3 pl-10 pr-3 text-sm focus:border-ink focus:outline-none" />
-                  </div>
-                </div>
-                <Field label="Education" helper="Optional" type="text" value={proForm.education} onChange={(v) => setProForm((f) => ({ ...f, education: v }))} placeholder="e.g. High school, ITI, Diploma" leadingIcon={<GraduationCap size={16} />} />
-
-                {error && <ErrorBanner>{error}</ErrorBanner>}
-
-                <div className="flex items-center gap-3 pt-1">
-                  <button type="button" onClick={() => { setError(''); setStep(0); }} className="inline-flex items-center gap-1.5 rounded-full border border-ink/15 px-4 py-2.5 text-sm font-semibold text-ink/75 transition hover:bg-ink/5">
-                    <ArrowLeft size={15} /> Back
-                  </button>
-                  <div className="flex-1"><PrimaryCTA label="Continue" disabled={!detailsValid} /></div>
-                </div>
-              </form>
-            )}
-
-            {/* STEP 2 — KYC (worker) */}
-            {step === 2 && (
-              <form onSubmit={onSubmitWorker} className="space-y-5 px-6 pb-6 pt-5 sm:px-8 sm:pb-8">
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-ink/65">Aadhaar number</label>
-                    <input inputMode="numeric" maxLength={12} value={aadhaarNumber} onChange={(e) => setAadhaarNumber(e.target.value.replace(/\D/g, '').slice(0, 12))} placeholder="12-digit Aadhaar" className="mt-2 w-full rounded-xl border border-ink/15 bg-transparent p-3 text-sm focus:border-ink focus:outline-none" />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-ink/65">PAN number</label>
-                    <input maxLength={10} value={panNumber} onChange={(e) => setPanNumber(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10))} placeholder="ABCDE1234F" className="mt-2 w-full rounded-xl border border-ink/15 bg-transparent p-3 text-sm uppercase focus:border-ink focus:outline-none" />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  {KYC_FIELDS.map(({ key, label, required }) => {
-                    const preview = previews[key];
-                    const isPdfPreview = preview === 'pdf';
-                    return (
-                      <div key={key} className="flex flex-col rounded-2xl border-2 border-dashed border-ink/20 p-3">
-                        <div className="mb-2 flex items-center justify-between text-[10px] uppercase tracking-wider text-ink/60">
-                          <span>{label} {required && <span className="text-red-500">*</span>}</span>
-                          <Upload size={12} />
+                    <label className="relative block cursor-pointer transition hover:opacity-90">
+                      {preview ? (
+                        isPdfPreview ? (
+                          <div className="flex h-24 items-center justify-center rounded-xl bg-ink/5"><FileText size={28} className="text-ink/40" /></div>
+                        ) : (
+                          <img src={preview} alt={label} className="h-24 w-full rounded-xl object-cover" />
+                        )
+                      ) : (
+                        <div className="flex h-24 flex-col items-center justify-center rounded-xl bg-ink/5 text-[10px] text-ink/50">
+                          <Upload size={18} className="mb-1" /> Tap to upload
                         </div>
-                        <label className="relative block cursor-pointer transition hover:opacity-90">
-                          {preview ? (
-                            isPdfPreview ? (
-                              <div className="flex h-24 items-center justify-center rounded-xl bg-ink/5"><FileText size={28} className="text-ink/40" /></div>
-                            ) : (
-                              <img src={preview} alt={label} className="h-24 w-full rounded-xl object-cover" />
-                            )
-                          ) : (
-                            <div className="flex h-24 flex-col items-center justify-center rounded-xl bg-ink/5 text-[10px] text-ink/50">
-                              <Upload size={18} className="mb-1" /> Tap to upload
-                            </div>
-                          )}
-                          <input type="file" accept="image/*,application/pdf" capture={key === 'selfie' ? 'user' : undefined} onChange={(e) => handleFile(key, e.target.files?.[0])} className="absolute inset-0 cursor-pointer opacity-0" />
-                        </label>
-                        {files[key] && <div className="mt-1.5 truncate text-center text-[10px] text-ink/70">{files[key].name}</div>}
-                      </div>
-                    );
-                  })}
-                </div>
+                      )}
+                      <input type="file" accept="image/*,application/pdf" capture={key === 'selfie' ? 'user' : undefined} onChange={(e) => handleFile(key, e.target.files?.[0])} className="absolute inset-0 cursor-pointer opacity-0" />
+                    </label>
+                    {files[key] && <div className="mt-1.5 truncate text-center text-[10px] text-ink/70">{files[key].name}</div>}
+                  </div>
+                );
+              })}
+            </div>
 
-                {error && <ErrorBanner>{error}</ErrorBanner>}
+            {error && <ErrorBanner>{error}</ErrorBanner>}
 
-                <div className="flex items-center gap-3 pt-1">
-                  <button type="button" disabled={submitting} onClick={() => { setError(''); setStep(1); }} className="inline-flex items-center gap-1.5 rounded-full border border-ink/15 px-4 py-2.5 text-sm font-semibold text-ink/75 transition hover:bg-ink/5 disabled:opacity-50">
-                    <ArrowLeft size={15} /> Back
-                  </button>
-                  <div className="flex-1"><PrimaryCTA loading={submitting} label="Submit for review" /></div>
-                </div>
-              </form>
-            )}
-          </div>
-        </motion.div>
-      </section>
+            <div className="flex items-center gap-3 pt-1">
+              <button type="button" disabled={submitting} onClick={() => { setError(''); setStep(1); }} className="inline-flex items-center gap-1.5 rounded-full border border-ink/15 px-4 py-2.5 text-sm font-semibold text-ink/75 transition hover:bg-ink/5 disabled:opacity-50">
+                <ArrowLeft size={15} /> Back
+              </button>
+              <div className="flex-1"><PrimaryCTA loading={submitting} label="Submit for review" /></div>
+            </div>
+          </form>
+        )}
+      </div>
+    </motion.div>
+  );
+
+  return (
+    <>
+      {!inline && (
+        <>
+          <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 bg-paper" />
+          <div
+            aria-hidden
+            className="pointer-events-none fixed inset-0 -z-10 opacity-70"
+            style={{
+              backgroundImage:
+                'radial-gradient(60rem 60rem at 12% 0%, rgba(26,26,26,0.06), transparent 60%), radial-gradient(50rem 50rem at 100% 100%, rgba(26,26,26,0.05), transparent 55%)',
+            }}
+          />
+        </>
+      )}
+
+      {inline ? (
+        <div className="w-full flex justify-center">
+          {innerCard}
+        </div>
+      ) : (
+        <section className="relative flex min-h-[100dvh] items-center justify-center px-4 sm:px-6" style={{ paddingTop: 'calc(6rem + env(safe-area-inset-top))', paddingBottom: 'calc(2.5rem + env(safe-area-inset-bottom))' }}>
+          {innerCard}
+        </section>
+      )}
 
       {/* KYC under-review card */}
       <AnimatePresence>

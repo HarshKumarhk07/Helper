@@ -14,6 +14,7 @@ export default function ServiceCard({ service }) {
   const isFavorited = favorites.some((fav) => fav._id === service._id);
   const isPopular = (service.ratingCount || 0) >= 50;
   const isFeatured = service.isFeatured;
+  const isCarService = service.slug === 'car-trips' || service.category?.slug === 'car-trips';
 
   const handleFavorite = (e) => {
     e.preventDefault();
@@ -33,12 +34,29 @@ export default function ServiceCard({ service }) {
     });
   };
 
+  const handleCardClick = () => {
+    if (isCarService) {
+      navigate('/trips');
+    } else {
+      navigate(`/services/${service._id}`);
+    }
+  };
+
+  const handleBookClick = (e) => {
+    e.stopPropagation();
+    if (isCarService) {
+      navigate('/trips');
+    } else {
+      navigate(`/book/${service._id}`);
+    }
+  };
+
   return (
     <div className="group flex flex-col h-full w-full max-w-full min-w-0 cursor-pointer bg-paper rounded-[1.5rem] p-2.5 sm:p-3 transition-all duration-500 hover:shadow-xl hover:-translate-y-1 border border-ink/5 hover:border-ink/10 overflow-hidden">
       {/* Image container — overflow-hidden keeps every badge clipped inside */}
       <div
         className="block relative w-full overflow-hidden rounded-[1rem] bg-sand aspect-[4/5]"
-        onClick={() => navigate(`/services/${service._id}`)}
+        onClick={handleCardClick}
       >
         <img
           src={image}
@@ -98,7 +116,7 @@ export default function ServiceCard({ service }) {
 
       {/* Service Info — min-w-0 lets long names truncate instead of forcing
           the card wider than its grid cell on narrow screens. */}
-      <div className="mt-3 sm:mt-4 px-1 flex flex-col flex-1 min-w-0" onClick={() => navigate(`/services/${service._id}`)}>
+      <div className="mt-3 sm:mt-4 px-1 flex flex-col flex-1 min-w-0" onClick={handleCardClick}>
         <div className="flex-1 min-w-0 group/title">
           <div className="text-[9px] sm:text-[10px] uppercase tracking-[0.22em] font-extrabold text-ink/50 mb-1 truncate">
             {service.category?.name || 'Service'}
@@ -118,21 +136,20 @@ export default function ServiceCard({ service }) {
           </div>
 
           <div className="flex items-center gap-2 w-full sm:w-auto min-w-0">
+            {!isCarService && (
+              <button
+                type="button"
+                onClick={handleAddToCart}
+                aria-label="Add to cart"
+                title="Add to cart"
+                className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full border border-ink/15 text-ink transition-all duration-300 hover:bg-ink hover:text-paper"
+              >
+                <ShoppingCart size={15} />
+              </button>
+            )}
             <button
               type="button"
-              onClick={handleAddToCart}
-              aria-label="Add to cart"
-              title="Add to cart"
-              className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full border border-ink/15 text-ink transition-all duration-300 hover:bg-ink hover:text-paper"
-            >
-              <ShoppingCart size={15} />
-            </button>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                navigate(`/book/${service._id}`);
-              }}
+              onClick={handleBookClick}
               aria-label="Book"
               title="Book"
               className="flex flex-1 sm:flex-none min-w-0 items-center justify-center gap-1.5 text-[11px] sm:text-xs font-bold uppercase tracking-wider sm:tracking-widest text-white bg-ink rounded-full py-2 sm:py-3 px-3 sm:px-5 whitespace-nowrap hover:bg-[#13294B] transition-all duration-300 hover:shadow-lg hover:shadow-[#13294B]/20"

@@ -7,7 +7,7 @@ const COLS = [
   {
     n: '01',
     title: 'We handle it',
-    body: 'Our vetted pros arrive on time, fully equipped, and ready to work — thoroughly and safely.',
+    body: 'Our vetted professionals arrive on time, fully equipped, and ready to work — thoroughly and safely.',
     img: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80',
   },
   {

@@ -58,8 +58,11 @@ const CartPage = lazy(() => import('./pages/CartPage.jsx'));
 const CheckoutPage = lazy(() => import('./pages/CheckoutPage.jsx'));
 const Favorites = lazy(() => import('./pages/Favorites.jsx'));
 const ProfileEdit = lazy(() => import('./pages/ProfileEdit.jsx'));
+const CategoryDetail = lazy(() => import('./pages/CategoryDetail.jsx'));
+const CategoriesIndex = lazy(() => import('./pages/CategoriesIndex.jsx'));
 const TermsAndConditions = lazy(() => import('./pages/TermsAndConditions.jsx'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy.jsx'));
+const AboutUs = lazy(() => import('./pages/AboutUs.jsx'));
 
 // Admin/manager surface
 const AdminDashboard = lazy(() => import('./pages/dashboards/AdminDashboard.jsx'));
@@ -75,6 +78,10 @@ const AdminOrders = lazy(() => import('./pages/dashboards/AdminOrders.jsx'));
 const AdminFinance = lazy(() => import('./pages/dashboards/AdminFinance.jsx'));
 const AdminPayouts = lazy(() => import('./pages/dashboards/AdminPayouts.jsx'));
 const AdminSettings = lazy(() => import('./pages/dashboards/AdminSettings.jsx'));
+const WorkerCarService = lazy(() => import('./pages/dashboards/WorkerCarService.jsx'));
+const AdminCarKycQueue = lazy(() => import('./pages/dashboards/AdminCarKycQueue.jsx'));
+const CarTripsBrowse = lazy(() => import('./pages/CarTripsBrowse.jsx'));
+const CustomerCarBookings = lazy(() => import('./pages/dashboards/CustomerCarBookings.jsx'));
 const AdminCategories = lazy(() => import('./pages/dashboards/AdminCategories.jsx'));
 const AdminLocations = lazy(() => import('./pages/dashboards/AdminLocations.jsx'));
 const AdminBrandCategories = lazy(() => import('./pages/dashboards/AdminBrandCategories.jsx'));
@@ -126,7 +133,7 @@ export default function App() {
     <div className="flex min-h-screen flex-col bg-sand text-ink">
       <ScrollToTop />
       <Navbar />
-      <main className="flex-1 pt-24">
+      <main className="flex-1 pt-16 md:pt-24 bg-paper">
         <Suspense fallback={<PageFallback />}>
           <Routes>
             <Route path="/" element={<Home />} />
@@ -138,9 +145,13 @@ export default function App() {
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/terms" element={<TermsAndConditions />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/about" element={<AboutUs />} />
+            <Route path="/trips" element={<CarTripsBrowse />} />
 
             <Route path="/services" element={<ServicesIndex />} />
             <Route path="/services/:id" element={<ServiceDetail />} />
+            <Route path="/categories" element={<CategoriesIndex />} />
+            <Route path="/categories/:slug" element={<CategoryDetail />} />
             <Route path="/products" element={<ProductsIndex />} />
             <Route path="/products/:id" element={<ProductDetail />} />
             <Route
@@ -176,6 +187,7 @@ export default function App() {
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/admin/users" element={<AdminUsers />} />
               <Route path="/admin/workers" element={<AdminWorkers />} />
+              <Route path="/admin/car-kyc" element={<AdminCarKycQueue />} />
               <Route path="/admin/workers/:id" element={<AdminWorkerDetail />} />
             </Route>
 
@@ -215,6 +227,7 @@ export default function App() {
               <Route path="/worker/jobs" element={<WorkerJobs />} />
               <Route path="/worker/earnings" element={<WorkerEarnings />} />
               <Route path="/worker/kyc" element={<WorkerKyc />} />
+              <Route path="/worker/car-service" element={<WorkerCarService />} />
               <Route path="/worker/services" element={<WorkerServices />} />
               <Route path="/worker/availability" element={<WorkerAvailability />} />
               <Route path="/worker/jobs/:bookingId/nav" element={<WorkerNav />} />
@@ -224,6 +237,7 @@ export default function App() {
             <Route element={<ProtectedRoute />}>
               <Route path="/me" element={<UserDashboard />} />
               <Route path="/me/bookings" element={<UserBookings />} />
+              <Route path="/me/car-bookings" element={<CustomerCarBookings />} />
               <Route path="/me/reviews" element={<UserReviews />} />
               <Route path="/me/orders" element={<UserOrders />} />
               <Route path="/me/orders/:id" element={<UserOrderDetail />} />

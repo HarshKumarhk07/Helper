@@ -21,7 +21,7 @@ export default function Spotlight() {
             subtitle: cat.description || null,
             cta: 'Book now',
             ctaCls: 'bg-paper text-ink hover:bg-paper/90',
-            to: `/services?cat=${cat.slug}`,
+            to: `/categories/${cat.slug}`,
             image: mediaUrl(cat.image) || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=700&q=80',
             imageAlt: cat.name,
           };

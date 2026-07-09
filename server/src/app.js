@@ -32,6 +32,7 @@ import trackingRoutes from './routes/tracking.routes.js';
 import debugRoutes from './routes/debug.routes.js';
 import locationRoutes from './routes/location.routes.js';
 import faqRoutes from './routes/faq.routes.js';
+import carServiceRoutes from './routes/carService.routes.js';
 import { notFound, errorHandler } from './middleware/error.js';
 
 const app = express();
@@ -185,6 +186,7 @@ app.use('/api/tracking', trackingRoutes);
 app.use('/api/debug', debugRoutes);
 app.use('/api/locations', locationRoutes);
 app.use('/api/faqs', faqRoutes);
+app.use('/api/car-service', carServiceRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

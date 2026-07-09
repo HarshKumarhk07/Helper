@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import ServiceDetailHero from '../sections/services/ServiceDetailHero.jsx';
 
 import { getService, getServiceWorkers, getServiceReviews } from '../api/services.js';
-import { formatPrice } from '../lib/booking.js';
+import { formatPrice, getWorkerName, getWorkerAvatar } from '../lib/booking.js';
 import FadeUp from '../components/ui/FadeUp.jsx';
 import SkeletonCard from '../components/ui/SkeletonCard.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -168,6 +168,10 @@ export default function ServiceDetail() {
       getServiceReviews(id).catch(() => [])
     ])
       .then(([svc, wrkrs, revs]) => {
+        if (svc?.slug === 'car-trips' || svc?.category?.slug === 'car-trips') {
+          navigate('/trips', { replace: true });
+          return;
+        }
         setService(svc);
         setWorkers(wrkrs);
         setReviews(revs);
@@ -299,46 +303,75 @@ export default function ServiceDetail() {
             </FadeUp>
 
             <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-              {workers.map((ws, i) => (
-                <FadeUp key={ws._id} delay={i * 0.1}>
-                  <div className="bg-paper rounded-3xl p-6 border border-ink/5 flex flex-col items-center text-center hover:shadow-lg transition-shadow">
-                    <div className="w-20 h-20 rounded-full overflow-hidden mb-4 border-2 border-brand/20">
-                      {ws.worker?.avatar ? (
-                        <img src={ws.worker.avatar} alt={ws.worker?.name || 'Worker'} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full bg-ink/5 flex items-center justify-center">
-                          <UserCircle2 size={40} className="text-ink/20" />
+              {workers.map((ws, i) => {
+                const workerName = getWorkerName(ws.worker);
+                const workerAvatar = getWorkerAvatar(ws.worker);
+                return (
+                  <FadeUp key={ws._id} delay={i * 0.1}>
+                    <div className="bg-paper rounded-[2rem] p-6 border border-ink/5 flex flex-col justify-between items-center text-center h-full hover:shadow-lg transition-all duration-300">
+                      
+                      {/* Top content */}
+                      <div className="flex flex-col items-center w-full">
+                        <div className="w-20 h-20 rounded-full overflow-hidden mb-4 border-2 border-brand/20 shrink-0">
+                          {workerAvatar ? (
+                            <img src={workerAvatar} alt={workerName} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full bg-ink/5 flex items-center justify-center">
+                              <UserCircle2 size={40} className="text-ink/20" />
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                    {ws.worker?.isRecommended && (
-                      <div className="text-[10px] uppercase tracking-widest font-bold text-brand bg-brand/10 px-3 py-1 rounded-full mb-3">
-                        Best Service Provider
+                        
+                        {ws.worker?.isRecommended && (
+                          <div className="text-[10px] uppercase tracking-widest font-bold text-brand bg-brand/10 px-3 py-1 rounded-full mb-3 shrink-0">
+                            Best Service Provider
+                          </div>
+                        )}
+                        
+                        <h4 className="text-base font-bold text-ink mb-1 line-clamp-1">
+                          {workerName}
+                        </h4>
+                        
+                        {ws.worker?.phone && (
+                          <p className="text-xs text-ink/55 mb-2">{ws.worker.phone}</p>
+                        )}
+                        
+                        <div className="flex items-center justify-center gap-1 mb-4">
+                          {Array.from({ length: 5 }).map((_, idx) => (
+                            <Star 
+                              key={idx} 
+                              size={13} 
+                              className={idx < Math.round(ws.worker?.ratingAvg || 4.5) ? "text-brand fill-brand" : "text-ink/10"} 
+                            />
+                          ))}
+                        </div>
                       </div>
-                    )}
-                    <h4 className="text-lg font-bold text-ink mb-1">
-                      {ws.worker?.name || 'Worker'}
-                    </h4>
-                    {ws.worker?.phone && (
-                      <p className="text-sm text-ink/60 mb-2">{ws.worker.phone}</p>
-                    )}
-                    <div className="flex items-center justify-center gap-1 mb-4">
-                      {Array.from({ length: 5 }).map((_, idx) => (
-                        <Star 
-                          key={idx} 
-                          size={14} 
-                          className={idx < Math.round(ws.worker?.ratingAvg || 0) ? "text-brand fill-brand" : "text-ink/10"} 
-                        />
-                      ))}
-                    </div>
-                    {ws.pricingType === 'fixed' && ws.amount > 0 && (
-                      <div className="text-sm font-medium text-ink bg-sand px-3 py-1.5 rounded-full w-full">
-                        Charges {formatPrice(ws.amount)}
+
+                      {/* Bottom pricing and action */}
+                      <div className="w-full mt-auto space-y-3">
+                        {ws.pricingType === 'fixed' && ws.amount > 0 ? (
+                          <div className="text-xs font-semibold text-ink/70 bg-sand px-3 py-1.5 rounded-full w-full">
+                            Charges {formatPrice(ws.amount)}
+                          </div>
+                        ) : (
+                          <div className="text-xs font-semibold text-ink/70 bg-sand px-3 py-1.5 rounded-full w-full">
+                            Quote Required
+                          </div>
+                        )}
+                        
+                        <Link
+                          to={`/book/${service._id}?worker=${ws.worker?._id}`}
+                          className="inline-flex items-center justify-center gap-2 rounded-full w-full bg-ink text-paper py-2.5 text-xs font-bold uppercase tracking-wider transition hover:bg-brand hover:text-ink shadow-sm"
+                        >
+                          Book Professional
+                          <ArrowUpRight size={13} strokeWidth={2.5} />
+                        </Link>
                       </div>
-                    )}
-                  </div>
-                </FadeUp>
-              ))}
+
+                    </div>
+                  </FadeUp>
+                );
+              })}
             </div>
           </div>
         </section>

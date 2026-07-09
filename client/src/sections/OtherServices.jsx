@@ -43,7 +43,7 @@ export default function OtherServices() {
           {rows.map((r, i) => (
             <FadeUp key={r.slug || r.name}>
               <Link
-                to={r.slug ? `/services?cat=${r.slug}` : '/services'}
+                to={r.slug ? `/categories/${r.slug}` : '/services'}
                 className="group flex items-center gap-5 py-6 transition hover:bg-sand/40"
               >
                 <span className="w-8 shrink-0 text-sm font-semibold text-ink/40">

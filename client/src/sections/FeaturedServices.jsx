@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useEffect, useState, useRef } from 'react';
 import toast from 'react-hot-toast';
 import FadeUp from '../components/ui/FadeUp.jsx';
 import { listServices } from '../api/services.js';
@@ -9,13 +9,24 @@ import ServiceCard from '../components/services/ServiceCard.jsx';
 export default function FeaturedServices() {
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
+  const containerRef = useRef(null);
 
   useEffect(() => {
     listServices({ active: 'true', featured: 'true' })
-      .then((items) => setServices(items.slice(0, 4)))
+      .then((items) => setServices(items))
       .catch(() => toast.error('Failed to load featured services'))
       .finally(() => setLoading(false));
   }, []);
+
+  const scroll = (direction) => {
+    if (containerRef.current) {
+      const scrollAmount = 330; // width of card + gap
+      containerRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
 
   if (!loading && services.length === 0) return null;
 
@@ -58,12 +69,36 @@ export default function FeaturedServices() {
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 md:gap-6">
-            {services.map((svc, i) => (
-              <FadeUp key={svc._id} delay={i * 0.05} className="h-full">
-                <ServiceCard service={svc} />
-              </FadeUp>
-            ))}
+          <div className="relative group">
+            {/* Left Scroll Button */}
+            <button
+              onClick={() => scroll('left')}
+              className="hidden lg:flex absolute -left-5 top-1/2 -translate-y-1/2 z-10 h-10 w-10 items-center justify-center rounded-full bg-paper text-ink shadow-lg border border-ink/5 hover:scale-105 hover:bg-sand transition-all"
+              title="Scroll left"
+            >
+              <ChevronLeft size={20} className="text-[#13294B]" />
+            </button>
+
+            {/* Horizontal Scrollable container */}
+            <div
+              ref={containerRef}
+              className="flex gap-4 md:gap-6 overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-none pb-4"
+            >
+              {services.map((svc, i) => (
+                <div key={svc._id} className="w-[280px] sm:w-[310px] shrink-0 snap-start h-full">
+                  <ServiceCard service={svc} />
+                </div>
+              ))}
+            </div>
+
+            {/* Right Scroll Button */}
+            <button
+              onClick={() => scroll('right')}
+              className="hidden lg:flex absolute -right-5 top-1/2 -translate-y-1/2 z-10 h-10 w-10 items-center justify-center rounded-full bg-paper text-ink shadow-lg border border-ink/5 hover:scale-105 hover:bg-sand transition-all"
+              title="Scroll right"
+            >
+              <ChevronRight size={20} className="text-[#13294B]" />
+            </button>
           </div>
         )}
       </div>

@@ -346,7 +346,7 @@ export default function Login() {
                   <div className="text-center text-xs text-ink/55">
                     Want to work or sell with us?{' '}
                     <Link to="/join" className="font-semibold text-ink underline-offset-4 hover:underline">
-                      Join as a pro or brand
+                      Join as a professional or brand
                     </Link>
                   </div>
                 </div>

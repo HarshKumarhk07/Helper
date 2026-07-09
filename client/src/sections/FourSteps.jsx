@@ -3,7 +3,7 @@ import FadeUp from '../components/ui/FadeUp.jsx';
 const STEPS = [
   { n: '01', title: 'Share details', body: 'Tell us about your space, schedule, and preferences in a quick form.' },
   { n: '02', title: 'Get matched', body: 'We match you with the nearest verified, top-rated professional.' },
-  { n: '03', title: 'Track live', body: 'Follow your pro in real time and pay securely, all in one place.' },
+  { n: '03', title: 'Track live', body: 'Follow your professional in real time and pay securely, all in one place.' },
   { n: '04', title: 'Relax', body: 'Sit back while the job gets done right — then rate your experience.' },
 ];
 

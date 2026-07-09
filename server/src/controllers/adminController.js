@@ -3,6 +3,7 @@ import Order from '../models/Order.js';
 import User from '../models/User.js';
 import Product from '../models/Product.js';
 import SupportTicket from '../models/SupportTicket.js';
+import CarServiceKYC from '../models/CarServiceKYC.js';
 import { ApiError, asyncHandler } from '../utils/asyncHandler.js';
 
 // Threshold below which a product is flagged as "low stock" on the admin
@@ -192,9 +193,7 @@ export const getDashboardStats = asyncHandler(async (req, res) => {
   });
 });
 
-// Sections that carry a "new items" notification badge on the admin console.
-// Each maps to one dashboard button and one destination page.
-export const BADGE_KEYS = ['bookings', 'orders', 'users', 'kyc', 'support'];
+export const BADGE_KEYS = ['bookings', 'orders', 'users', 'kyc', 'support', 'carKyc'];
 
 // Count how many items in each section are newer than the timestamp at which
 // this admin last opened that section. On the very first read a missing "seen"
@@ -215,7 +214,7 @@ export const getAdminBadges = asyncHandler(async (req, res) => {
   if (changed) await admin.save();
 
   const s = admin.adminSeen;
-  const [bookings, orders, users, kyc, support] = await Promise.all([
+  const [bookings, orders, users, kyc, support, carKyc] = await Promise.all([
     Booking.countDocuments({
       createdAt: { $gt: s.bookings },
       $or: [
@@ -244,9 +243,13 @@ export const getAdminBadges = asyncHandler(async (req, res) => {
       status: { $in: ['open', 'awaiting_agent'] },
       lastActivityAt: { $gt: s.support },
     }),
+    CarServiceKYC.countDocuments({
+      status: 'pending',
+      createdAt: { $gt: s.carKyc },
+    }),
   ]);
 
-  res.json({ badges: { bookings, orders, users, kyc, support } });
+  res.json({ badges: { bookings, orders, users, kyc, support, carKyc } });
 });
 
 // Mark a section as seen (opened). Returns the PREVIOUS seen timestamp so the

@@ -141,18 +141,32 @@ export default function ServiceDetailHero({
                 <ChevronLeft size={16} strokeWidth={2.5} />
                 Go back to services
               </Link>
-              <button
+              <motion.button
                 onClick={onBook}
                 className="inline-flex items-center justify-center gap-3 rounded-full px-6 py-3.5 text-sm font-bold text-[#0B1220] transition-colors duration-300 whitespace-nowrap shadow-md"
                 style={{ backgroundColor: '#FBBF24' }}
                 onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#F5B400'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#FBBF24'; }}
+                animate={{
+                  scale: [1, 1.03, 1],
+                  boxShadow: [
+                    '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                    '0 0 16px 2px rgba(251, 191, 36, 0.55)',
+                    '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+                  ]
+                }}
+                transition={{
+                  scale: { repeat: Infinity, duration: 2, ease: "easeInOut" },
+                  boxShadow: { repeat: Infinity, duration: 2, ease: "easeInOut" }
+                }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.98 }}
               >
                 <span>Book service — ₹{price}</span>
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#2F5FF6] text-white shrink-0 shadow-sm">
                   <ArrowUpRight size={13} strokeWidth={3} />
                 </span>
-              </button>
+              </motion.button>
             </motion.div>
 
             {/* Social proof row */}

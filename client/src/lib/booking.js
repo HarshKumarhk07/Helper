@@ -109,12 +109,12 @@ export const getWorkerAvatar = (worker) => {
 
 export const getWorkerExperience = (worker) => {
   if (!worker) return null;
+  let years = 0;
   if (typeof worker === 'object') {
-    if (worker.experienceYears) return `${worker.experienceYears}y exp`;
-    const name = worker.name;
-    const exp = WORKER_EXP_MAP[name];
-    return exp ? `${exp}y exp` : null;
+    years = worker.experienceYears || WORKER_EXP_MAP[worker.name] || 0;
+  } else {
+    years = WORKER_EXP_MAP[worker] || 0;
   }
-  const exp = WORKER_EXP_MAP[worker];
-  return exp ? `${exp}y exp` : null;
+  if (!years) return null;
+  return `${years} ${years === 1 ? 'year' : 'years'} experience`;
 };

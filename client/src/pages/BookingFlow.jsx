@@ -39,10 +39,7 @@ export default function BookingFlow() {
   const [paymentMode, setPaymentMode] = useState(() => {
     return sessionStorage.getItem('bf_paymentMode') || 'online';
   });
-  const [autoAssign, setAutoAssign] = useState(() => {
-    const saved = sessionStorage.getItem('bf_autoAssign');
-    return saved !== null ? saved === 'true' : true;
-  });
+  const [autoAssign, setAutoAssign] = useState(false);
   const [selectedWorker, setSelectedWorker] = useState(null);   // { _id, name, avatar, … }
   const [workers, setWorkers] = useState([]);
   const [workersLoading, setWorkersLoading] = useState(false);
@@ -275,7 +272,19 @@ export default function BookingFlow() {
 
     api.get('/users/workers', { params })
       .then(({ data }) => {
-        setWorkers(data.workers || []);
+        const fetched = data.workers || [];
+        setWorkers(fetched);
+
+        // Pre-select worker from URL param if present
+        const queryParams = new URLSearchParams(window.location.search);
+        const urlWorkerId = queryParams.get('worker');
+        if (urlWorkerId) {
+          const match = fetched.find(w => String(w._id) === urlWorkerId);
+          if (match) {
+            setSelectedWorker(match);
+            setAutoAssign(false);
+          }
+        }
       })
       .catch(() => {})
       .finally(() => setWorkersLoading(false));
@@ -423,6 +432,11 @@ export default function BookingFlow() {
       return;
     }
 
+    if (!service.isWorkerBooking && serviceId !== 'cart' && !selectedWorker && !autoAssign) {
+      toast.error('Please choose your professional first');
+      return;
+    }
+
     let inlineAddressPayload = null;
     if (!selectedAddressId) {
       // Inline path covers two sources of address data:
@@ -503,7 +517,7 @@ export default function BookingFlow() {
         if (selectedAddressId) quotePayload.addressId = selectedAddressId;
         else if (inlineAddressPayload) quotePayload.address = inlineAddressPayload;
         await createQuoteRequest(quotePayload);
-        toast.success("Quote requested — we'll notify you when the pro responds");
+        toast.success("Quote requested — we'll notify you when the professional responds");
         navigate('/me/bookings');
         return;
       }
@@ -708,7 +722,7 @@ export default function BookingFlow() {
           <div className="min-w-0 space-y-5">
             <FadeUp>
               <Section icon={Calendar} title="When">
-                <div className="grid grid-cols-2 gap-2.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   <ChoiceCard
                     active={bookingType === 'instant'}
                     onClick={() => setBookingType('instant')}
@@ -1016,23 +1030,32 @@ export default function BookingFlow() {
                       {/* Auto-assign option */}
                       <button
                         type="button"
-                        onClick={() => { setSelectedWorker(null); setAutoAssign(true); }}
+                        onClick={() => {
+                          if (!selectedWorker && autoAssign) {
+                            setAutoAssign(false);
+                          } else {
+                            setSelectedWorker(null);
+                            setAutoAssign(true);
+                          }
+                        }}
                         className={`relative block w-full rounded-2xl border p-4 text-left transition ${
-                          !selectedWorker
+                          !selectedWorker && autoAssign
                             ? 'border-black bg-black/[0.03] shadow-sm'
                             : 'border-black/10 bg-white hover:border-black/30 hover:shadow-sm'
                         }`}
                       >
                         <div className="flex items-center justify-between gap-3">
                           <div>
-                            <div className="text-sm font-medium text-black">Auto-assign nearest pro</div>
-                            <div className="text-xs text-black/55 mt-0.5">We'll match you with the closest available expert</div>
+                            <div className="text-sm font-medium text-black">Auto-assign nearest professional</div>
+                            <div className="text-xs text-black/55 mt-0.5">We'll match you with the closest available professional</div>
                           </div>
-                          {!selectedWorker && (
-                            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-black text-white">
-                              <Check size={14} strokeWidth={3} />
-                            </div>
-                          )}
+                          <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition-all ${
+                            !selectedWorker && autoAssign
+                              ? 'bg-black border-black text-white'
+                              : 'border-black/20 bg-transparent text-transparent'
+                          }`}>
+                            <Check size={14} strokeWidth={3} className={!selectedWorker && autoAssign ? 'opacity-100' : 'opacity-0'} />
+                          </div>
                         </div>
                       </button>
 
@@ -1088,17 +1111,8 @@ export default function BookingFlow() {
 
                                 {/* Stats row */}
                                 <div className="flex flex-wrap items-center gap-3 mt-1">
-                                  {w.displayRating > 0 && (
-                                    <span className="flex items-center gap-1 text-xs text-black/70">
-                                      <Star size={11} className="fill-amber-400 text-amber-400" />
-                                      <span className="font-semibold">{w.displayRating.toFixed(1)}</span>
-                                    </span>
-                                  )}
-                                  {w.completedJobs > 0 && (
-                                    <span className="text-xs text-black/55">{w.completedJobs} jobs done</span>
-                                  )}
-                                  {(w.experienceYears > 0 || getWorkerExperience(w)) && (
-                                    <span className="text-xs text-black/55">{w.experienceYears || getWorkerExperience(w)}</span>
+                                  {getWorkerExperience(w) && (
+                                    <span className="text-xs text-black/55">{getWorkerExperience(w)}</span>
                                   )}
                                 </div>
 
@@ -1139,11 +1153,25 @@ export default function BookingFlow() {
                                 )}
                               </div>
 
-                              {active && (
-                                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-black text-white ml-auto">
-                                  <Check size={14} strokeWidth={3} />
+                              {/* Right-aligned Rating & Checkmark */}
+                              <div className="flex items-center gap-3 shrink-0 self-center ml-auto">
+                                <div className="text-right flex flex-col items-end">
+                                  <div className="flex items-center gap-1 text-xs font-bold text-black">
+                                    <Star size={13} className="fill-amber-400 text-amber-400" />
+                                    <span>{((w.displayRating > 0 ? w.displayRating : null) || w.publicRating || 4.5).toFixed(1)}/5</span>
+                                  </div>
+                                  <div className="text-[10px] text-black/55 mt-0.5">
+                                    {w.completedJobs > 0 ? `${w.completedJobs} review${w.completedJobs === 1 ? '' : 's'}` : '0 reviews'}
+                                  </div>
                                 </div>
-                              )}
+                                 <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition-all ${
+                                   active
+                                     ? 'bg-black border-black text-white'
+                                     : 'border-black/20 bg-transparent text-transparent'
+                                 }`}>
+                                   <Check size={14} strokeWidth={3} className={active ? 'opacity-100' : 'opacity-0'} />
+                                 </div>
+                              </div>
                             </div>
                           </button>
                         );
@@ -1154,31 +1182,7 @@ export default function BookingFlow() {
               </FadeUp>
             )}
 
-            {!service.isWorkerBooking && serviceId !== 'cart' && (
-              <FadeUp delay={0.13}>
-                <Section icon={UserCheck} title="Auto-Assign">
-                  <label className="flex items-start gap-2.5 rounded-2xl border border-black/10 bg-white p-3.5 text-sm text-black transition hover:border-black/20 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={autoAssign}
-                      onChange={(e) => {
-                        setAutoAssign(e.target.checked);
-                        if (e.target.checked) {
-                          setSelectedWorker(null);
-                        }
-                      }}
-                      className="mt-0.5 h-4 w-4 shrink-0 rounded border-black/30 accent-black"
-                    />
-                    <span>
-                      <span className="block font-medium">Auto-assign nearest pro</span>
-                      <span className="block text-xs text-black/60">
-                        We&apos;ll match you with the closest available expert
-                      </span>
-                    </span>
-                  </label>
-                </Section>
-              </FadeUp>
-            )}
+
 
             <FadeUp delay={0.1}>
               <Section icon={CreditCard} title="Payment">
@@ -1201,7 +1205,7 @@ export default function BookingFlow() {
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   rows={3}
-                  placeholder="Anything the pro should know — gate code, pets, parking, etc."
+                  placeholder="Anything the professional should know — gate code, pets, parking, etc."
                   className="w-full resize-none rounded-2xl border border-black/15 bg-white p-3.5 text-sm text-black placeholder:text-black/40 outline-none transition focus:border-black focus:shadow-sm"
                 />
               </Section>
@@ -1255,7 +1259,7 @@ export default function BookingFlow() {
                     }
                     muted={!selectedAddress && !showAddressForm}
                   />
-                  <Row label="Auto-assign" value={selectedWorker ? 'No — specific pro selected' : (autoAssign ? 'Yes' : 'No')} />
+                  <Row label="Auto-assign" value={selectedWorker ? 'No — specific professional selected' : (autoAssign ? 'Yes' : 'No')} />
                   {selectedWorker && (
                     <Row label="Professional" value={selectedWorker.name} />
                   )}
@@ -1304,7 +1308,7 @@ export default function BookingFlow() {
                   </button>
                   <p className="mt-3 text-center text-[10px] uppercase tracking-widest text-black/40">
                     {isQuoteMode
-                      ? 'The pro will send a price to accept'
+                      ? 'The professional will send a price to accept'
                       : paymentMode === 'online'
                       ? 'Your payment has been received securely.'
                       : "You'll pay after the service is completed."}

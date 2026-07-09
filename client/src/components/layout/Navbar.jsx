@@ -15,20 +15,22 @@ import { mediaUrl } from '../../lib/catalogImage.js';
 
 const NAV = [
   { to: '/services', label: 'Services', hasChevron: true },
-  { to: '/services', label: 'Categories', hasChevron: true, isCategoryDropdown: true },
+  { to: '/categories', label: 'Categories', hasChevron: true, isCategoryDropdown: true },
   { to: '/products', label: 'Products' },
+  { to: '/trips', label: 'Car Trips' },
   { to: '/join', label: 'Become a Professional' },
-  { to: '/#stats-bar', label: 'About Us' },
+  { to: '/about', label: 'About Us' },
 ];
 
 // Hero-mode nav links shown only on homepage before scrolling.
 // All map to existing routes — no 404 risk.
 const HERO_NAV = [
   { to: '/services', label: 'Services', hasChevron: true },
-  { to: '/services', label: 'Categories', hasChevron: true, isCategoryDropdown: true },
+  { to: '/categories', label: 'Categories', hasChevron: true, isCategoryDropdown: true },
   { to: '/products', label: 'Products' },
+  { to: '/trips', label: 'Car Trips' },
   { to: '/join', label: 'Become a Professional' },
-  { to: '/#stats-bar', label: 'About Us' },
+  { to: '/about', label: 'About Us' },
 ];
 
 const PANEL_BY_ROLE = {
@@ -61,7 +63,7 @@ export default function Navbar() {
     const hasCategoryQuery = new URLSearchParams(routerLocation.search).has('cat');
 
     if (item.isCategoryDropdown) {
-      return isServicePath && hasCategoryQuery;
+      return routerLocation.pathname === '/categories' || routerLocation.pathname.startsWith('/categories/');
     }
 
     if (to === '/services') {
@@ -132,11 +134,16 @@ export default function Navbar() {
   }, []);
 
   const groupedServices = services.reduce((acc, svc) => {
-    const catName = svc.category?.name || 'Other';
-    if (!acc[catName]) {
-      acc[catName] = [];
+    const cat = svc.category || { name: 'Other', slug: 'other' };
+    const catKey = cat.name;
+    if (!acc[catKey]) {
+      acc[catKey] = {
+        name: cat.name,
+        slug: cat.slug,
+        services: []
+      };
     }
-    acc[catName].push(svc);
+    acc[catKey].services.push(svc);
     return acc;
   }, {});
 
@@ -268,14 +275,14 @@ export default function Navbar() {
       }`}
     >
       <div
-        className="w-full max-w-[1400px] py-3 md:py-4 px-4 md:px-10"
+        className="w-full max-w-[1400px] py-3 md:py-4 px-3 md:px-5"
       >
-        <div className="flex items-center justify-between gap-2.5 w-full h-full relative">
+        <div className="flex items-center justify-between gap-2 w-full h-full relative">
           
           {/* Logo (Left) */}
           <Link
             to="/"
-            className="flex-shrink-0 flex items-center gap-1 group mr-2 md:mr-6"
+            className="flex-shrink-0 flex items-center gap-1 group mr-2 md:mr-4"
           >
             <span className="transition-all">
               <img
@@ -287,7 +294,7 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden min-w-0 items-center gap-3 xl:gap-6 lg:flex shrink-0">
+          <nav className="hidden min-w-0 items-center gap-2 xl:gap-4 lg:flex shrink-0">
             {activeNavLinks.map((n) => {
               const active = isNavActive(n);
               
@@ -301,7 +308,7 @@ export default function Navbar() {
                   >
                     <button
                       type="button"
-                      onClick={() => navigate('/services')}
+                      onClick={() => navigate('/categories')}
                       className={`no-underline text-sm font-medium tracking-tightish transition-colors duration-300 relative flex items-center gap-1 bg-transparent border-0 cursor-pointer ${
                         heroMode
                           ? active ? 'text-hero-dark' : 'text-hero-dark/60 hover:text-hero-dark'
@@ -345,7 +352,7 @@ export default function Navbar() {
                               {categories.map((cat) => (
                                 <Link
                                   key={cat._id}
-                                  to={`/services?cat=${cat.slug}`}
+                                  to={`/categories/${cat.slug}`}
                                   onClick={() => setIsCategoriesDropdownOpen(false)}
                                   className="block text-xs font-semibold text-[#13294B]/80 hover:text-[#13294B] hover:translate-x-1 transition-all duration-200 py-1"
                                 >
@@ -414,13 +421,17 @@ export default function Navbar() {
                           ) : (
                             <>
                               <div className="grid grid-cols-2 gap-x-6 gap-y-4 max-h-[320px] overflow-y-auto pr-1">
-                                {Object.entries(groupedServices).map(([catName, svcs]) => (
-                                  <div key={catName} className="space-y-1.5 min-w-0">
-                                    <div className="text-[10px] font-bold uppercase tracking-widest text-ink/40 mb-1 truncate">
-                                      {catName}
-                                    </div>
+                                {Object.values(groupedServices).map((group) => (
+                                  <div key={group.name} className="space-y-1.5 min-w-0">
+                                    <Link
+                                      to={`/categories/${group.slug}`}
+                                      onClick={() => setIsServicesDropdownOpen(false)}
+                                      className="text-[10px] font-bold uppercase tracking-widest text-ink/50 hover:text-brand transition-colors mb-1 block truncate"
+                                    >
+                                      {group.name} →
+                                    </Link>
                                     <ul className="space-y-1">
-                                      {svcs.map((svc) => (
+                                      {group.services.map((svc) => (
                                         <li key={svc._id} className="truncate">
                                           <Link
                                             to={`/services/${svc._id}`}
@@ -477,7 +488,7 @@ export default function Navbar() {
 
 
           {/* Right Actions */}
-          <div className="flex grow shrink-0 items-center justify-end gap-2 xl:gap-4">
+          <div className="flex grow shrink-0 items-center justify-end gap-1.5 xl:gap-3">
             {/* Select Location */}
             <button
               type="button"
@@ -485,7 +496,7 @@ export default function Navbar() {
               className={`hidden lg:inline-flex items-center gap-2 rounded-full border px-3 py-1.5 transition-colors ${
                 heroMode
                   ? 'border-hero-border bg-white hover:bg-hero-bg text-hero-dark/70 hover:text-hero-dark'
-                  : 'border-ink/10 pr-3 mr-1 border-r ' + iconCls
+                  : 'border-ink/10 pr-2 mr-0.5 border-r ' + iconCls
               }`}
               aria-label="Select location"
             >
@@ -530,7 +541,7 @@ export default function Navbar() {
                       value={searchValue}
                       onChange={(e) => setSearchValue(e.target.value)}
                       placeholder="Search services, products, workers..."
-                      className={`min-w-0 w-[110px] lg:w-[120px] xl:w-[240px] focus:lg:w-[180px] focus:xl:w-[300px] bg-transparent text-sm outline-none font-medium transition-all duration-300 ${
+                      className={`min-w-0 w-[110px] lg:w-[100px] xl:w-[180px] focus:lg:w-[140px] focus:xl:w-[240px] bg-transparent text-sm outline-none font-medium transition-all duration-300 ${
                         searchValue.length > 0
                           ? 'text-ink placeholder:text-ink/40'
                           : heroMode
@@ -712,7 +723,7 @@ export default function Navbar() {
             )}
 
             {isAuthenticated ? (
-              <div className={`hidden lg:flex items-center gap-3 lg:gap-4 pl-3 lg:pl-4 border-l shrink-0 ${heroMode ? 'border-hero-border' : 'border-ink/10'}`}>
+              <div className={`hidden lg:flex items-center gap-2 lg:gap-3 pl-2.5 lg:pl-3 border-l shrink-0 ${heroMode ? 'border-hero-border' : 'border-ink/10'}`}>
                 {(user?.passportPhoto || user?.avatar) && (
                   <Link to={panelPath} className="shrink-0" aria-label={panelLabel}>
                     <img
@@ -920,7 +931,7 @@ export default function Navbar() {
                                     categories.map((cat) => (
                                       <Link
                                         key={cat._id}
-                                        to={`/services?cat=${cat.slug}`}
+                                        to={`/categories/${cat.slug}`}
                                         onClick={() => {
                                           setOpen(false);
                                           setMobileCategoriesOpen(false);

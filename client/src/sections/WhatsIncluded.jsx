@@ -58,7 +58,7 @@ export default function WhatsIncluded() {
           {cards.map((c, i) => (
             <FadeUp key={c.slug || c.name} delay={Math.min(i * 0.05, 0.2)}>
               <Link
-                to={c.slug ? `/services?cat=${c.slug}` : '/services'}
+                to={c.slug ? `/categories/${c.slug}` : '/services'}
                 className="group block overflow-hidden rounded-[22px] border border-ink/10 bg-paper transition hover:shadow-card"
               >
                 <div className="overflow-hidden">

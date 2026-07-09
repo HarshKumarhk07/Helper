@@ -45,7 +45,7 @@ export default function Categories() {
             {displayCategories.map((c, i) => (
               <FadeUp key={c.slug} delay={i * 0.1}>
                 <Link
-                  to={`/services?cat=${c.slug}`}
+                  to={`/categories/${c.slug}`}
                   onMouseEnter={() => setHoveredIdx(i)}
                   className="group flex flex-col md:flex-row md:items-baseline gap-2 md:gap-6 border-b border-ink/10 pb-6 hover:border-ink/40 transition-colors"
                 >
