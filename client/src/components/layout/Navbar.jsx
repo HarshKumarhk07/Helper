@@ -199,9 +199,21 @@ export default function Navbar() {
         const combined = [
           ...(products || []).map(p => ({ type: 'product', ...p })),
           ...(services || []).map(s => ({ type: 'service', ...s })),
-        ].slice(0, 6);
+        ];
 
-        setSuggestions(combined);
+        const queryLower = query.toLowerCase();
+        combined.sort((a, b) => {
+          const aName = (a.name || '').toLowerCase();
+          const bName = (b.name || '').toLowerCase();
+          const aStarts = aName.startsWith(queryLower);
+          const bStarts = bName.startsWith(queryLower);
+          
+          if (aStarts && !bStarts) return -1;
+          if (!aStarts && bStarts) return 1;
+          return 0;
+        });
+
+        setSuggestions(combined.slice(0, 6));
       } catch (err) {
         console.error('Autocomplete fetch failed:', err);
         setSuggestions([]);

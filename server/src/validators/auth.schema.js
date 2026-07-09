@@ -71,6 +71,7 @@ export const adminUpdateUserSchema = z.object({
 
 export const updateMeSchema = z.object({
   name: z.string().min(2).max(80).optional(),
+  email: z.string().email().max(120).optional(),
   phone: z.string().max(20).optional(),
   avatar: mediaUrl,
   passportPhoto: mediaUrl,

@@ -22,12 +22,20 @@ export const listServices = asyncHandler(async (req, res) => {
     else return res.json({ services: [] });
   }
   if (q) {
-    // Match the query against the service name, its description, OR the
-    // name of any category it belongs to — so searching a category term
-    // like "appliance" still surfaces "AC Installation".
-    const rx = { $regex: q.trim(), $options: 'i' };
+    // Match the query against the service name, its description (using word boundaries,
+    // only if query is at least 3 chars long to avoid matching common short words),
+    // OR the name of any category it belongs to.
+    const escaped = q.trim().replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    const rx = { $regex: escaped, $options: 'i' };
     const matchedCats = await ServiceCategory.find({ name: rx }).select('_id');
-    const or = [{ name: rx }, { description: rx }];
+    const or = [{ name: rx }];
+    
+    // Only search descriptions for longer search terms (e.g. >= 3 chars)
+    if (q.trim().length >= 3) {
+      const rxDesc = { $regex: '\\b' + escaped, $options: 'i' };
+      or.push({ description: rxDesc });
+    }
+    
     if (matchedCats.length) {
       or.push({ category: { $in: matchedCats.map((c) => c._id) } });
     }

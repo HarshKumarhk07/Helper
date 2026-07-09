@@ -390,12 +390,15 @@ export default function AdminDashboard() {
       )}
 
       <div className="mb-8 space-y-6 sm:mb-10 sm:space-y-8">
-        <AdminSection title="Bookings & Orders">
+        <AdminSection title="Bookings, Orders & Products">
           <PillButton variant="solid" to="/admin/bookings" badge={badges.bookings}>
             Open bookings →
           </PillButton>
           <PillButton variant="solid" to="/admin/orders" badge={badges.orders}>
             Add admin notes on orders →
+          </PillButton>
+          <PillButton variant="solid" to="/admin/products">
+            Manage Products →
           </PillButton>
         </AdminSection>
 

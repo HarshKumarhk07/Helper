@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useCart } from '../context/CartContext.jsx';
+import { useAuth } from '../context/AuthContext.jsx';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { createOrder, deleteMyOrder } from '../api/orders.js';
 import { createRazorpayOrder, verifyRazorpayPayment } from '../api/payments.js';
@@ -14,6 +15,7 @@ import RouteMap from '../components/booking/RouteMap.jsx';
 
 export default function CheckoutPage() {
   const { cart, removeFromCart } = useCart();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
@@ -227,6 +229,11 @@ export default function CheckoutPage() {
           } catch (err) {
             toast.error('Payment verification failed');
           }
+        },
+        prefill: {
+          name: user?.name || '',
+          email: user?.email || '',
+          contact: user?.phone || '',
         },
         theme: { color: "#111111" },
         modal: {

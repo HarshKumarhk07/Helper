@@ -46,6 +46,8 @@ export default function DashboardShell({ eyebrow, title, children, slices }) {
       { to: '/admin', label: 'Admin Dashboard' },
       { to: '/admin/bookings', label: 'Bookings' },
       { to: '/admin/orders', label: 'Orders' },
+      { to: '/admin/products', label: 'Products' },
+      { to: '/admin/brand-categories', label: 'Product Categories' },
       { to: '/admin/services', label: 'Services' },
       { to: '/admin/categories', label: 'Categories' },
       { to: '/admin/workers', label: 'Workers' },

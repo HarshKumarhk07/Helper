@@ -15,6 +15,7 @@ import SlotPicker from '../components/booking/SlotPicker.jsx';
 import RouteMap from '../components/booking/RouteMap.jsx';
 import { useCart } from '../context/CartContext.jsx';
 import { useLocation } from '../context/LocationContext.jsx';
+import { useAuth } from '../context/AuthContext.jsx';
 import api from '../api/axios.js';
 
 export default function BookingFlow() {
@@ -22,6 +23,7 @@ export default function BookingFlow() {
   const { location } = useLocation();
   const navigate = useNavigate();
   const { cart, removeFromCart } = useCart();
+  const { user } = useAuth();
 
   const [service, setService] = useState(null);
   const [addresses, setAddresses] = useState([]);
@@ -554,9 +556,9 @@ export default function BookingFlow() {
               }
             },
             prefill: {
-              name: 'Customer',
-              email: 'customer@velorahouse.com',
-              contact: '9999999999',
+              name: user?.name || '',
+              email: user?.email || '',
+              contact: user?.phone || '',
             },
             theme: { color: '#111111' },
             modal: {
@@ -637,9 +639,9 @@ export default function BookingFlow() {
             }
           },
           prefill: {
-            name: 'Customer',
-            email: 'customer@velorahouse.com',
-            contact: '9999999999',
+            name: user?.name || '',
+            email: user?.email || '',
+            contact: user?.phone || '',
           },
           theme: { color: '#111111' },
           modal: {

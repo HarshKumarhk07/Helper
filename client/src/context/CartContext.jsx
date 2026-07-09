@@ -226,7 +226,10 @@ export function CartProvider({ children }) {
 
   const updateQuantity = useCallback(
     (productId, quantity) => {
-      if (quantity < 1) return;
+      if (quantity < 1) {
+        removeFromCart(productId);
+        return;
+      }
       const item = cart.find((it) => it.product === productId);
       setCart((prev) =>
         prev.map((it) => (it.product === productId ? { ...it, quantity } : it))
@@ -235,7 +238,7 @@ export function CartProvider({ children }) {
         updateServerCartItem(productId, quantity).catch(() => null);
       }
     },
-    [isAuthenticated, cart]
+    [isAuthenticated, cart, removeFromCart]
   );
 
   const clearCart = useCallback(() => {

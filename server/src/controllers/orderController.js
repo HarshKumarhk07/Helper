@@ -128,7 +128,12 @@ export const createOrder = asyncHandler(async (req, res) => {
     },
   });
 
-  notifyOrderPlaced({ user: req.user, order });
+  // Only notify immediately for non-online orders (e.g. COD).
+  // For online payments, the confirmation email is sent after payment
+  // verification in paymentController.verifyPayment.
+  if (order.paymentMode !== 'online') {
+    notifyOrderPlaced({ user: req.user, order });
+  }
 
   res.status(201).json({ order });
 });

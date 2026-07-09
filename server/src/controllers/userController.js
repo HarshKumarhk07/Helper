@@ -105,6 +105,14 @@ export const adminUpdateUser = asyncHandler(async (req, res) => {
 
 export const updateMe = asyncHandler(async (req, res) => {
   const { kycDocuments, ...rest } = req.body || {};
+
+  // Check email uniqueness if updating email
+  if (rest.email && rest.email !== req.user.email) {
+    const existing = await User.findOne({ email: rest.email.toLowerCase(), _id: { $ne: req.user._id } });
+    if (existing) throw new ApiError(409, 'That email is already in use');
+    rest.email = rest.email.toLowerCase();
+  }
+
   Object.assign(req.user, rest);
 
   // Merge kycDocuments rather than overwriting — partial uploads must keep
