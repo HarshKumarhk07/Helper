@@ -15,9 +15,10 @@ import BestWorkers from '../sections/BestWorkers.jsx';
 
 function ServiceCard({ service }) {
   const img = resolveCatalogImage(service);
+  const isCarService = service.slug === 'car-trips' || service.category?.slug === 'car-trips';
   return (
     <Link
-      to={`/services/${service._id}`}
+      to={isCarService ? '/trips' : `/services/${service._id}`}
       className="group flex flex-col h-full w-full bg-paper rounded-[1.5rem] border border-ink/5 hover:border-ink/15 overflow-hidden transition-all duration-500 hover:shadow-xl hover:-translate-y-1"
     >
       {/* Image */}
@@ -60,7 +61,7 @@ function ServiceCard({ service }) {
 
         <div className="mt-auto flex items-center justify-between pt-3 border-t border-ink/5">
           <div className="text-lg font-bold text-ink tracking-tight">
-            {formatPrice(service.price)}
+            {isCarService ? `starts ${formatPrice(service.price)}` : formatPrice(service.price)}
           </div>
           <div className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-ink/60 group-hover:text-ink transition-colors">
             Book <ArrowRight size={11} className="group-hover:translate-x-0.5 transition-transform" />

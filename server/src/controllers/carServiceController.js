@@ -277,7 +277,19 @@ export const getMyTrips = asyncHandler(async (req, res) => {
   if (req.user.role !== 'worker') {
     throw new ApiError(403, 'Only professionals can list their listed trips.');
   }
-  const trips = await CarTrip.find({ professional: req.user._id }).sort({ departureTime: -1 }).lean();
+  const trips = await CarTrip.find({ professional: req.user._id }).lean();
+
+  trips.sort((a, b) => {
+    const aActive = a.status === 'active';
+    const bActive = b.status === 'active';
+    if (aActive && !bActive) return -1;
+    if (!aActive && bActive) return 1;
+
+    if (aActive && bActive) {
+      return new Date(a.departureTime) - new Date(b.departureTime);
+    }
+    return new Date(b.departureTime) - new Date(a.departureTime);
+  });
 
   const tripIds = trips.map((t) => t._id);
   const bookings = await CarBooking.find({

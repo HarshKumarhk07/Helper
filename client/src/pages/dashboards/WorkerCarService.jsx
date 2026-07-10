@@ -14,6 +14,8 @@ import {
   Clock,
   Trash2,
   AlertTriangle,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import DashboardShell from './DashboardShell.jsx';
 import FadeUp from '../../components/ui/FadeUp.jsx';
@@ -60,6 +62,14 @@ export default function WorkerCarService() {
 
   // Trips List State
   const [trips, setTrips] = useState([]);
+  const [expandedTrips, setExpandedTrips] = useState({});
+
+  const toggleTripExpand = (tripId) => {
+    setExpandedTrips((prev) => ({
+      ...prev,
+      [tripId]: !prev[tripId],
+    }));
+  };
 
   const fetchKycAndTrips = async () => {
     try {
@@ -447,7 +457,7 @@ export default function WorkerCarService() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider mb-1">Departure Date</label>
                   <input
@@ -470,7 +480,7 @@ export default function WorkerCarService() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider mb-1">Outbound Price / Seat</label>
                   <div className="relative">
@@ -518,7 +528,7 @@ export default function WorkerCarService() {
 
               {isRoundTrip && (
                 <div className="p-4 bg-sand/30 rounded-2xl border border-ink/5 space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-semibold uppercase tracking-wider mb-1">Return Date</label>
                       <input
@@ -541,7 +551,7 @@ export default function WorkerCarService() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-semibold uppercase tracking-wider mb-1">Return Price / Seat</label>
                       <div className="relative">
@@ -597,123 +607,167 @@ export default function WorkerCarService() {
               <p className="text-xs mt-1">Fill the form to list your first outbound seats pool.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-3">
               {trips.map((trip) => {
                 const isPast = new Date(trip.departureTime) < new Date();
                 const canCancel = trip.status === 'active' && !isPast;
                 const timeDiffMs = new Date(trip.departureTime).getTime() - Date.now();
                 const cancelDisabled = timeDiffMs < 2 * 60 * 60 * 1000; // 2 hour cutoff
+                const isExpanded = !!expandedTrips[trip._id];
 
                 return (
                   <div
                     key={trip._id}
-                    className="border border-ink/10 bg-paper rounded-2xl p-5 hover:shadow-lg hover:border-ink/20 transition-all flex flex-col justify-between"
+                    className="border border-ink/10 bg-paper rounded-2xl p-4 md:p-5 hover:shadow-md transition-all space-y-4"
                   >
-                    <div>
-                      {/* Source & Destination Header */}
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-1.5 font-semibold text-sm">
-                          <span className="text-ink">{trip.source}</span>
-                          <span className="text-ink/40">→</span>
-                          <span className="text-ink">{trip.destination}</span>
+                    {/* Header Row */}
+                    <div
+                      onClick={() => toggleTripExpand(trip._id)}
+                      className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-pointer select-none"
+                    >
+                      {/* Left: Route and Time */}
+                      <div className="flex items-start gap-3 min-w-0">
+                        <div className="p-2.5 rounded-xl bg-sand/40 text-ink shrink-0 mt-0.5">
+                          <MapPin className="h-5 w-5" />
                         </div>
-                        <span
-                          className={`text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded ${
-                            trip.status === 'active'
-                              ? 'bg-emerald-100 text-emerald-800'
-                              : trip.status === 'completed'
-                              ? 'bg-slate-100 text-slate-600'
-                              : 'bg-rose-100 text-rose-800'
-                          }`}
-                        >
-                          {trip.status}
-                        </span>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 font-semibold text-sm md:text-base">
+                            <span className="text-ink">{trip.source}</span>
+                            <span className="text-ink/40">→</span>
+                            <span className="text-ink">{trip.destination}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-xs text-ink/60 mt-1">
+                            <Calendar className="h-3.5 w-3.5 shrink-0" />
+                            <span>Departure: {formatDateTime(trip.departureTime)}</span>
+                          </div>
+                        </div>
                       </div>
 
-                      {/* Outbound Info */}
-                      <div className="space-y-2 text-xs border-b border-ink/5 pb-3 mb-3">
-                        <div className="flex items-center gap-2 text-ink/70">
-                          <Clock className="h-3.5 w-3.5" />
-                          <span>Outbound: {formatDateTime(trip.departureTime)}</span>
+                      {/* Right: Status, Seats Pool, and Expand Toggle */}
+                      <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-6 shrink-0 border-t border-ink/5 sm:border-0 pt-3 sm:pt-0">
+                        <div className="text-left sm:text-right">
+                          <div className="text-[11px] text-ink/50 uppercase tracking-widest font-bold">Seats Left</div>
+                          <div className="text-xs font-bold text-ink mt-0.5">
+                            {trip.seatsAvailableOutbound} / {trip.totalSeatsOutbound} outbound
+                            {trip.returnTime && ` · ${trip.seatsAvailableReturn} / ${trip.totalSeatsReturn} return`}
+                          </div>
                         </div>
-                        <div className="flex items-center justify-between text-ink/60">
-                          <span>Seats Pool:</span>
-                          <span className="font-semibold text-ink">
-                            {trip.seatsAvailableOutbound} / {trip.totalSeatsOutbound} left
+
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded ${
+                              trip.status === 'active'
+                                ? 'bg-emerald-100 text-emerald-800'
+                                : trip.status === 'completed'
+                                ? 'bg-slate-100 text-slate-600'
+                                : 'bg-rose-100 text-rose-800'
+                            }`}
+                          >
+                            {trip.status}
                           </span>
-                        </div>
-                        <div className="flex items-center justify-between text-ink/60">
-                          <span>Outbound Price:</span>
-                          <span className="font-semibold text-ink">₹{trip.pricePerSeatOutbound}</span>
+                          <button
+                            type="button"
+                            className="p-1 rounded-lg border border-ink/10 hover:bg-sand/20 transition-all text-ink/70"
+                          >
+                            {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                          </button>
                         </div>
                       </div>
-
-                      {/* Return Info */}
-                      {trip.returnTime && (
-                        <div className="space-y-2 text-xs border-b border-ink/5 pb-3 mb-3">
-                          <div className="flex items-center gap-2 text-ink/70">
-                            <Clock className="h-3.5 w-3.5" />
-                            <span>Return: {formatDateTime(trip.returnTime)}</span>
-                          </div>
-                          <div className="flex items-center justify-between text-ink/60">
-                            <span>Seats Pool:</span>
-                            <span className="font-semibold text-ink">
-                              {trip.seatsAvailableReturn} / {trip.totalSeatsReturn} left
-                            </span>
-                          </div>
-                          <div className="flex items-center justify-between text-ink/60">
-                            <span>Return Price:</span>
-                            <span className="font-semibold text-ink">₹{trip.pricePerSeatReturn}</span>
-                          </div>
-                        </div>
-                      )}
                     </div>
 
-                    {/* Booked Passengers details */}
-                    {trip.bookings && trip.bookings.length > 0 ? (
-                      <div className="mt-4 pt-4 border-t border-ink/5 space-y-3">
-                        <span className="text-[10px] uppercase font-bold tracking-widest text-[#13294B] block">
-                          Confirmed Passengers ({trip.bookings.reduce((sum, b) => sum + b.seatsOutbound + b.seatsReturn, 0)} seats)
-                        </span>
-                        <div className="space-y-2">
-                          {trip.bookings.map((booking) => (
-                            <div key={booking._id} className="text-xs p-3 bg-sand/35 rounded-xl space-y-1">
-                              <div className="flex justify-between font-semibold">
-                                <span>{booking.customer?.name}</span>
-                                <span className="text-[10px] text-ink/60">
-                                  {booking.seatsOutbound > 0 ? `Outbound: ${booking.seatsOutbound}` : ''}
-                                  {booking.seatsOutbound > 0 && booking.seatsReturn > 0 ? ' | ' : ''}
-                                  {booking.seatsReturn > 0 ? `Return: ${booking.seatsReturn}` : ''}
-                                </span>
+                    {/* Expandable Details Container */}
+                    {isExpanded && (
+                      <div className="border-t border-ink/5 pt-4 space-y-4 animate-fadeIn">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-sand/15 p-4 rounded-xl border border-ink/5">
+                          {/* Outbound Leg details */}
+                          <div className="space-y-1.5 text-xs">
+                            <div className="font-bold text-ink/50 uppercase tracking-wider text-[10px]">Outbound Details</div>
+                            <div className="flex justify-between">
+                              <span className="text-ink/60">Time:</span>
+                              <span className="font-semibold">{formatDateTime(trip.departureTime)}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-ink/60">Price per seat:</span>
+                              <span className="font-semibold">₹{trip.pricePerSeatOutbound}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-ink/60">Available Seats:</span>
+                              <span className="font-semibold">{trip.seatsAvailableOutbound} / {trip.totalSeatsOutbound} left</span>
+                            </div>
+                          </div>
+
+                          {/* Return Leg details (if round trip) */}
+                          {trip.returnTime ? (
+                            <div className="space-y-1.5 text-xs border-t md:border-t-0 md:border-l border-ink/5 pt-3 md:pt-0 md:pl-4">
+                              <div className="font-bold text-ink/50 uppercase tracking-wider text-[10px]">Return Details</div>
+                              <div className="flex justify-between">
+                                <span className="text-ink/60">Time:</span>
+                                <span className="font-semibold">{formatDateTime(trip.returnTime)}</span>
                               </div>
-                              <div className="text-ink/60 text-[11px] flex flex-wrap gap-x-3">
-                                <span>📞 {booking.customer?.phone || 'N/A'}</span>
-                                <span>✉️ {booking.customer?.email}</span>
+                              <div className="flex justify-between">
+                                <span className="text-ink/60">Price per seat:</span>
+                                <span className="font-semibold">₹{trip.pricePerSeatReturn}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-ink/60">Available Seats:</span>
+                                <span className="font-semibold">{trip.seatsAvailableReturn} / {trip.totalSeatsReturn} left</span>
                               </div>
                             </div>
-                          ))}
+                          ) : (
+                            <div className="text-xs text-ink/40 flex items-center md:border-l border-ink/5 md:pl-4">
+                              One-way trip (no return leg scheduled)
+                            </div>
+                          )}
                         </div>
-                      </div>
-                    ) : (
-                      <div className="mt-4 pt-4 border-t border-ink/5 text-center text-ink/40 text-[11px]">
-                        No seats booked yet.
-                      </div>
-                    )}
 
-                    {canCancel && (
-                      <div className="mt-4 pt-2">
-                        {cancelDisabled ? (
-                          <div className="text-[11px] text-rose-600 bg-rose-50 px-3 py-1.5 rounded-lg border border-rose-100/50 flex items-center gap-1.5">
-                            <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-                            <span>Locked (Departure inside 2h)</span>
+                        {/* Confirmed Passengers details */}
+                        {trip.bookings && trip.bookings.length > 0 ? (
+                          <div className="space-y-3">
+                            <span className="text-[10px] uppercase font-bold tracking-widest text-[#13294B] block">
+                              Confirmed Passengers ({trip.bookings.reduce((sum, b) => sum + b.seatsOutbound + b.seatsReturn, 0)} seats)
+                            </span>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              {trip.bookings.map((booking) => (
+                                <div key={booking._id} className="text-xs p-3 bg-sand/35 rounded-xl space-y-1">
+                                  <div className="flex justify-between font-semibold">
+                                    <span>{booking.customer?.name}</span>
+                                    <span className="text-[10px] text-ink/60">
+                                      {booking.seatsOutbound > 0 ? `Outbound: ${booking.seatsOutbound}` : ''}
+                                      {booking.seatsOutbound > 0 && booking.seatsReturn > 0 ? ' | ' : ''}
+                                      {booking.seatsReturn > 0 ? `Return: ${booking.seatsReturn}` : ''}
+                                    </span>
+                                  </div>
+                                  <div className="text-ink/60 text-[11px] flex flex-col mt-1 space-y-0.5">
+                                    <span>📞 {booking.customer?.phone || 'N/A'}</span>
+                                    <span>✉️ {booking.customer?.email}</span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
                           </div>
                         ) : (
-                          <button
-                            onClick={() => handleCancelTrip(trip._id, trip.departureTime)}
-                            className="w-full h-9 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 transition-colors flex items-center justify-center gap-1 text-xs font-semibold"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" /> Cancel Trip Listing
-                          </button>
+                          <div className="text-center text-ink/40 text-[11px] py-4 border border-dashed border-ink/10 rounded-xl bg-sand/5">
+                            No seats booked yet.
+                          </div>
+                        )}
+
+                        {/* Cancellation options */}
+                        {canCancel && (
+                          <div className="pt-2 border-t border-ink/5 flex justify-end">
+                            {cancelDisabled ? (
+                              <div className="text-[11px] text-rose-600 bg-rose-50 px-3 py-1.5 rounded-lg border border-rose-100/50 flex items-center gap-1.5">
+                                <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                                <span>Locked (Departure inside 2h)</span>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => handleCancelTrip(trip._id, trip.departureTime)}
+                                className="w-full sm:w-auto px-4 h-9 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 transition-colors flex items-center justify-center gap-1 text-xs font-semibold"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" /> Cancel Trip Listing
+                              </button>
+                            )}
+                          </div>
                         )}
                       </div>
                     )}

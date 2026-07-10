@@ -132,7 +132,9 @@ export default function ServiceCard({ service }) {
         <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-ink/5 flex flex-col gap-2.5 sm:gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-col min-w-0">
             <span className="text-[10px] uppercase tracking-widest text-ink/40 font-medium mb-0.5">Price</span>
-            <span className="text-sm sm:text-lg font-bold text-ink truncate">{formatPrice(service.price)}</span>
+            <span className="text-sm sm:text-lg font-bold text-ink truncate">
+              {isCarService ? `starts ${formatPrice(service.price)}` : formatPrice(service.price)}
+            </span>
           </div>
 
           <div className="flex items-center gap-2 w-full sm:w-auto min-w-0">

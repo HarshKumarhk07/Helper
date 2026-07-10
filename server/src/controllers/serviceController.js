@@ -5,6 +5,7 @@ import { ApiError, asyncHandler } from '../utils/asyncHandler.js';
 import WorkerService from '../models/WorkerService.js';
 import Review from '../models/Review.js';
 import Booking from '../models/Booking.js';
+import CarTrip from '../models/CarTrip.js';
 
 const slugify = (s) =>
   s.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -79,13 +80,49 @@ export const listServices = asyncHandler(async (req, res) => {
   const parsedLimit = limit ? parseInt(limit, 10) : 500;
   services = services.slice(0, parsedLimit);
 
-  res.json({ services });
+  // Convert to plain objects to dynamically override car travel service price
+  const plainServices = [];
+  for (let svc of services) {
+    const obj = svc.toObject();
+    const isCar = obj.slug === 'car-trips' || (obj.category && obj.category.slug === 'car-trips');
+    if (isCar) {
+      try {
+        const activeTrips = await CarTrip.find({ status: 'active', departureTime: { $gte: new Date() } })
+          .select('pricePerSeatOutbound')
+          .lean();
+        if (activeTrips.length > 0) {
+          obj.price = Math.min(...activeTrips.map((t) => t.pricePerSeatOutbound));
+        }
+      } catch (err) {
+        console.error('Error finding lowest car trip price:', err);
+      }
+    }
+    plainServices.push(obj);
+  }
+
+  res.json({ services: plainServices });
 });
 
 export const getService = asyncHandler(async (req, res) => {
   const svc = await Service.findById(req.params.id).populate('category', 'name slug icon color');
   if (!svc) throw new ApiError(404, 'Service not found');
-  res.json({ service: svc });
+  
+  const obj = svc.toObject();
+  const isCar = obj.slug === 'car-trips' || (obj.category && obj.category.slug === 'car-trips');
+  if (isCar) {
+    try {
+      const activeTrips = await CarTrip.find({ status: 'active', departureTime: { $gte: new Date() } })
+        .select('pricePerSeatOutbound')
+        .lean();
+      if (activeTrips.length > 0) {
+        obj.price = Math.min(...activeTrips.map((t) => t.pricePerSeatOutbound));
+      }
+    } catch (err) {
+      console.error('Error finding lowest car trip price:', err);
+    }
+  }
+  
+  res.json({ service: obj });
 });
 
 export const getServiceWorkers = asyncHandler(async (req, res) => {
