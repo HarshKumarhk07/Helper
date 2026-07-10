@@ -1004,7 +1004,7 @@ export default function Navbar() {
                                           {catName}
                                         </div>
                                         <div className="pl-2 border-l border-ink/5 space-y-1.5">
-                                          {svcs.map((svc) => (
+                                          {svcs.services.map((svc) => (
                                             <Link
                                               key={svc._id}
                                               to={`/services/${svc._id}`}
