@@ -17,7 +17,7 @@ export default function WorkerCard({ worker }) {
 
   const displayName = getWorkerName(worker);
   const displayAvatar = getWorkerAvatar(worker);
-  const displayExp = worker.experienceYears || (getWorkerExperience(worker) ? parseInt(getWorkerExperience(worker).match(/\d+/)?.[0], 10) : 3);
+  const displayExp = worker.experienceYears || 0;
 
   return (
     <div className="group flex flex-col justify-between h-full w-full bg-paper rounded-[1.5rem] p-4 transition-all duration-500 hover:shadow-xl hover:-translate-y-1 border border-ink/5 hover:border-ink/10 overflow-hidden relative min-h-[420px]">
@@ -60,7 +60,9 @@ export default function WorkerCard({ worker }) {
         <div className="space-y-2 text-xs text-ink/75">
           <div className="flex justify-between items-center border-b border-ink/5 pb-2">
             <span>Experience</span>
-            <span className="font-semibold text-ink">{displayExp} years</span>
+            <span className="font-semibold text-ink">
+              {displayExp > 0 ? `${displayExp} year${displayExp === 1 ? '' : 's'}` : 'Verified provider'}
+            </span>
           </div>
           <div className="flex justify-between items-center border-b border-ink/5 pb-2">
             <span>Jobs Completed</span>
@@ -70,15 +72,19 @@ export default function WorkerCard({ worker }) {
           {/* Rating detail */}
           <div className="flex justify-between items-center border-b border-ink/5 pb-2">
             <span>Rating</span>
-            <div className="flex items-center gap-1">
-              <Star size={12} className="fill-amber-400 text-amber-400" />
-              <span className="font-semibold text-ink">{worker.displayRating || '—'}</span>
-              {worker.hasHiredBefore && (
-                <span className="text-[8px] text-[#13294B] font-bold bg-[#13294B]/10 px-1.5 py-0.5 rounded-full ml-1.5">
-                  Previously Hired
-                </span>
-              )}
-            </div>
+            {worker.completedJobs > 0 ? (
+              <div className="flex items-center gap-1">
+                <Star size={12} className="fill-amber-400 text-amber-400" />
+                <span className="font-semibold text-ink">{(worker.displayRating || worker.publicRating || 5).toFixed(1)}/5</span>
+                {worker.hasHiredBefore && (
+                  <span className="text-[8px] text-[#13294B] font-bold bg-[#13294B]/10 px-1.5 py-0.5 rounded-full ml-1.5">
+                    Previously Hired
+                  </span>
+                )}
+              </div>
+            ) : (
+              <span className="font-semibold text-ink/50 text-[10px] uppercase tracking-wider">New professional</span>
+            )}
           </div>
 
           {/* Pricing config display */}

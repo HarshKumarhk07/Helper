@@ -4,9 +4,11 @@ import PillButton from '../components/ui/PillButton.jsx';
 import FadeUp from '../components/ui/FadeUp.jsx';
 import { Trash2, Plus, Minus } from 'lucide-react';
 import { mediaUrl } from '../lib/catalogImage.js';
+import { useAuth } from '../context/AuthContext.jsx';
 
 export default function CartPage() {
   const { cart, removeFromCart, updateQuantity } = useCart();
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   const productCart = cart.filter((item) => item.kind !== 'service');
@@ -22,6 +24,15 @@ export default function CartPage() {
   const grandTotal = productSubtotal + serviceSubtotal;
   const hasProducts = productCart.length > 0;
   const serviceOnlyCart = !hasProducts && serviceCart.length > 0;
+
+  if (user && user.role !== 'user') {
+    return (
+      <section className="container-velora py-20 text-center">
+        <h1 className="heading-display text-4xl mb-4 text-ink">RESTRICTED ACCESS</h1>
+        <p className="text-ink/70 mb-8 max-w-md mx-auto">only accounts registered as customer are allowed to book services/order products</p>
+      </section>
+    );
+  }
 
   if (cart.length === 0) {
     return (

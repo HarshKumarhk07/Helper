@@ -50,6 +50,9 @@ const resolveAddress = async (req) => {
 };
 
 export const createOrder = asyncHandler(async (req, res) => {
+  if (req.user.role !== 'user') {
+    throw new ApiError(403, 'only accounts registered as customer are allowed to book services/order products');
+  }
   const { items, paymentMode, addressId, address, couponCode } = req.body;
   if (!items || !items.length) throw new ApiError(400, 'Order must have items');
   if (paymentMode && paymentMode !== 'online') {
@@ -150,7 +153,10 @@ export const getMyOrder = asyncHandler(async (req, res) => {
 });
 
 export const listMyOrders = asyncHandler(async (req, res) => {
-  const orders = await Order.find({ user: req.user._id }).sort({ createdAt: -1 });
+  const orders = await Order.find({
+    user: req.user._id,
+    paymentStatus: { $in: ['paid', 'refunded'] },
+  }).sort({ createdAt: -1 });
   res.json({ orders });
 });
 

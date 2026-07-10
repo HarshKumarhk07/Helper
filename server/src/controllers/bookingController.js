@@ -125,6 +125,9 @@ const resolveAddress = async (req) => {
 };
 
 export const createBooking = asyncHandler(async (req, res) => {
+  if (req.user.role !== 'user') {
+    throw new ApiError(403, 'only accounts registered as customer are allowed to book services/order products');
+  }
   const { service: serviceId, category: categoryId, worker: workerId, type, scheduledAt, paymentMode, notes, autoAssign } =
     req.body;
 
@@ -281,7 +284,13 @@ export const createBooking = asyncHandler(async (req, res) => {
 
 export const listMyBookings = asyncHandler(async (req, res) => {
   const { status } = req.query;
-  const filter = { user: req.user._id };
+  const filter = {
+    user: req.user._id,
+    $or: [
+      { paymentStatus: { $in: ['paid', 'refunded', 'refund_pending'] } },
+      { isQuoteRequest: true, quoteStatus: { $ne: 'accepted' } }
+    ]
+  };
   if (status) {
     if (status === 'placed') {
       filter.status = { $in: ['placed', 'assigned'] };
@@ -417,6 +426,9 @@ export const rejectJob = asyncHandler(async (req, res) => {
 // POST /bookings/quote-request — customer asks a specific worker for a quote on
 // a variable-priced service. Creates a booking with no confirmed amount yet.
 export const createQuoteRequest = asyncHandler(async (req, res) => {
+  if (req.user.role !== 'user') {
+    throw new ApiError(403, 'only accounts registered as customer are allowed to book services/order products');
+  }
   const { service: serviceId, worker: workerId, type = BOOKING_TYPE.INSTANT, scheduledAt, description, photos } = req.body;
 
   if (!workerId) throw new ApiError(400, 'Select a professional to request a quote from');

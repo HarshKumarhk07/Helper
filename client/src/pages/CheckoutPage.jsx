@@ -123,6 +123,15 @@ export default function CheckoutPage() {
     }
   }, [cart.length, productCart.length, serviceCart.length, navigate]);
 
+  if (user && user.role !== 'user') {
+    return (
+      <section className="container-velora py-20 text-center">
+        <h1 className="heading-display text-4xl mb-4 text-ink">RESTRICTED ACCESS</h1>
+        <p className="text-ink/70 mb-8 max-w-md mx-auto">only accounts registered as customer are allowed to book services/order products</p>
+      </section>
+    );
+  }
+
   if (cart.length === 0 || (productCart.length === 0 && serviceCart.length > 0)) {
     return null;
   }

@@ -179,8 +179,19 @@ export function CartProvider({ children }) {
     }
   }, [isAuthenticated]);
 
+  // Keep workers, admins, and brands from carrying/persisting any cart items.
+  useEffect(() => {
+    if (user && user.role !== 'user') {
+      setCart([]);
+    }
+  }, [user]);
+
   const addToCart = useCallback(
     (product) => {
+      if (user && user.role !== 'user') {
+        toast.error('only accounts registered as customer are allowed to book services/order products');
+        return;
+      }
       const itemKind = product.kind || 'product';
       setCart((prev) => {
         const existing = prev.find(
@@ -210,7 +221,7 @@ export function CartProvider({ children }) {
         addCartItem(product._id, 1).catch(() => null);
       }
     },
-    [isAuthenticated]
+    [isAuthenticated, user]
   );
 
   const removeFromCart = useCallback(

@@ -369,6 +369,9 @@ export const cancelTrip = asyncHandler(async (req, res) => {
 
 // Bookings - create (customer)
 export const createBooking = asyncHandler(async (req, res) => {
+  if (req.user.role !== 'user') {
+    throw new ApiError(403, 'only accounts registered as customer are allowed to book services/order products');
+  }
   const { tripId, legsBooked, seatsOutbound, seatsReturn } = req.body;
 
   if (!tripId || !legsBooked || !Array.isArray(legsBooked) || legsBooked.length === 0) {
@@ -609,7 +612,10 @@ export const cancelBooking = asyncHandler(async (req, res) => {
 
 // Bookings - get own bookings list (customer)
 export const getMyBookings = asyncHandler(async (req, res) => {
-  const bookings = await CarBooking.find({ customer: req.user._id })
+  const bookings = await CarBooking.find({
+    customer: req.user._id,
+    paymentStatus: { $in: ['paid', 'refunded'] },
+  })
     .populate({
       path: 'trip',
       populate: { path: 'professional', select: 'name phone email avatar' },

@@ -275,14 +275,19 @@ export default function BookingFlow() {
         const fetched = data.workers || [];
         setWorkers(fetched);
 
-        // Pre-select worker from URL param if present
-        const queryParams = new URLSearchParams(window.location.search);
-        const urlWorkerId = queryParams.get('worker');
-        if (urlWorkerId) {
-          const match = fetched.find(w => String(w._id) === urlWorkerId);
-          if (match) {
-            setSelectedWorker(match);
-            setAutoAssign(false);
+        if (fetched.length === 0) {
+          setAutoAssign(true);
+          setSelectedWorker(null);
+        } else {
+          // Pre-select worker from URL param if present
+          const queryParams = new URLSearchParams(window.location.search);
+          const urlWorkerId = queryParams.get('worker');
+          if (urlWorkerId) {
+            const match = fetched.find(w => String(w._id) === urlWorkerId);
+            if (match) {
+              setSelectedWorker(match);
+              setAutoAssign(false);
+            }
           }
         }
       })
@@ -700,6 +705,15 @@ export default function BookingFlow() {
     );
   }
 
+  if (user && user.role !== 'user') {
+    return (
+      <section className="container-velora py-20 text-center">
+        <h1 className="heading-display text-4xl mb-4 text-ink">RESTRICTED ACCESS</h1>
+        <p className="text-ink/70 mb-8 max-w-md mx-auto">only accounts registered as customer are allowed to book services/order products</p>
+      </section>
+    );
+  }
+
   const selectedAddress = addresses.find((a) => a._id === selectedAddressId);
   const previewAddress = showAddressForm ? newAddress : selectedAddress;
   const previewHasCoords = hasValidCoords(previewAddress?.lat, previewAddress?.lng);
@@ -1023,19 +1037,22 @@ export default function BookingFlow() {
                     <div className="flex items-center gap-2 text-xs text-black/50">
                       <Loader2 size={14} className="animate-spin" /> Loading professionals…
                     </div>
-                  ) : workers.length === 0 ? (
-                    <p className="text-xs text-black/50">No verified professionals found for this category. We'll auto-assign the closest available expert.</p>
                   ) : (
                     <div className="space-y-3">
+                      {workers.length === 0 && (
+                        <p className="text-xs text-black/50 mb-1">No verified professionals found for this category. We'll auto-assign the closest available expert.</p>
+                      )}
                       {/* Auto-assign option */}
                       <button
                         type="button"
                         onClick={() => {
-                          if (!selectedWorker && autoAssign) {
-                            setAutoAssign(false);
-                          } else {
-                            setSelectedWorker(null);
-                            setAutoAssign(true);
+                          if (workers.length > 0) {
+                            if (!selectedWorker && autoAssign) {
+                              setAutoAssign(false);
+                            } else {
+                              setSelectedWorker(null);
+                              setAutoAssign(true);
+                            }
                           }
                         }}
                         className={`relative block w-full rounded-2xl border p-4 text-left transition ${
@@ -1107,6 +1124,11 @@ export default function BookingFlow() {
                                       ★ Featured
                                     </span>
                                   )}
+                                  {(!w.completedJobs || w.completedJobs === 0) && (
+                                    <span className="rounded-full bg-black/5 text-black/60 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider">
+                                      New professional
+                                    </span>
+                                  )}
                                 </div>
 
                                 {/* Stats row */}
@@ -1155,22 +1177,24 @@ export default function BookingFlow() {
 
                               {/* Right-aligned Rating & Checkmark */}
                               <div className="flex items-center gap-3 shrink-0 self-center ml-auto">
-                                <div className="text-right flex flex-col items-end">
-                                  <div className="flex items-center gap-1 text-xs font-bold text-black">
-                                    <Star size={13} className="fill-amber-400 text-amber-400" />
-                                    <span>{((w.displayRating > 0 ? w.displayRating : null) || w.publicRating || 4.5).toFixed(1)}/5</span>
+                                {w.completedJobs > 0 && (
+                                  <div className="text-right flex flex-col items-end">
+                                    <div className="flex items-center gap-1 text-xs font-bold text-black">
+                                      <Star size={13} className="fill-amber-400 text-amber-400" />
+                                      <span>{((w.displayRating > 0 ? w.displayRating : null) || w.publicRating || 5).toFixed(1)}/5</span>
+                                    </div>
+                                    <div className="text-[10px] text-black/55 mt-0.5">
+                                      {w.completedJobs} review{w.completedJobs === 1 ? '' : 's'}
+                                    </div>
                                   </div>
-                                  <div className="text-[10px] text-black/55 mt-0.5">
-                                    {w.completedJobs > 0 ? `${w.completedJobs} review${w.completedJobs === 1 ? '' : 's'}` : '0 reviews'}
-                                  </div>
+                                )}
+                                <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition-all ${
+                                  active
+                                    ? 'bg-black border-black text-white'
+                                    : 'border-black/20 bg-transparent text-transparent'
+                                }`}>
+                                  <Check size={14} strokeWidth={3} className={active ? 'opacity-100' : 'opacity-0'} />
                                 </div>
-                                 <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition-all ${
-                                   active
-                                     ? 'bg-black border-black text-white'
-                                     : 'border-black/20 bg-transparent text-transparent'
-                                 }`}>
-                                   <Check size={14} strokeWidth={3} className={active ? 'opacity-100' : 'opacity-0'} />
-                                 </div>
                               </div>
                             </div>
                           </button>
