@@ -28,6 +28,9 @@ export default function HeroSection() {
       </div>
 
       {/* ── MOBILE/TABLET HERO VIEW ONLY (lg:hidden) ── */}
+      {/* Keep pt small so the image fills up behind the fixed navbar — adding
+          more here just exposes the navy wrapper bg as a band under the navbar.
+          Navbar clearance is handled by the heading's top offset below. */}
       <div className="lg:hidden flex flex-col pt-[60px] pb-12">
         
         {/* Lady Image Container + Overlapping SearchCard (Full Width Screen!) */}
@@ -45,8 +48,10 @@ export default function HeroSection() {
           {/* Subtle light gradient for text contrast */}
           <div className="absolute inset-0 bg-gradient-to-br from-white/70 via-white/20 to-transparent pointer-events-none z-10" />
 
-          {/* Absolute Heading and Description Overlaid on the Image */}
-          <div className="absolute top-8 left-6 right-6 z-10 select-none">
+          {/* Absolute Heading and Description Overlaid on the Image.
+              top offset pushes the heading below the fixed navbar (the image
+              itself extends up behind the navbar, so no navy band shows). */}
+          <div className="absolute top-20 left-6 right-6 z-10 select-none">
             <h1 className="font-sans text-[clamp(2.1rem,7.5vw,3.2rem)] font-extrabold leading-[1.0] tracking-tightest text-[#13294B] text-left">
               <span>Reliable home</span>
               <br />

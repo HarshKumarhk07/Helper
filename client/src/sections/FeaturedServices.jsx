@@ -69,7 +69,7 @@ export default function FeaturedServices() {
             ))}
           </div>
         ) : (
-          <div className="relative group">
+          <div className="relative">
             {/* Left Scroll Button */}
             <button
               onClick={() => scroll('left')}

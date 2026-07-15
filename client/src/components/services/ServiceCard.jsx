@@ -156,10 +156,9 @@ export default function ServiceCard({ service }) {
               title="Book"
               className="flex flex-1 sm:flex-none min-w-0 items-center justify-center gap-1.5 text-[11px] sm:text-xs font-bold uppercase tracking-wider sm:tracking-widest text-white bg-ink rounded-full py-2 sm:py-3 px-3 sm:px-5 whitespace-nowrap hover:bg-[#13294B] transition-all duration-300 hover:shadow-lg hover:shadow-[#13294B]/20"
             >
-              {/* "Book" label is hidden on mobile (< sm) so the tight cards
-                  show just the arrow instead of clipping to "OOK". Desktop
-                  / tablet (≥ 640px) gets the full "Book →" label. */}
-              <span className="hidden sm:inline">Book</span>
+              {/* Full "Book →" label on every breakpoint. The button is
+                  flex-1 (full width) on mobile, so there's room for the text. */}
+              <span>Book</span>
               <ArrowRight size={14} className="shrink-0 transition-transform group-hover:translate-x-0.5" />
             </button>
           </div>

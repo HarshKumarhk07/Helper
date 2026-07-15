@@ -32,6 +32,14 @@ const DUMMY_FAQS = [
   }
 ];
 
+// Decorative images that flank the FAQ column — swap these for your own.
+const SIDE_IMAGE =
+  'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?auto=format&fit=crop&q=80&w=800';
+const STACK_IMAGE_TOP =
+  'https://images.unsplash.com/photo-1562259949-e8e7689d7828?auto=format&fit=crop&q=80&w=800';
+const STACK_IMAGE_BOTTOM =
+  'https://images.unsplash.com/photo-1595428774223-ef52624120d2?auto=format&fit=crop&q=80&w=800';
+
 export default function HomeFAQ() {
   const [faqs, setFaqs] = useState([]);
   const [openId, setOpenId] = useState(null);
@@ -51,83 +59,96 @@ export default function HomeFAQ() {
   };
 
   return (
-    <section className="bg-paper py-20 md:py-32 overflow-hidden relative">
-      <div className="container-velora relative z-10">
-        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-          
-          {/* Left Side: Large Image */}
-          <FadeUp className="hidden lg:block h-full">
-            <div className="w-full h-[600px] rounded-[2.5rem] overflow-hidden shadow-2xl shadow-ink/5">
-              <img 
-                src="https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&q=80&w=1200" 
-                alt="Cleaning professional" 
+    <section className="bg-paper pt-8 pb-16 md:pt-10 md:pb-20 overflow-hidden">
+      <div className="container-velora">
+
+        {/* Centered heading */}
+        <FadeUp className="text-center mb-8 md:mb-12">
+          <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#13294B]/60 mb-3">
+            Common Questions
+          </p>
+          <h2 className="font-sans text-3xl md:text-[2.75rem] leading-tight tracking-tight text-[#13294B] uppercase">
+            <span className="font-medium">All You </span>
+            <span className="font-extrabold">Need To Know</span>
+          </h2>
+        </FadeUp>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
+
+          {/* Left: single tall image */}
+          <FadeUp className="hidden lg:block lg:col-span-3">
+            <div className="w-full h-[560px] rounded-[2rem] overflow-hidden shadow-xl shadow-ink/5">
+              <img
+                src={SIDE_IMAGE}
+                alt="Professional at work"
                 className="w-full h-full object-cover"
               />
             </div>
           </FadeUp>
 
-          {/* Right Side: Accordion Box */}
-          <FadeUp delay={0.1} className="relative z-20">
-            {/* On desktop, we pull it slightly to the left over the image */}
-            <div className="bg-[#13294B] text-paper rounded-[2.5rem] p-8 md:p-12 lg:-ml-16 shadow-[0_25px_60px_-15px_rgba(19,41,75,0.4)] border border-white/10">
-              
-              {/* FAQ Section Accent Badges */}
-              <div className="mb-4 flex items-center gap-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-[#F5C518]" />
-                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/50">
-                  Common Questions
-                </span>
-              </div>
+          {/* Center: FAQ accordion */}
+          <FadeUp delay={0.1} className="lg:col-span-6">
+            <div className="flex flex-col">
+              {faqs.map((faq) => {
+                const isOpen = openId === faq._id;
 
-              <h2 className="font-sans text-3xl md:text-4xl font-semibold leading-tight tracking-tight mb-8 text-white uppercase">
-                ALL YOU NEED TO KNOW
-              </h2>
-
-              <div className="flex flex-col gap-1">
-                {faqs.map((faq) => {
-                  const isOpen = openId === faq._id;
-                  
-                  return (
-                    <div 
-                      key={faq._id} 
-                      className="border-b border-white/10 last:border-b-0 py-1"
+                return (
+                  <div
+                    key={faq._id}
+                    className="border-b border-ink/10 first:border-t first:border-ink/10"
+                  >
+                    <button
+                      onClick={() => toggleOpen(faq._id)}
+                      className="w-full py-5 md:py-6 flex items-center justify-between text-left group"
                     >
-                      <button
-                        onClick={() => toggleOpen(faq._id)}
-                        className="w-full py-4.5 flex items-center justify-between text-left group"
-                      >
-                        <span className={`text-[15px] md:text-base font-semibold pr-8 transition-colors duration-200 ${
-                          isOpen ? 'text-[#F5C518]' : 'text-white/95 group-hover:text-[#FBBF24]'
-                        }`}>
-                          {faq.question}
-                        </span>
-                        <div className={`flex-shrink-0 transition-colors duration-200 ${
-                          isOpen ? 'text-[#F5C518]' : 'text-white/40 group-hover:text-[#FBBF24]'
-                        }`}>
-                          {isOpen ? <Minus size={18} strokeWidth={2.5} /> : <Plus size={18} strokeWidth={2.5} />}
-                        </div>
-                      </button>
+                      <span className={`text-base md:text-lg font-semibold pr-8 transition-colors duration-200 ${
+                        isOpen ? 'text-[#F5C518]' : 'text-[#13294B] group-hover:text-[#F5C518]'
+                      }`}>
+                        {faq.question}
+                      </span>
+                      <div className={`flex-shrink-0 transition-colors duration-200 ${
+                        isOpen ? 'text-[#F5C518]' : 'text-[#13294B]/30 group-hover:text-[#F5C518]'
+                      }`}>
+                        {isOpen ? <Minus size={20} strokeWidth={2} /> : <Plus size={20} strokeWidth={2} />}
+                      </div>
+                    </button>
 
-                      <AnimatePresence initial={false}>
-                        {isOpen && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: 'auto', opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.25, ease: 'easeInOut' }}
-                            className="overflow-hidden"
-                          >
-                            <p className="pb-5 text-sm md:text-[15px] text-white/80 leading-relaxed pr-8">
-                              {faq.answer}
-                            </p>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  );
-                })}
-              </div>
+                    <AnimatePresence initial={false}>
+                      {isOpen && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.25, ease: 'easeInOut' }}
+                          className="overflow-hidden"
+                        >
+                          <p className="pb-6 text-sm md:text-[15px] text-[#13294B]/70 leading-relaxed pr-8">
+                            {faq.answer}
+                          </p>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                );
+              })}
+            </div>
+          </FadeUp>
 
+          {/* Right: two stacked images */}
+          <FadeUp delay={0.2} className="hidden lg:flex lg:col-span-3 flex-col gap-6">
+            <div className="w-full h-[266px] rounded-[2rem] overflow-hidden shadow-xl shadow-ink/5">
+              <img
+                src={STACK_IMAGE_TOP}
+                alt="Professional painting a wall"
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div className="w-full h-[266px] rounded-[2rem] overflow-hidden shadow-xl shadow-ink/5">
+              <img
+                src={STACK_IMAGE_BOTTOM}
+                alt="Professional painting a wall"
+                className="w-full h-full object-cover"
+              />
             </div>
           </FadeUp>
 

@@ -106,7 +106,14 @@ export default function CheckoutPage() {
     };
   }, []);
 
-  const productCart = cart.filter((item) => item.kind !== 'service');
+  // "Buy Now" scopes the checkout to a single product instead of the whole
+  // cart. When the `buyNow` param is present we only order that one product;
+  // everything else stays in the cart untouched.
+  const buyNowId = searchParams.get('buyNow');
+  const allProductCart = cart.filter((item) => item.kind !== 'service');
+  const productCart = buyNowId
+    ? allProductCart.filter((item) => item.product === buyNowId)
+    : allProductCart;
   const serviceCart = cart.filter((item) => item.kind === 'service');
   const cartTotal = productCart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const total = cartTotal - discount;
@@ -117,11 +124,18 @@ export default function CheckoutPage() {
       return;
     }
 
+    // Buy Now, but the target product isn't in the cart (e.g. removed / stale
+    // link) — nothing to check out, send the user back to their cart.
+    if (buyNowId && productCart.length === 0) {
+      navigate('/cart');
+      return;
+    }
+
     if (productCart.length === 0 && serviceCart.length > 0) {
       toast.error('Your cart has services only. Book them from the service page.');
       navigate('/cart');
     }
-  }, [cart.length, productCart.length, serviceCart.length, navigate]);
+  }, [cart.length, productCart.length, serviceCart.length, buyNowId, navigate]);
 
   if (user && user.role !== 'user') {
     return (
@@ -132,7 +146,9 @@ export default function CheckoutPage() {
     );
   }
 
-  if (cart.length === 0 || (productCart.length === 0 && serviceCart.length > 0)) {
+  // No products to check out (empty cart, services-only, or a Buy Now whose
+  // target product isn't in the cart) — the effect above redirects to /cart.
+  if (cart.length === 0 || productCart.length === 0) {
     return null;
   }
 

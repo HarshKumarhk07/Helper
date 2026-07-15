@@ -49,7 +49,9 @@ export default function ProductDetail() {
 
   // "Buy Now" — skip the cart step. Ensure the product is in the cart
   // (without bumping quantity if already there) and jump straight to
-  // checkout. The cart is left intact so the user can keep other items.
+  // checkout for THIS product only. The `buyNow` param tells the checkout
+  // page to scope the order to this single product, leaving other cart
+  // items untouched.
   const handleBuyNow = () => {
     if (product.stock <= 0) return;
     const already = cart.find(
@@ -64,7 +66,7 @@ export default function ProductDetail() {
         image: resolveCatalogImage(product),
       });
     }
-    navigate('/checkout');
+    navigate(`/checkout?buyNow=${product._id}`);
   };
 
   if (loading) {

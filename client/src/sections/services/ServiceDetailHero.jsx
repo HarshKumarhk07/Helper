@@ -197,73 +197,130 @@ export default function ServiceDetailHero({
 
           </div>
 
-          {/* ── RIGHT COLUMN (Image + Floating Cards) ── */}
-          <div className="relative w-full px-4 py-6 lg:px-0 lg:py-0 overflow-visible flex flex-col lg:block items-center">
-            
-            {/* Background circular decoration (Desktop only) */}
-            <div className="hidden lg:block absolute left-[-10%] top-[-10%] w-[120%] h-[120%] border border-white/10 rounded-full pointer-events-none z-0" />
-            
-            {/* Decorative dot grids (Desktop only) */}
-            <div className="hidden lg:block absolute top-[5%] left-[-4%] w-16 h-24 opacity-25 z-0" style={{
-              backgroundImage: 'radial-gradient(rgba(255,255,255,0.15) 1.5px, transparent 1.5px)',
-              backgroundSize: '10px 10px'
-            }} />
+          {/* ── RIGHT COLUMN ── */}
+          <div className="relative w-full">
 
-            {/* Main Cover Image container */}
-            <div className="relative w-full max-w-[500px] lg:max-w-none lg:w-full h-[480px] lg:h-[450px] rounded-2xl shadow-xl z-10 overflow-hidden lg:overflow-visible transition-transform duration-500 lg:transform lg:rotate-[-1.5deg] lg:hover:rotate-0">
-              <img
-                src={coverImage}
-                alt={titlePrimary}
-                className="absolute inset-0 w-full h-full object-cover rounded-2xl"
-              />
+            {/* ===== MOBILE ONLY: staircase cards on the left, square image on the right ===== */}
+            <div className="lg:hidden">
+              <div className="flex items-center gap-3">
 
-              {/* Card 1: Top-Right */}
-              {trustCards?.topRight && (
-                <div
-                  className="absolute top-[4%] right-[4%] w-[62%] lg:top-[8%] lg:-right-[6%] lg:w-[220px] bg-white rounded-xl lg:rounded-2xl shadow-lg lg:shadow-xl p-3 lg:p-4 border border-slate-100 z-25 text-left"
-                >
-                  <div className="flex gap-2.5 lg:gap-3">
-                    <div className="flex h-8 w-8 lg:h-9 lg:w-9 items-center justify-center rounded-full bg-[#E8EEFF] shrink-0">
-                      {trustCards.topRight.icon && React.cloneElement(trustCards.topRight.icon, { size: 15, style: { color: '#2F5FF6' } })}
-                    </div>
-                    <div className="min-w-0">
-                      <h4 className="text-[11px] lg:text-xs font-bold text-[#0B1220] leading-tight">{trustCards.topRight.title}</h4>
-                      <p className="text-[9px] lg:text-[10px] text-slate-400 mt-0.5 lg:mt-1 leading-snug">{trustCards.topRight.subtext}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
+                {/* Staircase cards column — all cards equal size, stepped right */}
+                <div className="flex w-[54%] flex-col gap-3">
 
-              {/* Card 2: Bottom-Left */}
-              {trustCards?.bottomLeft && (
-                <div
-                  className="absolute top-[38%] left-[4%] w-[68%] lg:top-auto lg:bottom-[-6%] lg:left-[-6%] lg:w-[235px] bg-white rounded-xl lg:rounded-2xl shadow-lg lg:shadow-xl p-3 lg:p-4 border border-slate-100 z-25 text-left"
-                >
-                  <div className="flex gap-2.5 lg:gap-3">
-                    <div className="flex h-8 w-8 lg:h-9 lg:w-9 items-center justify-center rounded-full bg-[#E8EEFF] shrink-0">
-                      {trustCards.bottomLeft.icon && React.cloneElement(trustCards.bottomLeft.icon, { size: 15, style: { color: '#2F5FF6' } })}
+                  {/* Card 1 (top step) */}
+                  {trustCards?.topRight && (
+                    <div className="w-[80%] ml-0 min-h-[88px] bg-white rounded-xl shadow-lg p-3 border border-slate-100 text-left flex items-center gap-2.5">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#E8EEFF] shrink-0">
+                        {trustCards.topRight.icon && React.cloneElement(trustCards.topRight.icon, { size: 14, style: { color: '#2F5FF6' } })}
+                      </div>
+                      <div className="min-w-0">
+                        <h4 className="text-[11px] font-bold text-[#0B1220] leading-tight">{trustCards.topRight.title}</h4>
+                        <p className="text-[9px] text-slate-400 mt-0.5 leading-snug">{trustCards.topRight.subtext}</p>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <h4 className="text-[11px] lg:text-xs font-bold text-[#0B1220] leading-tight">{trustCards.bottomLeft.title}</h4>
-                      <p className="text-[9px] lg:text-[10px] text-slate-400 mt-0.5 lg:mt-1 leading-snug">{trustCards.bottomLeft.subtext}</p>
+                  )}
+
+                  {/* Card 2 (middle step) */}
+                  {trustCards?.bottomLeft && (
+                    <div className="w-[80%] ml-[10%] min-h-[88px] bg-white rounded-xl shadow-lg p-3 border border-slate-100 text-left flex items-center gap-2.5">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#E8EEFF] shrink-0">
+                        {trustCards.bottomLeft.icon && React.cloneElement(trustCards.bottomLeft.icon, { size: 14, style: { color: '#2F5FF6' } })}
+                      </div>
+                      <div className="min-w-0">
+                        <h4 className="text-[11px] font-bold text-[#0B1220] leading-tight">{trustCards.bottomLeft.title}</h4>
+                        <p className="text-[9px] text-slate-400 mt-0.5 leading-snug">{trustCards.bottomLeft.subtext}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Card 3 (bottom step — price) */}
+                  <div className="w-[80%] ml-[20%] min-h-[88px] bg-[#2F5FF6] rounded-xl shadow-lg p-3 text-white flex items-center gap-2.5 text-left">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F5B400] shrink-0 text-white shadow-sm">
+                      <Check size={14} strokeWidth={3} />
+                    </div>
+                    <div>
+                      <span className="text-[9px] text-white/70 block leading-none">Starts at</span>
+                      <span className="text-base font-bold block mt-0.5 leading-none">₹{price}</span>
+                      <span className="text-[8px] text-white/70 block mt-0.5 leading-none">per service</span>
                     </div>
                   </div>
-                </div>
-              )}
 
-              {/* Card 3: Bottom-Right Price Badge */}
-              <div
-                className="absolute bottom-[4%] right-[4%] w-[48%] lg:bottom-[6%] lg:-right-[4%] lg:w-[150px] bg-[#2F5FF6] rounded-xl lg:rounded-2xl shadow-lg lg:shadow-xl p-3 lg:p-3.5 text-white z-25 flex items-center gap-2 lg:gap-2.5 text-left"
-              >
-                <div className="flex h-7 w-7 lg:h-8 lg:w-8 items-center justify-center rounded-full bg-[#F5B400] shrink-0 text-white shadow-sm">
-                  <Check size={14} strokeWidth={3} className="lg:hidden" />
-                  <Check size={16} strokeWidth={3} className="hidden lg:block" />
                 </div>
-                <div>
-                  <span className="text-[9px] lg:text-[10px] text-white/70 block leading-none">Starts at</span>
-                  <span className="text-base lg:text-xl font-bold block mt-0.5 leading-none">₹{price}</span>
-                  <span className="text-[8px] lg:text-[9px] text-white/70 block mt-0.5 leading-none">per service</span>
+
+                {/* Cover image — square */}
+                <div className="relative w-[46%] aspect-square rounded-2xl shadow-xl overflow-hidden">
+                  <img
+                    src={coverImage}
+                    alt={titlePrimary}
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
                 </div>
+
+              </div>
+            </div>
+
+            {/* ===== DESKTOP ONLY: image with floating cards (unchanged) ===== */}
+            <div className="hidden lg:block relative w-full px-4 py-6 lg:px-0 lg:py-0 overflow-visible">
+
+              {/* Background circular decoration */}
+              <div className="absolute left-[-10%] top-[-10%] w-[120%] h-[120%] border border-white/10 rounded-full pointer-events-none z-0" />
+
+              {/* Decorative dot grids */}
+              <div className="absolute top-[5%] left-[-4%] w-16 h-24 opacity-25 z-0" style={{
+                backgroundImage: 'radial-gradient(rgba(255,255,255,0.15) 1.5px, transparent 1.5px)',
+                backgroundSize: '10px 10px'
+              }} />
+
+              {/* Main Cover Image container */}
+              <div className="relative w-full h-[450px] rounded-2xl shadow-xl z-10 overflow-visible transition-transform duration-500 transform rotate-[-1.5deg] hover:rotate-0">
+                <img
+                  src={coverImage}
+                  alt={titlePrimary}
+                  className="absolute inset-0 w-full h-full object-cover rounded-2xl"
+                />
+
+                {/* Card 1: Top-Right */}
+                {trustCards?.topRight && (
+                  <div className="absolute top-[8%] -right-[6%] w-[220px] bg-white rounded-2xl shadow-xl p-4 border border-slate-100 z-25 text-left">
+                    <div className="flex gap-3">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#E8EEFF] shrink-0">
+                        {trustCards.topRight.icon && React.cloneElement(trustCards.topRight.icon, { size: 15, style: { color: '#2F5FF6' } })}
+                      </div>
+                      <div className="min-w-0">
+                        <h4 className="text-xs font-bold text-[#0B1220] leading-tight">{trustCards.topRight.title}</h4>
+                        <p className="text-[10px] text-slate-400 mt-1 leading-snug">{trustCards.topRight.subtext}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Card 2: Bottom-Left */}
+                {trustCards?.bottomLeft && (
+                  <div className="absolute bottom-[-6%] left-[-6%] w-[235px] bg-white rounded-2xl shadow-xl p-4 border border-slate-100 z-25 text-left">
+                    <div className="flex gap-3">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#E8EEFF] shrink-0">
+                        {trustCards.bottomLeft.icon && React.cloneElement(trustCards.bottomLeft.icon, { size: 15, style: { color: '#2F5FF6' } })}
+                      </div>
+                      <div className="min-w-0">
+                        <h4 className="text-xs font-bold text-[#0B1220] leading-tight">{trustCards.bottomLeft.title}</h4>
+                        <p className="text-[10px] text-slate-400 mt-1 leading-snug">{trustCards.bottomLeft.subtext}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Card 3: Bottom-Right Price Badge */}
+                <div className="absolute bottom-[6%] -right-[4%] w-[150px] bg-[#2F5FF6] rounded-2xl shadow-xl p-3.5 text-white z-25 flex items-center gap-2.5 text-left">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F5B400] shrink-0 text-white shadow-sm">
+                    <Check size={16} strokeWidth={3} />
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-white/70 block leading-none">Starts at</span>
+                    <span className="text-xl font-bold block mt-0.5 leading-none">₹{price}</span>
+                    <span className="text-[9px] text-white/70 block mt-0.5 leading-none">per service</span>
+                  </div>
+                </div>
+
               </div>
 
             </div>

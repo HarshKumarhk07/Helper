@@ -96,12 +96,15 @@ export function CartProvider({ children }) {
   const validatedRef = useRef(new Set());
 
   // When the active user changes, swap to that user's cart bucket so one
-  // user's cart never appears in another user's session.
-  useEffect(() => {
-    if (lastKeyRef.current === currentKey) return;
+  // user's cart never appears in another user's session. This runs during
+  // render (not in an effect) so that `cart` already reflects the new bucket
+  // by the time the validate/merge effects below read it — otherwise those
+  // effects fire with the *previous* user's items still in the closure and
+  // write them forward into the new bucket / new user's server cart.
+  if (lastKeyRef.current !== currentKey) {
     lastKeyRef.current = currentKey;
     setCart(readKey(currentKey));
-  }, [currentKey]);
+  }
 
   // Persist only when `cart` actually changes — never on currentKey change
   // alone. Listening to currentKey here would fire on logout with the
@@ -142,7 +145,11 @@ export function CartProvider({ children }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentKey, bootstrapping]);
 
-  // On login, push any local product items to the server, then read the merged cart back.
+  // On login, merge ONLY the guest bucket into the account, then read the
+  // merged cart back. We deliberately never merge from `cart` / another
+  // user's bucket — the guest bucket is the only cart that belongs to
+  // "whoever just logged in". After merging we clear the guest bucket so a
+  // subsequent login on a different account can't inherit these items.
   useEffect(() => {
     if (!isAuthenticated || !user?._id) return;
     if (syncedForUserRef.current === user._id) return;
@@ -151,16 +158,32 @@ export function CartProvider({ children }) {
     let cancelled = false;
     const run = async () => {
       try {
-        const localProducts = cart
+        const guestItems = readKey(GUEST_KEY);
+        const guestProducts = guestItems
           .filter((it) => it.kind !== 'service' && it.product)
           .map((it) => ({ productId: it.product, quantity: it.quantity }));
+        const guestServices = guestItems.filter((it) => it.kind === 'service');
 
         const merged =
-          localProducts.length > 0
-            ? await mergeServerCart(localProducts)
+          guestProducts.length > 0
+            ? await mergeServerCart(guestProducts)
             : await getMyCart();
         if (cancelled) return;
-        setCart((current) => mergeServerWithLocal(merged.items, current));
+
+        // Server products (source of truth) + this user's own local services
+        // + any guest services carried over on this login.
+        setCart((current) => {
+          const withGuestServices = mergeServerWithLocal(merged.items, current);
+          const keys = new Set(withGuestServices.map((it) => `${it.kind}:${it.product}`));
+          const carried = guestServices.filter(
+            (gs) => !keys.has(`${gs.kind}:${gs.product}`)
+          );
+          return [...withGuestServices, ...carried];
+        });
+
+        // Guest items have been absorbed into this account — empty the guest
+        // bucket so the next account to log in on this browser starts clean.
+        writeKey(GUEST_KEY, []);
       } catch {
         // Best-effort; if server is unreachable we keep the local cart.
       }

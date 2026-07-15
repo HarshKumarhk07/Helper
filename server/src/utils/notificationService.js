@@ -75,28 +75,53 @@ export const sendEmail = async ({ to, subject, html, text }) => {
 
   if (!recipients.length) return { skipped: true, reason: 'missing_to' };
 
-  try {
-    const response = await client.transactionalEmails.sendTransacEmail({
-      sender: getSenderIdentity(),
-      to: recipients,
-      subject,
-      htmlContent: html,
-      textContent: text || stripHtml(html),
-    });
-    const messageId = response?.messageId || response?.body?.messageId || null;
-    console.log(
-      `[notification] email sent to ${recipients.map((r) => r.email).join(', ')} (${messageId || 'no-id'}) — ${subject}`
-    );
-    return { ok: true, id: messageId };
-  } catch (err) {
-    // Brevo SDK errors surface useful detail on err.body / err.statusCode.
-    // Surface both so logs are actionable without leaking the API key.
-    const status = err?.statusCode || err?.status || err?.response?.status;
-    const body = err?.body || err?.response?.body || err?.response?.data;
-    const detail = (body && (body.message || body.code)) || err?.message || 'unknown error';
-    console.error(`[notification] Brevo email failed (status=${status || 'n/a'}): ${detail}`);
-    return { ok: false, error: detail, status };
+  const payload = {
+    sender: getSenderIdentity(),
+    to: recipients,
+    subject,
+    htmlContent: html,
+    textContent: text || stripHtml(html),
+  };
+
+  // Brevo occasionally returns transient errors — 429 rate-limits, 5xx, or a
+  // dropped connection with no HTTP response (common on deployed hosts). Those
+  // used to be fatal: a single blip silently lost the email. Retry a few times
+  // with backoff so intermittent failures self-heal instead of dropping mail.
+  const MAX_ATTEMPTS = 3;
+  let last = null;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
+    try {
+      const response = await client.transactionalEmails.sendTransacEmail(payload);
+      const messageId = response?.messageId || response?.body?.messageId || null;
+      console.log(
+        `[notification] email sent to ${recipients.map((r) => r.email).join(', ')} (${messageId || 'no-id'})${attempt > 1 ? ` [attempt ${attempt}]` : ''} — ${subject}`
+      );
+      return { ok: true, id: messageId };
+    } catch (err) {
+      // Brevo SDK errors surface useful detail on err.body / err.statusCode.
+      // Surface both so logs are actionable without leaking the API key.
+      const status = err?.statusCode || err?.status || err?.response?.status;
+      const body = err?.body || err?.response?.body || err?.response?.data;
+      const detail = (body && (body.message || body.code)) || err?.message || 'unknown error';
+      last = { detail, status };
+
+      // No HTTP status = network/connection error (transient). 408/429/5xx are
+      // retryable; 4xx like invalid sender / bad payload are permanent.
+      const transient =
+        status == null || status === 408 || status === 429 || (status >= 500 && status < 600);
+      if (transient && attempt < MAX_ATTEMPTS) {
+        const backoffMs = 400 * attempt;
+        console.warn(
+          `[notification] Brevo email transient failure (status=${status || 'n/a'}) attempt ${attempt}/${MAX_ATTEMPTS}, retrying in ${backoffMs}ms: ${detail}`
+        );
+        await new Promise((resolve) => setTimeout(resolve, backoffMs));
+        continue;
+      }
+      console.error(`[notification] Brevo email failed (status=${status || 'n/a'}): ${detail}`);
+      return { ok: false, error: detail, status };
+    }
   }
+  return { ok: false, error: last?.detail || 'email failed', status: last?.status };
 };
 
 // Map raw Twilio errors to user-actionable messages.
@@ -628,7 +653,14 @@ export const notificationStatus = () => ({
   sms: !!getSmsClient(),
 });
 
-// Idempotent notification wrapper
+// Idempotent notification wrapper.
+//
+// The claim (setting the flag) is made BEFORE sending so concurrent callers
+// don't double-send. But if the send then fails on every channel, we must
+// release the claim — otherwise the notification is permanently marked "sent"
+// when nothing was delivered, and it can never be re-attempted. That was the
+// cause of "sometimes the start/end-service mail doesn't arrive": a transient
+// Brevo failure flipped the flag to true and the mail was lost for good.
 export const sendBookingNotificationOnce = async (bookingId, notificationKey, notifyFn, args) => {
   const updateKey = `sentNotifications.${notificationKey}`;
   const booking = await Booking.findOneAndUpdate(
@@ -640,7 +672,30 @@ export const sendBookingNotificationOnce = async (bookingId, notificationKey, no
     console.log(`[notification] Duplicate skipped for booking=${bookingId} key=${notificationKey}`);
     return null;
   }
-  return notifyFn(args);
+
+  const releaseClaim = () =>
+    Booking.updateOne({ _id: bookingId }, { $unset: { [updateKey]: '' } }).catch(() => {});
+
+  try {
+    const results = await notifyFn(args);
+    // notify* fns return Promise.allSettled results: [{status, value}, ...]
+    // where each value is { ok }, { ok:false } or { skipped }. If not a single
+    // channel actually delivered, release the claim so a later re-trigger can
+    // retry instead of the notification being lost forever.
+    const anyDelivered =
+      Array.isArray(results) &&
+      results.some((r) => r.status === 'fulfilled' && r.value && r.value.ok === true);
+    if (Array.isArray(results) && !anyDelivered) {
+      await releaseClaim();
+      console.warn(
+        `[notification] Released claim for booking=${bookingId} key=${notificationKey} — no channel delivered`
+      );
+    }
+    return results;
+  } catch (err) {
+    await releaseClaim();
+    throw err;
+  }
 };
 
 export const notifyCarBookingPlaced = async ({ professional, customer, trip, booking }) => {
