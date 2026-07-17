@@ -3,6 +3,7 @@ import Booking from '../models/Booking.js';
 import Earning from '../models/Earning.js';
 import Review from '../models/Review.js';
 import WorkerAvailability from '../models/WorkerAvailability.js';
+import WorkerService from '../models/WorkerService.js';
 import { ROLES } from '../config/roles.js';
 import { BOOKING_STATUS } from '../config/booking.js';
 import { ApiError, asyncHandler } from '../utils/asyncHandler.js';
@@ -174,8 +175,24 @@ export const listKycSubmissions = asyncHandler(async (req, res) => {
     counts.all += count;
   });
 
+  // How many catalog services each worker on this page offers, so the admin
+  // list can surface enrolment inline instead of making admins open each
+  // worker's full profile. One aggregate for the page, not N queries.
+  const workerIds = workers.filter((w) => w.role === ROLES.WORKER).map((w) => w._id);
+  const serviceCounts = new Map();
+  if (workerIds.length > 0) {
+    const agg = await WorkerService.aggregate([
+      { $match: { worker: { $in: workerIds } } },
+      { $group: { _id: '$worker', n: { $sum: 1 } } },
+    ]);
+    agg.forEach(({ _id, n }) => serviceCounts.set(String(_id), n));
+  }
+
   res.json({
-    workers: workers.map(safeUser),
+    workers: workers.map((w) => ({
+      ...safeUser(w),
+      serviceCount: serviceCounts.get(String(w._id)) || 0,
+    })),
     counts,
     pagination: {
       page,

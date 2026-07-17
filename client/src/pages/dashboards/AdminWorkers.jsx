@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { ShieldCheck, ShieldX, ShieldAlert, FileText, Eye } from 'lucide-react';
+import { ShieldCheck, ShieldX, ShieldAlert, FileText, Eye, Wrench, X } from 'lucide-react';
 import DashboardShell from './DashboardShell.jsx';
 import FadeUp from '../../components/ui/FadeUp.jsx';
 import {
@@ -10,6 +10,7 @@ import {
   rejectKyc,
 } from '../../api/kyc.js';
 import { mediaUrl } from '../../lib/catalogImage.js';
+import WorkerServicesOverride from '../../components/admin/WorkerServicesOverride.jsx';
 import useAdminSeen from '../../hooks/useAdminSeen.js';
 
 const STATUS_TABS = [
@@ -78,6 +79,8 @@ export default function AdminWorkers() {
   const [counts, setCounts] = useState({ all: 0 });
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
+  // Worker whose service enrolments are being managed in the modal.
+  const [servicesFor, setServicesFor] = useState(null);
   const [rejectMode, setRejectMode] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -204,6 +207,7 @@ export default function AdminWorkers() {
             <tr>
               <th className="p-4 font-normal">Applicant</th>
               <th className="p-4 font-normal">KYC</th>
+              <th className="p-4 font-normal">Services</th>
               <th className="p-4 font-normal">Submitted</th>
               <th className="p-4 font-normal">Reviewed</th>
               <th className="p-4 font-normal">Actions</th>
@@ -212,13 +216,13 @@ export default function AdminWorkers() {
           <tbody className="divide-y divide-ink/10">
             {loading ? (
               <tr>
-                <td colSpan="5" className="p-6 text-center text-ink/60">
+                <td colSpan="6" className="p-6 text-center text-ink/60">
                   Loading…
                 </td>
               </tr>
             ) : filtered.length === 0 ? (
               <tr>
-                <td colSpan="5" className="p-6 text-center text-ink/60">
+                <td colSpan="6" className="p-6 text-center text-ink/60">
                   No submissions in this state.
                 </td>
               </tr>
@@ -259,6 +263,25 @@ export default function AdminWorkers() {
                       <div className="mt-2 text-xs text-red-600">
                         {w.kycRejectionReason}
                       </div>
+                    )}
+                  </td>
+                  {/* Enrolled services — opens the manage modal inline so admins
+                      don't have to dig into the full profile to assign work. */}
+                  <td className="p-4">
+                    {w.role === 'worker' ? (
+                      <button
+                        onClick={() => setServicesFor(w)}
+                        className="inline-flex items-center gap-1.5 rounded-full border border-ink/20 px-3 py-1.5 text-xs font-medium text-ink transition hover:bg-ink hover:text-paper"
+                        title="Assign or remove services for this worker"
+                      >
+                        <Wrench size={12} />
+                        {w.serviceCount || 0}
+                        <span className="text-[10px] uppercase tracking-widest opacity-70">
+                          {w.serviceCount === 1 ? 'service' : 'services'}
+                        </span>
+                      </button>
+                    ) : (
+                      <span className="text-xs text-ink/35">—</span>
                     )}
                   </td>
                   <td className="p-4 text-xs text-ink">
@@ -322,6 +345,44 @@ export default function AdminWorkers() {
             >
               Next
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Manage a worker's service enrolments without leaving the list.
+          Reuses the same panel as the full profile, so behaviour stays in one
+          place. Closing reloads so the Services count in the row is current. */}
+      {servicesFor && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-ink/70 px-4 py-8 backdrop-blur-sm">
+          <div className="w-full max-w-lg">
+            <div className="mb-3 flex items-center justify-between">
+              <div className="text-paper">
+                <div className="text-[10px] uppercase tracking-widest opacity-60">
+                  Manage services
+                </div>
+                <div className="text-lg font-semibold">{servicesFor.name}</div>
+              </div>
+              <button
+                onClick={() => {
+                  setServicesFor(null);
+                  load();
+                }}
+                className="rounded-full bg-paper/10 p-2 text-paper transition hover:bg-paper/20"
+                aria-label="Close"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {servicesFor.kycStatus !== 'verified' && (
+              <div className="mb-3 rounded-xl border border-amber-300/40 bg-amber-100/90 px-3 py-2 text-xs text-amber-900">
+                This worker's KYC is <strong>{servicesFor.kycStatus || 'pending'}</strong>. You can
+                assign services, but they won't be bookable until KYC is verified and their account
+                is active.
+              </div>
+            )}
+
+            <WorkerServicesOverride workerId={servicesFor._id} />
           </div>
         </div>
       )}
