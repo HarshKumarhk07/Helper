@@ -23,7 +23,12 @@ const priceLabel = (ws) => {
   if (ws.pricingType === 'variable') {
     return ws.startingPrice > 0 ? `From ${formatPrice(ws.startingPrice)}` : 'Quote on request';
   }
-  return formatPrice(ws.amount);
+  // amount 0 = "no custom price set" (e.g. bulk enrolment or an admin
+  // assignment), in which case the catalog price is what's actually charged.
+  // Rendering the raw 0 made the worker look free.
+  return ws.amount > 0
+    ? formatPrice(ws.amount)
+    : `${formatPrice(ws.service?.price || 0)} · catalog price`;
 };
 
 // Shared pricing editor used by both the Add and Edit flows. When the admin

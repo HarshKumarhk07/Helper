@@ -226,6 +226,13 @@ export const getWorkersForCustomer = asyncHandler(async (req, res) => {
     role: ROLES.WORKER,
     kycStatus: 'verified',
     isActive: true,
+    // Don't offer a worker who is mid-job. Auto-assign already excludes busy
+    // workers, so without this the customer could hand-pick someone the
+    // dispatcher would never choose. It also protects currentBooking: accepting
+    // a second job while busy would overwrite the link to the job they're
+    // actually on, and completing the new one would free them mid-service.
+    // $ne also matches legacy docs with no currentStatus field.
+    currentStatus: { $ne: 'busy' },
   };
 
   // When a specific service is requested, only surface workers who actually

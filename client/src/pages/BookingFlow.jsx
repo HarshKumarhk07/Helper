@@ -1207,7 +1207,13 @@ export default function BookingFlow() {
                                       ? offering.startingPrice > 0
                                         ? `From ${formatPrice(offering.startingPrice)} · Get a quote`
                                         : 'Get a quote'
-                                      : `Fixed ${formatPrice(offering.amount)}`
+                                      : /* amount 0 means "no custom price — use
+                                           the catalog price", which is what the
+                                           server actually charges. Showing the
+                                           raw 0 advertised the job as free. */
+                                        `Fixed ${formatPrice(
+                                          offering.amount > 0 ? offering.amount : service?.price || 0
+                                        )}`
                                     : w.pricingType === 'hourly'
                                     ? `₹${w.hourlyRate}/hr`
                                     : `Fixed ₹${w.fixedPrice}`}
