@@ -396,14 +396,16 @@ export default function WorkerJobs() {
                       </Link>
                     )}
 
-                    {/* Once travelling, the job can be started with the start PIN. */}
-                    {b.status === BOOKING_STATUS.CONFIRMED && b.enRouteAt && (
+                    {/* Start the job with the customer's start PIN. Available for
+                        ANY confirmed booking — "On the way" is an optional
+                        tracking convenience, never a gate on starting work. */}
+                    {b.status === BOOKING_STATUS.CONFIRMED && (
                       <button
                         onClick={() => move(b, BOOKING_STATUS.IN_PROGRESS, 'Started')}
                         disabled={rowBusy}
                         className="pill-btn-solid px-4 py-1.5 text-xs disabled:opacity-50"
                       >
-                        Start job
+                        Start job (Enter PIN)
                       </button>
                     )}
 

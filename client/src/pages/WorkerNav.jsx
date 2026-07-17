@@ -517,8 +517,10 @@ export default function WorkerNav() {
                   <Navigation size={13} /> On the way
                 </button>
               )}
-              {/* Travelling → can start the job with the customer's start PIN. */}
-              {status === BOOKING_STATUS.CONFIRMED && booking.enRouteAt && (
+              {/* Start with the customer's start PIN. Available for ANY confirmed
+                  booking — "On the way" is an optional tracking convenience, not
+                  a gate on starting work. */}
+              {status === BOOKING_STATUS.CONFIRMED && (
                 <button
                   onClick={handleStart}
                   disabled={working}
