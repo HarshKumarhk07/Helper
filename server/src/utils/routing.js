@@ -1,7 +1,15 @@
 // OSRM routing client.
-// Default: free public OSRM server (router.project-osrm.org).
-// Override with OSRM_BASE_URL env var, or set OPENROUTESERVICE_API_KEY to use ORS.
-
+//
+// Default: OSRM's FREE PUBLIC DEMO server (router.project-osrm.org). That server
+// is explicitly not intended for production use and will rate-limit under real
+// traffic — swap it before launch.
+//
+// Point OSRM_BASE_URL at a self-hosted OSRM or any OSRM-COMPATIBLE host and no
+// code change is needed. Note that only OSRM-compatible endpoints work as a
+// pure config swap: both the URL shape (/route/v1/driving/{lng},{lat};...) and
+// the response parsing below are OSRM-specific. A non-OSRM provider (Google
+// Directions, Mapbox, OpenRouteService) needs an adapter here — there is
+// currently NO OpenRouteService support despite what older comments claimed.
 const DEFAULT_OSRM = 'https://router.project-osrm.org';
 const ROUTE_CACHE_TTL_MS = 30_000; // 30s — coarse enough for ETA, cheap enough for live updates
 const ROUTE_CACHE_BUCKET_M = 25;   // round positions to ~25m buckets to keep the cache hit-rate high
