@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { mediaUrl } from '../../lib/catalogImage.js';
+import ChooseServicesPrompt from '../../components/worker/ChooseServicesPrompt.jsx';
 
 const getInitials = (name = '') =>
   name
@@ -160,6 +161,11 @@ export default function DashboardShell({ eyebrow, title, children, slices }) {
               ))}
             </div>
           )}
+
+          {/* A worker with no service enrolments is invisible to the picker and
+              to auto-assign — surface that rather than let them wait for jobs
+              that can never arrive. Self-hides once they've enrolled. */}
+          {role === 'worker' && <ChooseServicesPrompt />}
 
           {children}
         </div>
