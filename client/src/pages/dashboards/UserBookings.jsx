@@ -206,28 +206,34 @@ export default function UserBookings() {
                     <QuotePanel booking={b} onChanged={load} payBooking={payBooking} actionLoadingId={actionLoadingId} />
                   ) : isActiveStatus(b.status) ? (
                     <div className="flex flex-wrap items-center justify-between gap-3">
-                      {/* Live tracking only once the worker has actually set off
-                          (enRouteAt) or started — never for a booking that's
-                          merely confirmed for a future slot. */}
-                      {isTrackingActive(b) && (
-                        <div className="flex flex-wrap items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        {/* The LIVE MAP is what depends on the worker actually
+                            having set off (enRouteAt) — a booking confirmed for
+                            a future slot must not show a bogus live map. */}
+                        {isTrackingActive(b) && (
                           <span className="inline-flex items-center gap-1 rounded-full bg-black px-2.5 py-1 text-[10px] uppercase tracking-widest text-white">
                             <MapPin size={10} /> Live map
                           </span>
-                          <button
-                            onClick={() => setTrackingBooking(b)}
-                            className="rounded border border-ink/30 px-3 py-1 text-xs uppercase tracking-widest text-ink transition hover:bg-ink hover:text-paper"
-                          >
-                            Track | PINs
-                          </button>
+                        )}
+                        {/* PINs are NOT tracking: the customer must be able to
+                            read their Start PIN for any live booking, since the
+                            worker asks for it on arrival. Never gate this on
+                            enRouteAt. */}
+                        <button
+                          onClick={() => setTrackingBooking(b)}
+                          className="rounded border border-ink/30 px-3 py-1 text-xs uppercase tracking-widest text-ink transition hover:bg-ink hover:text-paper"
+                        >
+                          Track | PINs
+                        </button>
+                        {isTrackingActive(b) && (
                           <Link
                             to={`/track/${b._id}`}
                             className="rounded bg-sky-500 px-3 py-1 text-xs uppercase tracking-widest text-white hover:bg-sky-400"
                           >
                             Open full tracker →
                           </Link>
-                        </div>
-                      )}
+                        )}
+                      </div>
                       
                       {b.paymentMode === 'online' && b.paymentStatus === 'pending' && (
                         <button
