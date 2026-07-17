@@ -12,7 +12,7 @@ import { notifyOrderPlaced, notifyBookingPlaced, notifyBookingCancelled, notifyO
 import { markWorkerUnavailable } from '../utils/workerAvailability.js';
 import { recordCouponUsage } from './couponController.js';
 import { creditWallet } from '../utils/wallet.js';
-import { reassignBooking } from '../utils/dispatch.js';
+import { reassignBooking, emitBookingRequest, emitBookingStatus } from '../utils/dispatch.js';
 import { BOOKING_STATUS, ASSIGNMENT_TTL_MS, BOOKING_CONFIRMATION_TIMEOUT_MS } from '../config/booking.js';
 
 let razorpay;
@@ -166,6 +166,11 @@ export const verifyRazorpayPayment = asyncHandler(async (req, res) => {
             }).catch(() => {});
           } else {
             // Normal flow — the worker must Accept/Reject within the window.
+            // Push to their portal FIRST so the request modal pops immediately;
+            // without this the modal only appeared on the next poll, which is
+            // the slow fallback for a dropped socket, not the primary path.
+            emitBookingRequest(updatedBooking);
+            emitBookingStatus(updatedBooking);
             await sendBookingNotificationOnce(
               updatedBooking._id,
               `bookingRequested_${workerToNotify._id}`,
