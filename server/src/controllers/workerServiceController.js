@@ -6,7 +6,7 @@ import { ApiError, asyncHandler } from '../utils/asyncHandler.js';
 // Fields returned for the catalog service reference on every worker-service row.
 const SERVICE_POPULATE = {
   path: 'service',
-  select: 'name slug image price durationMinutes category isActive',
+  select: 'name slug image price pricingType fixedPrice hourlyRate durationMinutes category isActive',
   populate: { path: 'category', select: 'name slug icon color' },
 };
 
@@ -17,7 +17,7 @@ export const getServiceCatalog = asyncHandler(async (req, res) => {
   const [categories, services, mine] = await Promise.all([
     ServiceCategory.find({ isActive: true }).sort({ sortOrder: 1, name: 1 }).lean(),
     Service.find({ isActive: true })
-      .select('name slug image price durationMinutes category')
+      .select('name slug image price pricingType fixedPrice hourlyRate durationMinutes category')
       .sort({ name: 1 })
       .lean(),
     WorkerService.find({ worker: req.user._id }).select('service').lean(),

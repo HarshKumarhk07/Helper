@@ -318,7 +318,7 @@ export const getWorkerProfile = asyncHandler(async (req, res) => {
           },
           cancelled: {
             $sum: {
-              $cond: [{ $eq: ['$status', BOOKING_STATUS.CANCELLED] }, 1, 0],
+              $cond: [{ $eq: ['$status', BOOKING_STATUS.CANCELLED_BY_USER] }, 1, 0],
             },
           },
           inProgress: {
@@ -328,7 +328,7 @@ export const getWorkerProfile = asyncHandler(async (req, res) => {
           },
           assigned: {
             $sum: {
-              $cond: [{ $eq: ['$status', BOOKING_STATUS.ASSIGNED] }, 1, 0],
+              $cond: [{ $eq: ['$status', BOOKING_STATUS.CONFIRMED] }, 1, 0],
             },
           },
         },

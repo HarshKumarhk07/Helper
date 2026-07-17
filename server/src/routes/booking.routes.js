@@ -12,6 +12,8 @@ import {
   autoAssign,
   transitionStatus,
   rejectJob,
+  markEnRoute,
+  changeWorker,
   createQuoteRequest,
   sendQuote,
   listQuotes,
@@ -48,6 +50,11 @@ router.post(
 router.post('/:id/auto-assign', requireRole(ROLES.ADMIN), autoAssign);
 router.post('/:id/status', validate(transitionStatusSchema), transitionStatus);
 router.post('/:id/reject', requireRole(ROLES.WORKER), rejectJob);
+// "On the way" — stamps enRouteAt; status stays `confirmed` (en_route is not a
+// status, so a booking scheduled days out never looks like it's travelling).
+router.post('/:id/en-route', requireRole(ROLES.WORKER), markEnRoute);
+// Customer picks a different professional — re-opens the same paid booking.
+router.post('/:id/change-worker', changeWorker);
 
 // Variable pricing / quotes
 router.post('/:id/quote', requireRole(ROLES.WORKER), sendQuote);

@@ -28,6 +28,18 @@ export const transitionStatus = (id, to, note, pin) =>
 export const rejectJob = (id, reason) =>
   api.post(`/bookings/${id}/reject`, { reason }).then((r) => r.data);
 
+// Worker taps "On the way" — stamps enRouteAt. This is NOT a status change:
+// the booking stays `confirmed`. Live tracking gates on enRouteAt, so a booking
+// scheduled days out never shows a bogus "worker en route" map.
+export const markEnRoute = (id) =>
+  api.post(`/bookings/${id}/en-route`).then((r) => r.data.booking);
+
+// Customer picks a different professional. The booking is already paid, so this
+// re-opens the SAME booking to pending_confirmation with a fresh window rather
+// than cancelling + refunding.
+export const changeWorker = (id, workerId) =>
+  api.post(`/bookings/${id}/change-worker`, { workerId }).then((r) => r.data.booking);
+
 // ── Variable pricing / quotes ────────────────────────────────────────────────
 export const createQuoteRequest = (payload) =>
   api.post('/bookings/quote-request', payload).then((r) => r.data.booking);

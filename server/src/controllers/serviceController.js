@@ -172,12 +172,25 @@ export const createService = asyncHandler(async (req, res) => {
   res.status(201).json({ service: svc });
 });
 
+// Load-modify-save (not findByIdAndUpdate) so the Service pre('validate')
+// pricing sync hook runs — it mirrors the active price field into `price` and
+// clears the stale one when the admin switches pricingType.
 export const updateService = asyncHandler(async (req, res) => {
-  const svc = await Service.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true,
-  });
+  const svc = await Service.findById(req.params.id);
   if (!svc) throw new ApiError(404, 'Service not found');
+
+  const updatable = [
+    'name', 'slug', 'description', 'category', 'image', 'coverImage',
+    'durationMinutes', 'locations', 'tags', 'isActive', 'isFeatured',
+    'includedItems', 'pricingType', 'fixedPrice', 'hourlyRate', 'price',
+  ];
+  for (const key of updatable) {
+    if (Object.prototype.hasOwnProperty.call(req.body, key)) {
+      svc[key] = req.body[key];
+    }
+  }
+
+  await svc.save();
   await svc.populate('category', 'name slug icon color');
   res.json({ service: svc });
 });

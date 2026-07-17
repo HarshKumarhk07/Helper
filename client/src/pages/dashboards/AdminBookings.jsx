@@ -3,19 +3,22 @@ import toast from 'react-hot-toast';
 import { listAllBookings, assignWorker, autoAssign, transitionStatus } from '../../api/bookings.js';
 import { listUsers } from '../../api/users.js';
 import StatusBadge from '../../components/booking/StatusBadge.jsx';
-import { formatDateTime, formatPrice, BOOKING_STATUS } from '../../lib/booking.js';
+import { formatDateTime, formatPrice, BOOKING_STATUS, REFUNDED_FILTER } from '../../lib/booking.js';
 import RefundModal from '../../components/admin/RefundModal.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import useAdminSeen from '../../hooks/useAdminSeen.js';
 
 const FILTERS = [
   { key: 'all', label: 'All' },
-  { key: BOOKING_STATUS.PLACED, label: 'Placed' },
-  { key: BOOKING_STATUS.ASSIGNED, label: 'Assigned' },
+  { key: BOOKING_STATUS.PENDING_CONFIRMATION, label: 'Awaiting confirmation' },
+  { key: BOOKING_STATUS.CONFIRMED, label: 'Confirmed' },
   { key: BOOKING_STATUS.IN_PROGRESS, label: 'In progress' },
   { key: BOOKING_STATUS.COMPLETED, label: 'Completed' },
-  { key: BOOKING_STATUS.CANCELLED, label: 'Cancelled' },
-  { key: BOOKING_STATUS.REFUNDED, label: 'Refunded' },
+  { key: BOOKING_STATUS.REJECTED, label: 'Rejected' },
+  { key: BOOKING_STATUS.WORKER_UNAVAILABLE, label: 'Worker unavailable' },
+  { key: BOOKING_STATUS.CANCELLED_BY_USER, label: 'Cancelled' },
+  // paymentStatus filter, not a booking status — see lib/booking.js
+  { key: REFUNDED_FILTER, label: 'Refunded' },
 ];
 
 export default function AdminBookings() {
@@ -35,7 +38,7 @@ export default function AdminBookings() {
   const load = () => {
     setLoading(true);
     const query = {
-      ...(filter === 'all' ? {} : filter === 'refunded' ? { paymentStatus: 'refunded' } : { status: filter }),
+      ...(filter === 'all' ? {} : filter === REFUNDED_FILTER ? { paymentStatus: 'refunded' } : { status: filter }),
       page,
       limit: 10,
     };
@@ -84,7 +87,7 @@ export default function AdminBookings() {
   const onTransition = async (booking, to) => {
     // Destructive transitions (cancel) get an extra confirmation step so a
     // misclick can't kill an active booking.
-    if (to === 'cancelled') {
+    if (to === BOOKING_STATUS.CANCELLED_BY_USER) {
       const ok = window.confirm(
         `Cancel booking ${booking.code || ''}? The customer will be notified and this can't be undone.`
       );
@@ -92,7 +95,7 @@ export default function AdminBookings() {
     }
     // Completing requires the end PIN held by the customer — even for admins.
     let pin;
-    if (to === 'completed') {
+    if (to === BOOKING_STATUS.COMPLETED) {
       if (!booking.endPin) {
         toast.error('End PIN is not available for this booking yet');
         return;
@@ -178,8 +181,8 @@ export default function AdminBookings() {
                 </td>
                 <td className="py-3 pr-4">
                   {b.worker && <div className="text-xs">{b.worker.name}</div>}
-                  {/* Assign / reassign while still placed or assigned. */}
-                  {['placed', 'assigned'].includes(b.status) && (
+                  {/* Assign / reassign while still awaiting confirmation. */}
+                  {b.status === BOOKING_STATUS.PENDING_CONFIRMATION && (
                     <select
                       key={b.worker?._id || 'none'}
                       defaultValue=""
@@ -216,7 +219,7 @@ export default function AdminBookings() {
                 </td>
                 <td className="py-3 pr-4">
                   <div className="flex flex-wrap gap-2">
-                    {b.status === 'placed' && !b.worker && (
+                    {b.status === BOOKING_STATUS.PENDING_CONFIRMATION && !b.worker && (
                       <button
                         onClick={() => onAuto(b)}
                         className="rounded-pill border border-ink bg-ink/85 text-paper px-3 py-1 text-[10px] uppercase tracking-widest hover:bg-ink hover:text-paper"
@@ -224,18 +227,18 @@ export default function AdminBookings() {
                         Auto
                       </button>
                     )}
-                    {['placed', 'assigned'].includes(b.status) && (
+                    {[BOOKING_STATUS.PENDING_CONFIRMATION, BOOKING_STATUS.CONFIRMED].includes(b.status) && (
                       <button
-                        onClick={() => onTransition(b, 'cancelled')}
+                        onClick={() => onTransition(b, BOOKING_STATUS.CANCELLED_BY_USER)}
                         className="rounded-pill border border-red-300 px-3 py-1 text-[10px] uppercase tracking-widest text-red-700 hover:bg-red-700 hover:text-paper"
                       >
                         Cancel
                       </button>
                     )}
-                    {b.status === 'in_progress' && (
+                    {b.status === BOOKING_STATUS.IN_PROGRESS && (
                       <div className="flex flex-col gap-1">
                         <button
-                          onClick={() => onTransition(b, 'completed')}
+                          onClick={() => onTransition(b, BOOKING_STATUS.COMPLETED)}
                           disabled={!b.endPin}
                           title={b.endPin ? 'Enter the customer end PIN to complete this booking' : 'End PIN is not available for this booking yet'}
                           className="rounded-pill border border-ink bg-ink/85 px-3 py-1 text-[10px] uppercase tracking-widest text-paper hover:bg-ink hover:text-paper disabled:cursor-not-allowed disabled:border-ink/20 disabled:bg-ink/20 disabled:text-ink/40"
@@ -250,7 +253,7 @@ export default function AdminBookings() {
                     {isAdmin && b.paymentStatus !== 'refunded' && (
                       <button
                         onClick={() => {
-                          if (b.status !== 'cancelled') {
+                          if (b.status !== BOOKING_STATUS.CANCELLED_BY_USER) {
                             toast.error('Please cancel the booking first before issuing a refund.');
                             return;
                           }

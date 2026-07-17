@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { Calendar, Zap, MapPin, CreditCard, Banknote, Plus, FileText, Check, Crosshair, Loader2, Navigation, UserCheck, Star } from 'lucide-react';
+import { Calendar, Zap, MapPin, CreditCard, Banknote, Plus, FileText, Check, Crosshair, Loader2, Navigation, UserCheck, Star, Clock, Minus } from 'lucide-react';
 import { getService } from '../api/services.js';
 import { listMyAddresses, createAddress } from '../api/addresses.js';
 import { createBooking, createQuoteRequest } from '../api/bookings.js';
 import { validateCoupon } from '../api/coupons.js';
 import { createRazorpayOrder, verifyRazorpayPayment } from '../api/payments.js';
 import { formatPrice, getWorkerName, getWorkerAvatar, getWorkerExperience } from '../lib/booking.js';
+import { isHourlyService, getServiceUnitPrice, calculateServicePrice, clampHours, MIN_SERVICE_HOURS, MAX_SERVICE_HOURS } from '../lib/servicePricing.js';
 import { geocodeAddressText, hasValidCoords, reverseGeocodeCoordinates } from '../lib/geocoding.js';
 import PillButton from '../components/ui/PillButton.jsx';
 import FadeUp from '../components/ui/FadeUp.jsx';
@@ -38,6 +39,10 @@ export default function BookingFlow() {
   });
   const [paymentMode, setPaymentMode] = useState(() => {
     return sessionStorage.getItem('bf_paymentMode') || 'online';
+  });
+  // Hours selected for hourly-priced services (ignored for fixed services).
+  const [hours, setHours] = useState(() => {
+    return clampHours(sessionStorage.getItem('bf_hours') || MIN_SERVICE_HOURS);
   });
   const [autoAssign, setAutoAssign] = useState(false);
   const [selectedWorker, setSelectedWorker] = useState(null);   // { _id, name, avatar, … }
@@ -153,10 +158,15 @@ export default function BookingFlow() {
     }
   }, [appliedCoupon, discount]);
 
-  // Reset pending booking if the user edits any option fields
+  useEffect(() => {
+    sessionStorage.setItem('bf_hours', String(hours));
+  }, [hours]);
+
+  // Reset pending booking if the user edits any option fields (hours changes
+  // the amount for hourly services, so it must invalidate a pending booking).
   useEffect(() => {
     setPendingBooking(null);
-  }, [selectedAddressId, bookingType, scheduledAt, notes, appliedCoupon, selectedWorker]);
+  }, [selectedAddressId, bookingType, scheduledAt, notes, appliedCoupon, selectedWorker, hours]);
 
   const clearSessionStorage = () => {
     sessionStorage.removeItem('bf_selectedAddressId');
@@ -169,6 +179,7 @@ export default function BookingFlow() {
     sessionStorage.removeItem('bf_couponCode');
     sessionStorage.removeItem('bf_appliedCoupon');
     sessionStorage.removeItem('bf_discount');
+    sessionStorage.removeItem('bf_hours');
   };
 
   useEffect(() => {
@@ -295,14 +306,17 @@ export default function BookingFlow() {
       .finally(() => setWorkersLoading(false));
   }, [service, serviceId, location]);
 
-  // The price actually charged: a selected worker's fixed per-service price
-  // wins; otherwise the catalog base price. (Variable/quote pros aren't
-  // directly bookable yet — see Sprint 4.)
-  const effectiveBasePrice =
-    selectedWorker?.serviceOffering?.pricingType === 'fixed' &&
-    selectedWorker.serviceOffering.amount > 0
-      ? selectedWorker.serviceOffering.amount
-      : service?.price || 0;
+  // Hourly services are admin-priced: total = admin rate × hours, and a
+  // worker's own price never overrides it. Fixed services keep the existing
+  // rule — a selected worker's fixed per-service price wins, else the catalog
+  // base price. (Variable/quote pros aren't directly bookable yet — Sprint 4.)
+  const serviceIsHourly = isHourlyService(service);
+  const effectiveBasePrice = serviceIsHourly
+    ? calculateServicePrice(service, hours)
+    : selectedWorker?.serviceOffering?.pricingType === 'fixed' &&
+      selectedWorker.serviceOffering.amount > 0
+    ? selectedWorker.serviceOffering.amount
+    : service?.price || 0;
   const effectiveTotal = Math.max(0, effectiveBasePrice - discount);
 
   // Variable-priced pro selected → this is a quote request, not an instant book.
@@ -617,6 +631,8 @@ export default function BookingFlow() {
       else if (inlineAddressPayload) payload.address = inlineAddressPayload;
       if (notes.trim()) payload.notes = notes.trim();
       if (appliedCoupon?.code) payload.couponCode = appliedCoupon.code;
+      // Hourly services: tell the server how many hours to bill.
+      if (serviceIsHourly) payload.hours = hours;
 
       let booking = pendingBooking;
       if (!booking) {
@@ -648,9 +664,11 @@ export default function BookingFlow() {
                 referenceId: booking._id,
                 type: 'booking',
               });
-              toast.success('Payment successful | Booking Confirmed!');
+              toast.success('Payment successful — confirming your booking');
               clearSessionStorage();
-              navigate('/me/bookings');
+              // The worker still has to accept, so land on the confirming
+              // screen (countdown + Change Worker) rather than the list.
+              navigate(`/booking/${booking._id}/confirming`);
             } catch {
               toast.error('Payment verification failed');
             } finally {
@@ -679,7 +697,7 @@ export default function BookingFlow() {
 
       toast.success(`Booked — ${booking.code}`);
       clearSessionStorage();
-      navigate('/me/bookings');
+      navigate(`/booking/${booking._id}/confirming`);
     } catch (err) {
       const data = err?.response?.data;
       const fieldMsg = Array.isArray(data?.details) && data.details.length
@@ -729,7 +747,9 @@ export default function BookingFlow() {
         </h1>
         <p className="mt-2 text-sm text-black/60">
           {service.category?.name && <span>{service.category.name} · </span>}
-          {service.durationMinutes} min · starting at {formatPrice(service.price)}
+          {service.durationMinutes} min · {serviceIsHourly
+            ? `${formatPrice(getServiceUnitPrice(service))}/hr`
+            : `starting at ${formatPrice(service.price)}`}
         </p>
 
         <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1.4fr),minmax(0,1fr)] lg:gap-8">
@@ -764,6 +784,44 @@ export default function BookingFlow() {
                 )}
               </Section>
             </FadeUp>
+
+            {/* Duration (hours) — only for hourly-priced services. Total is
+                recalculated live from the admin rate × hours. */}
+            {serviceIsHourly && !service.isWorkerBooking && serviceId !== 'cart' && (
+              <FadeUp delay={0.07}>
+                <Section icon={Clock} title="Duration">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="min-w-0">
+                      <div className="text-sm font-medium text-black">Number of hours</div>
+                      <div className="mt-0.5 text-xs text-black/55">
+                        {formatPrice(getServiceUnitPrice(service))}/hr × {hours} hr = <span className="font-semibold text-black">{formatPrice(calculateServicePrice(service, hours))}</span>
+                      </div>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setHours(clampHours(hours - 1))}
+                        disabled={hours <= MIN_SERVICE_HOURS}
+                        className="flex h-9 w-9 items-center justify-center rounded-full border border-black/15 text-black transition hover:border-black/40 disabled:opacity-40"
+                        aria-label="Decrease hours"
+                      >
+                        <Minus size={15} />
+                      </button>
+                      <span className="w-8 text-center text-lg font-bold text-black">{hours}</span>
+                      <button
+                        type="button"
+                        onClick={() => setHours(clampHours(hours + 1))}
+                        disabled={hours >= MAX_SERVICE_HOURS}
+                        className="flex h-9 w-9 items-center justify-center rounded-full border border-black/15 text-black transition hover:border-black/40 disabled:opacity-40"
+                        aria-label="Increase hours"
+                      >
+                        <Plus size={15} />
+                      </button>
+                    </div>
+                  </div>
+                </Section>
+              </FadeUp>
+            )}
 
             <FadeUp delay={0.05}>
               <Section icon={MapPin} title="Where">
@@ -1138,9 +1196,13 @@ export default function BookingFlow() {
                                   )}
                                 </div>
 
-                                {/* Pricing — per-service price for this service */}
+                                {/* Pricing — per-service price for this service.
+                                    Hourly services are admin-priced, so show the
+                                    admin rate rather than the worker's own price. */}
                                 <div className="mt-1 text-xs font-semibold text-black/70">
-                                  {offering
+                                  {serviceIsHourly
+                                    ? `${formatPrice(getServiceUnitPrice(service))}/hr · admin rate`
+                                    : offering
                                     ? isVariable
                                       ? offering.startingPrice > 0
                                         ? `From ${formatPrice(offering.startingPrice)} · Get a quote`
@@ -1286,6 +1348,12 @@ export default function BookingFlow() {
                   <Row label="Auto-assign" value={selectedWorker ? 'No — specific professional selected' : (autoAssign ? 'Yes' : 'No')} />
                   {selectedWorker && (
                     <Row label="Professional" value={selectedWorker.name} />
+                  )}
+                  {serviceIsHourly && (
+                    <>
+                      <Row label="Rate" value={`${formatPrice(getServiceUnitPrice(service))}/hr`} />
+                      <Row label="Hours" value={`${hours} hr`} />
+                    </>
                   )}
                   <Row label="Payment" value={paymentMode === 'cod' ? 'COD' : 'Online'} />
                 </div>

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { ensureSocket, socket } from '../../lib/socket.js';
+import { isTrackingActive } from '../../lib/bookingStatus.js';
 
 const EMIT_INTERVAL_MS = 3_000; // minimum ms between location emits
 const GEO_OPTIONS = {
@@ -37,8 +38,11 @@ export default function WorkerLocationEmitter({ workerId, activeJobs, onLocation
   }, [onLocationUpdate]);
 
   // Derive a stable job-ids string to use as effect dependency
+  // Only emit location once the worker is actually travelling (enRouteAt) or
+  // the job has started — never for a booking merely confirmed for a future
+  // slot, which would broadcast the worker's location for days.
   const trackableIds = (activeJobs || [])
-    .filter((j) => ['assigned', 'accepted', 'en_route', 'in_progress'].includes(j.status))
+    .filter((j) => isTrackingActive(j))
     .map((j) => j._id)
     .sort()
     .join(',');

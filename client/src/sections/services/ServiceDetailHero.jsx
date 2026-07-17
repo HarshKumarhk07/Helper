@@ -29,6 +29,7 @@ export default function ServiceDetailHero({
   description = '',
   features = [],
   price = 0,
+  pricingType = 'fixed',
   coverImage = '',
   trustCards = {
     topRight: { icon: <ShieldCheck />, title: 'Verified Quality', subtext: 'Safe & certified service delivery' },
@@ -41,6 +42,10 @@ export default function ServiceDetailHero({
   const shouldReduce = useReducedMotion();
   const container = shouldReduce ? noMotion : containerVariants;
   const fadeUp = shouldReduce ? noMotion : fadeUpVariants;
+
+  // Hourly services show a per-hour rate; the customer picks hours at booking.
+  const isHourly = pricingType === 'hourly';
+  const priceSuffix = isHourly ? '/hr' : '';
 
   return (
     <div
@@ -162,7 +167,7 @@ export default function ServiceDetailHero({
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <span>Book service — ₹{price}</span>
+                <span>Book service — ₹{price}{priceSuffix}</span>
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#2F5FF6] text-white shrink-0 shadow-sm">
                   <ArrowUpRight size={13} strokeWidth={3} />
                 </span>
@@ -240,8 +245,8 @@ export default function ServiceDetailHero({
                     </div>
                     <div>
                       <span className="text-[9px] text-white/70 block leading-none">Starts at</span>
-                      <span className="text-base font-bold block mt-0.5 leading-none">₹{price}</span>
-                      <span className="text-[8px] text-white/70 block mt-0.5 leading-none">per service</span>
+                      <span className="text-base font-bold block mt-0.5 leading-none">₹{price}{priceSuffix}</span>
+                      <span className="text-[8px] text-white/70 block mt-0.5 leading-none">{isHourly ? 'per hour' : 'per service'}</span>
                     </div>
                   </div>
 
@@ -316,8 +321,8 @@ export default function ServiceDetailHero({
                   </div>
                   <div>
                     <span className="text-[10px] text-white/70 block leading-none">Starts at</span>
-                    <span className="text-xl font-bold block mt-0.5 leading-none">₹{price}</span>
-                    <span className="text-[9px] text-white/70 block mt-0.5 leading-none">per service</span>
+                    <span className="text-xl font-bold block mt-0.5 leading-none">₹{price}{priceSuffix}</span>
+                    <span className="text-[9px] text-white/70 block mt-0.5 leading-none">{isHourly ? 'per hour' : 'per service'}</span>
                   </div>
                 </div>
 

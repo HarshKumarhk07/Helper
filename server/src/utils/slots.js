@@ -36,7 +36,7 @@ export const getDayBookingsForWorkers = async (workerIds, dayStart, dayEnd) => {
   return Booking.find({
     worker: { $in: workerIds },
     scheduledAt: { $gte: dayStart, $lt: dayEnd },
-    status: { $nin: [BOOKING_STATUS.CANCELLED, BOOKING_STATUS.COMPLETED] },
+    status: { $nin: [BOOKING_STATUS.CANCELLED_BY_USER, BOOKING_STATUS.COMPLETED, BOOKING_STATUS.REJECTED, BOOKING_STATUS.WORKER_UNAVAILABLE] },
   })
     .select('worker scheduledAt service')
     .populate('service', 'durationMinutes')
@@ -176,7 +176,7 @@ export const checkBookingConflict = async ({ workerId, scheduledAt, durationMinu
   const candidates = await Booking.find({
     worker: workerId,
     scheduledAt: { $gte: lookbehind, $lte: lookahead },
-    status: { $nin: [BOOKING_STATUS.CANCELLED, BOOKING_STATUS.COMPLETED] },
+    status: { $nin: [BOOKING_STATUS.CANCELLED_BY_USER, BOOKING_STATUS.COMPLETED, BOOKING_STATUS.REJECTED, BOOKING_STATUS.WORKER_UNAVAILABLE] },
   })
     .select('scheduledAt service')
     .populate('service', 'durationMinutes');

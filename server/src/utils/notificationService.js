@@ -229,6 +229,45 @@ export const notifyBookingPlaced = ({ user, booking }) =>
     }),
   ]);
 
+// Sent to a worker the moment a booking request targets them
+// (status pending_confirmation). Includes the service, customer, scheduled
+// time (if any) and a link to their portal to Accept/Reject. Reuses the shared
+// mailer — no SMTP creds here.
+export const notifyBookingRequested = ({ worker, user, booking }) => {
+  const portalUrl = `${(process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/$/, '')}/worker/jobs`;
+  const serviceName = booking?.service?.name || 'a service';
+  const when = booking?.scheduledAt
+    ? new Date(booking.scheduledAt).toLocaleString('en-IN')
+    : 'As soon as possible (instant booking)';
+  return Promise.allSettled([
+    sendEmail({
+      to: worker?.email,
+      subject: `New booking request · ${booking.code} — respond within 10 min`,
+      html: wrapEmail(
+        'You have a new booking request',
+        `
+        <p>Hi ${worker?.name || 'there'},</p>
+        <p><strong>${user?.name || 'A customer'}</strong> has requested you for a booking. Please Accept or Reject it from your portal — it will auto-expire if you don't respond in time.</p>
+        <table style="width:100%;border-collapse:collapse;margin:14px 0;">
+          <tr><td style="padding:6px 0;color:#666;">Booking</td><td><strong>${booking.code}</strong></td></tr>
+          <tr><td style="padding:6px 0;color:#666;">Service</td><td>${escapeHtml(serviceName)}</td></tr>
+          <tr><td style="padding:6px 0;color:#666;">When</td><td>${escapeHtml(when)}</td></tr>
+          <tr><td style="padding:6px 0;color:#666;">Where</td><td>${fmtAddress(booking.address)}</td></tr>
+          <tr><td style="padding:6px 0;color:#666;">Amount</td><td><strong>${inr(booking.amount)}</strong></td></tr>
+        </table>
+        <p style="margin:20px 0;">
+          <a href="${portalUrl}" style="display:inline-block;padding:12px 22px;background:#1a1a1a;color:#faf6ef;border-radius:8px;text-decoration:none;font-weight:600;">Open portal to Accept / Reject</a>
+        </p>
+        `
+      ),
+    }),
+    sendSMS({
+      to: worker?.phone,
+      body: `Helper: New booking request ${booking.code} (${serviceName}). Open your portal to Accept/Reject within 10 min.`,
+    }),
+  ]);
+};
+
 export const notifyPaymentFailed = ({ user, booking }) =>
   Promise.allSettled([
     sendEmail({

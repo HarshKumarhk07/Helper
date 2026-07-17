@@ -6,11 +6,20 @@ import {
   PAYMENT_MODE,
   PAYMENT_MODE_LIST,
 } from '../config/booking.js';
+import { BOOKING_STATUS_VALUES as NEW_BOOKING_STATUS_VALUES, LEGACY_STATUS_MAP } from '../config/bookingStatus.js';
+
+// The controllers now write only canonical statuses, but existing DB rows keep
+// their legacy status until `npm run migrate:booking-status` runs. So the enum
+// accepts BOTH until migration; remove the legacy keys from this union once the
+// migration has been run in every environment.
+const ALL_BOOKING_STATUSES = [
+  ...new Set([...NEW_BOOKING_STATUS_VALUES, ...Object.keys(LEGACY_STATUS_MAP)]),
+];
 
 const statusLogSchema = new mongoose.Schema(
   {
-    from: { type: String, enum: BOOKING_STATUS_LIST, required: true },
-    to: { type: String, enum: BOOKING_STATUS_LIST, required: true },
+    from: { type: String, enum: ALL_BOOKING_STATUSES, required: true },
+    to: { type: String, enum: ALL_BOOKING_STATUSES, required: true },
     by: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     note: { type: String, default: '' },
     at: { type: Date, default: Date.now },
@@ -59,8 +68,8 @@ const bookingSchema = new mongoose.Schema(
     address: { type: snapshotAddressSchema, required: true },
     status: {
       type: String,
-      enum: BOOKING_STATUS_LIST,
-      default: BOOKING_STATUS.PLACED,
+      enum: ALL_BOOKING_STATUSES,
+      default: BOOKING_STATUS.PENDING_CONFIRMATION,
       index: true,
     },
     worker: {
@@ -69,10 +78,24 @@ const bookingSchema = new mongoose.Schema(
       default: null,
       index: true,
     },
+    // True when the customer let us pick the professional (auto-assign) rather
+    // than choosing one. Drives what happens on a confirmation timeout/reject:
+    //  - autoAssigned  → bounce to the next eligible worker (fresh timer),
+    //                    only worker_unavailable once the pool is exhausted
+    //  - hand-picked   → terminal (rejected / worker_unavailable); the USER
+    //                    picks another worker
+    autoAssigned: { type: Boolean, default: false },
     assignedAt: { type: Date, default: null },
     // When the current assignment expires if the worker doesn't accept (15 min).
     // Cleared once accepted; used by the expiry sweeper to mark jobs "missed".
     assignmentExpiresAt: { type: Date, default: null },
+    // Confirmation-flow timeout: set when status becomes pending_confirmation
+    // (createdAt + BOOKING_CONFIRMATION_TIMEOUT_MS). The confirmation-timeout
+    // sweeper flips still-pending bookings past this instant to
+    // worker_unavailable. Same rule for instant AND scheduled bookings.
+    confirmationExpiresAt: { type: Date, default: null, index: true },
+    // When the worker accepted or rejected the confirmation request.
+    respondedAt: { type: Date, default: null },
     acceptedAt: { type: Date, default: null },
     enRouteAt: { type: Date, default: null },
     startedAt: { type: Date, default: null },
@@ -96,6 +119,8 @@ const bookingSchema = new mongoose.Schema(
     startPin: { type: String, select: false },
     endPin: { type: String, select: false },
     amount: { type: Number, required: true, min: 0 },
+    // Number of hours billed for hourly-priced services (null for fixed).
+    hours: { type: Number, default: null, min: 0 },
     couponCode: { type: String, default: null },
     discountAmount: { type: Number, default: 0 },
     paymentMode: { type: String, enum: PAYMENT_MODE_LIST, default: PAYMENT_MODE.COD },
@@ -111,7 +136,6 @@ const bookingSchema = new mongoose.Schema(
     refundedAt: { type: Date, default: null },
     notes: { type: String, default: '', maxlength: 500 },
     history: { type: [statusLogSchema], default: [] },
-    autoAssign: { type: Boolean, default: false },
     sentNotifications: {
       bookingPlaced: { type: Boolean, default: false },
       workerAssigned: { type: Boolean, default: false },

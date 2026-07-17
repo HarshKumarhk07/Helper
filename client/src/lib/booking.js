@@ -1,35 +1,19 @@
-export const BOOKING_STATUS = {
-  PLACED: 'placed',
-  ASSIGNED: 'assigned',
-  ACCEPTED: 'accepted',
-  EN_ROUTE: 'en_route',
-  IN_PROGRESS: 'in_progress',
-  COMPLETED: 'completed',
-  CANCELLED: 'cancelled',
-  REFUNDED: 'refunded',
-};
+// Canonical booking statuses live in ./bookingStatus.js — the single source of
+// truth on the client (mirrors server/src/config/bookingStatus.js). Re-exported
+// here so existing `from '../lib/booking.js'` imports resolve to the canonical
+// set with no import churn.
+export {
+  BOOKING_STATUS,
+  BOOKING_STATUS_VALUES,
+  STATUS_LABEL,
+  STATUS_TONE,
+  isTrackingActive,
+  isActiveStatus,
+} from './bookingStatus.js';
 
-export const STATUS_LABEL = {
-  placed: 'Placed',
-  assigned: 'Assigned',
-  accepted: 'Accepted',
-  en_route: 'En route',
-  in_progress: 'In progress',
-  completed: 'Completed',
-  cancelled: 'Cancelled',
-  refunded: 'Refunded',
-};
-
-export const STATUS_TONE = {
-  placed: 'bg-ash/30 text-ink',
-  assigned: 'bg-sand text-ink',
-  accepted: 'bg-indigo-100 text-indigo-900',
-  en_route: 'bg-sky-100 text-sky-900',
-  in_progress: 'bg-ink text-paper',
-  completed: 'bg-emerald-100 text-emerald-900',
-  cancelled: 'bg-red-100 text-red-900',
-  refunded: 'bg-blue-100 text-blue-900',
-};
+// NOT a booking status — a *paymentStatus* value, used only as a dashboard
+// filter tab ("Refunded"). Kept separate so it never pollutes the status enum.
+export const REFUNDED_FILTER = 'refunded';
 
 export const formatPrice = (n) =>
   new Intl.NumberFormat('en-IN', {

@@ -235,6 +235,7 @@ export default function ServiceDetail() {
         description={service.description || 'Consistent, safe, and detail-focused cleaning that makes your space feel lighter, fresher, and fully yours again.'}
         features={getServiceMetadata(service.name, service.category?.name).features}
         price={service.price}
+        pricingType={service.pricingType}
         coverImage={coverImage}
         trustCards={getServiceMetadata(service.name, service.category?.name).trustCards}
         avatars={getServiceMetadata(service.name, service.category?.name).avatars}

@@ -1,6 +1,8 @@
 import { lazy, Suspense, useEffect, useRef } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigationType } from 'react-router-dom';
 import Navbar from './components/layout/Navbar.jsx';
+import { useAuth } from './context/AuthContext.jsx';
+import BookingRequestModal from './components/booking/BookingRequestModal.jsx';
 import Footer from './components/layout/Footer.jsx';
 
 // Route-change scroll behavior:
@@ -54,6 +56,7 @@ const ServiceDetail = lazy(() => import('./pages/ServiceDetail.jsx'));
 const ProductsIndex = lazy(() => import('./pages/ProductsIndex.jsx'));
 const ProductDetail = lazy(() => import('./pages/ProductDetail.jsx'));
 const BookingFlow = lazy(() => import('./pages/BookingFlow.jsx'));
+const BookingConfirming = lazy(() => import('./pages/BookingConfirming.jsx'));
 const CartPage = lazy(() => import('./pages/CartPage.jsx'));
 const CheckoutPage = lazy(() => import('./pages/CheckoutPage.jsx'));
 const Favorites = lazy(() => import('./pages/Favorites.jsx'));
@@ -129,9 +132,14 @@ function PageFallback() {
 }
 
 export default function App() {
+  const { user } = useAuth();
+
   return (
     <div className="flex min-h-screen flex-col bg-sand text-ink">
       <ScrollToTop />
+      {/* Mounted at app level (not just /worker/*) so a booking request reaches
+          the worker wherever they are in the app — storefront included. */}
+      {user?.role === 'worker' && <BookingRequestModal />}
       <Navbar />
       <main className="flex-1 pt-16 md:pt-24 bg-paper">
         <Suspense fallback={<PageFallback />}>
@@ -159,6 +167,16 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <BookingFlow />
+                </ProtectedRoute>
+              }
+            />
+            {/* "Confirming your booking…" — shown right after payment while the
+                professional accepts/rejects, with countdown + Change Worker. */}
+            <Route
+              path="/booking/:id/confirming"
+              element={
+                <ProtectedRoute>
+                  <BookingConfirming />
                 </ProtectedRoute>
               }
             />

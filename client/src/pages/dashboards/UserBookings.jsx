@@ -11,17 +11,19 @@ import LiveTrackerModal from '../../components/booking/LiveTrackerModal.jsx';
 import ReviewModal from '../../components/booking/ReviewModal.jsx';
 import PillButton from '../../components/ui/PillButton.jsx';
 import FadeUp from '../../components/ui/FadeUp.jsx';
-import { BOOKING_STATUS } from '../../lib/booking.js';
+import { BOOKING_STATUS, REFUNDED_FILTER, isActiveStatus, isTrackingActive } from '../../lib/booking.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 
 const FILTERS = [
   { key: 'all', label: 'All' },
-  { key: BOOKING_STATUS.PLACED, label: 'Placed' },
-  { key: BOOKING_STATUS.ASSIGNED, label: 'Assigned' },
+  { key: BOOKING_STATUS.PENDING_CONFIRMATION, label: 'Awaiting confirmation' },
+  { key: BOOKING_STATUS.CONFIRMED, label: 'Confirmed' },
   { key: BOOKING_STATUS.IN_PROGRESS, label: 'In progress' },
   { key: BOOKING_STATUS.COMPLETED, label: 'Completed' },
-  { key: BOOKING_STATUS.CANCELLED, label: 'Cancelled' },
-  { key: BOOKING_STATUS.REFUNDED, label: 'Refunded' },
+  { key: BOOKING_STATUS.CANCELLED_BY_USER, label: 'Cancelled' },
+  { key: BOOKING_STATUS.WORKER_UNAVAILABLE, label: 'Worker unavailable' },
+  // paymentStatus filter, not a booking status — see lib/booking.js
+  { key: REFUNDED_FILTER, label: 'Refunded' },
 ];
 
 export default function UserBookings() {
@@ -58,7 +60,7 @@ export default function UserBookings() {
     if (actionLoadingId) return;
     setActionLoadingId(`cancel_${booking._id}`);
     try {
-      await transitionStatus(booking._id, 'cancelled', 'Cancelled by customer');
+      await transitionStatus(booking._id, BOOKING_STATUS.CANCELLED_BY_USER, 'Cancelled by customer');
       toast.success(`Cancelled ${booking.code}`);
       load();
     } catch (err) {
@@ -202,9 +204,12 @@ export default function UserBookings() {
                 footer={
                   b.isQuoteRequest && b.quoteStatus !== 'accepted' ? (
                     <QuotePanel booking={b} onChanged={load} payBooking={payBooking} actionLoadingId={actionLoadingId} />
-                  ) : ['placed', 'assigned', 'accepted', 'en_route', 'in_progress'].includes(b.status) ? (
+                  ) : isActiveStatus(b.status) ? (
                     <div className="flex flex-wrap items-center justify-between gap-3">
-                      {['assigned', 'accepted', 'en_route', 'in_progress'].includes(b.status) && (
+                      {/* Live tracking only once the worker has actually set off
+                          (enRouteAt) or started — never for a booking that's
+                          merely confirmed for a future slot. */}
+                      {isTrackingActive(b) && (
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="inline-flex items-center gap-1 rounded-full bg-black px-2.5 py-1 text-[10px] uppercase tracking-widest text-white">
                             <MapPin size={10} /> Live map
@@ -234,7 +239,8 @@ export default function UserBookings() {
                         </button>
                       )}
 
-                      {['placed', 'assigned', 'accepted'].includes(b.status) && (
+                      {/* Cancellable until the service actually starts. */}
+                      {[BOOKING_STATUS.PENDING_CONFIRMATION, BOOKING_STATUS.CONFIRMED].includes(b.status) && (
                         <button
                           onClick={() => cancel(b)}
                           disabled={actionLoadingId !== null}
@@ -244,7 +250,7 @@ export default function UserBookings() {
                         </button>
                       )}
                     </div>
-                  ) : b.status === 'completed' ? (
+                  ) : b.status === BOOKING_STATUS.COMPLETED ? (
                     <div className="flex justify-end gap-4 items-center">
                       <button
                         onClick={() => handleDownloadInvoice('booking', b._id, `Invoice_BOOKING_${b.code}.pdf`)}

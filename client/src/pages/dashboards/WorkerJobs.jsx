@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Clock, MapPin, User as UserIcon, Check, X } from 'lucide-react';
-import { listWorkerJobs, transitionStatus, rejectJob, sendQuote } from '../../api/bookings.js';
+import { listWorkerJobs, transitionStatus, rejectJob, sendQuote, markEnRoute } from '../../api/bookings.js';
 import StatusBadge from '../../components/booking/StatusBadge.jsx';
 import { formatDateTime, formatPrice, BOOKING_STATUS } from '../../lib/booking.js';
 import FadeUp from '../../components/ui/FadeUp.jsx';
@@ -18,9 +18,10 @@ const FILTERS = [
 
 const REJECT_REASONS = ['Too far', 'Not available', 'Low price', 'Other'];
 
+// en_route is no longer a status — a confirmed job is "active" whether or not
+// the worker has set off yet (enRouteAt).
 const ACTIVE_STATUSES = [
-  BOOKING_STATUS.ACCEPTED,
-  BOOKING_STATUS.EN_ROUTE,
+  BOOKING_STATUS.CONFIRMED,
   BOOKING_STATUS.IN_PROGRESS,
 ];
 
@@ -62,7 +63,7 @@ export default function WorkerJobs() {
   const filtered = useMemo(() => {
     if (filter === 'all') return jobs;
     if (filter === 'new')
-      return jobs.filter((j) => j.status === BOOKING_STATUS.ASSIGNED || isQuoteReq(j));
+      return jobs.filter((j) => j.status === BOOKING_STATUS.PENDING_CONFIRMATION || isQuoteReq(j));
     if (filter === 'active') return jobs.filter((j) => ACTIVE_STATUSES.includes(j.status) && !isQuoteReq(j));
     if (filter === 'completed') return jobs.filter((j) => j.status === BOOKING_STATUS.COMPLETED);
     return jobs;
@@ -89,7 +90,21 @@ export default function WorkerJobs() {
     }
   };
 
-  const accept = (job) => move(job, BOOKING_STATUS.ACCEPTED, 'Accepted by worker');
+  const accept = (job) => move(job, BOOKING_STATUS.CONFIRMED, 'Accepted by worker');
+
+  // "On the way" — stamps enRouteAt server-side; the status stays `confirmed`.
+  const startTravel = async (job) => {
+    setBusyId(job._id);
+    try {
+      await markEnRoute(job._id);
+      toast.success('Marked as on the way');
+      load();
+    } catch (err) {
+      toast.error(err?.response?.data?.error || 'Action failed');
+    } finally {
+      setBusyId(null);
+    }
+  };
 
   const submitQuote = async () => {
     if (!quoteTarget) return;
@@ -148,7 +163,7 @@ export default function WorkerJobs() {
         {FILTERS.map((f) => {
           const count =
             f.key === 'new'
-              ? jobs.filter((j) => j.status === BOOKING_STATUS.ASSIGNED || isQuoteReq(j)).length
+              ? jobs.filter((j) => j.status === BOOKING_STATUS.PENDING_CONFIRMATION || isQuoteReq(j)).length
               : f.key === 'active'
               ? jobs.filter((j) => ACTIVE_STATUSES.includes(j.status) && !isQuoteReq(j)).length
               : null;
@@ -178,7 +193,7 @@ export default function WorkerJobs() {
           </div>
         ) : (
           filtered.map((b, i) => {
-            const isNew = b.status === BOOKING_STATUS.ASSIGNED;
+            const isNew = b.status === BOOKING_STATUS.PENDING_CONFIRMATION;
             const quoteReq = isQuoteReq(b);
             const masked = isNew || quoteReq;
             const latestQuote = b.quotes?.[b.quotes.length - 1];
@@ -360,17 +375,19 @@ export default function WorkerJobs() {
                       </>
                     )}
 
-                    {b.status === BOOKING_STATUS.ACCEPTED && (
+                    {/* Confirmed but hasn't set off yet → offer "On the way".
+                        Sets enRouteAt; status stays confirmed. */}
+                    {b.status === BOOKING_STATUS.CONFIRMED && !b.enRouteAt && (
                       <button
-                        onClick={() => move(b, BOOKING_STATUS.EN_ROUTE, 'On the way')}
+                        onClick={() => startTravel(b)}
                         disabled={rowBusy}
                         className="pill-btn-solid px-4 py-1.5 text-xs disabled:opacity-50"
                       >
-                        Start travel (En route)
+                        On the way
                       </button>
                     )}
 
-                    {(b.status === BOOKING_STATUS.ASSIGNED || b.status === BOOKING_STATUS.ACCEPTED || b.status === BOOKING_STATUS.EN_ROUTE || b.status === BOOKING_STATUS.IN_PROGRESS) && (
+                    {(b.status === BOOKING_STATUS.PENDING_CONFIRMATION || b.status === BOOKING_STATUS.CONFIRMED || b.status === BOOKING_STATUS.IN_PROGRESS) && (
                       <Link
                         to={`/worker/jobs/${b._id}/nav`}
                         className="inline-flex items-center gap-1 rounded-full bg-[#13294B] px-4 py-1.5 text-xs uppercase tracking-widest text-white hover:bg-[#13294B]/90"
@@ -379,7 +396,8 @@ export default function WorkerJobs() {
                       </Link>
                     )}
 
-                    {b.status === BOOKING_STATUS.EN_ROUTE && (
+                    {/* Once travelling, the job can be started with the start PIN. */}
+                    {b.status === BOOKING_STATUS.CONFIRMED && b.enRouteAt && (
                       <button
                         onClick={() => move(b, BOOKING_STATUS.IN_PROGRESS, 'Started')}
                         disabled={rowBusy}

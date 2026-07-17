@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Clock, ArrowRight, Heart, BadgeCheck, Flame, ShoppingCart } from 'lucide-react';
 import { formatPrice } from '../../lib/booking.js';
+import { formatServiceRate } from '../../lib/servicePricing.js';
 import { resolveCatalogImage, CATALOG_PLACEHOLDER_IMAGE } from '../../lib/catalogImage.js';
 import { useFavorites } from '../../context/FavoritesContext.jsx';
 import { useCart } from '../../context/CartContext.jsx';
@@ -133,7 +134,7 @@ export default function ServiceCard({ service }) {
           <div className="flex flex-col min-w-0">
             <span className="text-[10px] uppercase tracking-widest text-ink/40 font-medium mb-0.5">Price</span>
             <span className="text-sm sm:text-lg font-bold text-ink truncate">
-              {isCarService ? `starts ${formatPrice(service.price)}` : formatPrice(service.price)}
+              {isCarService ? `starts ${formatPrice(service.price)}` : formatServiceRate(service)}
             </span>
           </div>
 

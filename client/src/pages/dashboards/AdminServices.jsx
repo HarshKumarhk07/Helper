@@ -20,11 +20,13 @@ export default function AdminServices() {
   const [editingService, setEditingService] = useState(null);
   
   const [newService, setNewService] = useState({
-    name: '', description: '', price: '', category: '', image: '', durationMinutes: '', locations: []
+    name: '', description: '', pricingType: 'fixed', fixedPrice: '', hourlyRate: '',
+    category: '', image: '', durationMinutes: '', locations: []
   });
 
   const [editForm, setEditForm] = useState({
-    name: '', description: '', price: '', category: '', image: '', durationMinutes: '', locations: []
+    name: '', description: '', pricingType: 'fixed', fixedPrice: '', hourlyRate: '',
+    category: '', image: '', durationMinutes: '', locations: []
   });
 
   const slugify = (value) =>
@@ -73,19 +75,30 @@ export default function AdminServices() {
     }
   };
 
+  // Build the pricing part of the payload: send only the field that matches
+  // the chosen pricingType so no stale value reaches the server. The backend
+  // syncs `price` from whichever one is present.
+  const buildPricingPayload = (form) =>
+    form.pricingType === 'hourly'
+      ? { pricingType: 'hourly', hourlyRate: Number(form.hourlyRate) }
+      : { pricingType: 'fixed', fixedPrice: Number(form.fixedPrice) };
+
   const handleCreate = async (e) => {
     e.preventDefault();
     try {
       await createService({
-        ...newService,
+        name: newService.name,
+        description: newService.description,
+        image: newService.image,
+        locations: newService.locations,
+        ...buildPricingPayload(newService),
         slug: slugify(newService.name),
-        price: Number(newService.price),
         category: newService.category,
         durationMinutes: newService.durationMinutes ? Number(newService.durationMinutes) : 60
       });
       toast.success('Service created');
       setShowForm(false);
-      setNewService({ name: '', description: '', price: '', category: '', image: '', durationMinutes: '' });
+      setNewService({ name: '', description: '', pricingType: 'fixed', fixedPrice: '', hourlyRate: '', category: '', image: '', durationMinutes: '', locations: [] });
       load();
     } catch (err) {
       toast.error(err?.response?.data?.error || 'Failed to create service');
@@ -109,10 +122,16 @@ export default function AdminServices() {
 
   const openEditor = (service) => {
     setEditingService(service);
+    // Default to the (migrated) pricingType; pre-fill both rate fields so a
+    // later toggle already has the right value. Falls back to `price` for any
+    // service not yet carrying the typed fields.
+    const pricingType = service.pricingType === 'hourly' ? 'hourly' : 'fixed';
     setEditForm({
       name: service.name || '',
       description: service.description || '',
-      price: service.price || '',
+      pricingType,
+      fixedPrice: service.fixedPrice ?? (pricingType === 'fixed' ? service.price : '') ?? '',
+      hourlyRate: service.hourlyRate ?? (pricingType === 'hourly' ? service.price : '') ?? '',
       category: service.category?._id || service.category || '',
       image: service.image || '',
       durationMinutes: service.durationMinutes || '',
@@ -122,16 +141,18 @@ export default function AdminServices() {
 
   const closeEditor = () => {
     setEditingService(null);
-    setEditForm({ name: '', description: '', price: '', category: '', image: '', durationMinutes: '' });
+    setEditForm({ name: '', description: '', pricingType: 'fixed', fixedPrice: '', hourlyRate: '', category: '', image: '', durationMinutes: '', locations: [] });
   };
 
   const handleUpdateService = async (e) => {
     e.preventDefault();
     try {
       const payload = {
-        ...editForm,
+        name: editForm.name,
+        description: editForm.description,
+        image: editForm.image,
+        ...buildPricingPayload(editForm),
         slug: slugify(editForm.name),
-        price: Number(editForm.price),
         category: editForm.category || null,
         durationMinutes: editForm.durationMinutes ? Number(editForm.durationMinutes) : 60,
         locations: editForm.locations || []
@@ -174,9 +195,29 @@ export default function AdminServices() {
                 <input required placeholder="e.g., TV Installation" className="w-full p-3 border rounded-xl bg-white" value={newService.name} onChange={(e) => setNewService({ ...newService, name: e.target.value })} />
               </div>
               <div>
-                <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Price (₹)</label>
-                <input required type="number" placeholder="499" className="w-full p-3 border rounded-xl bg-white" value={newService.price} onChange={(e) => setNewService({...newService, price: e.target.value})} />
+                <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Pricing Type</label>
+                <div className="flex gap-2">
+                  <button type="button" onClick={() => setNewService({ ...newService, pricingType: 'fixed', hourlyRate: '' })}
+                    className={`flex-1 rounded-xl px-3 py-3 text-xs font-medium uppercase tracking-widest border transition ${newService.pricingType === 'fixed' ? 'bg-ink text-paper border-ink' : 'bg-white text-ink/70 border-ink/20 hover:border-ink/40'}`}>
+                    Fixed Price
+                  </button>
+                  <button type="button" onClick={() => setNewService({ ...newService, pricingType: 'hourly', fixedPrice: '' })}
+                    className={`flex-1 rounded-xl px-3 py-3 text-xs font-medium uppercase tracking-widest border transition ${newService.pricingType === 'hourly' ? 'bg-ink text-paper border-ink' : 'bg-white text-ink/70 border-ink/20 hover:border-ink/40'}`}>
+                    Per Hour
+                  </button>
+                </div>
               </div>
+              {newService.pricingType === 'fixed' ? (
+                <div>
+                  <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Fixed Price (₹)</label>
+                  <input required type="number" min="0" placeholder="499" className="w-full p-3 border rounded-xl bg-white" value={newService.fixedPrice} onChange={(e) => setNewService({...newService, fixedPrice: e.target.value})} />
+                </div>
+              ) : (
+                <div>
+                  <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Hourly Rate (₹ / hr)</label>
+                  <input required type="number" min="0" placeholder="200" className="w-full p-3 border rounded-xl bg-white" value={newService.hourlyRate} onChange={(e) => setNewService({...newService, hourlyRate: e.target.value})} />
+                </div>
+              )}
               <div>
                 <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Duration (minutes)</label>
                 <input required type="number" placeholder="e.g., 120" min="5" max="600" className="w-full p-3 border rounded-xl bg-white" value={newService.durationMinutes} onChange={(e) => setNewService({...newService, durationMinutes: e.target.value})} />
@@ -274,7 +315,11 @@ export default function AdminServices() {
                     {s.category?.name || s.category?.slug || 'Uncategorized'}
                   </td>
                   <td className="p-4 font-medium">{s.name}</td>
-                  <td className="p-4">₹{s.price}</td>
+                  <td className="p-4">
+                    {s.pricingType === 'hourly'
+                      ? <>₹{s.hourlyRate ?? s.price}<span className="text-ink/50">/hr</span></>
+                      : <>₹{s.fixedPrice ?? s.price}</>}
+                  </td>
                   <td className="p-4">{s.durationMinutes} min</td>
                   <td className="p-4">
                     <button
@@ -324,9 +369,29 @@ export default function AdminServices() {
                 <input required placeholder="Service name" className="w-full p-2 text-sm border rounded-xl bg-white text-ink border-ink/20" value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} />
               </div>
               <div>
-                <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Price (₹)</label>
-                <input required type="number" placeholder="499" className="w-full p-2 text-sm border rounded-xl bg-white text-ink border-ink/20" value={editForm.price} onChange={(e) => setEditForm({ ...editForm, price: e.target.value })} />
+                <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Pricing Type</label>
+                <div className="flex gap-2">
+                  <button type="button" onClick={() => setEditForm({ ...editForm, pricingType: 'fixed', hourlyRate: '' })}
+                    className={`flex-1 rounded-xl px-2 py-2 text-[11px] font-medium uppercase tracking-widest border transition ${editForm.pricingType === 'fixed' ? 'bg-ink text-paper border-ink' : 'bg-white text-ink/70 border-ink/20 hover:border-ink/40'}`}>
+                    Fixed
+                  </button>
+                  <button type="button" onClick={() => setEditForm({ ...editForm, pricingType: 'hourly', fixedPrice: '' })}
+                    className={`flex-1 rounded-xl px-2 py-2 text-[11px] font-medium uppercase tracking-widest border transition ${editForm.pricingType === 'hourly' ? 'bg-ink text-paper border-ink' : 'bg-white text-ink/70 border-ink/20 hover:border-ink/40'}`}>
+                    Per Hour
+                  </button>
+                </div>
               </div>
+              {editForm.pricingType === 'fixed' ? (
+                <div>
+                  <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Fixed Price (₹)</label>
+                  <input required type="number" min="0" placeholder="499" className="w-full p-2 text-sm border rounded-xl bg-white text-ink border-ink/20" value={editForm.fixedPrice} onChange={(e) => setEditForm({ ...editForm, fixedPrice: e.target.value })} />
+                </div>
+              ) : (
+                <div>
+                  <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Hourly Rate (₹ / hr)</label>
+                  <input required type="number" min="0" placeholder="200" className="w-full p-2 text-sm border rounded-xl bg-white text-ink border-ink/20" value={editForm.hourlyRate} onChange={(e) => setEditForm({ ...editForm, hourlyRate: e.target.value })} />
+                </div>
+              )}
               <div>
                 <label className="block text-xs uppercase tracking-widest font-medium mb-2 text-ink/60">Duration (minutes)</label>
                 <input required type="number" placeholder="e.g., 120" min="5" max="600" className="w-full p-2 text-sm border rounded-xl bg-white text-ink border-ink/20" value={editForm.durationMinutes} onChange={(e) => setEditForm({ ...editForm, durationMinutes: e.target.value })} />

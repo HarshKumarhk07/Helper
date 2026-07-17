@@ -3,14 +3,16 @@ import { BOOKING_STATUS, canTransition } from '../config/booking.js';
 import { ROLES } from '../config/roles.js';
 
 export const assertBookingTransition = ({ booking, to, pin, role, userId }) => {
+  // A failed/cancelled payment can only move to a user cancellation.
   if (booking.paymentStatus === 'failed' || booking.paymentStatus === 'cancelled') {
-    if (to !== BOOKING_STATUS.CANCELLED) {
+    if (to !== BOOKING_STATUS.CANCELLED_BY_USER) {
       throw new ApiError(400, 'Only cancellation is allowed for failed or cancelled payments');
     }
   }
 
-  if (to === BOOKING_STATUS.ASSIGNED && booking.paymentStatus !== 'paid') {
-    throw new ApiError(400, 'Workers can only be assigned after successful payment');
+  // A worker may only confirm a booking that has actually been paid for.
+  if (to === BOOKING_STATUS.CONFIRMED && booking.paymentStatus !== 'paid') {
+    throw new ApiError(400, 'A booking can only be confirmed after successful payment');
   }
 
   const isOwner = String(booking.user) === String(userId);
@@ -18,22 +20,22 @@ export const assertBookingTransition = ({ booking, to, pin, role, userId }) => {
   const isAdmin = role === ROLES.ADMIN;
 
   const allowedActors = {
-    [BOOKING_STATUS.ASSIGNED]: [ROLES.ADMIN],
-    [BOOKING_STATUS.ACCEPTED]: [ROLES.WORKER, ROLES.ADMIN],
-    [BOOKING_STATUS.EN_ROUTE]: [ROLES.WORKER, ROLES.ADMIN],
-    [BOOKING_STATUS.IN_PROGRESS]: [ROLES.WORKER, ROLES.ADMIN],
-    [BOOKING_STATUS.COMPLETED]: [ROLES.WORKER, ROLES.ADMIN],
-    [BOOKING_STATUS.CANCELLED]: [ROLES.USER, ROLES.ADMIN],
+    [BOOKING_STATUS.CONFIRMED]: [ROLES.WORKER, ROLES.ADMIN],           // worker accepts
+    [BOOKING_STATUS.REJECTED]: [ROLES.WORKER, ROLES.ADMIN],           // worker rejects
+    [BOOKING_STATUS.WORKER_UNAVAILABLE]: [ROLES.ADMIN],               // normally the sweeper
+    [BOOKING_STATUS.IN_PROGRESS]: [ROLES.WORKER, ROLES.ADMIN],        // start PIN
+    [BOOKING_STATUS.COMPLETED]: [ROLES.WORKER, ROLES.ADMIN],          // end PIN
+    [BOOKING_STATUS.CANCELLED_BY_USER]: [ROLES.USER, ROLES.ADMIN],    // user cancels
   };
 
   const actorAllowed = (allowedActors[to] || []).includes(role);
-  const userCanCancel = to === BOOKING_STATUS.CANCELLED && isOwner;
+  const userCanCancel = to === BOOKING_STATUS.CANCELLED_BY_USER && isOwner;
 
   if (!actorAllowed && !userCanCancel) {
     throw new ApiError(403, 'You may not perform that transition');
   }
 
-  if (to !== BOOKING_STATUS.CANCELLED && !isAdmin && !isWorker && !isOwner) {
+  if (to !== BOOKING_STATUS.CANCELLED_BY_USER && !isAdmin && !isWorker && !isOwner) {
     throw new ApiError(403, 'Forbidden');
   }
 

@@ -2,7 +2,7 @@ import User from '../models/User.js';
 import Booking from '../models/Booking.js';
 import WorkerAvailability from '../models/WorkerAvailability.js';
 import { ROLES } from '../config/roles.js';
-import { TERMINAL_STATUSES } from '../config/booking.js';
+import { BOOKING_STATUS, TERMINAL_STATUSES } from '../config/booking.js';
 
 export const pickWorkerForCategory = async ({ excludeIds = [] } = {}) => {
   const now = new Date();
@@ -56,9 +56,14 @@ export const pickWorkerForCategory = async ({ excludeIds = [] } = {}) => {
   if (workers.length === 0) return null;
 
   const workerIds = workers.map((w) => w._id);
-  const activeStatuses = ['placed', 'assigned', 'in_progress'].filter(
-    (s) => !TERMINAL_STATUSES.has(s)
-  );
+  // A worker's current load = bookings that occupy them but aren't finished:
+  // offered-and-awaiting (pending_confirmation), accepted (confirmed), or
+  // running (in_progress). Filtered against TERMINAL_STATUSES defensively.
+  const activeStatuses = [
+    BOOKING_STATUS.PENDING_CONFIRMATION,
+    BOOKING_STATUS.CONFIRMED,
+    BOOKING_STATUS.IN_PROGRESS,
+  ].filter((s) => !TERMINAL_STATUSES.has(s));
 
   const counts = await Booking.aggregate([
     { $match: { worker: { $in: workerIds }, status: { $in: activeStatuses } } },

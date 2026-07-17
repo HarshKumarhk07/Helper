@@ -8,6 +8,7 @@ import { initSocket } from './sockets/index.js';
 import { refreshCommissionCacheFromDB } from './utils/earnings.js';
 import { startStaleWorkerSweeper, stopStaleWorkerSweeper } from './utils/staleWorkerSweeper.js';
 import { startAssignmentExpirySweeper, stopAssignmentExpirySweeper } from './utils/dispatch.js';
+import { startConfirmationTimeoutSweeper, stopConfirmationTimeoutSweeper } from './utils/confirmationTimeoutSweeper.js';
 
 const PORT = process.env.PORT || 5000;
 
@@ -19,11 +20,13 @@ const start = async () => {
   initSocket(server);
   startStaleWorkerSweeper();
   startAssignmentExpirySweeper();
+  startConfirmationTimeoutSweeper();
 
   for (const sig of ['SIGTERM', 'SIGINT']) {
     process.on(sig, () => {
       stopStaleWorkerSweeper();
       stopAssignmentExpirySweeper();
+      stopConfirmationTimeoutSweeper();
       server.close(() => process.exit(0));
     });
   }

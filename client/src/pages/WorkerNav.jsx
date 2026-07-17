@@ -24,21 +24,28 @@ import {
   socket,
 } from '../lib/socket.js';
 import { getTrackingState } from '../api/tracking.js';
-import { transitionStatus } from '../api/bookings.js';
+import { transitionStatus, markEnRoute } from '../api/bookings.js';
 import useSocket from '../hooks/useSocket.js';
 import { useAuth } from '../context/AuthContext.jsx';
+import { BOOKING_STATUS } from '../lib/bookingStatus.js';
 
 const STATUS_BADGE = {
-  assigned: 'bg-sky-400/15 text-sky-300 ring-sky-400/30',
-  in_progress: 'bg-emerald-400/15 text-emerald-300 ring-emerald-400/30',
-  completed: 'bg-emerald-500/15 text-emerald-300 ring-emerald-500/40',
-  cancelled: 'bg-rose-400/15 text-rose-300 ring-rose-400/30',
+  [BOOKING_STATUS.PENDING_CONFIRMATION]: 'bg-amber-400/15 text-amber-300 ring-amber-400/30',
+  [BOOKING_STATUS.CONFIRMED]: 'bg-sky-400/15 text-sky-300 ring-sky-400/30',
+  [BOOKING_STATUS.IN_PROGRESS]: 'bg-emerald-400/15 text-emerald-300 ring-emerald-400/30',
+  [BOOKING_STATUS.COMPLETED]: 'bg-emerald-500/15 text-emerald-300 ring-emerald-500/40',
+  [BOOKING_STATUS.CANCELLED_BY_USER]: 'bg-rose-400/15 text-rose-300 ring-rose-400/30',
+  [BOOKING_STATUS.REJECTED]: 'bg-rose-400/15 text-rose-300 ring-rose-400/30',
+  [BOOKING_STATUS.WORKER_UNAVAILABLE]: 'bg-rose-400/15 text-rose-300 ring-rose-400/30',
 };
 const STATUS_LABEL = {
-  assigned: 'En route',
-  in_progress: 'In service',
-  completed: 'Completed',
-  cancelled: 'Cancelled',
+  [BOOKING_STATUS.PENDING_CONFIRMATION]: 'Awaiting your response',
+  [BOOKING_STATUS.CONFIRMED]: 'Confirmed',
+  [BOOKING_STATUS.IN_PROGRESS]: 'In service',
+  [BOOKING_STATUS.COMPLETED]: 'Completed',
+  [BOOKING_STATUS.CANCELLED_BY_USER]: 'Cancelled',
+  [BOOKING_STATUS.REJECTED]: 'Rejected',
+  [BOOKING_STATUS.WORKER_UNAVAILABLE]: 'Expired',
 };
 
 const fmtKm = (m) =>
@@ -241,7 +248,7 @@ export default function WorkerNav() {
   const handleAccept = async () => {
     setWorking(true);
     try {
-      await transitionStatus(bookingId, 'accepted', 'Accepted by worker');
+      await transitionStatus(bookingId, BOOKING_STATUS.CONFIRMED, 'Accepted by worker');
       toast.success('Job accepted!');
       refresh(false);
     } catch (err) {
@@ -254,7 +261,8 @@ export default function WorkerNav() {
   const handleStartTravel = async () => {
     setWorking(true);
     try {
-      await transitionStatus(bookingId, 'en_route', 'On the way');
+      // Not a status change — stamps enRouteAt; the booking stays `confirmed`.
+      await markEnRoute(bookingId);
       toast.success('Started travel!');
       refresh(false);
     } catch (err) {
@@ -269,7 +277,7 @@ export default function WorkerNav() {
     if (!pin) return;
     setWorking(true);
     try {
-      await transitionStatus(bookingId, 'in_progress', 'Started on site', pin);
+      await transitionStatus(bookingId, BOOKING_STATUS.IN_PROGRESS, 'Started on site', pin);
       toast.success('Job started!');
       refresh(false);
     } catch (err) {
@@ -288,7 +296,7 @@ export default function WorkerNav() {
     if (!pin) return;
     setWorking(true);
     try {
-      await transitionStatus(bookingId, 'completed', 'Service completed', pin);
+      await transitionStatus(bookingId, BOOKING_STATUS.COMPLETED, 'Service completed', pin);
       toast.success('Job completed!');
       refresh(false);
     } catch (err) {
@@ -323,8 +331,12 @@ export default function WorkerNav() {
 
   const { booking } = state;
   const status = booking.status;
-  const inProgress = status === 'in_progress';
-  const finished = status === 'completed' || status === 'cancelled';
+  const inProgress = status === BOOKING_STATUS.IN_PROGRESS;
+  const finished =
+    status === BOOKING_STATUS.COMPLETED ||
+    status === BOOKING_STATUS.CANCELLED_BY_USER ||
+    status === BOOKING_STATUS.REJECTED ||
+    status === BOOKING_STATUS.WORKER_UNAVAILABLE;
 
   // The worker's location to show on the map — prefer local GPS, fall back to server
   const workerMapPos = localWorkerPos || state.workerLocation || null;
@@ -486,7 +498,7 @@ export default function WorkerNav() {
           {/* Action buttons — dynamically rendered based on status */}
           {!finished && (
             <div className="mt-4 flex flex-col gap-2">
-              {status === 'assigned' && (
+              {status === BOOKING_STATUS.PENDING_CONFIRMATION && (
                 <button
                   onClick={handleAccept}
                   disabled={working}
@@ -495,16 +507,18 @@ export default function WorkerNav() {
                   <Play size={13} /> Accept Job
                 </button>
               )}
-              {status === 'accepted' && (
+              {/* Confirmed but not yet travelling → "On the way" (stamps enRouteAt). */}
+              {status === BOOKING_STATUS.CONFIRMED && !booking.enRouteAt && (
                 <button
                   onClick={handleStartTravel}
                   disabled={working}
                   className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-sky-500 px-4 py-2.5 text-xs uppercase tracking-widest text-white transition hover:bg-sky-400 disabled:opacity-40"
                 >
-                  <Navigation size={13} /> Start travel (En route)
+                  <Navigation size={13} /> On the way
                 </button>
               )}
-              {status === 'en_route' && (
+              {/* Travelling → can start the job with the customer's start PIN. */}
+              {status === BOOKING_STATUS.CONFIRMED && booking.enRouteAt && (
                 <button
                   onClick={handleStart}
                   disabled={working}
@@ -513,7 +527,7 @@ export default function WorkerNav() {
                   <Play size={13} /> Start job (Enter PIN)
                 </button>
               )}
-              {status === 'in_progress' && (
+              {status === BOOKING_STATUS.IN_PROGRESS && (
                 <button
                   onClick={handleComplete}
                   disabled={working || !booking?.hasEndPin}
@@ -523,7 +537,7 @@ export default function WorkerNav() {
                   <CheckCircle2 size={13} /> Complete job (Enter PIN)
                 </button>
               )}
-              {status === 'in_progress' && (
+              {status === BOOKING_STATUS.IN_PROGRESS && (
                 <div className="text-center text-[10px] uppercase tracking-widest text-sky-300/80">
                   {booking?.hasEndPin ? 'End PIN required before completion' : 'End PIN missing for this booking'}
                 </div>
@@ -533,7 +547,7 @@ export default function WorkerNav() {
 
           {finished && (
             <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-3 text-center text-sm text-paper/65">
-              {status === 'completed'
+              {status === BOOKING_STATUS.COMPLETED
                 ? 'Job completed. Earnings will appear in your dashboard shortly.'
                 : 'Job cancelled.'}
             </div>

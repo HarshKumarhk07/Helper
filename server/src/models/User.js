@@ -60,6 +60,15 @@ const userSchema = new mongoose.Schema(
       default: 'free',
       index: true,
     },
+    // The booking that currently occupies this worker (set on Accept, cleared
+    // when they submit the end PIN). Linked so we always know WHICH job made
+    // them busy — never a bare boolean. Managed only via the centralized
+    // markWorkerUnavailable/markWorkerAvailable helpers (utils/workerAvailability.js).
+    currentBooking: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Booking',
+      default: null,
+    },
     // Persisted rolling review average for this worker (recomputed on each new
     // review). Avoids recomputing from scratch on every customer search.
     ratingAvg: { type: Number, default: 0 },

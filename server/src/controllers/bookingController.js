@@ -11,10 +11,13 @@ import {
   BOOKING_TYPE,
   PAYMENT_MODE,
   ASSIGNMENT_TTL_MS,
+  BOOKING_CONFIRMATION_TIMEOUT_MS,
 } from '../config/booking.js';
+import { markWorkerUnavailable, markWorkerAvailable } from '../utils/workerAvailability.js';
 import { generatePin } from '../utils/pin.js';
+import { isHourlyService, clampHours, calculateServicePrice } from '../utils/servicePricing.js';
 import { pickWorkerForCategory } from '../utils/assignment.js';
-import { reassignBooking } from '../utils/dispatch.js';
+import { reassignBooking, bounceToNextWorker, emitBookingStatus, emitBookingRequest } from '../utils/dispatch.js';
 import { assertBookingTransition } from '../utils/bookingTransitionGuard.js';
 import { logAudit } from '../utils/auditLogger.js';
 import { createEarningForBooking } from '../utils/earnings.js';
@@ -28,6 +31,7 @@ import {
   notifyBookingCancelled,
   notifyQuoteRequested,
   notifyQuoteSent,
+  notifyBookingRequested,
   sendBookingNotificationOnce,
 } from '../utils/notificationService.js';
 import { performBookingRefund } from './paymentController.js';
@@ -82,7 +86,7 @@ const maskBookingForWorker = (booking) => {
   // Mask before the worker commits: an un-accepted assignment, or a quote
   // request that hasn't been accepted yet.
   const preCommit =
-    obj.status === BOOKING_STATUS.ASSIGNED ||
+    obj.status === BOOKING_STATUS.PENDING_CONFIRMATION ||
     (obj.isQuoteRequest && obj.quoteStatus !== 'accepted');
   if (preCommit) {
     if (obj.user && typeof obj.user === 'object') {
@@ -145,6 +149,7 @@ export const createBooking = asyncHandler(async (req, res) => {
   let resolvedServiceId = serviceId || null;
   let resolvedWorkerId = workerId || null;
   let serviceDuration = 60; // default service duration in minutes
+  let bookedHours = null; // set only for hourly-priced services
 
   // Resolve the catalog service first — it provides the category, duration and
   // the base price we fall back to when no worker-specific price applies.
@@ -155,7 +160,14 @@ export const createBooking = asyncHandler(async (req, res) => {
       const fallbackService = await Service.findOne({ isActive: true });
       service = fallbackService || { _id: serviceId, price: 749, category: null, isActive: true };
     }
-    finalAmount = service.price;
+    // Hourly services: total = admin rate × hours (server is authoritative —
+    // never trust a client-sent amount). Fixed: the flat catalog price.
+    if (isHourlyService(service)) {
+      bookedHours = clampHours(req.body.hours);
+      finalAmount = calculateServicePrice(service, bookedHours);
+    } else {
+      finalAmount = service.price;
+    }
     resolvedCategory = service.category;
     resolvedServiceId = service._id;
     serviceDuration = service.durationMinutes || 60;
@@ -179,12 +191,16 @@ export const createBooking = asyncHandler(async (req, res) => {
         isActive: true,
       });
       if (offering) {
-        if (offering.pricingType === 'variable') {
-          // Variable jobs are finalised via a quote (Sprint 4). Charge the
-          // starting price up front when set, else the catalog base price.
-          finalAmount = offering.startingPrice > 0 ? offering.startingPrice : (service?.price || 0);
-        } else if (offering.amount > 0) {
-          finalAmount = offering.amount;
+        // Hourly services are admin-priced — a worker's own price never
+        // overrides the rate × hours total computed above.
+        if (!isHourlyService(service)) {
+          if (offering.pricingType === 'variable') {
+            // Variable jobs are finalised via a quote (Sprint 4). Charge the
+            // starting price up front when set, else the catalog base price.
+            finalAmount = offering.startingPrice > 0 ? offering.startingPrice : (service?.price || 0);
+          } else if (offering.amount > 0) {
+            finalAmount = offering.amount;
+          }
         }
         pricedFromOffering = true;
       }
@@ -238,28 +254,32 @@ export const createBooking = asyncHandler(async (req, res) => {
     scheduledAt: type === BOOKING_TYPE.SCHEDULED ? new Date(scheduledAt) : null,
     address: addressSnapshot,
     amount: finalAmount,
+    hours: bookedHours,
     couponCode: appliedCouponCode,
     discountAmount: discountAmount,
     paymentMode: PAYMENT_MODE.ONLINE,
     notes: notes || '',
     startPin: generatePin(6),
     endPin: generatePin(6),
+    // No worker chosen → we pick one (auto-assign), which changes what happens
+    // on a confirmation timeout/reject (bounce vs terminal). See Booking model.
+    autoAssigned: !resolvedWorkerId,
+    worker: resolvedWorkerId || null,
     history: [
       {
-        from: BOOKING_STATUS.PLACED,
-        to: BOOKING_STATUS.PLACED,
+        from: BOOKING_STATUS.PENDING_CONFIRMATION,
+        to: BOOKING_STATUS.PENDING_CONFIRMATION,
         by: req.user._id,
-        note: 'Created',
+        note: 'Created — awaiting worker confirmation',
       },
     ],
   });
 
-  if (resolvedWorkerId) {
-    booking.worker = resolvedWorkerId;
-    await booking.save();
-  }
-  if (autoAssign) {
-    booking.autoAssign = true;
+  // Online bookings go live (and the 10-min confirmation window starts) once
+  // payment is verified — see paymentController. Anything already paid at
+  // creation starts its window right now.
+  if (booking.paymentStatus === 'paid' && !booking.confirmationExpiresAt) {
+    booking.confirmationExpiresAt = new Date(Date.now() + BOOKING_CONFIRMATION_TIMEOUT_MS);
     await booking.save();
   }
 
@@ -291,12 +311,11 @@ export const listMyBookings = asyncHandler(async (req, res) => {
       { isQuoteRequest: true, quoteStatus: { $ne: 'accepted' } }
     ]
   };
+  // Callers filter using the canonical enum values (config/bookingStatus.js).
+  // The old placed/assigned pair collapsed into `pending_confirmation`, so no
+  // special-casing is needed any more.
   if (status) {
-    if (status === 'placed') {
-      filter.status = { $in: ['placed', 'assigned'] };
-    } else {
-      filter.status = status;
-    }
+    filter.status = status;
   }
   // PINs are select:false by default. We surface them here so the customer
   // can read their own Start/End PIN in the tracker modal and dictate it to
@@ -310,12 +329,11 @@ export const listMyBookings = asyncHandler(async (req, res) => {
 export const listAllBookings = asyncHandler(async (req, res) => {
   const { status, paymentStatus, worker, user, category } = req.query;
   const filter = {};
+  // Callers filter using the canonical enum values (config/bookingStatus.js).
+  // The old placed/assigned pair collapsed into `pending_confirmation`, so no
+  // special-casing is needed any more.
   if (status) {
-    if (status === 'placed') {
-      filter.status = { $in: ['placed', 'assigned'] };
-    } else {
-      filter.status = status;
-    }
+    filter.status = status;
   }
   if (paymentStatus) {
     filter.paymentStatus = paymentStatus;
@@ -393,32 +411,160 @@ export const rejectJob = asyncHandler(async (req, res) => {
   if (!booking.worker || String(booking.worker) !== String(req.user._id)) {
     throw new ApiError(403, 'This job is not assigned to you');
   }
-  if (booking.status !== BOOKING_STATUS.ASSIGNED) {
+  if (booking.status !== BOOKING_STATUS.PENDING_CONFIRMATION) {
     throw new ApiError(409, 'You can only reject a job before accepting it');
   }
 
   const rejectingWorker = booking.worker;
-  booking.rejections.push({ worker: rejectingWorker, reason: reason.slice(0, 300), at: new Date() });
-  recordHistory(booking, BOOKING_STATUS.ASSIGNED, BOOKING_STATUS.PLACED, req.user, `Rejected: ${reason}`);
-  booking.worker = null;
-  booking.status = BOOKING_STATUS.PLACED;
-  booking.assignmentExpiresAt = null;
-  await booking.save();
+  booking.respondedAt = new Date();
 
-  await User.updateOne({ _id: rejectingWorker }, { currentStatus: 'free' });
+  if (booking.autoAssigned) {
+    // Auto-assigned: log the rejection and re-offer to the next eligible worker
+    // with a fresh window; only worker_unavailable once the pool is exhausted.
+    recordHistory(
+      booking,
+      BOOKING_STATUS.PENDING_CONFIRMATION,
+      BOOKING_STATUS.PENDING_CONFIRMATION,
+      req.user,
+      `Rejected: ${reason}`
+    );
+    await bounceToNextWorker(booking, { missedWorker: rejectingWorker, reason });
+  } else {
+    // Hand-picked: terminal. The customer chose this worker, so they choose
+    // the next one — we don't silently swap in someone else.
+    recordHistory(
+      booking,
+      BOOKING_STATUS.PENDING_CONFIRMATION,
+      BOOKING_STATUS.REJECTED,
+      req.user,
+      `Rejected: ${reason}`
+    );
+    booking.rejections.push({ worker: rejectingWorker, reason: reason.slice(0, 300), at: new Date() });
+    booking.status = BOOKING_STATUS.REJECTED;
+    booking.confirmationExpiresAt = null;
+    await booking.save();
+    // The rejecting worker was never marked busy (busy happens on accept), but
+    // normalise so a stuck flag can't block future dispatch.
+    await markWorkerAvailable(rejectingWorker);
+    emitBookingStatus(booking);
+  }
 
   logAudit({
     req,
     action: 'reject_job',
     resource: 'booking',
     resourceId: booking._id,
-    changes: { status: { from: BOOKING_STATUS.ASSIGNED, to: BOOKING_STATUS.PLACED }, reason: { from: null, to: reason } },
+    changes: { status: { from: BOOKING_STATUS.PENDING_CONFIRMATION, to: booking.status }, reason: { from: null, to: reason } },
   });
 
-  // Best-effort reassignment to another eligible worker.
-  await reassignBooking(booking).catch(() => null);
+  res.json({ ok: true, status: booking.status });
+});
 
-  res.json({ ok: true });
+// POST /bookings/:id/change-worker — customer picks a different professional.
+//
+// The customer has already paid, so we never kill the booking: we detach the
+// current worker, record them so they aren't re-offered, attach the chosen one
+// and re-open the SAME booking as pending_confirmation with a fresh window.
+// Works both while still waiting (Change Worker) and after a rejection/timeout
+// ("choose another worker").
+export const changeWorker = asyncHandler(async (req, res) => {
+  const { workerId } = req.body || {};
+  const booking = await Booking.findById(req.params.id);
+  if (!booking) throw new ApiError(404, 'Booking not found');
+  if (String(booking.user) !== String(req.user._id)) {
+    throw new ApiError(403, 'This is not your booking');
+  }
+
+  const changeable = [
+    BOOKING_STATUS.PENDING_CONFIRMATION,
+    BOOKING_STATUS.REJECTED,
+    BOOKING_STATUS.WORKER_UNAVAILABLE,
+  ];
+  if (!changeable.includes(booking.status)) {
+    throw new ApiError(409, 'This booking can no longer change professional');
+  }
+  if (booking.paymentStatus !== 'paid') {
+    throw new ApiError(400, 'Only a paid booking can be reassigned');
+  }
+
+  const worker = await User.findById(workerId);
+  if (!worker || worker.role !== ROLES.WORKER || worker.kycStatus !== 'verified' || !worker.isActive) {
+    throw new ApiError(400, 'Selected professional is not available');
+  }
+  if (booking.worker && String(booking.worker) === String(worker._id)) {
+    throw new ApiError(400, 'That professional is already assigned to this booking');
+  }
+
+  // Log the outgoing worker so they're excluded from any future auto-assign,
+  // and free them via the centralized helper (they were never marked busy while
+  // merely pending, but normalise defensively).
+  if (booking.worker) {
+    booking.rejections.push({
+      worker: booking.worker,
+      reason: 'Customer chose another professional',
+      at: new Date(),
+    });
+    await markWorkerAvailable(booking.worker);
+  }
+
+  const from = booking.status;
+  booking.worker = worker._id;
+  booking.autoAssigned = false; // hand-picked by the customer
+  booking.status = BOOKING_STATUS.PENDING_CONFIRMATION;
+  booking.assignedAt = new Date();
+  booking.respondedAt = null;
+  booking.confirmationExpiresAt = new Date(Date.now() + BOOKING_CONFIRMATION_TIMEOUT_MS);
+  recordHistory(booking, from, BOOKING_STATUS.PENDING_CONFIRMATION, req.user, `Customer selected ${worker.name}`);
+  await booking.save();
+
+  logAudit({
+    req,
+    action: 'change_worker',
+    resource: 'booking',
+    resourceId: booking._id,
+    changes: { status: { from, to: booking.status }, worker: { from: null, to: String(worker._id) } },
+  });
+
+  await sendBookingNotificationOnce(
+    booking._id,
+    `bookingRequested_${worker._id}`,
+    notifyBookingRequested,
+    { user: req.user, worker, booking }
+  ).catch(() => {});
+
+  emitBookingStatus(booking);
+  emitBookingRequest(booking);
+
+  res.json({ booking: await populateBooking(Booking.findById(booking._id)) });
+});
+
+// POST /bookings/:id/en-route — worker taps "On the way".
+// en_route is NOT a status: the booking stays `confirmed` and we stamp
+// enRouteAt. Live-tracking UI gates on enRouteAt != null, so a booking
+// scheduled days out never shows a bogus "worker en route" map.
+export const markEnRoute = asyncHandler(async (req, res) => {
+  const booking = await Booking.findById(req.params.id);
+  if (!booking) throw new ApiError(404, 'Booking not found');
+  if (!booking.worker || String(booking.worker) !== String(req.user._id)) {
+    throw new ApiError(403, 'This job is not assigned to you');
+  }
+  if (booking.status !== BOOKING_STATUS.CONFIRMED) {
+    throw new ApiError(409, 'You can only head out for a confirmed booking');
+  }
+
+  if (!booking.enRouteAt) {
+    booking.enRouteAt = new Date();
+    booking.history.push({
+      from: BOOKING_STATUS.CONFIRMED,
+      to: BOOKING_STATUS.CONFIRMED,
+      by: req.user._id,
+      note: 'Worker en route',
+    });
+    await booking.save();
+    emitBookingStatus(booking);
+  }
+
+  res.json({ booking: await populateBooking(Booking.findById(booking._id)) });
 });
 
 // ── Variable pricing / quote flow ───────────────────────────────────────────
@@ -474,7 +620,7 @@ export const createQuoteRequest = asyncHandler(async (req, res) => {
     },
     startPin: generatePin(6),
     endPin: generatePin(6),
-    history: [{ from: BOOKING_STATUS.PLACED, to: BOOKING_STATUS.PLACED, by: req.user._id, note: 'Quote requested' }],
+    history: [{ from: BOOKING_STATUS.PENDING_CONFIRMATION, to: BOOKING_STATUS.PENDING_CONFIRMATION, by: req.user._id, note: 'Quote requested' }],
   });
 
   logAudit({ req, action: 'quote_requested', resource: 'booking', resourceId: booking._id });
@@ -543,7 +689,7 @@ export const acceptQuote = asyncHandler(async (req, res) => {
   booking.quoteStatus = 'accepted';
   booking.worker = quote.worker;
   // Keep status as PLACED. Defer worker busy / ACCEPTED transition until checkout payment.
-  booking.history.push({ from: BOOKING_STATUS.PLACED, to: BOOKING_STATUS.PLACED, by: req.user._id, note: `Quote accepted: ${quote.amount}` });
+  booking.history.push({ from: BOOKING_STATUS.PENDING_CONFIRMATION, to: BOOKING_STATUS.PENDING_CONFIRMATION, by: req.user._id, note: `Quote accepted: ${quote.amount}` });
   await booking.save();
 
   logAudit({ req, action: 'quote_accepted', resource: 'booking', resourceId: booking._id });
@@ -591,7 +737,7 @@ export const getBooking = asyncHandler(async (req, res) => {
   }
 
   // A worker viewing a job they haven't accepted yet only sees area-level info.
-  if (isWorker && !isPrivileged && bObj.status === BOOKING_STATUS.ASSIGNED) {
+  if (isWorker && !isPrivileged && bObj.status === BOOKING_STATUS.PENDING_CONFIRMATION) {
     if (bObj.user && typeof bObj.user === 'object') {
       bObj.user = { _id: bObj.user._id, name: 'New request' };
     }
@@ -648,27 +794,29 @@ export const assignWorker = asyncHandler(async (req, res) => {
   }
 
   const previousWorker = booking.worker ? String(booking.worker) : null;
-  const wasPlaced = booking.status === BOOKING_STATUS.PLACED;
+  const wasUnassigned = !booking.worker;
 
+  // Admin (re)assignment offers the job to `worker` — the booking stays
+  // pending_confirmation and the worker gets a fresh confirmation window to
+  // Accept/Reject, exactly like any other request.
   const updatedBooking = await Booking.findOneAndUpdate(
     {
       _id: req.params.id,
-      status: { $in: [BOOKING_STATUS.PLACED, BOOKING_STATUS.ASSIGNED] },
+      status: BOOKING_STATUS.PENDING_CONFIRMATION,
       paymentStatus: 'paid'
     },
     {
       $set: {
         worker: worker._id,
         assignedAt: new Date(),
-        assignmentExpiresAt: new Date(Date.now() + ASSIGNMENT_TTL_MS),
-        status: BOOKING_STATUS.ASSIGNED
+        confirmationExpiresAt: new Date(Date.now() + BOOKING_CONFIRMATION_TIMEOUT_MS),
       },
       $push: {
         history: {
-          from: booking.status,
-          to: BOOKING_STATUS.ASSIGNED,
+          from: BOOKING_STATUS.PENDING_CONFIRMATION,
+          to: BOOKING_STATUS.PENDING_CONFIRMATION,
           by: req.user._id,
-          note: wasPlaced ? `Assigned to ${worker.name}` : `Reassigned to ${worker.name}`
+          note: wasUnassigned ? `Assigned to ${worker.name}` : `Reassigned to ${worker.name}`
         }
       }
     },
@@ -686,7 +834,7 @@ export const assignWorker = asyncHandler(async (req, res) => {
     resourceId: updatedBooking._id,
     changes: {
       worker: { from: previousWorker, to: String(worker._id) },
-      status: { from: wasPlaced ? BOOKING_STATUS.PLACED : BOOKING_STATUS.ASSIGNED, to: BOOKING_STATUS.ASSIGNED },
+      status: { from: BOOKING_STATUS.PENDING_CONFIRMATION, to: BOOKING_STATUS.PENDING_CONFIRMATION },
     },
   });
 
@@ -704,8 +852,8 @@ export const assignWorker = asyncHandler(async (req, res) => {
 export const autoAssign = asyncHandler(async (req, res) => {
   const booking = await Booking.findById(req.params.id);
   if (!booking) throw new ApiError(404, 'Booking not found');
-  if (booking.status !== BOOKING_STATUS.PLACED) {
-    throw new ApiError(409, 'Auto-assign only allowed when booking is placed');
+  if (booking.status !== BOOKING_STATUS.PENDING_CONFIRMATION) {
+    throw new ApiError(409, 'Auto-assign only allowed while a booking is awaiting confirmation');
   }
   if (booking.paymentStatus !== 'paid') {
     throw new ApiError(400, 'Workers can only be assigned after successful payment');
@@ -717,7 +865,7 @@ export const autoAssign = asyncHandler(async (req, res) => {
   const updatedBooking = await Booking.findOneAndUpdate(
     {
       _id: req.params.id,
-      status: BOOKING_STATUS.PLACED,
+      status: BOOKING_STATUS.PENDING_CONFIRMATION,
       worker: null,
       paymentStatus: 'paid'
     },
@@ -725,13 +873,12 @@ export const autoAssign = asyncHandler(async (req, res) => {
       $set: {
         worker: worker._id,
         assignedAt: new Date(),
-        assignmentExpiresAt: new Date(Date.now() + ASSIGNMENT_TTL_MS),
-        status: BOOKING_STATUS.ASSIGNED
+        confirmationExpiresAt: new Date(Date.now() + BOOKING_CONFIRMATION_TIMEOUT_MS),
       },
       $push: {
         history: {
-          from: BOOKING_STATUS.PLACED,
-          to: BOOKING_STATUS.ASSIGNED,
+          from: BOOKING_STATUS.PENDING_CONFIRMATION,
+          to: BOOKING_STATUS.PENDING_CONFIRMATION,
           by: req.user._id,
           note: 'Auto-assigned'
         }
@@ -778,26 +925,26 @@ export const transitionStatus = asyncHandler(async (req, res) => {
 
   const from = booking.status;
   booking.status = to;
-  if (to === BOOKING_STATUS.ACCEPTED) {
+  if (to === BOOKING_STATUS.CONFIRMED) {
     booking.acceptedAt = new Date();
-    // Worker has committed — stop the 15-min expiry clock.
-    booking.assignmentExpiresAt = null;
+    booking.respondedAt = new Date();
+    // Worker has committed — stop the confirmation countdown.
+    booking.confirmationExpiresAt = null;
   }
-  if (to === BOOKING_STATUS.EN_ROUTE) booking.enRouteAt = new Date();
   if (to === BOOKING_STATUS.IN_PROGRESS) booking.startedAt = new Date();
   if (to === BOOKING_STATUS.COMPLETED) booking.completedAt = new Date();
-  if (to === BOOKING_STATUS.CANCELLED) booking.cancelledAt = new Date();
+  if (to === BOOKING_STATUS.CANCELLED_BY_USER) booking.cancelledAt = new Date();
   recordHistory(booking, from, to, req.user, note);
   await booking.save();
 
-  // Keep the worker's real-time busy flag in sync so the matching engine never
-  // offers a new job to someone already committed. Busy once they accept, free
-  // again when the job ends (completed or cancelled).
+  // Worker availability is flipped ONLY through the centralized helpers
+  // (utils/workerAvailability.js) so currentStatus and the currentBooking
+  // back-link always move together. Busy on accept; free when the job ends.
   if (booking.worker) {
-    if (to === BOOKING_STATUS.ACCEPTED) {
-      await User.updateOne({ _id: booking.worker }, { currentStatus: 'busy' });
-    } else if (to === BOOKING_STATUS.COMPLETED || to === BOOKING_STATUS.CANCELLED) {
-      await User.updateOne({ _id: booking.worker }, { currentStatus: 'free' });
+    if (to === BOOKING_STATUS.CONFIRMED) {
+      await markWorkerUnavailable(booking.worker, booking._id);
+    } else if (to === BOOKING_STATUS.COMPLETED || to === BOOKING_STATUS.CANCELLED_BY_USER) {
+      await markWorkerAvailable(booking.worker);
     }
   }
 
@@ -826,7 +973,7 @@ export const transitionStatus = asyncHandler(async (req, res) => {
       user: populatedUser,
       booking,
     }).catch(() => {});
-  } else if (to === BOOKING_STATUS.CANCELLED) {
+  } else if (to === BOOKING_STATUS.CANCELLED_BY_USER) {
     // Don't auto-refund — let admin issue refund explicitly via the refund button.
     if (booking.paymentStatus !== 'paid' && booking.paymentStatus !== 'refunded') {
       booking.paymentStatus = 'cancelled';

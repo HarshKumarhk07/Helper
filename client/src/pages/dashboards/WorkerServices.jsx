@@ -4,6 +4,7 @@ import { Plus, Pencil, Trash2, X, Tag, Info, PackageSearch } from 'lucide-react'
 import DashboardShell from './DashboardShell.jsx';
 import FadeUp from '../../components/ui/FadeUp.jsx';
 import { formatPrice } from '../../lib/booking.js';
+import { isHourlyService, formatServiceRate, getServiceUnitPrice } from '../../lib/servicePricing.js';
 import { mediaUrl, CATALOG_PLACEHOLDER_IMAGE } from '../../lib/catalogImage.js';
 import {
   getServiceCatalog,
@@ -14,15 +15,39 @@ import {
 } from '../../api/workerServices.js';
 
 const priceLabel = (ws) => {
+  // Hourly services are priced by admin — the worker's own price doesn't apply.
+  if (isHourlyService(ws.service)) {
+    return `${formatServiceRate(ws.service)} · set by admin`;
+  }
   if (ws.pricingType === 'variable') {
     return ws.startingPrice > 0 ? `From ${formatPrice(ws.startingPrice)}` : 'Quote on request';
   }
   return formatPrice(ws.amount);
 };
 
-// Shared pricing editor used by both the Add and Edit flows.
-function PricingFields({ value, onChange }) {
+// Shared pricing editor used by both the Add and Edit flows. When the admin
+// has set the service to hourly, pricing is locked to the admin rate — the
+// worker can't set their own price, so we show a read-only notice instead.
+function PricingFields({ value, onChange, service }) {
   const { pricingType, amount, startingPrice, note } = value;
+
+  if (isHourlyService(service)) {
+    return (
+      <div className="rounded-xl border border-ink/15 bg-sand/30 p-4">
+        <div className="text-[11px] font-bold uppercase tracking-wider text-ink/65">
+          Hourly service — admin-set rate
+        </div>
+        <div className="mt-1.5 text-lg font-bold text-ink">
+          {formatPrice(getServiceUnitPrice(service))}<span className="text-sm font-medium text-ink/60">/hr</span>
+        </div>
+        <p className="mt-1 text-xs text-ink/55">
+          This service is billed per hour at a rate fixed by admin. You can't set your own
+          price — the customer picks the number of hours at booking.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <div>
@@ -146,12 +171,19 @@ export default function WorkerServices() {
     if (!selectedService) return toast.error('Pick a service first');
     setSubmitting(true);
     try {
+      // Hourly services are admin-priced: enroll the worker without a custom
+      // price (amount 0 → booking falls back to the admin hourly rate).
+      const pricing = isHourlyService(selectedService)
+        ? { pricingType: 'fixed', amount: 0, startingPrice: 0, note: '' }
+        : {
+            pricingType: addPricing.pricingType,
+            amount: Number(addPricing.amount) || 0,
+            startingPrice: Number(addPricing.startingPrice) || 0,
+            note: addPricing.note,
+          };
       await addWorkerService({
         service: selectedService._id,
-        pricingType: addPricing.pricingType,
-        amount: Number(addPricing.amount) || 0,
-        startingPrice: Number(addPricing.startingPrice) || 0,
-        note: addPricing.note,
+        ...pricing,
       });
       toast.success('Service added');
       setShowAdd(false);
@@ -379,7 +411,10 @@ export default function WorkerServices() {
                       />
                       <div className="min-w-0 flex-1">
                         <div className="truncate text-sm font-medium text-ink">{s.name}</div>
-                        <div className="text-xs text-ink/50">Catalog: {formatPrice(s.price)}</div>
+                        <div className="text-xs text-ink/50">
+                          Catalog: {formatServiceRate(s)}
+                          {isHourlyService(s) && <span className="ml-1 text-ink/40">(admin-priced)</span>}
+                        </div>
                       </div>
                       {disabled && (
                         <span className="text-[10px] font-semibold uppercase tracking-widest text-ink/45">
@@ -399,7 +434,7 @@ export default function WorkerServices() {
 
             {/* Pricing */}
             <div className="mt-5">
-              <PricingFields value={addPricing} onChange={setAddPricing} />
+              <PricingFields value={addPricing} onChange={setAddPricing} service={selectedService} />
             </div>
 
             <div className="mt-6 flex justify-end gap-3">
@@ -432,7 +467,7 @@ export default function WorkerServices() {
               </button>
             </div>
 
-            <PricingFields value={editPricing} onChange={setEditPricing} />
+            <PricingFields value={editPricing} onChange={setEditPricing} service={editing.service} />
 
             <div className="mt-6 flex justify-end gap-3">
               <button onClick={() => setEditing(null)} className="pill-btn text-sm">

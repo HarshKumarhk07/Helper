@@ -26,48 +26,67 @@ import {
 } from '../lib/socket.js';
 import { getTrackingState } from '../api/tracking.js';
 import useSocket from '../hooks/useSocket.js';
-import { getWorkerName, getWorkerAvatar, getWorkerExperience } from '../lib/booking.js';
+import { getWorkerName, getWorkerAvatar, getWorkerExperience, BOOKING_STATUS } from '../lib/booking.js';
 
 // ─── Status display config ────────────────────────────────────────────────────
 
 const STATUS_BADGE = {
-  placed: 'bg-amber-400/15 text-amber-300 ring-amber-400/30',
-  assigned: 'bg-sky-400/15 text-sky-300 ring-sky-400/30',
-  accepted: 'bg-indigo-400/15 text-indigo-300 ring-indigo-400/30',
-  en_route: 'bg-sky-400/15 text-sky-300 ring-sky-400/30',
-  in_progress: 'bg-emerald-400/15 text-emerald-300 ring-emerald-400/30',
-  completed: 'bg-emerald-500/15 text-emerald-300 ring-emerald-500/40',
-  cancelled: 'bg-rose-400/15 text-rose-300 ring-rose-400/30',
+  [BOOKING_STATUS.PENDING_CONFIRMATION]: 'bg-amber-400/15 text-amber-300 ring-amber-400/30',
+  [BOOKING_STATUS.CONFIRMED]: 'bg-indigo-400/15 text-indigo-300 ring-indigo-400/30',
+  [BOOKING_STATUS.IN_PROGRESS]: 'bg-emerald-400/15 text-emerald-300 ring-emerald-400/30',
+  [BOOKING_STATUS.COMPLETED]: 'bg-emerald-500/15 text-emerald-300 ring-emerald-500/40',
+  [BOOKING_STATUS.CANCELLED_BY_USER]: 'bg-rose-400/15 text-rose-300 ring-rose-400/30',
+  [BOOKING_STATUS.REJECTED]: 'bg-rose-400/15 text-rose-300 ring-rose-400/30',
+  [BOOKING_STATUS.WORKER_UNAVAILABLE]: 'bg-rose-400/15 text-rose-300 ring-rose-400/30',
 };
 
-const STATUS_LABEL = {
-  placed: 'Placed',
-  assigned: 'Worker assigned',
-  accepted: 'Worker accepted',
-  en_route: 'Worker en route',
-  in_progress: 'Service in progress',
-  completed: 'Completed',
-  cancelled: 'Cancelled',
+// Tracker-specific phrasing (richer than the shared STATUS_LABEL badges).
+const TRACK_LABEL = {
+  [BOOKING_STATUS.PENDING_CONFIRMATION]: 'Awaiting worker confirmation',
+  [BOOKING_STATUS.CONFIRMED]: 'Worker confirmed',
+  [BOOKING_STATUS.IN_PROGRESS]: 'Service in progress',
+  [BOOKING_STATUS.COMPLETED]: 'Completed',
+  [BOOKING_STATUS.CANCELLED_BY_USER]: 'Cancelled',
+  [BOOKING_STATUS.REJECTED]: 'Worker rejected',
+  [BOOKING_STATUS.WORKER_UNAVAILABLE]: 'Worker unavailable',
+};
+
+// `en_route` is a timeline STEP, not a status — it's derived from enRouteAt on
+// a booking that is still `confirmed`.
+const STEP = {
+  PENDING: BOOKING_STATUS.PENDING_CONFIRMATION,
+  CONFIRMED: BOOKING_STATUS.CONFIRMED,
+  EN_ROUTE: 'en_route_step',
+  IN_PROGRESS: BOOKING_STATUS.IN_PROGRESS,
+  COMPLETED: BOOKING_STATUS.COMPLETED,
 };
 
 const TIMELINE = [
-  { key: 'placed', label: 'Placed', Icon: Hourglass },
-  { key: 'assigned', label: 'Assigned', Icon: UserCheck },
-  { key: 'en_route', label: 'On the way', Icon: Truck },
-  { key: 'in_progress', label: 'In progress', Icon: Clock },
-  { key: 'completed', label: 'Completed', Icon: CheckCircle2 },
+  { key: STEP.PENDING, label: 'Awaiting confirmation', Icon: Hourglass },
+  { key: STEP.CONFIRMED, label: 'Confirmed', Icon: UserCheck },
+  { key: STEP.EN_ROUTE, label: 'On the way', Icon: Truck },
+  { key: STEP.IN_PROGRESS, label: 'In progress', Icon: Clock },
+  { key: STEP.COMPLETED, label: 'Completed', Icon: CheckCircle2 },
 ];
 
-// Map a raw booking status onto its timeline step (accepted collapses into the
-// assigned step, cancelled shows as the final step).
-const STATUS_TO_STEP = {
-  placed: 'placed',
-  assigned: 'assigned',
-  accepted: 'assigned',
-  en_route: 'en_route',
-  in_progress: 'in_progress',
-  completed: 'completed',
-  cancelled: 'completed',
+// Derive the timeline step from the booking. A confirmed booking only reaches
+// the "On the way" step once enRouteAt is stamped — so a job scheduled days out
+// sits at "Confirmed" instead of falsely showing the worker travelling.
+const stepForBooking = (booking) => {
+  const s = booking?.status;
+  if (s === BOOKING_STATUS.COMPLETED) return STEP.COMPLETED;
+  if (s === BOOKING_STATUS.IN_PROGRESS) return STEP.IN_PROGRESS;
+  if (s === BOOKING_STATUS.CONFIRMED) {
+    return booking?.enRouteAt ? STEP.EN_ROUTE : STEP.CONFIRMED;
+  }
+  if (
+    s === BOOKING_STATUS.CANCELLED_BY_USER ||
+    s === BOOKING_STATUS.REJECTED ||
+    s === BOOKING_STATUS.WORKER_UNAVAILABLE
+  ) {
+    return STEP.COMPLETED; // terminal — show the timeline as finished
+  }
+  return STEP.PENDING;
 };
 
 // ─── Formatters ───────────────────────────────────────────────────────────────
@@ -283,7 +302,11 @@ export default function TrackBooking() {
   }, [lastSeenAt]);
 
   const status = state?.booking?.status;
-  const isCancelled = status === 'cancelled';
+  // Terminal "this isn't happening" states — cancelled, rejected, or timed out.
+  const isCancelled =
+    status === BOOKING_STATUS.CANCELLED_BY_USER ||
+    status === BOOKING_STATUS.REJECTED ||
+    status === BOOKING_STATUS.WORKER_UNAVAILABLE;
 
   // ─────────────────────────────────────────────────────────────────────────
 
@@ -382,7 +405,7 @@ export default function TrackBooking() {
                   }`}
                 >
                   {isCancelled ? <XCircle size={11} /> : <Truck size={11} />}
-                  {STATUS_LABEL[status] || status}
+                  {TRACK_LABEL[status] || status}
                 </span>
                 <span className="text-xs text-paper/80">
                   <span className="text-paper/50">ETA </span>
@@ -470,7 +493,7 @@ export default function TrackBooking() {
                 <ol className="mt-4 flex overflow-x-auto gap-2 pb-2 scrollbar-none -mx-2 px-2 shrink-0">
                   {TIMELINE.map((step) => {
                     const stepIdx = TIMELINE.findIndex((s) => s.key === step.key);
-                    const currIdx = TIMELINE.findIndex((s) => s.key === (STATUS_TO_STEP[status] || status));
+                    const currIdx = TIMELINE.findIndex((s) => s.key === stepForBooking(state?.booking));
                     const reached = stepIdx <= currIdx;
                     const current = step.key === status;
                     return (

@@ -52,7 +52,7 @@ export const evaluateCoupon = async ({ coupon, userId, orderValue, target }) => 
     const [bookingCount, orderCount] = await Promise.all([
       Booking.countDocuments({
         user: userId,
-        status: { $in: [BOOKING_STATUS.COMPLETED, BOOKING_STATUS.IN_PROGRESS, BOOKING_STATUS.ASSIGNED] },
+        status: { $in: [BOOKING_STATUS.COMPLETED, BOOKING_STATUS.IN_PROGRESS, BOOKING_STATUS.CONFIRMED, BOOKING_STATUS.PENDING_CONFIRMATION] },
       }),
       Order.countDocuments({
         user: userId,

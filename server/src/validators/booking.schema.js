@@ -24,6 +24,9 @@ export const createBookingSchema = z.object({
   paymentMode: z.literal('online').default('online'),
   notes: z.string().max(500).optional(),
   autoAssign: z.boolean().optional(),
+  // Hours to bill for hourly-priced services (ignored for fixed). The
+  // controller clamps to a safe range; server recomputes the amount.
+  hours: z.coerce.number().int().min(1).max(24).optional(),
 }).refine((d) => d.addressId || d.address, {
   message: 'Provide either addressId or inline address',
 });
