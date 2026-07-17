@@ -16,10 +16,31 @@ export const ASSIGNMENT_TTL_MS = 15 * 60 * 1000;
 // How long a worker has to Accept/Reject a booking request before it
 // auto-times-out to `worker_unavailable`. Single source of truth — never
 // hardcode the number elsewhere. Applies uniformly to instant AND scheduled
-// bookings (timer starts the moment the booking is created).
-export const BOOKING_CONFIRMATION_TIMEOUT_MINUTES = 10;
+// bookings (timer starts the moment the booking goes live).
+//
+// Overridable via the BOOKING_CONFIRMATION_TIMEOUT_MINUTES env var so staging
+// can use a short window (e.g. 1) to exercise the timeout/bounce path without
+// a 10-minute wait or a code change. Invalid/zero/negative values fall back to
+// the default rather than silently disabling the timeout.
+const DEFAULT_CONFIRMATION_TIMEOUT_MINUTES = 10;
+const envConfirmationTimeout = Number(process.env.BOOKING_CONFIRMATION_TIMEOUT_MINUTES);
+
+export const BOOKING_CONFIRMATION_TIMEOUT_MINUTES =
+  Number.isFinite(envConfirmationTimeout) && envConfirmationTimeout > 0
+    ? envConfirmationTimeout
+    : DEFAULT_CONFIRMATION_TIMEOUT_MINUTES;
+
 export const BOOKING_CONFIRMATION_TIMEOUT_MS =
   BOOKING_CONFIRMATION_TIMEOUT_MINUTES * 60 * 1000;
+
+// Loud on purpose: a non-default window is a testing setting, and shipping it
+// to production by accident would silently change customer-facing behaviour.
+if (BOOKING_CONFIRMATION_TIMEOUT_MINUTES !== DEFAULT_CONFIRMATION_TIMEOUT_MINUTES) {
+  console.warn(
+    `[booking] confirmation timeout overridden to ${BOOKING_CONFIRMATION_TIMEOUT_MINUTES} min ` +
+      `(default ${DEFAULT_CONFIRMATION_TIMEOUT_MINUTES}) via BOOKING_CONFIRMATION_TIMEOUT_MINUTES`
+  );
+}
 
 export const BOOKING_TYPE = Object.freeze({
   INSTANT: 'instant',
