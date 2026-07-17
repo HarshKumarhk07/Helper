@@ -37,7 +37,13 @@ export default function UserBookings() {
 
   const load = () => {
     setLoading(true);
-    listMyBookings(filter === 'all' ? {} : { status: filter })
+    listMyBookings(
+      filter === 'all'
+        ? {}
+        : filter === REFUNDED_FILTER
+        ? { paymentStatus: 'refunded' } // a paymentStatus, not a booking status
+        : { status: filter }
+    )
       .then(setBookings)
       .catch(() => toast.error('Failed to load bookings'))
       .finally(() => setLoading(false));

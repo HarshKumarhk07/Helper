@@ -77,8 +77,10 @@ export default function BookingConfirming() {
     : null;
 
   const serviceId = booking?.service?._id || booking?.service;
+  // IDs of professionals who already declined/missed this booking — the server
+  // sends these (reasons stay private) so we never re-offer someone who said no.
   const excluded = useMemo(
-    () => new Set((booking?.rejections || []).map((r) => String(r.worker?._id || r.worker))),
+    () => new Set((booking?.rejectedWorkerIds || []).map(String)),
     [booking]
   );
 

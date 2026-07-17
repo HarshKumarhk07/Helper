@@ -64,9 +64,16 @@ const populateBooking = (q) =>
 // Note: startPin / endPin are intentionally preserved — the customer
 // shares them with the worker to start/complete the job, so the UI must
 // render them. They're only generated server-side and never reused.
+// The customer needs to know WHICH professionals already declined/missed this
+// booking so the "choose another" picker can exclude them — but not the
+// reasons they gave. Expose IDs only.
+const rejectedWorkerIds = (obj) =>
+  (obj.rejections || []).map((r) => String(r.worker?._id || r.worker)).filter(Boolean);
+
 const sanitizeBookingForOwner = (booking) => {
   const obj = booking?.toObject ? booking.toObject() : { ...booking };
   delete obj.history;
+  obj.rejectedWorkerIds = rejectedWorkerIds(obj);
   delete obj.rejections;
   delete obj.razorpayPaymentId;
   delete obj.razorpayOrderId;
@@ -303,7 +310,7 @@ export const createBooking = asyncHandler(async (req, res) => {
 });
 
 export const listMyBookings = asyncHandler(async (req, res) => {
-  const { status } = req.query;
+  const { status, paymentStatus } = req.query;
   const filter = {
     user: req.user._id,
     $or: [
@@ -316,6 +323,12 @@ export const listMyBookings = asyncHandler(async (req, res) => {
   // special-casing is needed any more.
   if (status) {
     filter.status = status;
+  }
+  // "Refunded" is a paymentStatus, not a booking status — without this the
+  // dashboard's Refunded tab filtered `status: 'refunded'`, which can never
+  // match the status enum and so always came back empty.
+  if (paymentStatus) {
+    filter.paymentStatus = paymentStatus;
   }
   // PINs are select:false by default. We surface them here so the customer
   // can read their own Start/End PIN in the tracker modal and dictate it to
@@ -441,6 +454,11 @@ export const rejectJob = asyncHandler(async (req, res) => {
     );
     booking.rejections.push({ worker: rejectingWorker, reason: reason.slice(0, 300), at: new Date() });
     booking.status = BOOKING_STATUS.REJECTED;
+    // Detach them: they declined, so they're no longer this booking's worker.
+    // Leaving them attached made changeWorker reject the customer's next pick
+    // with "already assigned to this booking", and would double-log them into
+    // rejections. Who declined is preserved in `rejections` above.
+    booking.worker = null;
     booking.confirmationExpiresAt = null;
     await booking.save();
     // The rejecting worker was never marked busy (busy happens on accept), but
@@ -753,6 +771,9 @@ export const getBooking = asyncHandler(async (req, res) => {
   // Strip fields that have no client utility and could leak internal state.
   // Admins see everything; owners/workers get a sanitized view.
   if (!isPrivileged) {
+    // Owners get the IDs (so the "choose another professional" picker can skip
+    // anyone who already declined) but never the reasons.
+    if (isOwner) bObj.rejectedWorkerIds = rejectedWorkerIds(bObj);
     delete bObj.rejections;
     delete bObj.razorpayPaymentId;
     delete bObj.razorpayOrderId;
