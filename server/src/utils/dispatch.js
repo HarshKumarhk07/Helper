@@ -54,7 +54,12 @@ export const reassignBooking = async (booking, { resetTimer = false } = {}) => {
     .map((r) => String(r.worker))
     .filter(Boolean);
 
-  const worker = await pickWorkerForCategory({ excludeIds });
+  // Scope to workers who actually offer this booking's service. A booking with
+  // no service (direct-worker booking) falls back to any eligible worker.
+  const worker = await pickWorkerForCategory({
+    excludeIds,
+    serviceId: booking.service || null,
+  });
   if (!worker) return null;
 
   const set = { worker: worker._id, assignedAt: new Date() };

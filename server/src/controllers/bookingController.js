@@ -880,8 +880,14 @@ export const autoAssign = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'Workers can only be assigned after successful payment');
   }
 
-  const worker = await pickWorkerForCategory();
-  if (!worker) throw new ApiError(404, 'No available worker');
+  // Restrict to workers enrolled in this booking's service (see assignment.js).
+  const worker = await pickWorkerForCategory({ serviceId: booking.service || null });
+  if (!worker) {
+    throw new ApiError(
+      404,
+      'No available professional currently offers this service'
+    );
+  }
 
   const updatedBooking = await Booking.findOneAndUpdate(
     {

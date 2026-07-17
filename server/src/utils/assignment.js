@@ -1,10 +1,21 @@
 import User from '../models/User.js';
 import Booking from '../models/Booking.js';
+import WorkerService from '../models/WorkerService.js';
 import WorkerAvailability from '../models/WorkerAvailability.js';
 import { ROLES } from '../config/roles.js';
 import { BOOKING_STATUS, TERMINAL_STATUSES } from '../config/booking.js';
 
-export const pickWorkerForCategory = async ({ excludeIds = [] } = {}) => {
+// Pick the best worker to offer a booking to.
+//
+// `serviceId` — REQUIRED for any booking that has a service. Candidates are then
+// restricted to workers with an active WorkerService enrolment for it, because
+// WorkerService is the single source of truth for who offers what. Without this
+// the picker matched on nothing but role/KYC/availability and would happily
+// hand a driving job to a plumber.
+//
+// Omit `serviceId` only when the booking genuinely has no service (direct
+// worker bookings), in which case any eligible worker is a valid candidate.
+export const pickWorkerForCategory = async ({ excludeIds = [], serviceId = null } = {}) => {
   const now = new Date();
 
   // Never dispatch to a worker who is mid-job (busy) — $ne also matches legacy
@@ -16,9 +27,25 @@ export const pickWorkerForCategory = async ({ excludeIds = [] } = {}) => {
     kycStatus: 'verified',
     currentStatus: { $ne: 'busy' },
   };
-  if (excludeIds.length) {
-    query._id = { $nin: excludeIds };
+
+  const excluded = [...excludeIds];
+
+  if (serviceId) {
+    // Only workers who actually offer this service, and haven't hidden it.
+    const offerings = await WorkerService.find({
+      service: serviceId,
+      isActive: true,
+    }).select('worker');
+    const enrolledIds = offerings.map((o) => String(o.worker));
+    if (enrolledIds.length === 0) return null; // nobody offers it — don't misassign
+    const excludedSet = new Set(excluded.map(String));
+    const eligibleIds = enrolledIds.filter((id) => !excludedSet.has(id));
+    if (eligibleIds.length === 0) return null;
+    query._id = { $in: eligibleIds };
+  } else if (excluded.length) {
+    query._id = { $nin: excluded };
   }
+
   const candidates = await User.find(query).select('_id name');
   if (candidates.length === 0) return null;
 
