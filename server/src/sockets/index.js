@@ -15,8 +15,20 @@ const BOOKING_DEST_TTL_MS = 60 * 60 * 1000; // 1 hour
 
 // Latest computed route per booking — used to dedupe and to replay on late-joiners.
 const bookingRoutes = new Map(); // bookingId -> { route, eta, workerLocation, at }
-const ROUTE_REFRESH_MS = 4_000;
-const ROUTE_REFRESH_DISTANCE_M = 10; // ~10m movement triggers a re-route
+// Re-route only when the worker has genuinely moved. The old values (4s / 10m)
+// meant a STATIONARY worker re-routed every ~4s forever, and 10m sits below
+// normal GPS jitter (~25m), so idle noise also counted as "movement" — together
+// they hammered the routing provider with full re-routes of long journeys.
+//
+// The route from A→B can't change while A doesn't (the OSRM driving profile has
+// no live traffic), so the time-based refresh is only a slow safety net now.
+const ROUTE_REFRESH_MS = 120_000;      // stationary worker: at most one re-route / 2 min
+const ROUTE_REFRESH_DISTANCE_M = 100;  // comfortably above GPS jitter
+
+// Positions worse than this are useless for routing — e.g. an IP-derived fix
+// with 20km of error would place the worker in the wrong city and yank the
+// customer's ETA around. Drop them rather than route from a bad position.
+const MAX_LOCATION_ACCURACY_M = 1_000;
 
 const getBookingDestination = async (bookingId) => {
   const cached = bookingDestCache.get(bookingId);
@@ -67,12 +79,16 @@ async function recomputeBookingRoute({ io, bookingId, workerLocation }) {
 
   const previous = bookingRoutes.get(bookingId);
   const now = Date.now();
-  if (
-    previous &&
-    !significantMove(previous.workerLocation, workerLocation, ROUTE_REFRESH_DISTANCE_M) &&
-    now - previous.at < ROUTE_REFRESH_MS
-  ) {
-    return; // Skip — no meaningful change.
+  if (previous) {
+    const moved = significantMove(
+      previous.workerLocation,
+      workerLocation,
+      ROUTE_REFRESH_DISTANCE_M
+    );
+    const stale = now - previous.at >= ROUTE_REFRESH_MS;
+    // Recompute on real movement, or occasionally as a safety net. A stationary
+    // worker must NOT trigger a re-route just because a few seconds passed.
+    if (!moved && !stale) return;
   }
 
   const route = await getRoute({
@@ -177,6 +193,13 @@ export const initSocket = (httpServer) => {
         Math.abs(lat) > 90 ||
         Math.abs(lng) > 180
       ) {
+        return;
+      }
+      // Drop hopeless fixes (e.g. IP-derived, ~20km error) — routing from them
+      // puts the worker in the wrong city and jerks the customer's ETA around.
+      // A missing/unknown accuracy is allowed through rather than assumed bad.
+      if (typeof accuracy === 'number' && accuracy > MAX_LOCATION_ACCURACY_M) {
+        log(`ignoring low-accuracy fix user=${userId} accuracy=${Math.round(accuracy)}m`);
         return;
       }
       const at = new Date().toISOString();

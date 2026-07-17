@@ -7,7 +7,10 @@ import { formatPrice, formatDateTime } from '../../lib/booking.js';
 import { ensureSocket, socket } from '../../lib/socket.js';
 
 const REJECT_REASONS = ['Too far', 'Not available', 'Low price', 'Other'];
-const POLL_MS = 20_000;
+// The socket `booking:request` event is the primary trigger; this poll is only
+// a safety net for a dropped socket, so it can be slow. It used to run every
+// 20s on every page for every worker session.
+const POLL_MS = 60_000;
 
 const fmtCountdown = (ms) => {
   if (ms == null) return null;
@@ -54,12 +57,6 @@ export default function BookingRequestModal() {
     };
   }, [load]);
 
-  // Drive the countdown.
-  useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(t);
-  }, []);
-
   // Only ever show one request at a time — the oldest, so nothing starves.
   const current = useMemo(() => {
     if (requests.length === 0) return null;
@@ -67,6 +64,17 @@ export default function BookingRequestModal() {
       (a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0)
     )[0];
   }, [requests]);
+
+  // Drive the countdown ONLY while a request is on screen. This component is
+  // mounted app-wide for every worker session, so an unconditional 1s tick
+  // re-rendered the whole tree every second on every page for nothing.
+  const hasCountdown = !!current?.confirmationExpiresAt;
+  useEffect(() => {
+    if (!hasCountdown) return undefined;
+    setNow(Date.now());
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, [hasCountdown]);
 
   const remaining = current?.confirmationExpiresAt
     ? new Date(current.confirmationExpiresAt).getTime() - now
