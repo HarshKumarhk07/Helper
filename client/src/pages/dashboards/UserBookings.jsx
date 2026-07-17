@@ -239,6 +239,18 @@ export default function UserBookings() {
                             Open full tracker →
                           </Link>
                         )}
+                        {/* Still waiting on the professional → let the customer
+                            back into the confirming screen (countdown + change
+                            professional). Without this, leaving that page after
+                            booking left them with no way back to it. */}
+                        {b.status === BOOKING_STATUS.PENDING_CONFIRMATION && (
+                          <Link
+                            to={`/booking/${b._id}/confirming`}
+                            className="rounded bg-[#13294B] px-3 py-1 text-xs uppercase tracking-widest text-white hover:bg-[#13294B]/90"
+                          >
+                            View confirmation →
+                          </Link>
+                        )}
                       </div>
                       
                       {b.paymentMode === 'online' && b.paymentStatus === 'pending' && (
@@ -277,6 +289,37 @@ export default function UserBookings() {
                       >
                         Leave a Review
                       </button>
+                    </div>
+                  ) : [BOOKING_STATUS.REJECTED, BOOKING_STATUS.WORKER_UNAVAILABLE].includes(
+                      b.status
+                    ) ? (
+                    /* The professional declined or didn't respond, but the
+                       customer has already PAID — they must be able to pick
+                       someone else (or cancel for a refund) from here. Without
+                       this the booking had no footer at all and the money was
+                       stranded with no route forward. */
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <span className="text-xs text-ink/60">
+                        {b.status === BOOKING_STATUS.REJECTED
+                          ? 'This professional declined.'
+                          : "The professional didn't respond in time."}{' '}
+                        Your payment is safe on this booking.
+                      </span>
+                      <div className="flex items-center gap-3">
+                        <Link
+                          to={`/booking/${b._id}/confirming`}
+                          className="rounded bg-[#13294B] px-3 py-1.5 text-xs uppercase tracking-widest text-white hover:bg-[#13294B]/90"
+                        >
+                          Choose another professional →
+                        </Link>
+                        <button
+                          onClick={() => cancel(b)}
+                          disabled={actionLoadingId !== null}
+                          className="text-xs uppercase tracking-widest text-red-700 hover:underline disabled:opacity-50"
+                        >
+                          {actionLoadingId === `cancel_${b._id}` ? 'Cancelling...' : 'Cancel'}
+                        </button>
+                      </div>
                     </div>
                   ) : null
                 }
