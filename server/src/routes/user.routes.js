@@ -13,6 +13,11 @@ import {
   getFeaturedWorkersPublic,
   deleteUser,
 } from '../controllers/userController.js';
+import {
+  adminListWorkerServices,
+  adminAddWorkerService,
+  adminRemoveWorkerService,
+} from '../controllers/workerServiceController.js';
 
 const router = Router();
 
@@ -23,6 +28,17 @@ router.use(requireAuth);
 
 router.patch('/me', validate(updateMeSchema), updateMe);
 router.get('/workers', getWorkersForCustomer);
+
+// Admin override on the worker↔service mapping. WorkerService is the single
+// source of truth for enrolment, so removing here also removes the service
+// from the worker's "My Services" and makes them un-bookable for it.
+router.get('/workers/:workerId/services', requireRole(ROLES.ADMIN), adminListWorkerServices);
+router.post('/workers/:workerId/services', requireRole(ROLES.ADMIN), adminAddWorkerService);
+router.delete(
+  '/workers/:workerId/services/:serviceId',
+  requireRole(ROLES.ADMIN),
+  adminRemoveWorkerService
+);
 
 router.get('/', requireRole(ROLES.ADMIN), listUsers);
 router.post(

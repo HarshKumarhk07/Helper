@@ -8,6 +8,7 @@ import {
   Mail,
   Upload,
   CheckCircle2,
+  Lock,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import api from '../api/axios.js';
@@ -36,6 +37,10 @@ export default function ProfileEdit() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Once KYC is verified the identity fields it attests to are frozen. The UI
+  // lock is a courtesy — updateMe enforces this server-side too.
+  const kycLocked = user?.kycStatus === 'verified';
 
   const [form, setForm] = useState({
     name: '',
@@ -92,20 +97,24 @@ export default function ProfileEdit() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    if (!emailValid) {
+    if (!kycLocked && !emailValid) {
       setError("That doesn't look like a valid email.");
       return;
     }
     setLoading(true);
     try {
       const payload = {
-        name: form.name.trim(),
-        phone: form.phone.trim(),
         passportPhoto: form.passportPhoto || '',
         locations: form.locations || [],
       };
-      // Only send email if the user typed one (don't accidentally clear or revert).
-      if (form.email.trim()) payload.email = form.email.trim();
+      // KYC-verified identity fields are frozen — don't even send them (the
+      // server rejects changes to them regardless).
+      if (!kycLocked) {
+        payload.name = form.name.trim();
+        payload.phone = form.phone.trim();
+        // Only send email if the user typed one (don't accidentally clear or revert).
+        if (form.email.trim()) payload.email = form.email.trim();
+      }
       const { data } = await api.patch('/users/me', payload);
       if (typeof setUser === 'function') setUser(data.user);
       toast.success('Profile updated');
@@ -177,6 +186,18 @@ export default function ProfileEdit() {
             className="space-y-5 rounded-[28px] border border-ink/10 bg-paper/95 p-5 shadow-card backdrop-blur-xl sm:p-7"
           >
             <Section title="Personal information">
+              {kycLocked && (
+                <div className="mb-4 flex items-start gap-2 rounded-xl border border-ink/10 bg-ink/[0.04] px-3 py-2.5">
+                  <Lock size={13} className="mt-0.5 shrink-0 text-ink/50" />
+                  <p className="text-[11px] leading-relaxed text-ink/60">
+                    Your name, phone and email are locked because your KYC is verified.{' '}
+                    <span className="font-semibold text-ink/75">
+                      Contact support to change verified details.
+                    </span>{' '}
+                    Your profile photo can still be updated.
+                  </p>
+                </div>
+              )}
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <Field
                   label="Full name"
@@ -185,7 +206,8 @@ export default function ProfileEdit() {
                   placeholder="First and last name"
                   autoComplete="name"
                   required
-                  leadingIcon={<UserIcon size={16} />}
+                  locked={kycLocked}
+                  leadingIcon={kycLocked ? <Lock size={16} /> : <UserIcon size={16} />}
                 />
                 <Field
                   label="Phone"
@@ -194,7 +216,8 @@ export default function ProfileEdit() {
                   onChange={(v) => setForm((f) => ({ ...f, phone: v }))}
                   placeholder="10-digit number"
                   autoComplete="tel"
-                  leadingIcon={<Phone size={16} />}
+                  locked={kycLocked}
+                  leadingIcon={kycLocked ? <Lock size={16} /> : <Phone size={16} />}
                 />
               </div>
 
@@ -207,9 +230,16 @@ export default function ProfileEdit() {
                     onChange={(v) => setForm((f) => ({ ...f, email: v }))}
                     placeholder="you@example.com"
                     autoComplete="email"
-                    leadingIcon={<Mail size={16} />}
-                    error={!emailValid}
-                    helper={!emailValid ? "Doesn't look right" : 'For receipts and notifications'}
+                    locked={kycLocked}
+                    leadingIcon={kycLocked ? <Lock size={16} /> : <Mail size={16} />}
+                    error={!emailValid && !kycLocked}
+                    helper={
+                      kycLocked
+                        ? 'Locked — verified'
+                        : !emailValid
+                        ? "Doesn't look right"
+                        : 'For receipts and notifications'
+                    }
                   />
                 </div>
               )}

@@ -19,6 +19,10 @@ export function Field({
   mono = false,
   helper,
   error,
+  // `locked` renders the field read-only and visibly greyed out — used for
+  // identity fields frozen by KYC verification. Not just `disabled`, so the
+  // value is still selectable/copyable and reaches screen readers.
+  locked = false,
   ...rest
 }) {
   const [focused, setFocused] = useState(false);
@@ -33,12 +37,14 @@ export function Field({
         )}
       </span>
       <span
-        className={`group flex items-center gap-2 rounded-xl border-2 bg-paper px-3.5 py-2.5 transition-all duration-200 ${
-          error
-            ? 'border-rose-500 shadow-[0_0_0_3px_rgba(244,63,94,0.15)]'
+        className={`group flex items-center gap-2 rounded-xl border-2 px-3.5 py-2.5 transition-all duration-200 ${
+          locked
+            ? 'cursor-not-allowed border-ink/10 bg-ink/[0.06]'
+            : error
+            ? 'border-rose-500 bg-paper shadow-[0_0_0_3px_rgba(244,63,94,0.15)]'
             : focused
-            ? 'border-ink shadow-[0_0_0_3px_rgba(26,26,26,0.10)]'
-            : 'border-ink/30 hover:border-ink/55'
+            ? 'border-ink bg-paper shadow-[0_0_0_3px_rgba(26,26,26,0.10)]'
+            : 'border-ink/30 bg-paper hover:border-ink/55'
         }`}
       >
         {leadingIcon && (
@@ -53,12 +59,14 @@ export function Field({
         <input
           type={type}
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => !locked && onChange(e.target.value)}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
-          className={`w-full bg-transparent text-sm text-ink placeholder:text-ink/35 border-none outline-none focus:ring-0 focus:outline-none focus:border-none ${
-            mono ? 'font-mono tracking-[0.4em]' : ''
-          }`}
+          readOnly={locked}
+          aria-readonly={locked || undefined}
+          className={`w-full bg-transparent text-sm placeholder:text-ink/35 border-none outline-none focus:ring-0 focus:outline-none focus:border-none ${
+            locked ? 'cursor-not-allowed text-ink/45' : 'text-ink'
+          } ${mono ? 'font-mono tracking-[0.4em]' : ''}`}
           {...rest}
         />
         {trailing && <span className="shrink-0">{trailing}</span>}

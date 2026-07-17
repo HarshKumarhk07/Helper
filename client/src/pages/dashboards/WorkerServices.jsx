@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
-import { Plus, Pencil, Trash2, X, Tag, Info, PackageSearch } from 'lucide-react';
+import { Plus, Pencil, Trash2, X, Tag, Info, PackageSearch, Check } from 'lucide-react';
 import DashboardShell from './DashboardShell.jsx';
 import FadeUp from '../../components/ui/FadeUp.jsx';
 import { formatPrice } from '../../lib/booking.js';
@@ -10,6 +10,7 @@ import {
   getServiceCatalog,
   getMyServices,
   addWorkerService,
+  bulkAddWorkerServices,
   updateWorkerService,
   deleteWorkerService,
 } from '../../api/workerServices.js';
@@ -134,6 +135,12 @@ export default function WorkerServices() {
   const [selectedService, setSelectedService] = useState(null);
   const [addPricing, setAddPricing] = useState(emptyPricing);
 
+  // Bulk enrolment (onboarding multi-select). When on, the picker becomes
+  // multi-select and enrols everything at the catalog price in one go; pricing
+  // is then refined per service via Edit.
+  const [bulkMode, setBulkMode] = useState(false);
+  const [bulkIds, setBulkIds] = useState(() => new Set());
+
   const [editing, setEditing] = useState(null);
   const [editPricing, setEditPricing] = useState(emptyPricing);
 
@@ -158,13 +165,39 @@ export default function WorkerServices() {
     return list.filter((s) => String(s.category) === catFilter);
   }, [catalog.services, catFilter]);
 
-  const openAdd = () => {
+  const openAdd = (bulk = false) => {
     setSelectedService(null);
     setAddPricing(emptyPricing);
     setCatFilter('all');
+    setBulkMode(bulk);
+    setBulkIds(new Set());
     setShowAdd(true);
     // Refresh catalog so alreadyAdded flags are current.
     getServiceCatalog().then(setCatalog).catch(() => {});
+  };
+
+  const toggleBulk = (id) => {
+    setBulkIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const submitBulk = async () => {
+    if (bulkIds.size === 0) return toast.error('Pick at least one service');
+    setSubmitting(true);
+    try {
+      const res = await bulkAddWorkerServices([...bulkIds]);
+      toast.success(`Enrolled in ${res.added} service${res.added === 1 ? '' : 's'}`);
+      setShowAdd(false);
+      refresh();
+    } catch (err) {
+      toast.error(err?.response?.data?.message || err?.response?.data?.error || 'Could not enrol');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const submitAdd = async () => {
@@ -256,9 +289,14 @@ export default function WorkerServices() {
               services — if one is missing, contact admin/support to add it to the catalog.
             </p>
           </div>
-          <button onClick={openAdd} className="pill-btn-solid inline-flex shrink-0 items-center gap-1.5 text-sm">
-            <Plus size={16} /> Add service
-          </button>
+          <div className="flex shrink-0 gap-2">
+            <button onClick={() => openAdd(true)} className="pill-btn inline-flex items-center gap-1.5 text-sm">
+              <Plus size={16} /> Enrol in services
+            </button>
+            <button onClick={() => openAdd(false)} className="pill-btn-solid inline-flex items-center gap-1.5 text-sm">
+              <Plus size={16} /> Add with pricing
+            </button>
+          </div>
         </div>
       </FadeUp>
 
@@ -276,8 +314,8 @@ export default function WorkerServices() {
             <p className="max-w-sm text-sm text-ink/60">
               Add the services you offer so customers can find and book you.
             </p>
-            <button onClick={openAdd} className="pill-btn-solid mt-2 inline-flex items-center gap-1.5 text-sm">
-              <Plus size={16} /> Add your first service
+            <button onClick={() => openAdd(true)} className="pill-btn-solid mt-2 inline-flex items-center gap-1.5 text-sm">
+              <Plus size={16} /> Choose your services
             </button>
           </div>
         </FadeUp>
@@ -350,7 +388,9 @@ export default function WorkerServices() {
         <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-ink/60 px-4 py-8 backdrop-blur-sm">
           <div className="card-rounded w-full max-w-2xl bg-paper p-6 shadow-card">
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-xl font-semibold">Add a service</h3>
+              <h3 className="text-xl font-semibold">
+                {bulkMode ? 'Choose the services you offer' : 'Add a service'}
+              </h3>
               <button onClick={() => setShowAdd(false)} className="rounded-full p-1.5 hover:bg-ink/5">
                 <X size={18} />
               </button>
@@ -386,12 +426,12 @@ export default function WorkerServices() {
               ) : (
                 filteredCatalog.map((s) => {
                   const disabled = s.alreadyAdded;
-                  const active = selectedService?._id === s._id;
+                  const active = bulkMode ? bulkIds.has(s._id) : selectedService?._id === s._id;
                   return (
                     <button
                       key={s._id}
                       disabled={disabled}
-                      onClick={() => setSelectedService(s)}
+                      onClick={() => (bulkMode ? toggleBulk(s._id) : setSelectedService(s))}
                       className={`flex w-full items-center gap-3 border-b border-ink/5 p-3 text-left transition last:border-0 ${
                         disabled
                           ? 'cursor-not-allowed opacity-45'
@@ -421,7 +461,16 @@ export default function WorkerServices() {
                           Added
                         </span>
                       )}
-                      {active && !disabled && (
+                      {!disabled && bulkMode && (
+                        <span
+                          className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border transition ${
+                            active ? 'border-ink bg-ink text-paper' : 'border-ink/25'
+                          }`}
+                        >
+                          {active && <Check size={12} strokeWidth={3} />}
+                        </span>
+                      )}
+                      {active && !disabled && !bulkMode && (
                         <span className="text-[10px] font-semibold uppercase tracking-widest text-ink">
                           Selected
                         </span>
@@ -432,21 +481,34 @@ export default function WorkerServices() {
               )}
             </div>
 
-            {/* Pricing */}
-            <div className="mt-5">
-              <PricingFields value={addPricing} onChange={setAddPricing} service={selectedService} />
-            </div>
+            {/* Pricing — single-add only. Bulk enrols at the catalog price and
+                the worker refines each one afterwards via Edit. */}
+            {!bulkMode && (
+              <div className="mt-5">
+                <PricingFields value={addPricing} onChange={setAddPricing} service={selectedService} />
+              </div>
+            )}
+            {bulkMode && (
+              <p className="mt-5 rounded-xl border border-ink/10 bg-sand/30 p-3 text-xs text-ink/65">
+                You'll be enrolled at each service's catalog price. Set your own price for any of
+                them afterwards with <strong>Edit</strong>. Hourly services stay at the admin rate.
+              </p>
+            )}
 
             <div className="mt-6 flex justify-end gap-3">
               <button onClick={() => setShowAdd(false)} className="pill-btn text-sm">
                 Cancel
               </button>
               <button
-                onClick={submitAdd}
-                disabled={submitting || !selectedService}
+                onClick={bulkMode ? submitBulk : submitAdd}
+                disabled={submitting || (bulkMode ? bulkIds.size === 0 : !selectedService)}
                 className="pill-btn-solid text-sm disabled:opacity-50"
               >
-                {submitting ? 'Adding…' : 'Add service'}
+                {submitting
+                  ? 'Saving…'
+                  : bulkMode
+                  ? `Enrol in ${bulkIds.size || ''} service${bulkIds.size === 1 ? '' : 's'}`.trim()
+                  : 'Add service'}
               </button>
             </div>
           </div>

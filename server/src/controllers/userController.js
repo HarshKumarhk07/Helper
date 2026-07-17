@@ -103,8 +103,35 @@ export const adminUpdateUser = asyncHandler(async (req, res) => {
   res.json({ user: user.toSafeJSON() });
 });
 
+// Identity fields that are frozen once KYC is verified — they're what the
+// verification actually attests to. The profile picture stays editable.
+const KYC_LOCKED_FIELDS = ['name', 'email', 'phone'];
+
 export const updateMe = asyncHandler(async (req, res) => {
   const { kycDocuments, ...rest } = req.body || {};
+
+  // Enforced server-side, not just greyed out in the UI: reject any attempt to
+  // change verified identity fields even if the frontend is bypassed. Only
+  // values that actually differ are rejected, so a form that echoes unchanged
+  // fields back still saves fine.
+  if (req.user.kycStatus === 'verified') {
+    const attempted = KYC_LOCKED_FIELDS.filter((f) => {
+      if (rest[f] === undefined) return false;
+      const next = f === 'email' ? String(rest[f]).toLowerCase() : String(rest[f]).trim();
+      const current = f === 'email'
+        ? String(req.user[f] || '').toLowerCase()
+        : String(req.user[f] || '').trim();
+      return next !== current;
+    });
+    if (attempted.length > 0) {
+      throw new ApiError(
+        403,
+        `Your ${attempted.join(', ')} cannot be changed after KYC verification. Please contact support.`
+      );
+    }
+    // Drop them so an echoed-but-identical value can never overwrite anything.
+    for (const f of KYC_LOCKED_FIELDS) delete rest[f];
+  }
 
   // Check email uniqueness if updating email
   if (rest.email && rest.email !== req.user.email) {

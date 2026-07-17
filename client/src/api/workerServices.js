@@ -11,6 +11,21 @@ export const getMyServices = () =>
 export const addWorkerService = (payload) =>
   api.post('/worker/services', payload).then((r) => r.data.service);
 
+// Onboarding multi-select — enrol in several services at once (catalog price;
+// the worker refines pricing per service afterwards).
+export const bulkAddWorkerServices = (serviceIds) =>
+  api.post('/worker/services/bulk', { serviceIds }).then((r) => r.data);
+
+// ── Admin override on a worker's enrolments ─────────────────────────────────
+export const adminGetWorkerServices = (workerId) =>
+  api.get(`/users/workers/${workerId}/services`).then((r) => r.data);
+
+export const adminAddWorkerService = (workerId, serviceId) =>
+  api.post(`/users/workers/${workerId}/services`, { serviceId }).then((r) => r.data.service);
+
+export const adminRemoveWorkerService = (workerId, serviceId) =>
+  api.delete(`/users/workers/${workerId}/services/${serviceId}`).then((r) => r.data);
+
 export const updateWorkerService = (id, payload) =>
   api.put(`/worker/services/${id}`, payload).then((r) => r.data.service);
 

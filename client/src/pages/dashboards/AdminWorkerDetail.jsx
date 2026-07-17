@@ -17,6 +17,7 @@ import {
 import DashboardShell from './DashboardShell.jsx';
 import FadeUp from '../../components/ui/FadeUp.jsx';
 import { getWorkerProfile, approveKyc, rejectKyc } from '../../api/kyc.js';
+import WorkerServicesOverride from '../../components/admin/WorkerServicesOverride.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { formatPrice, formatDateTime } from '../../lib/booking.js';
 import { mediaUrl } from '../../lib/catalogImage.js';
@@ -427,11 +428,16 @@ export default function AdminWorkerDetail() {
               <FileText size={14} /> Booking funnel
             </div>
             <Row label="Total" value={bookings.stats.total} />
-            <Row label="Assigned" value={bookings.stats.assigned} />
+            {/* `assigned` now counts CONFIRMED bookings (the worker accepted) —
+                see the booking status enum cutover. */}
+            <Row label="Confirmed" value={bookings.stats.assigned} />
             <Row label="In progress" value={bookings.stats.inProgress} />
             <Row label="Completed" value={bookings.stats.completed} positive />
             <Row label="Cancelled" value={bookings.stats.cancelled} amber />
           </div>
+
+          {/* Admin override on which services this worker offers. */}
+          <WorkerServicesOverride workerId={id} disabled={!isAdmin} />
 
           {/* Schedule */}
           {availability && (

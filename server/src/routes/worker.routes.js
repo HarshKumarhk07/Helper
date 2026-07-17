@@ -5,6 +5,7 @@ import {
   getServiceCatalog,
   getMyServices,
   addMyService,
+  bulkAddMyServices,
   updateMyService,
   deleteMyService,
 } from '../controllers/workerServiceController.js';
@@ -20,6 +21,8 @@ router.get('/services/catalog', getServiceCatalog);
 // The worker's own offered services + pricing.
 router.get('/services', getMyServices);
 router.post('/services', addMyService);
+// Onboarding multi-select: enrol in several catalog services at once.
+router.post('/services/bulk', bulkAddMyServices);
 router.put('/services/:id', updateMyService);
 router.delete('/services/:id', deleteMyService);
 
