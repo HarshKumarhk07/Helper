@@ -12,6 +12,7 @@
     "add:services": "node src/seed/add-services.js",
     "cleanup:catalog": "node src/seed/cleanup-catalog.js",
     "migrate:service-pricing": "node src/seed/migrate-service-pricing.js",
+    "migrate:service-pricing:dry": "node src/seed/migrate-service-pricing.js --dry-run",
     "migrate:booking-status": "node src/seed/migrate-booking-status.js",
     "migrate:booking-status:dry": "node src/seed/migrate-booking-status.js --dry-run",
     "migrate:cloudinary": "node src/seed/migrate-uploads-to-cloudinary.js",
