@@ -185,7 +185,7 @@ export default function BookingConfirming() {
                   {status === BOOKING_STATUS.REJECTED
                     ? 'This professional declined your request.'
                     : "They didn't respond in time."}{' '}
-                  Choose another professional — your payment is safe and stays on this booking.
+                   Choose another professional — your booking stays active.
                 </p>
                 <button
                   onClick={openPicker}
@@ -214,7 +214,7 @@ export default function BookingConfirming() {
           <div className="space-y-3 p-6">
             <Row label="Booking" value={booking.code} />
             <Row label="Service" value={booking.service?.name || '—'} />
-            <Row label="Amount paid" value={formatPrice(booking.amount)} />
+            <Row label="Amount" value={formatPrice(booking.amount)} />
             {booking.hours ? <Row label="Hours" value={`${booking.hours} hr`} /> : null}
           </div>
 
@@ -228,7 +228,7 @@ export default function BookingConfirming() {
                 Change professional
               </button>
               <p className="mt-2 text-[10px] uppercase tracking-widest text-ink/40">
-                Your payment stays on this booking
+                Your booking stays active
               </p>
             </div>
           )}

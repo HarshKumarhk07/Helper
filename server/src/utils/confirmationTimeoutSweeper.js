@@ -3,8 +3,8 @@ import { BOOKING_STATUS } from '../config/bookingStatus.js';
 import { bounceToNextWorker, markBookingWorkerUnavailable } from './dispatch.js';
 
 // Enforces the booking-confirmation timeout. A booking goes live as
-// `pending_confirmation` with a `confirmationExpiresAt` (set in
-// paymentController = now + BOOKING_CONFIRMATION_TIMEOUT_MS). This sweeper
+// `pending_confirmation` with a `confirmationExpiresAt` (set at booking
+// creation = now + BOOKING_CONFIRMATION_TIMEOUT_MS). This sweeper
 // handles any booking still pending past that instant.
 //
 // Server-side (not a frontend setTimeout) so it fires with no tab open, and

@@ -214,7 +214,7 @@ export default function AdminBookings() {
                         : 'text-ink/50'
                     }`}
                   >
-                    {b.paymentStatus || 'pending'}
+                    {b.paymentStatus || 'unpaid'}
                   </div>
                 </td>
                 <td className="py-3 pr-4">

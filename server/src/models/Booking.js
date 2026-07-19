@@ -126,9 +126,10 @@ const bookingSchema = new mongoose.Schema(
     paymentMode: { type: String, enum: PAYMENT_MODE_LIST, default: PAYMENT_MODE.COD },
     paymentStatus: {
       type: String,
-      enum: ['pending', 'paid', 'refunded', 'failed', 'cancelled', 'refund_pending'],
-      default: 'pending',
+      enum: ['unpaid', 'paid', 'refunded', 'failed', 'cancelled', 'refund_pending'],
+      default: 'unpaid',
     },
+    paidAt: { type: Date, default: null },
     razorpayOrderId: { type: String, default: null },
     razorpayPaymentId: { type: String, default: null },
     razorpayRefundId: { type: String, default: null },

@@ -559,57 +559,9 @@ export default function BookingFlow() {
           })
         );
 
-        if (paymentMode === 'online') {
-          const firstBooking = createdBookings[0];
-          const rpOrder = await createRazorpayOrder({
-            amount: service.price,
-            receipt: firstBooking?.code || 'cart_booking',
-            type: 'booking',
-          });
-
-          const options = {
-            key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_xxxx',
-            amount: rpOrder.amount,
-            currency: rpOrder.currency,
-            name: 'Helper',
-            description: 'Premium Service Booking',
-            order_id: rpOrder.id,
-            handler: async function (response) {
-              try {
-                await verifyRazorpayPayment({
-                  ...response,
-                  referenceId: firstBooking._id,
-                  type: 'booking',
-                });
-                toast.success('Payment successful | Services Scheduled!');
-                serviceCartItems.forEach((item) => removeFromCart(item.product));
-                navigate('/me/bookings');
-              } catch {
-                toast.error('Payment verification failed');
-              }
-            },
-            prefill: {
-              name: user?.name || '',
-              email: user?.email || '',
-              contact: user?.phone || '',
-            },
-            theme: { color: '#111111' },
-            modal: {
-              ondismiss: function () {
-                setSubmitting(false);
-              }
-            },
-          };
-          const rzp = new window.Razorpay(options);
-          rzp.on('payment.failed', function () {
-            toast.error('Payment canceled or failed');
-          });
-          rzp.open();
-          return;
-        }
-
+        // Pay-later: no upfront payment required. Navigate to bookings list.
         serviceCartItems.forEach((item) => removeFromCart(item.product));
-        toast.success(`Successfully booked ${serviceCartItems.length} service(s)!`);
+        toast.success(`Successfully booked ${serviceCartItems.length} service(s)! Pay anytime from your bookings.`);
         navigate('/me/bookings');
         return;
       }
@@ -637,65 +589,10 @@ export default function BookingFlow() {
       let booking = pendingBooking;
       if (!booking) {
         booking = await createBooking(payload);
-        if (paymentMode === 'online') {
-          setPendingBooking(booking);
-        }
       }
 
-      if (paymentMode === 'online') {
-        const rpOrder = await createRazorpayOrder({
-          amount: booking.amount || service.price,
-          receipt: booking.code,
-          type: 'booking',
-        });
-
-        const options = {
-          key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_xxxx',
-          amount: rpOrder.amount,
-          currency: rpOrder.currency,
-          name: 'Helper',
-          description: `Booking: ${service.name}`,
-          order_id: rpOrder.id,
-          handler: async function (response) {
-            setSubmitting(true);
-            try {
-              await verifyRazorpayPayment({
-                ...response,
-                referenceId: booking._id,
-                type: 'booking',
-              });
-              toast.success('Payment successful — confirming your booking');
-              clearSessionStorage();
-              // The worker still has to accept, so land on the confirming
-              // screen (countdown + Change Worker) rather than the list.
-              navigate(`/booking/${booking._id}/confirming`);
-            } catch {
-              toast.error('Payment verification failed');
-            } finally {
-              setSubmitting(false);
-            }
-          },
-          prefill: {
-            name: user?.name || '',
-            email: user?.email || '',
-            contact: user?.phone || '',
-          },
-          theme: { color: '#111111' },
-          modal: {
-            ondismiss: function () {
-              setSubmitting(false);
-            }
-          },
-        };
-        const rzp = new window.Razorpay(options);
-        rzp.on('payment.failed', function () {
-          toast.error('Payment canceled or failed');
-        });
-        rzp.open();
-        return;
-      }
-
-      toast.success(`Booked — ${booking.code}`);
+      // Pay-later: navigate directly to confirming screen. No upfront payment.
+      toast.success('Booking placed — confirming with your professional');
       clearSessionStorage();
       navigate(`/booking/${booking._id}/confirming`);
     } catch (err) {

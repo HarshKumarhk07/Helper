@@ -9,10 +9,12 @@ import { formatPrice } from '../../lib/booking.js';
 import BookingCard from '../../components/booking/BookingCard.jsx';
 import LiveTrackerModal from '../../components/booking/LiveTrackerModal.jsx';
 import ReviewModal from '../../components/booking/ReviewModal.jsx';
+import PaymentPopup from '../../components/booking/PaymentPopup.jsx';
 import PillButton from '../../components/ui/PillButton.jsx';
 import FadeUp from '../../components/ui/FadeUp.jsx';
 import { BOOKING_STATUS, REFUNDED_FILTER, isActiveStatus, isTrackingActive } from '../../lib/booking.js';
 import { useAuth } from '../../context/AuthContext.jsx';
+import { ensureSocket, socket } from '../../lib/socket.js';
 
 const FILTERS = [
   { key: 'all', label: 'All' },
@@ -34,6 +36,7 @@ export default function UserBookings() {
   const [trackingBooking, setTrackingBooking] = useState(null);
   const [reviewBooking, setReviewBooking] = useState(null);
   const [actionLoadingId, setActionLoadingId] = useState(null); // 'cancel_id', 'invoice_id', 'pay_id'
+  const [payPopupBooking, setPayPopupBooking] = useState(null); // booking to show payment popup for
 
   const load = () => {
     setLoading(true);
@@ -61,6 +64,26 @@ export default function UserBookings() {
     s.async = true;
     document.body.appendChild(s);
   }, []);
+
+  // Listen for booking completion events to show the payment popup.
+  useEffect(() => {
+    ensureSocket();
+    const handleStatus = (data) => {
+      if (!data) return;
+      // If a booking just completed and is unpaid, show the payment popup.
+      if (data.status === BOOKING_STATUS.COMPLETED && data.paymentStatus === 'unpaid') {
+        const match = bookings.find((b) => String(b._id) === String(data.bookingId));
+        if (match) {
+          setPayPopupBooking({ ...match, status: data.status, paymentStatus: data.paymentStatus });
+        } else {
+          // Reload so the list is fresh, then show popup.
+          load();
+        }
+      }
+    };
+    socket.on('booking:status', handleStatus);
+    return () => socket.off('booking:status', handleStatus);
+  }, [bookings]);
 
   const cancel = async (booking) => {
     if (actionLoadingId) return;
@@ -92,7 +115,7 @@ export default function UserBookings() {
           setActionLoadingId(`pay_${bk._id}`);
           try {
             await verifyRazorpayPayment({ ...response, referenceId: bk._id, type: 'booking' });
-            toast.success('Payment successful — booking confirmed!');
+            toast.success('Payment successful!');
             load();
           } catch {
             toast.error('Payment verification failed');
@@ -253,13 +276,13 @@ export default function UserBookings() {
                         )}
                       </div>
                       
-                      {b.paymentMode === 'online' && b.paymentStatus === 'pending' && (
+                      {b.paymentStatus === 'unpaid' && (
                         <button
                           onClick={() => payBooking(b)}
                           disabled={actionLoadingId !== null}
                           className="rounded bg-[#F5C518] px-3.5 py-1.5 text-xs font-semibold uppercase tracking-widest text-black hover:bg-[#F5C518]/90 transition disabled:opacity-50"
                         >
-                          {actionLoadingId === `pay_${b._id}` ? 'Retrying...' : 'Retry Payment'}
+                          {actionLoadingId === `pay_${b._id}` ? 'Processing...' : 'Pay Now'}
                         </button>
                       )}
 
@@ -293,17 +316,14 @@ export default function UserBookings() {
                   ) : [BOOKING_STATUS.REJECTED, BOOKING_STATUS.WORKER_UNAVAILABLE].includes(
                       b.status
                     ) ? (
-                    /* The professional declined or didn't respond, but the
-                       customer has already PAID — they must be able to pick
-                       someone else (or cancel for a refund) from here. Without
-                       this the booking had no footer at all and the money was
-                       stranded with no route forward. */
+                    /* The professional declined or didn't respond — the customer
+                       must be able to pick someone else (or cancel) from here. */
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <span className="text-xs text-ink/60">
                         {b.status === BOOKING_STATUS.REJECTED
                           ? 'This professional declined.'
                           : "The professional didn't respond in time."}{' '}
-                        Your payment is safe on this booking.
+                        Your booking stays active.
                       </span>
                       <div className="flex items-center gap-3">
                         <Link
@@ -335,6 +355,14 @@ export default function UserBookings() {
 
       {reviewBooking && (
         <ReviewModal booking={reviewBooking} onClose={() => setReviewBooking(null)} />
+      )}
+
+      {payPopupBooking && (
+        <PaymentPopup
+          booking={payPopupBooking}
+          onPaid={() => { setPayPopupBooking(null); load(); }}
+          onDismiss={() => setPayPopupBooking(null)}
+        />
       )}
     </section>
   );

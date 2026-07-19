@@ -10,10 +10,8 @@ export const assertBookingTransition = ({ booking, to, pin, role, userId }) => {
     }
   }
 
-  // A worker may only confirm a booking that has actually been paid for.
-  if (to === BOOKING_STATUS.CONFIRMED && booking.paymentStatus !== 'paid') {
-    throw new ApiError(400, 'A booking can only be confirmed after successful payment');
-  }
+  // Pay-later model: workers can accept bookings regardless of payment status.
+  // Payment is no longer a prerequisite for the confirmation flow.
 
   const isOwner = String(booking.user) === String(userId);
   const isWorker = booking.worker && String(booking.worker) === String(userId);

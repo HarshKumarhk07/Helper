@@ -27,6 +27,7 @@ import {
 import { getTrackingState } from '../api/tracking.js';
 import useSocket from '../hooks/useSocket.js';
 import { getWorkerName, getWorkerAvatar, getWorkerExperience, BOOKING_STATUS } from '../lib/booking.js';
+import PaymentPopup from '../components/booking/PaymentPopup.jsx';
 
 // ─── Status display config ────────────────────────────────────────────────────
 
@@ -125,6 +126,7 @@ export default function TrackBooking() {
   // Sheet starts collapsed so the customer sees the map first; they can
   // expand for the full ETA / timeline details whenever they want.
   const [sheetExpanded, setSheetExpanded] = useState(false);
+  const [showPayPopup, setShowPayPopup] = useState(false);
 
   // ── Bootstrap from REST so the page paints immediately ───────────────────
   useEffect(() => {
@@ -239,14 +241,26 @@ export default function TrackBooking() {
       });
     };
 
+    const onStatus = (data) => {
+      if (!data || String(data.bookingId) !== String(bookingId)) return;
+      // If booking just completed and is unpaid, show payment popup.
+      if (data.status === BOOKING_STATUS.COMPLETED && data.paymentStatus === 'unpaid') {
+        setShowPayPopup(true);
+      }
+      // Refresh tracking state to update the timeline.
+      getTrackingState(bookingId).then((d) => setState(d)).catch(() => null);
+    };
+
     socket.on('location:update', onLocation);
     socket.on('booking:route', onRoute);
     socket.on('worker:offline', onWorkerOffline);
+    socket.on('booking:status', onStatus);
 
     return () => {
       socket.off('location:update', onLocation);
       socket.off('booking:route', onRoute);
       socket.off('worker:offline', onWorkerOffline);
+      socket.off('booking:status', onStatus);
       leaveBookingRoom(bookingId);
       console.debug('[TrackBooking] left booking room', bookingId);
     };
@@ -311,6 +325,7 @@ export default function TrackBooking() {
   // ─────────────────────────────────────────────────────────────────────────
 
   return (
+    <>
     <section className="relative min-h-[100dvh] bg-[#0a0e1a] text-paper">
       {/* ── Header ── */}
       <div className="absolute top-0 left-0 right-0 z-[400] px-4 pt-4">
@@ -540,6 +555,18 @@ export default function TrackBooking() {
         </div>
       )}
     </section>
+
+    {showPayPopup && state?.booking && (
+      <PaymentPopup
+        booking={state.booking}
+        onPaid={() => {
+          setShowPayPopup(false);
+          getTrackingState(bookingId).then((d) => setState(d)).catch(() => null);
+        }}
+        onDismiss={() => setShowPayPopup(false)}
+      />
+    )}
+    </>
   );
 }
 

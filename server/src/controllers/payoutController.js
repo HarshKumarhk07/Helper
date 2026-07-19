@@ -198,11 +198,13 @@ export const getPayoutBatch = asyncHandler(async (req, res) => {
 });
 
 export const backfillEarnings = asyncHandler(async (req, res) => {
+  // Pay-later: only create earnings for completed+paid bookings.
   const completed = await Booking.find({
     status: BOOKING_STATUS.COMPLETED,
     worker: { $ne: null },
     completedAt: { $ne: null },
-  }).select('_id worker amount completedAt');
+    paymentStatus: 'paid',
+  }).select('_id worker amount completedAt category');
 
   let created = 0;
   let skipped = 0;

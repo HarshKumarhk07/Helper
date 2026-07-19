@@ -8,12 +8,13 @@ import User from '../models/User.js';
 import { recordOrderHistory, applyOrderStatusTimestamps } from '../utils/ecommerce.js';
 import Product from '../models/Product.js';
 import { logAudit } from '../utils/auditLogger.js';
-import { notifyOrderPlaced, notifyBookingPlaced, notifyBookingCancelled, notifyOrderStatus, notifyWorkerAssigned, notifyBookingRequested, notifyPaymentFailed, sendBookingNotificationOnce } from '../utils/notificationService.js';
-import { markWorkerUnavailable } from '../utils/workerAvailability.js';
+import { notifyOrderPlaced, notifyBookingCancelled, notifyOrderStatus, notifyPaymentFailed, sendBookingNotificationOnce } from '../utils/notificationService.js';
+
 import { recordCouponUsage } from './couponController.js';
 import { creditWallet } from '../utils/wallet.js';
-import { reassignBooking, emitBookingRequest, emitBookingStatus } from '../utils/dispatch.js';
-import { BOOKING_STATUS, ASSIGNMENT_TTL_MS, BOOKING_CONFIRMATION_TIMEOUT_MS } from '../config/booking.js';
+import { emitBookingStatus } from '../utils/dispatch.js';
+import { BOOKING_STATUS } from '../config/booking.js';
+import { createEarningForBooking } from '../utils/earnings.js';
 
 let razorpay;
 try {
@@ -88,57 +89,26 @@ export const verifyRazorpayPayment = asyncHandler(async (req, res) => {
         return res.json({ message: 'Payment already verified' });
       }
 
-      const updateData = {
-        paymentStatus: 'paid',
-        razorpayOrderId: razorpay_order_id,
-        razorpayPaymentId: razorpay_payment_id,
-      };
-
-      let workerToNotify = null;
-      let shouldAutoAssign = false;
-
-      if (booking.isQuoteRequest && booking.quoteStatus === 'accepted') {
-        // The worker already agreed by sending the quote the customer accepted,
-        // so there's no Accept/Reject step — it goes straight to confirmed.
-        updateData.status = BOOKING_STATUS.CONFIRMED;
-        updateData.acceptedAt = new Date();
-        updateData.respondedAt = new Date();
-        updateData.confirmationExpiresAt = null;
-        workerToNotify = await User.findById(booking.worker);
-      } else {
-        // The booking goes live now, so the confirmation window starts here —
-        // the same 10-min rule for instant AND scheduled bookings.
-        updateData.confirmationExpiresAt = new Date(Date.now() + BOOKING_CONFIRMATION_TIMEOUT_MS);
-        if (booking.worker) {
-          const worker = await User.findById(booking.worker);
-          if (worker && worker.kycStatus === 'verified' && worker.isActive) {
-            updateData.assignedAt = new Date();
-            workerToNotify = worker;
-          } else {
-            updateData.worker = null;
-            if (booking.autoAssigned) {
-              shouldAutoAssign = true;
-            }
-          }
-        } else if (booking.autoAssigned) {
-          shouldAutoAssign = true;
-        }
-      }
-
+      // Pay-later model: payment verification only updates payment fields.
+      // Confirmation flow (confirmationExpiresAt, worker notify, reassign) is
+      // triggered at booking creation, NOT here.
       const updatedBooking = await Booking.findOneAndUpdate(
         {
           _id: referenceId,
           paymentStatus: { $ne: 'paid' }
         },
         {
-          $set: updateData,
+          $set: {
+            paymentStatus: 'paid',
+            paidAt: new Date(),
+            razorpayOrderId: razorpay_order_id,
+            razorpayPaymentId: razorpay_payment_id,
+          },
           $push: {
             history: {
-              from: BOOKING_STATUS.PENDING_CONFIRMATION,
-              to: updateData.status || BOOKING_STATUS.PENDING_CONFIRMATION,
-              note: booking.isQuoteRequest && booking.quoteStatus === 'accepted'
-                ? 'Quote payment verified'
-                : (workerToNotify ? 'Payment verified — awaiting worker confirmation' : 'Payment verified')
+              from: booking.status,
+              to: booking.status,
+              note: 'Payment verified',
             }
           }
         },
@@ -146,41 +116,16 @@ export const verifyRazorpayPayment = asyncHandler(async (req, res) => {
       );
 
       if (updatedBooking) {
-        if (booking.isQuoteRequest && booking.quoteStatus === 'accepted' && updatedBooking.worker) {
-          // Straight to confirmed → the worker is committed to this job.
-          await markWorkerUnavailable(updatedBooking.worker, updatedBooking._id);
+        // Retroactive earning: if the booking was already completed before
+        // payment, create the Earning row now.
+        if (updatedBooking.status === BOOKING_STATUS.COMPLETED && updatedBooking.completedAt) {
+          createEarningForBooking(updatedBooking).catch((err) =>
+            console.error('[earnings] retroactive create failed:', err.message)
+          );
         }
 
-        const user = await User.findById(updatedBooking.user);
-        // Send bookingPlaced notification once payment is verified
-        await sendBookingNotificationOnce(updatedBooking._id, 'bookingPlaced', notifyBookingPlaced, { user, booking: updatedBooking }).catch(() => {});
-
-        if (workerToNotify) {
-          if (updatedBooking.status === BOOKING_STATUS.CONFIRMED) {
-            // Quote flow — already confirmed, so send the job details + start PIN.
-            await sendBookingNotificationOnce(updatedBooking._id, 'workerAssigned', notifyWorkerAssigned, {
-              user,
-              worker: workerToNotify,
-              booking: updatedBooking,
-              startPin: updatedBooking.startPin,
-            }).catch(() => {});
-          } else {
-            // Normal flow — the worker must Accept/Reject within the window.
-            // Push to their portal FIRST so the request modal pops immediately;
-            // without this the modal only appeared on the next poll, which is
-            // the slow fallback for a dropped socket, not the primary path.
-            emitBookingRequest(updatedBooking);
-            emitBookingStatus(updatedBooking);
-            await sendBookingNotificationOnce(
-              updatedBooking._id,
-              `bookingRequested_${workerToNotify._id}`,
-              notifyBookingRequested,
-              { user, worker: workerToNotify, booking: updatedBooking }
-            ).catch(() => {});
-          }
-        } else if (shouldAutoAssign) {
-          await reassignBooking(updatedBooking).catch(() => null);
-        }
+        // Emit status so the customer's UI updates payment badge.
+        emitBookingStatus(updatedBooking);
 
         logAudit({
           req,
@@ -188,7 +133,7 @@ export const verifyRazorpayPayment = asyncHandler(async (req, res) => {
           resource: 'booking',
           resourceId: updatedBooking._id,
           changes: {
-            paymentStatus: { from: 'pending', to: 'paid' },
+            paymentStatus: { from: 'unpaid', to: 'paid' },
             razorpayOrderId: { from: null, to: razorpay_order_id },
             razorpayPaymentId: { from: null, to: razorpay_payment_id },
           },

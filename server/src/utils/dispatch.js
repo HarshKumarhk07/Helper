@@ -25,6 +25,7 @@ const emitBookingStatus = (booking) => {
   const payload = {
     bookingId: String(booking._id),
     status: booking.status,
+    paymentStatus: booking.paymentStatus,
     worker: booking.worker ? String(booking.worker) : null,
   };
   io.to(`user_${booking.user}`).emit('booking:status', payload);
@@ -48,7 +49,6 @@ export const reassignBooking = async (booking, { resetTimer = false } = {}) => {
   }
   if (booking.status !== BOOKING_STATUS.PENDING_CONFIRMATION) return null;
   if (booking.worker) return null; // already has a worker awaiting a response
-  if (booking.paymentStatus !== 'paid') return null;
 
   const excludeIds = (booking.rejections || [])
     .map((r) => String(r.worker))
@@ -72,7 +72,6 @@ export const reassignBooking = async (booking, { resetTimer = false } = {}) => {
       _id: booking._id,
       status: BOOKING_STATUS.PENDING_CONFIRMATION,
       worker: null,
-      paymentStatus: 'paid',
     },
     {
       $set: set,

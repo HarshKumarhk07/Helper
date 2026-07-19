@@ -31,14 +31,16 @@ const KYC_BADGE = {
 const fmtDate = (d) => (d ? new Date(d).toLocaleString() : '—');
 
 const DocPreview = ({ label, url: rawUrl }) => {
-  // Stored value may be a relative '/uploads/...' path — resolve to a
-  // loadable URL via mediaUrl, same as the rest of the app.
   const url = mediaUrl(rawUrl);
   if (!url) {
     return (
-      <div className="rounded-xl border border-dashed border-ink/15 p-3 text-xs text-ink/60">
-        <div className="mb-1 uppercase tracking-widest">{label}</div>
-        Not uploaded
+      <div className="flex h-full flex-col justify-between rounded-2xl border border-dashed border-ink/15 bg-sand/10 p-3 text-xs text-ink/60">
+        <div className="flex min-h-[2.5rem] items-start justify-between text-[10px] font-bold uppercase tracking-wider text-ink/60">
+          <span className="leading-tight">{label}</span>
+        </div>
+        <div className="flex h-28 w-full items-center justify-center rounded-xl bg-ink/5 text-xs text-ink/40">
+          Not uploaded
+        </div>
       </div>
     );
   }
@@ -48,25 +50,27 @@ const DocPreview = ({ label, url: rawUrl }) => {
       href={url}
       target="_blank"
       rel="noreferrer"
-      className="group flex flex-col rounded-xl border border-ink/15 p-3 transition hover:border-ink/40:border-paper/40"
+      className="group flex h-full flex-col justify-between rounded-2xl border border-ink/15 bg-sand/10 p-3 transition hover:border-ink/40 hover:bg-sand/20 hover:shadow-sm"
     >
-      <div className="mb-2 flex items-center justify-between text-xs uppercase tracking-widest text-ink/60">
-        <span>{label}</span>
-        <Eye size={14} className="opacity-60 group-hover:opacity-100" />
+      <div className="mb-2 flex min-h-[2.5rem] items-start justify-between gap-1 text-[10px] font-bold uppercase tracking-wider text-ink/75">
+        <span className="leading-tight">{label}</span>
+        <Eye size={14} className="mt-0.5 shrink-0 text-ink/40 transition group-hover:text-ink" />
       </div>
       {isPdf ? (
-        <div className="flex h-32 items-center justify-center rounded-lg bg-ink/5">
-          <FileText size={32} className="text-ink/40" />
+        <div className="flex h-28 w-full items-center justify-center rounded-xl bg-ink/5 transition group-hover:bg-ink/10">
+          <FileText size={28} className="text-ink/40" />
         </div>
       ) : (
-        <img
-          src={url}
-          alt={label}
-          className="h-32 w-full rounded-lg object-cover"
-          onError={(e) => {
-            e.currentTarget.style.display = 'none';
-          }}
-        />
+        <div className="overflow-hidden rounded-xl bg-ink/5">
+          <img
+            src={url}
+            alt={label}
+            className="h-28 w-full object-cover transition duration-300 group-hover:scale-105"
+            onError={(e) => {
+              e.currentTarget.style.display = 'none';
+            }}
+          />
+        </div>
       )}
     </a>
   );

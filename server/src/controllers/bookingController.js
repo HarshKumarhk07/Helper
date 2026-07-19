@@ -282,13 +282,13 @@ export const createBooking = asyncHandler(async (req, res) => {
     ],
   });
 
-  // Online bookings go live (and the 10-min confirmation window starts) once
-  // payment is verified — see paymentController. Anything already paid at
-  // creation starts its window right now.
-  if (booking.paymentStatus === 'paid' && !booking.confirmationExpiresAt) {
-    booking.confirmationExpiresAt = new Date(Date.now() + BOOKING_CONFIRMATION_TIMEOUT_MS);
-    await booking.save();
+  // Pay-later model: confirmation flow starts at booking creation (not after
+  // payment). Set the timeout window and notify the worker immediately.
+  booking.confirmationExpiresAt = new Date(Date.now() + BOOKING_CONFIRMATION_TIMEOUT_MS);
+  if (booking.worker) {
+    booking.assignedAt = new Date();
   }
+  await booking.save();
 
   logAudit({
     req,
@@ -298,8 +298,31 @@ export const createBooking = asyncHandler(async (req, res) => {
     changes: { code: { from: null, to: booking.code }, amount: { from: null, to: booking.amount } },
   });
 
-  if (booking.paymentMode !== PAYMENT_MODE.ONLINE || booking.paymentStatus === 'paid') {
-    await sendBookingNotificationOnce(booking._id, 'bookingPlaced', notifyBookingPlaced, { user: req.user, booking }).catch(() => {});
+  // Always send booking-placed notification (no longer gated on payment).
+  await sendBookingNotificationOnce(booking._id, 'bookingPlaced', notifyBookingPlaced, { user: req.user, booking }).catch(() => {});
+
+  // Notify the assigned worker so the Accept/Reject modal pops immediately.
+  if (booking.worker) {
+    const worker = await User.findById(booking.worker);
+    if (worker && worker.kycStatus === 'verified' && worker.isActive) {
+      emitBookingRequest(booking);
+      emitBookingStatus(booking);
+      await sendBookingNotificationOnce(
+        booking._id,
+        `bookingRequested_${worker._id}`,
+        notifyBookingRequested,
+        { user: req.user, worker, booking }
+      ).catch(() => {});
+    } else {
+      // KYC/inactive: detach and try auto-assign if applicable.
+      booking.worker = null;
+      await booking.save();
+      if (booking.autoAssigned) {
+        await reassignBooking(booking).catch(() => null);
+      }
+    }
+  } else if (booking.autoAssigned) {
+    await reassignBooking(booking).catch(() => null);
   }
 
   if (appliedCouponCode) {
@@ -311,12 +334,9 @@ export const createBooking = asyncHandler(async (req, res) => {
 
 export const listMyBookings = asyncHandler(async (req, res) => {
   const { status, paymentStatus } = req.query;
+  // Pay-later: show ALL bookings regardless of payment status.
   const filter = {
     user: req.user._id,
-    $or: [
-      { paymentStatus: { $in: ['paid', 'refunded', 'refund_pending'] } },
-      { isQuoteRequest: true, quoteStatus: { $ne: 'accepted' } }
-    ]
   };
   // Callers filter using the canonical enum values (config/bookingStatus.js).
   // The old placed/assigned pair collapsed into `pending_confirmation`, so no
@@ -348,14 +368,9 @@ export const listAllBookings = asyncHandler(async (req, res) => {
   if (status) {
     filter.status = status;
   }
+  // Pay-later: show all bookings in admin view regardless of payment status.
   if (paymentStatus) {
     filter.paymentStatus = paymentStatus;
-  } else {
-    filter.$or = [
-      { paymentMode: { $ne: 'online' } },
-      { paymentStatus: { $in: ['paid', 'cancelled', 'refunded'] } },
-      { isQuoteRequest: true }
-    ];
   }
   if (worker) filter.worker = worker;
   if (user) filter.user = user;
@@ -392,12 +407,9 @@ export const listAllBookings = asyncHandler(async (req, res) => {
 
 export const listWorkerJobs = asyncHandler(async (req, res) => {
   const { status } = req.query;
+  // Pay-later: workers see all jobs assigned to them regardless of payment.
   const filter = {
     worker: req.user._id,
-    $or: [
-      { paymentStatus: 'paid' },
-      { isQuoteRequest: true, quoteStatus: 'requested' }
-    ]
   };
   if (status) filter.status = status;
   const bookings = await populateBooking(
@@ -501,9 +513,7 @@ export const changeWorker = asyncHandler(async (req, res) => {
   if (!changeable.includes(booking.status)) {
     throw new ApiError(409, 'This booking can no longer change professional');
   }
-  if (booking.paymentStatus !== 'paid') {
-    throw new ApiError(400, 'Only a paid booking can be reassigned');
-  }
+  // Pay-later: customers can change worker on unpaid bookings too.
 
   const worker = await User.findById(workerId);
   if (!worker || worker.role !== ROLES.WORKER || worker.kycStatus !== 'verified' || !worker.isActive) {
@@ -798,9 +808,7 @@ export const assignWorker = asyncHandler(async (req, res) => {
   const booking = await Booking.findById(req.params.id);
   if (!booking) throw new ApiError(404, 'Booking not found');
 
-  if (booking.paymentStatus !== 'paid') {
-    throw new ApiError(400, 'Workers can only be assigned after successful payment');
-  }
+  // Pay-later: workers can be assigned regardless of payment status.
 
   if (booking.scheduledAt) {
     const populatedService = await Service.findById(booking.service).select('durationMinutes');
@@ -824,7 +832,6 @@ export const assignWorker = asyncHandler(async (req, res) => {
     {
       _id: req.params.id,
       status: BOOKING_STATUS.PENDING_CONFIRMATION,
-      paymentStatus: 'paid'
     },
     {
       $set: {
@@ -876,9 +883,7 @@ export const autoAssign = asyncHandler(async (req, res) => {
   if (booking.status !== BOOKING_STATUS.PENDING_CONFIRMATION) {
     throw new ApiError(409, 'Auto-assign only allowed while a booking is awaiting confirmation');
   }
-  if (booking.paymentStatus !== 'paid') {
-    throw new ApiError(400, 'Workers can only be assigned after successful payment');
-  }
+  // Pay-later: workers can be auto-assigned regardless of payment status.
 
   // Restrict to workers enrolled in this booking's service (see assignment.js).
   const worker = await pickWorkerForCategory({ serviceId: booking.service || null });
@@ -894,7 +899,6 @@ export const autoAssign = asyncHandler(async (req, res) => {
       _id: req.params.id,
       status: BOOKING_STATUS.PENDING_CONFIRMATION,
       worker: null,
-      paymentStatus: 'paid'
     },
     {
       $set: {
@@ -993,13 +997,19 @@ export const transitionStatus = asyncHandler(async (req, res) => {
       endPin: booking.endPin,
     }).catch(() => {});
   } else if (to === BOOKING_STATUS.COMPLETED) {
-    createEarningForBooking(booking).catch((err) =>
-      console.error('[earnings] failed to create:', err.message)
-    );
+    // Pay-later: earnings are created only when payment succeeds, not on
+    // completion. If already paid at this point, create immediately.
+    if (booking.paymentStatus === 'paid') {
+      createEarningForBooking(booking).catch((err) =>
+        console.error('[earnings] failed to create:', err.message)
+      );
+    }
     await sendBookingNotificationOnce(booking._id, 'jobCompleted', notifyJobCompleted, {
       user: populatedUser,
       booking,
     }).catch(() => {});
+    // Emit status so the customer's UI can show the payment popup if unpaid.
+    emitBookingStatus(booking);
   } else if (to === BOOKING_STATUS.CANCELLED_BY_USER) {
     // Don't auto-refund — let admin issue refund explicitly via the refund button.
     if (booking.paymentStatus !== 'paid' && booking.paymentStatus !== 'refunded') {
@@ -1022,9 +1032,10 @@ export const getWorkerEarnings = asyncHandler(async (req, res) => {
   const Earning = (await import('../models/Earning.js')).default;
   const { getCommissionRate } = await import('../utils/earnings.js');
 
-  // Backfill earnings for any completed bookings missing an Earning row.
+  // Backfill earnings for any completed+paid bookings missing an Earning row.
+  // Pay-later: only paid bookings get earnings — unpaid ones wait.
   const completedMissingEarning = await Booking.aggregate([
-    { $match: { worker: workerId, status: BOOKING_STATUS.COMPLETED } },
+    { $match: { worker: workerId, status: BOOKING_STATUS.COMPLETED, paymentStatus: 'paid' } },
     {
       $lookup: {
         from: 'earnings',
