@@ -32,9 +32,11 @@ export default function WorkerDashboard() {
         <PillButton variant="solid" to="/worker/kyc">
           KYC verification →
         </PillButton>
+        {/* [CAR-TRIPS DISABLED]
         <PillButton variant="solid" to="/worker/car-service">
           Car Service →
         </PillButton>
+        */}
         <PillButton variant="solid" to="/me/profile-edit">
           Edit profile →
         </PillButton>

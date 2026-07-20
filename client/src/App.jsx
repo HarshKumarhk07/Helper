@@ -81,10 +81,11 @@ const AdminOrders = lazy(() => import('./pages/dashboards/AdminOrders.jsx'));
 const AdminFinance = lazy(() => import('./pages/dashboards/AdminFinance.jsx'));
 const AdminPayouts = lazy(() => import('./pages/dashboards/AdminPayouts.jsx'));
 const AdminSettings = lazy(() => import('./pages/dashboards/AdminSettings.jsx'));
-const WorkerCarService = lazy(() => import('./pages/dashboards/WorkerCarService.jsx'));
-const AdminCarKycQueue = lazy(() => import('./pages/dashboards/AdminCarKycQueue.jsx'));
-const CarTripsBrowse = lazy(() => import('./pages/CarTripsBrowse.jsx'));
-const CustomerCarBookings = lazy(() => import('./pages/dashboards/CustomerCarBookings.jsx'));
+// [CAR-TRIPS DISABLED] Car Trips / Car Service feature hidden from UI. See CAR_TRIPS_DISABLED.md
+// const WorkerCarService = lazy(() => import('./pages/dashboards/WorkerCarService.jsx'));
+// const AdminCarKycQueue = lazy(() => import('./pages/dashboards/AdminCarKycQueue.jsx'));
+// const CarTripsBrowse = lazy(() => import('./pages/CarTripsBrowse.jsx'));
+// const CustomerCarBookings = lazy(() => import('./pages/dashboards/CustomerCarBookings.jsx'));
 const AdminCategories = lazy(() => import('./pages/dashboards/AdminCategories.jsx'));
 const AdminLocations = lazy(() => import('./pages/dashboards/AdminLocations.jsx'));
 const AdminBrandCategories = lazy(() => import('./pages/dashboards/AdminBrandCategories.jsx'));
@@ -154,7 +155,7 @@ export default function App() {
             <Route path="/terms" element={<TermsAndConditions />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/about" element={<AboutUs />} />
-            <Route path="/trips" element={<CarTripsBrowse />} />
+            {/* [CAR-TRIPS DISABLED] <Route path="/trips" element={<CarTripsBrowse />} /> */}
 
             <Route path="/services" element={<ServicesIndex />} />
             <Route path="/services/:id" element={<ServiceDetail />} />
@@ -205,7 +206,7 @@ export default function App() {
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/admin/users" element={<AdminUsers />} />
               <Route path="/admin/workers" element={<AdminWorkers />} />
-              <Route path="/admin/car-kyc" element={<AdminCarKycQueue />} />
+              {/* [CAR-TRIPS DISABLED] <Route path="/admin/car-kyc" element={<AdminCarKycQueue />} /> */}
               <Route path="/admin/workers/:id" element={<AdminWorkerDetail />} />
             </Route>
 
@@ -245,7 +246,7 @@ export default function App() {
               <Route path="/worker/jobs" element={<WorkerJobs />} />
               <Route path="/worker/earnings" element={<WorkerEarnings />} />
               <Route path="/worker/kyc" element={<WorkerKyc />} />
-              <Route path="/worker/car-service" element={<WorkerCarService />} />
+              {/* [CAR-TRIPS DISABLED] <Route path="/worker/car-service" element={<WorkerCarService />} /> */}
               <Route path="/worker/services" element={<WorkerServices />} />
               <Route path="/worker/availability" element={<WorkerAvailability />} />
               <Route path="/worker/jobs/:bookingId/nav" element={<WorkerNav />} />
@@ -255,7 +256,7 @@ export default function App() {
             <Route element={<ProtectedRoute />}>
               <Route path="/me" element={<UserDashboard />} />
               <Route path="/me/bookings" element={<UserBookings />} />
-              <Route path="/me/car-bookings" element={<CustomerCarBookings />} />
+              {/* [CAR-TRIPS DISABLED] <Route path="/me/car-bookings" element={<CustomerCarBookings />} /> */}
               <Route path="/me/reviews" element={<UserReviews />} />
               <Route path="/me/orders" element={<UserOrders />} />
               <Route path="/me/orders/:id" element={<UserOrderDetail />} />

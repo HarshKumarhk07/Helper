@@ -17,7 +17,7 @@ const NAV = [
   { to: '/services', label: 'Services', hasChevron: true },
   { to: '/categories', label: 'Categories', hasChevron: true, isCategoryDropdown: true },
   { to: '/products', label: 'Products' },
-  { to: '/trips', label: 'Car Trips' },
+  // [CAR-TRIPS DISABLED] { to: '/trips', label: 'Car Trips' },
   { to: '/join', label: 'Become a Professional' },
   { to: '/about', label: 'About Us' },
 ];
@@ -28,7 +28,7 @@ const HERO_NAV = [
   { to: '/services', label: 'Services', hasChevron: true },
   { to: '/categories', label: 'Categories', hasChevron: true, isCategoryDropdown: true },
   { to: '/products', label: 'Products' },
-  { to: '/trips', label: 'Car Trips' },
+  // [CAR-TRIPS DISABLED] { to: '/trips', label: 'Car Trips' },
   { to: '/join', label: 'Become a Professional' },
   { to: '/about', label: 'About Us' },
 ];
