@@ -1,7 +1,17 @@
 import api from './axios.js';
 
-export const listServices = (params = {}) =>
-  api.get('/services', { params }).then((r) => r.data.services);
+// [CAR-TRIPS DISABLED] The "Car Booking & Travel" service (slug 'car-trips') is
+// hidden from all public listings. Admin pages pass { includeHidden: true } to
+// keep managing it. See CAR_TRIPS_DISABLED.md.
+const HIDDEN_SERVICE_SLUGS = ['car-trips'];
+
+export const listServices = ({ includeHidden, ...params } = {}) =>
+  api.get('/services', { params }).then((r) => {
+    const services = r.data.services || [];
+    return includeHidden
+      ? services
+      : services.filter((s) => !HIDDEN_SERVICE_SLUGS.includes(s?.slug));
+  });
 
 export const getService = (id) =>
   api.get(`/services/${id}`).then((r) => r.data.service);

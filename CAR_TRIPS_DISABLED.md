@@ -54,23 +54,38 @@ they never render, but the source remains for restoration:
 
 ---
 
-## ⚠️ Caveat — catalog "Car Trips" card (DB-driven)
+## Catalog "Car Booking & Travel" card (DB-driven) — filtered client-side
 
-If the catalog seed (`server/scripts/seedCatalogCarService.js`) was ever run, the DB
-contains a **`car-trips` ServiceCategory and Service**. That data is rendered from the
-database, so it can still appear as a "Car Trips" card/category in:
+The catalog seed (`server/scripts/seedCatalogCarService.js`) created a **`car-trips`
+ServiceCategory and a `car-trips` Service ("Car Booking & Travel")** in the DB (the
+service is currently re-parented under the "DRIVER" category). Because this is DB data,
+commenting components wouldn't remove it — so it is filtered out **centrally in the API
+wrappers**:
 
-- `client/src/pages/ServicesIndex.jsx`
-- `client/src/components/services/ServiceCard.jsx`
-- `client/src/pages/ServiceDetail.jsx`
-- `client/src/pages/CategoryDetail.jsx`
-- the Navbar "Categories" dropdown
+| File | What |
+|------|------|
+| `client/src/api/services.js` | `listServices` drops any service whose slug is in `HIDDEN_SERVICE_SLUGS` (`car-trips`) unless `{ includeHidden: true }` is passed |
+| `client/src/api/categories.js` | `listCategories` drops any category whose slug is in `HIDDEN_CATEGORY_SLUGS` (`car-trips`) unless `{ includeHidden: true }` |
 
-These files contain redirect logic that sends a `car-trips` slug to `/trips` (now a
-dead route). They were **left as-is**. To fully hide the catalog entry, remove or
-unpublish the `car-trips` category/service in the database (code changes alone won't
-do it). Also note `server/src/controllers/serviceController.js` (~lines 87, 111)
-attaches active trips to the car-trips catalog entry.
+This hides the card/category from **every** public surface at once: services index,
+Navbar categories dropdown + autocomplete, featured/discover sections, category tiles,
+category detail, and the service modal.
+
+**Admin still sees and can manage it** — these pages pass `includeHidden: true`:
+- `client/src/pages/dashboards/AdminServices.jsx`
+- `client/src/pages/dashboards/AdminCategories.jsx`
+
+Direct-URL guards (for any saved/stale link) now bounce `car-trips` to `/services`
+instead of the dead `/trips` route:
+- `client/src/pages/ServiceDetail.jsx` (~line 171)
+- `client/src/pages/CategoryDetail.jsx` (~line 17)
+
+To restore the catalog card, remove the `HIDDEN_*_SLUGS` filters and revert the two
+redirects. `server/src/controllers/serviceController.js` (~lines 87, 111) still attaches
+active trips to the car-trips catalog entry — harmless while hidden.
+
+> To remove the data entirely instead of hiding it, delete/unpublish the `car-trips`
+> category and service in the database.
 
 ---
 

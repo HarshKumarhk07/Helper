@@ -38,7 +38,7 @@ export default function AdminServices() {
 
   const load = () => {
     setLoading(true);
-    listServices()
+    listServices({ includeHidden: true }) // [CAR-TRIPS DISABLED] admin retains full visibility
       .then(setServices)
       .catch(() => toast.error('Failed to load services'))
       .finally(() => setLoading(false));
@@ -46,7 +46,7 @@ export default function AdminServices() {
 
   useEffect(() => {
     load();
-    listCategories({ active: 'true' })
+    listCategories({ active: 'true', includeHidden: true }) // [CAR-TRIPS DISABLED] admin retains full visibility
       .then(setCategories)
       .catch(() => toast.error('Failed to load categories'));
     api.get('/locations')

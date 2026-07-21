@@ -49,7 +49,7 @@ export default function AdminCategories() {
 
   const load = () => {
     setLoading(true);
-    listCategories()
+    listCategories({ includeHidden: true }) // [CAR-TRIPS DISABLED] admin retains full visibility
       .then((cats) => {
         setCategories(cats);
       })

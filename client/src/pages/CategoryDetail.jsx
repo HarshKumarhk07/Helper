@@ -14,8 +14,9 @@ import ServiceCard from '../components/services/ServiceCard.jsx';
 export default function CategoryDetail() {
   const { slug } = useParams();
 
+  // [CAR-TRIPS DISABLED] feature hidden; bounce direct hits to the services list
   if (slug === 'car-trips') {
-    return <Navigate to="/trips" replace />;
+    return <Navigate to="/services" replace />;
   }
 
   const [category, setCategory] = useState(null);

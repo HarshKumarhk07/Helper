@@ -168,8 +168,9 @@ export default function ServiceDetail() {
       getServiceReviews(id).catch(() => [])
     ])
       .then(([svc, wrkrs, revs]) => {
+        // [CAR-TRIPS DISABLED] feature hidden; bounce direct hits to the services list
         if (svc?.slug === 'car-trips' || svc?.category?.slug === 'car-trips') {
-          navigate('/trips', { replace: true });
+          navigate('/services', { replace: true });
           return;
         }
         setService(svc);
