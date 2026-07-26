@@ -62,6 +62,13 @@ export default function DashboardShell({ eyebrow, title, children, slices }) {
       { to: '/admin/support', label: 'Support Tickets' },
       { to: '/admin/settings', label: 'Settings' }
     ];
+  } else if (role === 'brand') {
+    navItems = [
+      { to: '/brand', label: 'Brand Dashboard' },
+      { to: '/brand/products', label: 'Products' },
+      { to: '/brand/kyc', label: 'KYC Verification' },
+      { to: '/brand/pricing', label: 'Pricing (Optional)' }
+    ];
   }
 
   const isLinkActive = (to) => {

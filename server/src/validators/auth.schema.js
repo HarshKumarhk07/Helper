@@ -48,7 +48,7 @@ export const adminCreateUserSchema = z.object({
   password: passwordSchema,
   role: z.enum(['admin', 'worker', 'user', 'brand']),
   companyName: z.string().trim().min(2).max(120).optional().or(z.literal('')),
-  companyAddress: z.string().trim().min(5).max(300).optional().or(z.literal('')),
+  companyAddress: z.string().trim().min(2).max(300).optional().or(z.literal('')),
   businessType: z.string().trim().min(2).max(80).optional().or(z.literal('')),
 });
 
@@ -65,7 +65,7 @@ export const adminUpdateUserSchema = z.object({
   role: z.enum(['admin', 'worker', 'user', 'brand']).optional(),
   isActive: z.boolean().optional(),
   companyName: z.string().trim().min(2).max(120).optional().or(z.literal('')),
-  companyAddress: z.string().trim().min(5).max(300).optional().or(z.literal('')),
+  companyAddress: z.string().trim().min(2).max(300).optional().or(z.literal('')),
   businessType: z.string().trim().min(2).max(80).optional().or(z.literal('')),
 });
 
@@ -85,7 +85,7 @@ export const updateMeSchema = z.object({
   experienceYears: z.number().min(0).optional(),
   // Brand profile fields
   companyName: z.string().min(2).max(120).optional(),
-  companyAddress: z.string().min(5).max(300).optional(),
+  companyAddress: z.string().min(2).max(300).optional(),
   businessType: z.string().min(2).max(80).optional(),
   kycDocuments: z
     .object({

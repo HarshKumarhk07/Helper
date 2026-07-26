@@ -168,7 +168,13 @@ export default function BrandKyc() {
       await refreshUser();
       loadKyc(); // Reload KYC status to reflect submitted state
     } catch (err) {
-      toast.error(err?.response?.data?.error || 'Failed to submit KYC details');
+      const responseData = err?.response?.data;
+      if (responseData?.details && Array.isArray(responseData.details)) {
+        const msg = responseData.details.map(d => d.message).join(' | ');
+        toast.error(msg);
+      } else {
+        toast.error(responseData?.error || 'Failed to submit KYC details');
+      }
     } finally {
       setSubmitting(false);
     }
