@@ -32,7 +32,7 @@ export default function BookingCard({ booking, footer }) {
           </div>
           <div className="mt-1 text-base">{svc.name || 'Service'}</div>
           <div className="mt-1 text-xs text-ink/60">
-            {formatPrice(booking.amount)} · {booking.type}
+            {formatPrice(booking.finalPayableAmount ?? booking.amount)} · {booking.type}
           </div>
 
           <div className="mt-3 flex flex-col gap-1 text-xs text-ink/70">

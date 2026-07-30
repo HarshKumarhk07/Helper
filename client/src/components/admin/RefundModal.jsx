@@ -12,7 +12,7 @@ export default function RefundModal({
   onClose,
   onRefunded,
 }) {
-  const grossAmount = type === 'booking' ? reference?.amount : reference?.totalAmount;
+  const grossAmount = type === 'booking' ? (reference?.finalPayableAmount ?? reference?.amount) : reference?.totalAmount;
   const alreadyRefunded = reference?.paymentStatus === 'refunded';
   const channel = 'wallet';
 

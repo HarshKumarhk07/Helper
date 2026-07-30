@@ -31,11 +31,23 @@ try {
 export const createRazorpayOrder = asyncHandler(async (req, res) => {
   if (!razorpay) throw new ApiError(500, 'Payment gateway not configured');
   
-  const { amount, receipt, type } = req.body;
-  if (!amount) throw new ApiError(400, 'Amount is required');
+  const { amount: clientAmount, receipt, type } = req.body;
+  
+  let finalAmount = clientAmount;
+  
+  if (type === 'booking') {
+    const Booking = (await import('../models/Booking.js')).default;
+    const booking = await Booking.findOne({ code: receipt });
+    if (!booking) throw new ApiError(404, 'Booking not found');
+    
+    // STRICT SECURITY: Never trust frontend pricing for bookings
+    finalAmount = booking.finalPayableAmount != null ? booking.finalPayableAmount : booking.amount;
+  }
+  
+  if (!finalAmount) throw new ApiError(400, 'Amount is required');
 
   const options = {
-    amount: amount * 100, // Amount in paise
+    amount: finalAmount * 100, // Amount in paise
     currency: 'INR',
     receipt: receipt || `receipt_${Date.now()}`,
   };
@@ -303,7 +315,9 @@ export const refundPayment = asyncHandler(async (req, res) => {
     }
   }
 
-  const grossAmount = type === 'booking' ? target.amount : target.totalAmount;
+  const grossAmount = type === 'booking' 
+    ? (target.finalPayableAmount != null ? target.finalPayableAmount : target.amount) 
+    : target.totalAmount;
   const refundAmt = amount != null ? Number(amount) : grossAmount;
   if (!Number.isFinite(refundAmt) || refundAmt <= 0) {
     throw new ApiError(400, 'Invalid refund amount');

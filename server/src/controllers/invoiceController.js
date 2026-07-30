@@ -106,10 +106,20 @@ export const generateInvoice = asyncHandler(async (req, res) => {
     .lineTo(560, y + 10)
     .stroke();
 
+  if (data.discountAmount > 0) {
+    doc
+      .font('Helvetica')
+      .text('Discount:', 370, y + 15, { width: 90, align: 'right' })
+      .text(`- Rs. ${data.discountAmount.toFixed(2)}`, 470, y + 15, { width: 90, align: 'right' });
+    y += 15;
+  }
+
+  const finalTotal = type === 'order' ? data.totalAmount : (data.finalPayableAmount ?? data.amount);
+  
   doc
     .font('Helvetica-Bold')
     .text('Total:', 370, y + 30, { width: 90, align: 'right' })
-    .text(`Rs. ${(data.totalAmount || data.amount).toFixed(2)}`, 470, y + 30, { width: 90, align: 'right' });
+    .text(`Rs. ${finalTotal.toFixed(2)}`, 470, y + 30, { width: 90, align: 'right' });
 
   doc
     .font('Helvetica')

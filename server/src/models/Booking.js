@@ -122,7 +122,10 @@ const bookingSchema = new mongoose.Schema(
     // Number of hours billed for hourly-priced services (null for fixed).
     hours: { type: Number, default: null, min: 0 },
     couponCode: { type: String, default: null },
+    couponId: { type: mongoose.Schema.Types.ObjectId, ref: 'Coupon', default: null },
+    couponType: { type: String, enum: ['percentage', 'fixed'], default: null },
     discountAmount: { type: Number, default: 0 },
+    finalPayableAmount: { type: Number, default: null },
     paymentMode: { type: String, enum: PAYMENT_MODE_LIST, default: PAYMENT_MODE.COD },
     paymentStatus: {
       type: String,

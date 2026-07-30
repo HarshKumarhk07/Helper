@@ -216,7 +216,7 @@ export const notifyBookingPlaced = ({ user, booking }) =>
         <p>We've received your booking. Our team will assign a professional shortly.</p>
         <table style="width:100%;border-collapse:collapse;margin:14px 0;">
           <tr><td style="padding:6px 0;color:#666;">Booking ID</td><td><strong>${booking.code}</strong></td></tr>
-          <tr><td style="padding:6px 0;color:#666;">Amount</td><td><strong>${inr(booking.amount)}</strong></td></tr>
+          <tr><td style="padding:6px 0;color:#666;">Amount</td><td><strong>${inr(booking.finalPayableAmount ?? booking.amount)}</strong></td></tr>
           <tr><td style="padding:6px 0;color:#666;">Address</td><td>${fmtAddress(booking.address)}</td></tr>
         </table>
         <p style="margin-top:20px;color:#555;">You'll receive a 6-digit Start PIN once a worker is assigned. Share it with the worker only when they arrive.</p>
@@ -225,7 +225,7 @@ export const notifyBookingPlaced = ({ user, booking }) =>
     }),
     sendSMS({
       to: user?.phone,
-      body: `Helper: Booking ${booking.code} confirmed for ${inr(booking.amount)}. We'll assign a worker shortly.`,
+      body: `Helper: Booking ${booking.code} confirmed for ${inr(booking.finalPayableAmount ?? booking.amount)}. We'll assign a worker shortly.`,
     }),
   ]);
 
@@ -253,7 +253,7 @@ export const notifyBookingRequested = ({ worker, user, booking }) => {
           <tr><td style="padding:6px 0;color:#666;">Service</td><td>${escapeHtml(serviceName)}</td></tr>
           <tr><td style="padding:6px 0;color:#666;">When</td><td>${escapeHtml(when)}</td></tr>
           <tr><td style="padding:6px 0;color:#666;">Where</td><td>${fmtAddress(booking.address)}</td></tr>
-          <tr><td style="padding:6px 0;color:#666;">Amount</td><td><strong>${inr(booking.amount)}</strong></td></tr>
+          <tr><td style="padding:6px 0;color:#666;">Amount</td><td><strong>${inr(booking.finalPayableAmount ?? booking.amount)}</strong></td></tr>
         </table>
         <p style="margin:20px 0;">
           <a href="${portalUrl}" style="display:inline-block;padding:12px 22px;background:#1a1a1a;color:#faf6ef;border-radius:8px;text-decoration:none;font-weight:600;">Open portal to Accept / Reject</a>
@@ -348,7 +348,7 @@ export const notifyJobCompleted = ({ user, booking, invoiceUrl }) =>
         <p>Your service has been completed.</p>
         <table style="width:100%;border-collapse:collapse;margin:14px 0;">
           <tr><td style="padding:6px 0;color:#666;">Booking</td><td><strong>${booking.code}</strong></td></tr>
-          <tr><td style="padding:6px 0;color:#666;">Amount</td><td><strong>${inr(booking.amount)}</strong></td></tr>
+          <tr><td style="padding:6px 0;color:#666;">Amount</td><td><strong>${inr(booking.finalPayableAmount ?? booking.amount)}</strong></td></tr>
         </table>
         ${invoiceUrl ? `<p><a href="${invoiceUrl}" style="display:inline-block;padding:10px 18px;background:#1a1a1a;color:#faf6ef;border-radius:8px;text-decoration:none;">Download invoice</a></p>` : ''}
         <p>We'd love your feedback — please rate the service in your account.</p>
@@ -357,7 +357,7 @@ export const notifyJobCompleted = ({ user, booking, invoiceUrl }) =>
     }),
     sendSMS({
       to: user?.phone,
-      body: `Helper: ${booking.code} completed. ${inr(booking.amount)}. Rate your experience in the app.`,
+      body: `Helper: ${booking.code} completed. ${inr(booking.finalPayableAmount ?? booking.amount)}. Rate your experience in the app.`,
     }),
   ]);
 

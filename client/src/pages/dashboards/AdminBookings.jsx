@@ -204,7 +204,7 @@ export default function AdminBookings() {
                   {b.scheduledAt ? formatDateTime(b.scheduledAt) : 'Instant'}
                 </td>
                 <td className="py-3 pr-4">
-                  <div>{formatPrice(b.amount)}</div>
+                  <div>{formatPrice(b.finalPayableAmount ?? b.amount)}</div>
                   <div
                     className={`text-[10px] uppercase tracking-widest ${
                       b.paymentStatus === 'paid'

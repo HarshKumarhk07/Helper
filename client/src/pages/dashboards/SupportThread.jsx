@@ -180,7 +180,7 @@ export default function SupportThread({ adminMode = false }) {
                 <span className="text-ink/60">Booking</span>{' '}
                 <span className="font-mono">{ticket.booking.code}</span>{' '}
                 <span className="text-ink/60">
-                  · {ticket.booking.status} · ₹{ticket.booking.amount}
+                  · {ticket.booking.status} · ₹{ticket.booking.finalPayableAmount ?? ticket.booking.amount}
                 </span>
               </div>
             )}

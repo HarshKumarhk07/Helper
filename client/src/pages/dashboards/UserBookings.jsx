@@ -102,8 +102,9 @@ export default function UserBookings() {
   const payBooking = async (bk) => {
     if (actionLoadingId) return;
     setActionLoadingId(`pay_${bk._id}`);
+    const finalPayable = bk.finalPayableAmount ?? Math.max(0, bk.amount - (bk.discountAmount || 0));
     try {
-      const rp = await createRazorpayOrder({ amount: bk.amount, receipt: bk.code, type: 'booking' });
+      const rp = await createRazorpayOrder({ amount: finalPayable, receipt: bk.code, type: 'booking' });
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_xxxx',
         amount: rp.amount,

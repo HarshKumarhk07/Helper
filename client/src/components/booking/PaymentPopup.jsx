@@ -11,6 +11,7 @@ import toast from 'react-hot-toast';
 export default function PaymentPopup({ booking, onPaid, onDismiss }) {
   const { user } = useAuth();
   const [paying, setPaying] = useState(false);
+  const finalPayable = booking.finalPayableAmount ?? Math.max(0, booking.amount - (booking.discountAmount || 0));
 
   // Ensure Razorpay script is loaded.
   useEffect(() => {
@@ -28,7 +29,7 @@ export default function PaymentPopup({ booking, onPaid, onDismiss }) {
     setPaying(true);
     try {
       const rp = await createRazorpayOrder({
-        amount: booking.amount,
+        amount: finalPayable,
         receipt: booking.code,
         type: 'booking',
       });
@@ -113,8 +114,14 @@ export default function PaymentPopup({ booking, onPaid, onDismiss }) {
           )}
           <div className="flex items-center justify-between text-sm">
             <span className="text-ink/55">Amount</span>
-            <span className="text-base font-bold text-ink">{formatPrice(booking.amount)}</span>
+            <span className="text-base font-bold text-ink">{formatPrice(finalPayable)}</span>
           </div>
+          {booking.discountAmount > 0 && (
+            <div className="flex items-center justify-between text-xs mt-1">
+              <span className="text-emerald-600/70">Discount Applied</span>
+              <span className="font-medium text-emerald-600">-{formatPrice(booking.discountAmount)}</span>
+            </div>
+          )}
         </div>
 
         {/* Actions */}
@@ -130,7 +137,7 @@ export default function PaymentPopup({ booking, onPaid, onDismiss }) {
               </>
             ) : (
               <>
-                <CreditCard size={15} /> Pay Now — {formatPrice(booking.amount)}
+                <CreditCard size={15} /> Pay Now — {formatPrice(finalPayable)}
               </>
             )}
           </button>

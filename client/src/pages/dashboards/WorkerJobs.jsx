@@ -215,7 +215,7 @@ export default function WorkerJobs() {
                   </div>
                   <div className="mt-2 text-base">{b.service?.name}</div>
                   <div className="mt-1 text-xs text-ink/60">
-                    {formatPrice(b.amount)} · {b.type}
+                    {formatPrice(b.finalPayableAmount ?? b.amount)} · {b.type}
                   </div>
 
                   {/* Countdown for new requests */}

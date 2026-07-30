@@ -214,7 +214,10 @@ export default function BookingConfirming() {
           <div className="space-y-3 p-6">
             <Row label="Booking" value={booking.code} />
             <Row label="Service" value={booking.service?.name || '—'} />
-            <Row label="Amount" value={formatPrice(booking.amount)} />
+            <Row label="Amount" value={formatPrice(booking.finalPayableAmount ?? booking.amount)} />
+            {booking.discountAmount > 0 && (
+              <Row label="Discount" value={`-${formatPrice(booking.discountAmount)}`} />
+            )}
             {booking.hours ? <Row label="Hours" value={`${booking.hours} hr`} /> : null}
           </div>
 

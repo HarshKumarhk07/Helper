@@ -143,7 +143,7 @@ export default function BookingRequestModal() {
 
         <div className="space-y-2 rounded-2xl bg-sand/40 p-4 text-sm">
           <Row label="Booking" value={current.code} />
-          <Row label="Amount" value={formatPrice(current.amount)} />
+          <Row label="Amount" value={formatPrice(current.finalPayableAmount ?? current.amount)} />
           <Row
             label="When"
             value={current.scheduledAt ? formatDateTime(current.scheduledAt) : 'As soon as possible'}

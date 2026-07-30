@@ -232,6 +232,9 @@ export const createBooking = asyncHandler(async (req, res) => {
 
   let discountAmount = 0;
   let appliedCouponCode = null;
+  let appliedCouponId = null;
+  let appliedCouponType = null;
+  let finalPayableAmount = finalAmount;
 
   if (req.body.couponCode) {
     const coupon = await Coupon.findOne({ code: String(req.body.couponCode).toUpperCase() });
@@ -249,8 +252,10 @@ export const createBooking = asyncHandler(async (req, res) => {
     }
     
     discountAmount = ev.discount;
-    finalAmount = ev.finalAmount;
+    finalPayableAmount = ev.finalAmount;
     appliedCouponCode = coupon.code;
+    appliedCouponId = coupon._id;
+    appliedCouponType = coupon.discountType;
   }
 
   const booking = await Booking.create({
@@ -260,9 +265,12 @@ export const createBooking = asyncHandler(async (req, res) => {
     type,
     scheduledAt: type === BOOKING_TYPE.SCHEDULED ? new Date(scheduledAt) : null,
     address: addressSnapshot,
-    amount: finalAmount,
+    amount: finalAmount, // Original pre-discount amount
+    finalPayableAmount: finalPayableAmount,
     hours: bookedHours,
     couponCode: appliedCouponCode,
+    couponId: appliedCouponId,
+    couponType: appliedCouponType,
     discountAmount: discountAmount,
     paymentMode: PAYMENT_MODE.ONLINE,
     notes: notes || '',

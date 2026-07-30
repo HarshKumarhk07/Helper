@@ -335,7 +335,7 @@ export default function AdminWorkerDetail() {
                       </div>
                     </div>
                     <div className="text-right text-sm font-semibold tabular-nums">
-                      {formatPrice(b.amount)}
+                      {formatPrice(b.finalPayableAmount ?? b.amount)}
                     </div>
                   </div>
                 ))}

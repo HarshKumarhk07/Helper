@@ -553,7 +553,7 @@ export default function AdminDashboard() {
                           <div className="text-xs text-ink/60">{booking.service?.name}</div>
                         </div>
                         <div className="text-right">
-                          <div className="font-bold">{formatPrice(booking.amount)}</div>
+                          <div className="font-bold">{formatPrice(booking.finalPayableAmount ?? booking.amount)}</div>
                           <div className="text-xs text-ink/60 uppercase">{booking.status}</div>
                         </div>
                       </div>
