@@ -134,6 +134,8 @@ function PageFallback() {
 
 export default function App() {
   const { user } = useAuth();
+  const location = useLocation();
+  const isNavView = location.pathname.endsWith('/nav') || location.pathname.includes('/track/');
 
   return (
     <div className="flex min-h-screen flex-col bg-sand text-ink">
@@ -141,8 +143,8 @@ export default function App() {
       {/* Mounted at app level (not just /worker/*) so a booking request reaches
           the worker wherever they are in the app — storefront included. */}
       {user?.role === 'worker' && <BookingRequestModal />}
-      <Navbar />
-      <main className="flex-1 pt-16 md:pt-24 bg-paper">
+      {!isNavView && <Navbar />}
+      <main className={`flex-1 ${!isNavView ? 'pt-16 md:pt-24' : ''} bg-paper`}>
         <Suspense fallback={<PageFallback />}>
           <Routes>
             <Route path="/" element={<Home />} />
@@ -275,7 +277,7 @@ export default function App() {
           </Routes>
         </Suspense>
       </main>
-      <Footer />
+      {!isNavView && <Footer />}
     </div>
   );
 }
