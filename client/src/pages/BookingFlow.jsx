@@ -80,6 +80,7 @@ export default function BookingFlow() {
   const [addressMode, setAddressMode] = useState('current');
   const [detectingLocation, setDetectingLocation] = useState(false);
   const [addressError, setAddressError] = useState('');
+  const [prevBasePrice, setPrevBasePrice] = useState(0);
   // True when the user picked "Use Current Location" from the picker (not the
   // address form). Submission then uses the inline newAddress payload built
   // from reverse-geocoding instead of an addressId.
@@ -318,6 +319,20 @@ export default function BookingFlow() {
     ? selectedWorker.serviceOffering.amount
     : service?.price || 0;
   const effectiveTotal = Math.max(0, effectiveBasePrice - discount);
+
+  useEffect(() => {
+    if (effectiveBasePrice > 0 && prevBasePrice === 0) {
+      setPrevBasePrice(effectiveBasePrice);
+    } else if (effectiveBasePrice > 0 && prevBasePrice > 0 && effectiveBasePrice !== prevBasePrice) {
+      if (appliedCoupon) {
+        setAppliedCoupon(null);
+        setDiscount(0);
+        setCouponCode('');
+        toast.error('Service price changed. Please re-apply your coupon.');
+      }
+      setPrevBasePrice(effectiveBasePrice);
+    }
+  }, [effectiveBasePrice, prevBasePrice, appliedCoupon]);
 
   // Variable-priced pro selected → this is a quote request, not an instant book.
   const isQuoteMode =

@@ -393,12 +393,14 @@ export default function AdminCoupons() {
                     <div className="text-xs text-ink/60 uppercase tracking-widest mb-1">Status</div>
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-bold ${
-                        coupon.isActive
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-red-100 text-red-700'
+                        !coupon.isActive
+                          ? 'bg-red-100 text-red-700'
+                          : new Date(coupon.expiryDate) < new Date()
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : 'bg-green-100 text-green-700'
                       }`}
                     >
-                      {coupon.isActive ? 'Active' : 'Inactive'}
+                      {!coupon.isActive ? 'Inactive' : new Date(coupon.expiryDate) < new Date() ? 'Expired' : 'Active'}
                     </span>
                   </div>
                   <div className="flex justify-end gap-2">
