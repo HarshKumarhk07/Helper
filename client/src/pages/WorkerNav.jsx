@@ -78,6 +78,7 @@ export default function WorkerNav() {
   const [loading, setLoading] = useState(true);
   const [working, setWorking] = useState(false);
   const [sheetExpanded, setSheetExpanded] = useState(true);
+  const [pinPrompt, setPinPrompt] = useState(null);
 
   // ── Local GPS position for the worker marker ─────────────────────────────
   // The server broadcasts the worker's location back to the booking room, but
@@ -245,6 +246,12 @@ export default function WorkerNav() {
   ]);
 
   // ── Actions ──────────────────────────────────────────────────────────────
+  const requestPin = (type) => {
+    return new Promise((resolve) => {
+      setPinPrompt({ type, resolve });
+    });
+  };
+
   const handleAccept = async () => {
     setWorking(true);
     try {
@@ -273,7 +280,7 @@ export default function WorkerNav() {
   };
 
   const handleStart = async () => {
-    const pin = window.prompt('Enter the 6-digit Start PIN from the customer:');
+    const pin = await requestPin('start');
     if (!pin) return;
     setWorking(true);
     try {
@@ -288,11 +295,11 @@ export default function WorkerNav() {
   };
 
   const handleComplete = async () => {
-    if (!booking?.endPin) {
+    if (!booking?.hasEndPin) {
       toast.error('End PIN is not available for this booking yet');
       return;
     }
-    const pin = window.prompt('Enter the 6-digit End PIN from the customer:');
+    const pin = await requestPin('end');
     if (!pin) return;
     setWorking(true);
     try {
@@ -556,6 +563,62 @@ export default function WorkerNav() {
           )}
         </div>
       </div>
+
+      {/* ── Custom PIN Prompt Modal ── */}
+      {pinPrompt && (
+        <div className="fixed inset-0 z-[500] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-3xl bg-[#0f172a] p-6 shadow-2xl ring-1 ring-white/10">
+            <h3 className="text-lg font-semibold text-paper">
+              {pinPrompt.type === 'start' ? 'Start Job' : 'Complete Job'}
+            </h3>
+            <p className="mt-2 text-sm text-paper/70">
+              {pinPrompt.type === 'start'
+                ? 'Enter the 6-digit Start PIN from the customer to begin the service.'
+                : 'Enter the 6-digit End PIN from the customer to complete the service.'}
+            </p>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                pinPrompt.resolve(formData.get('pin'));
+                setPinPrompt(null);
+              }}
+              className="mt-5"
+            >
+              <input
+                autoFocus
+                name="pin"
+                type="text"
+                maxLength={6}
+                placeholder="000000"
+                className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-center text-2xl font-bold tracking-[0.5em] text-paper placeholder-white/20 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+                required
+                pattern="\d{6}"
+                title="6-digit PIN"
+                autoComplete="off"
+              />
+              <div className="mt-6 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    pinPrompt.resolve(null);
+                    setPinPrompt(null);
+                  }}
+                  className="flex-1 rounded-xl bg-white/5 px-4 py-2.5 text-sm font-medium hover:bg-white/10 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 rounded-xl bg-sky-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-sky-400 transition"
+                >
+                  Confirm
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
