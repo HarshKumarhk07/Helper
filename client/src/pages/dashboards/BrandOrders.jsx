@@ -1,0 +1,159 @@
+import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
+import { listBrandOrders } from '../../api/orders.js';
+import FadeUp from '../../components/ui/FadeUp.jsx';
+import DashboardShell from './DashboardShell.jsx';
+import { Package } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext.jsx';
+import { formatPrice } from '../../lib/booking.js';
+
+export default function BrandOrders() {
+  const { user } = useAuth();
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState(null);
+
+  const load = (p = 1) => {
+    setLoading(true);
+    listBrandOrders({ page: p, limit: 15 })
+      .then((res) => {
+        setOrders(res.orders || []);
+        setPagination(res.pagination || null);
+      })
+      .catch((err) => {
+        console.error('Failed to load brand orders', err);
+        toast.error('Failed to load orders');
+      })
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    load(page);
+  }, [page]);
+
+  return (
+    <DashboardShell eyebrow="Seller" title="Order History">
+      {loading && orders.length === 0 ? (
+        <div className="skeleton h-64 w-full" />
+      ) : (
+        <FadeUp>
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-xl font-bold tracking-tight">Your Sold Products</h2>
+            <div className="text-sm text-ink/60">
+              Showing {orders.length} {orders.length === 1 ? 'order' : 'orders'}
+            </div>
+          </div>
+
+          <div className="card-rounded overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-sand/50 text-xs uppercase tracking-widest text-ink/60">
+                <tr>
+                  <th className="p-4 font-normal">Order / Date</th>
+                  <th className="p-4 font-normal">Customer</th>
+                  <th className="p-4 font-normal">My Products Sold</th>
+                  <th className="p-4 font-normal text-right">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-ink/10">
+                {orders.length === 0 ? (
+                  <tr>
+                    <td colSpan="4" className="p-10 text-center text-ink/50">
+                      <Package size={24} className="mx-auto mb-2 opacity-50" />
+                      No orders found yet.
+                    </td>
+                  </tr>
+                ) : (
+                  orders.map((order) => {
+                    // Filter order items to only include products owned by this brand
+                    const myItems = order.items.filter(
+                      (item) => item.product && String(item.product.brand) === String(user._id)
+                    );
+
+                    return (
+                      <tr key={order._id} className="transition hover:bg-sand/30">
+                        <td className="p-4 align-top">
+                          <div className="font-mono text-xs font-semibold">#{order._id.slice(-8)}</div>
+                          <div className="text-[10px] text-ink/60 mt-1 uppercase tracking-widest">
+                            {new Date(order.placedAt || order.createdAt).toLocaleDateString()}
+                          </div>
+                        </td>
+                        <td className="p-4 align-top">
+                          <div className="font-medium">{order.user?.name || 'Unknown'}</div>
+                          <div className="text-[11px] text-ink/60">{order.user?.email}</div>
+                        </td>
+                        <td className="p-4 align-top">
+                          <div className="space-y-2">
+                            {myItems.map((item, i) => (
+                              <div key={i} className="flex items-center gap-2 text-xs">
+                                <div className="h-6 w-6 shrink-0 overflow-hidden rounded bg-sand">
+                                  {item.product?.image ? (
+                                    <img
+                                      src={item.product.image.startsWith('http') ? item.product.image : `/${item.product.image}`}
+                                      alt={item.product.name}
+                                      className="h-full w-full object-cover"
+                                      onError={(e) => { e.target.style.display = 'none'; }}
+                                    />
+                                  ) : (
+                                    <Package size={12} className="m-auto h-full text-ink/30" />
+                                  )}
+                                </div>
+                                <div>
+                                  <span className="font-medium">{item.quantity}x</span>{' '}
+                                  {item.product?.name || 'Unknown Product'}{' '}
+                                  <span className="text-ink/60">({formatPrice(item.price)})</span>
+                                </div>
+                              </div>
+                            ))}
+                            {myItems.length === 0 && (
+                              <span className="text-ink/40 text-[10px] italic">No items found</span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="p-4 text-right align-top">
+                          <span
+                            className={`inline-flex rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-widest ${
+                              order.status === 'delivered'
+                                ? 'bg-emerald-100 text-emerald-800'
+                                : order.status === 'cancelled'
+                                ? 'bg-red-100 text-red-800'
+                                : 'bg-amber-100 text-amber-800'
+                            }`}
+                          >
+                            {order.status}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {pagination && pagination.totalPages > 1 && (
+            <div className="mt-6 flex items-center justify-between text-sm">
+              <button
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={!pagination.hasPreviousPage || loading}
+                className="rounded-full border border-ink/10 px-4 py-2 font-medium tracking-wide transition hover:bg-ink hover:text-paper disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-ink"
+              >
+                Previous
+              </button>
+              <div className="font-mono text-xs opacity-60">
+                Page {pagination.page} of {pagination.totalPages}
+              </div>
+              <button
+                onClick={() => setPage((p) => p + 1)}
+                disabled={!pagination.hasNextPage || loading}
+                className="rounded-full border border-ink/10 px-4 py-2 font-medium tracking-wide transition hover:bg-ink hover:text-paper disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-ink"
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </FadeUp>
+      )}
+    </DashboardShell>
+  );
+}

@@ -12,6 +12,9 @@ export const getOrder = (id) =>
 export const listAllOrders = (params = {}) =>
   api.get('/orders', { params }).then((r) => r.data);
 
+export const listBrandOrders = (params = {}) =>
+  api.get('/orders/brand', { params }).then((r) => r.data);
+
 export const updateOrderStatus = (id, status) =>
   api.put(`/orders/${id}/status`, { status }).then((r) => r.data.order);
 

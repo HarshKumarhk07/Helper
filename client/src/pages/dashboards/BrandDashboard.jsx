@@ -3,6 +3,7 @@ import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
 import api from '../../api/axios.js';
 import { getMyEarnings, getMyEarningEntries } from '../../api/earnings.js';
+import { listBrandOrders } from '../../api/orders.js';
 import { 
   Package, DollarSign, ListOrdered, FileText, CheckCircle2, 
   AlertTriangle, Upload, LogOut, Loader2, ArrowRight, TrendingUp 
@@ -37,6 +38,15 @@ export default function BrandDashboard() {
         const products = prodRes.data.products || [];
         const lowStock = products.filter(p => p.stock <= 5).length;
 
+        // Fetch total brand orders
+        let totalOrdersCount = 0;
+        try {
+          const orderRes = await listBrandOrders({ limit: 1 });
+          totalOrdersCount = orderRes.pagination?.totalRecords || 0;
+        } catch (err) {
+          console.error('Failed to load brand orders count', err);
+        }
+
         // Fetch brand-specific earnings
         let totalEarningsSum = 0;
         let brandEarnings = [];
@@ -52,7 +62,7 @@ export default function BrandDashboard() {
 
         setStats({
           totalProducts: products.length,
-          totalOrders: 0,
+          totalOrders: totalOrdersCount,
           totalEarnings: Math.round(totalEarningsSum * 100) / 100,
           lowStockCount: lowStock,
         });
@@ -120,7 +130,7 @@ export default function BrandDashboard() {
           </div>
 
           {/* Cards metrics */}
-          <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 mb-10">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-10">
             <div className="p-6 bg-white/80 border border-ink/5 rounded-2xl backdrop-blur-md">
               <div className="flex items-center justify-between mb-4">
                 <span className="text-xs text-ink/65 uppercase tracking-wider">Catalog Products</span>
@@ -141,6 +151,17 @@ export default function BrandDashboard() {
               </div>
               <div className="text-3xl font-bold tracking-tight">₹{stats.totalEarnings}</div>
               <p className="text-[10px] text-ink/50 mt-1">Platform commissions deducted automatically</p>
+            </div>
+
+            <div className="p-6 bg-white/80 border border-ink/5 rounded-2xl backdrop-blur-md">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-xs text-ink/65 uppercase tracking-wider">Total Orders</span>
+                <div className="p-2 rounded-lg bg-blue-500/10 text-blue-600">
+                  <ListOrdered size={18} />
+                </div>
+              </div>
+              <div className="text-3xl font-bold tracking-tight">{stats.totalOrders}</div>
+              <p className="text-[10px] text-ink/50 mt-1">Orders containing your products</p>
             </div>
 
             <div className="p-6 bg-[#1a1a1a] text-paper border border-[#1a1a1a] rounded-2xl">
@@ -189,17 +210,25 @@ export default function BrandDashboard() {
             {/* Quick Actions Inventory */}
             <div className="p-6 bg-white/80 border border-ink/5 rounded-3xl backdrop-blur-md flex flex-col justify-between">
               <div>
-                <h3 className="font-semibold text-ink text-sm mb-4">Inventory Operations</h3>
+                <h3 className="font-semibold text-ink text-sm mb-4">Store Management</h3>
                 <p className="text-xs text-ink/75 leading-relaxed mb-6">
-                  Add, update, or decommission items inside your digital catalogue. Ensure high quality graphics, accurate pricing, and correct inventory tracking to avoid order cancellations.
+                  Add, update, or decommission items inside your digital catalogue, and track all incoming customer orders for your products.
                 </p>
               </div>
-              <Link
-                to="/brand/products"
-                className="w-full inline-flex items-center justify-center gap-2 bg-ink text-paper rounded-full py-3.5 text-xs font-bold uppercase tracking-widest hover:bg-[#13294B] transition-all hover:shadow-lg"
-              >
-                Go to Product Catalogue <ArrowRight size={14} />
-              </Link>
+              <div className="space-y-3">
+                <Link
+                  to="/brand/orders"
+                  className="w-full inline-flex items-center justify-center gap-2 border border-ink/10 text-ink rounded-full py-3.5 text-xs font-bold uppercase tracking-widest hover:bg-ink/5 transition-all"
+                >
+                  View Order History <ArrowRight size={14} />
+                </Link>
+                <Link
+                  to="/brand/products"
+                  className="w-full inline-flex items-center justify-center gap-2 bg-ink text-paper rounded-full py-3.5 text-xs font-bold uppercase tracking-widest hover:bg-[#13294B] transition-all hover:shadow-lg"
+                >
+                  Manage Product Catalogue <Package size={14} />
+                </Link>
+              </div>
             </div>
           </div>
         </div>

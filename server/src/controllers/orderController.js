@@ -160,6 +160,48 @@ export const listMyOrders = asyncHandler(async (req, res) => {
   res.json({ orders });
 });
 
+export const listBrandOrders = asyncHandler(async (req, res) => {
+  const page = Math.max(1, parseInt(req.query.page) || 1);
+  const limit = Math.max(1, Math.min(100, parseInt(req.query.limit) || 20));
+  const skip = (page - 1) * limit;
+
+  // Find all products owned by this brand
+  const myProducts = await Product.find({ brand: req.user._id }).select('_id');
+  const productIds = myProducts.map((p) => p._id);
+
+  // Find orders containing these products (only online/paid or COD)
+  const filter = {
+    'items.product': { $in: productIds },
+    $or: [
+      { paymentMode: { $ne: 'online' } },
+      { paymentStatus: { $in: ['paid', 'refunded'] } }
+    ]
+  };
+
+  const totalRecords = await Order.countDocuments(filter);
+  const totalPages = Math.ceil(totalRecords / limit);
+
+  const orders = await Order.find(filter)
+    .populate('user', 'name email')
+    .populate('items.product', 'name slug image price brand')
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit);
+
+  res.json({
+    orders,
+    pagination: {
+      page,
+      limit,
+      skip,
+      totalPages,
+      totalRecords,
+      hasNextPage: page < totalPages,
+      hasPreviousPage: page > 1,
+    }
+  });
+});
+
 // Customer-initiated cancellation. Allowed only while the order is still in
 // 'placed' — once the team starts processing/shipping, the customer must
 // contact support to cancel.

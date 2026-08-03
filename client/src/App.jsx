@@ -94,6 +94,7 @@ const AdminSupport = lazy(() => import('./pages/dashboards/AdminSupport.jsx'));
 const AdminWallet = lazy(() => import('./pages/dashboards/AdminWallet.jsx'));
 const BrandDashboard = lazy(() => import('./pages/dashboards/BrandDashboard.jsx'));
 const BrandProducts = lazy(() => import('./pages/dashboards/BrandProducts.jsx'));
+const BrandOrders = lazy(() => import('./pages/dashboards/BrandOrders.jsx'));
 const BrandKyc = lazy(() => import('./pages/dashboards/BrandKyc.jsx'));
 const BrandPricing = lazy(() => import('./pages/BrandPricing.jsx'));
 
@@ -227,6 +228,7 @@ export default function App() {
               <Route element={<ProtectedRoute roles={['brand', 'admin']} />}>
                 <Route path="/brand" element={<BrandDashboard />} />
                 <Route path="/brand/products" element={<BrandProducts />} />
+                <Route path="/brand/orders" element={<BrandOrders />} />
                 <Route path="/brand/kyc" element={<BrandKyc />} />
               </Route>
 
