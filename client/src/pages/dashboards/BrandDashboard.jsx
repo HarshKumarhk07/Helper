@@ -39,15 +39,7 @@ export default function BrandDashboard() {
         // Fetch brand-specific earnings
         let totalEarningsSum = 0;
         let brandEarnings = [];
-        try {
-          const earningRes = await api.get('/payouts/earnings');
-          brandEarnings = (earningRes.data.earnings || []).filter(
-            e => String(e.worker?._id || e.worker) === String(user._id)
-          );
-          totalEarningsSum = brandEarnings.reduce((sum, e) => sum + (e.netAmount || 0), 0);
-        } catch {
-          // earnings endpoint may not be accessible for brand — ignore
-        }
+        // TODO: Implement backend endpoint for brand earnings and orders
 
         setStats({
           totalProducts: products.length,
