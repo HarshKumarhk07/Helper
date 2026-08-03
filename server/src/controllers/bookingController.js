@@ -1136,6 +1136,7 @@ export const getWorkerEarningEntries = asyncHandler(async (req, res) => {
       select: 'code service amount completedAt',
       populate: { path: 'service', select: 'name' },
     })
+    .populate('order', 'totalAmount placedAt')
     .sort({ completedAt: -1 })
     .limit(Math.min(Number(limit) || 100, 500));
   res.json({ entries });

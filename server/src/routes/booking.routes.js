@@ -32,8 +32,8 @@ const router = Router();
 
 router.use(requireAuth);
 
-router.get('/worker/earnings', requireRole(ROLES.WORKER), getWorkerEarnings);
-router.get('/worker/earnings/entries', requireRole(ROLES.WORKER), getWorkerEarningEntries);
+router.get('/worker/earnings', requireRole(ROLES.WORKER, ROLES.BRAND), getWorkerEarnings);
+router.get('/worker/earnings/entries', requireRole(ROLES.WORKER, ROLES.BRAND), getWorkerEarningEntries);
 router.post('/', validate(createBookingSchema), createBooking);
 router.post('/quote-request', createQuoteRequest);
 router.get('/mine', listMyBookings);

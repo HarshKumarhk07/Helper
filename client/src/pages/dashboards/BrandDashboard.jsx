@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
 import api from '../../api/axios.js';
+import { getMyEarnings, getMyEarningEntries } from '../../api/earnings.js';
 import { 
   Package, DollarSign, ListOrdered, FileText, CheckCircle2, 
   AlertTriangle, Upload, LogOut, Loader2, ArrowRight, TrendingUp 
@@ -39,7 +40,15 @@ export default function BrandDashboard() {
         // Fetch brand-specific earnings
         let totalEarningsSum = 0;
         let brandEarnings = [];
-        // TODO: Implement backend endpoint for brand earnings and orders
+        try {
+          const earningRes = await getMyEarnings();
+          totalEarningsSum = earningRes.totals.net || 0;
+          
+          const entries = await getMyEarningEntries({ limit: 5 });
+          brandEarnings = entries || [];
+        } catch (err) {
+          console.error('Failed to load brand earnings', err);
+        }
 
         setStats({
           totalProducts: products.length,
@@ -162,7 +171,7 @@ export default function BrandDashboard() {
                   {recentEarnings.map((item) => (
                     <div key={item._id} className="py-3 flex justify-between items-center text-xs">
                       <div>
-                        <div className="font-medium text-ink">Order ID: #{item.order?.slice(-8)}</div>
+                        <div className="font-medium text-ink">Order ID: #{String(item.order?._id || item.order)?.slice(-8)}</div>
                         <div className="text-[10px] text-ink/50 mt-0.5">
                           {new Date(item.completedAt).toLocaleDateString()} · Comm: {Math.round(item.commissionRate * 100)}%
                         </div>
