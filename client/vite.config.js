@@ -24,8 +24,9 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          // Pull the heaviest libs into their own vendor chunks so they only
-          // load on pages that actually use them.
+          // React core and routing
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          // Heavy libraries
           leaflet: ['leaflet', 'react-leaflet'],
           charts: ['chart.js', 'react-chartjs-2'],
           motion: ['framer-motion'],
