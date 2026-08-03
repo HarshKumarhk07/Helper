@@ -4,6 +4,7 @@ import Navbar from './components/layout/Navbar.jsx';
 import { useAuth } from './context/AuthContext.jsx';
 import BookingRequestModal from './components/booking/BookingRequestModal.jsx';
 import Footer from './components/layout/Footer.jsx';
+import ErrorBoundary from './components/ErrorBoundary.jsx';
 
 // Route-change scroll behavior:
 //  - first paint / browser reload → leave alone (let the browser restore scroll)
@@ -145,137 +146,139 @@ export default function App() {
       {user?.role === 'worker' && <BookingRequestModal />}
       {!isNavView && <Navbar />}
       <main className={`flex-1 ${!isNavView ? 'pt-16 md:pt-24' : ''} bg-paper`}>
-        <Suspense fallback={<PageFallback />}>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/join" element={<JoinUs />} />
-            <Route path="/join/apply" element={<JoinApply />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/terms" element={<TermsAndConditions />} />
-            <Route path="/privacy" element={<PrivacyPolicy />} />
-            <Route path="/about" element={<AboutUs />} />
-            {/* [CAR-TRIPS DISABLED] <Route path="/trips" element={<CarTripsBrowse />} /> */}
+        <ErrorBoundary>
+          <Suspense fallback={<PageFallback />}>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/join" element={<JoinUs />} />
+              <Route path="/join/apply" element={<JoinApply />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/terms" element={<TermsAndConditions />} />
+              <Route path="/privacy" element={<PrivacyPolicy />} />
+              <Route path="/about" element={<AboutUs />} />
+              {/* [CAR-TRIPS DISABLED] <Route path="/trips" element={<CarTripsBrowse />} /> */}
 
-            <Route path="/services" element={<ServicesIndex />} />
-            <Route path="/services/:id" element={<ServiceDetail />} />
-            <Route path="/categories" element={<CategoriesIndex />} />
-            <Route path="/categories/:slug" element={<CategoryDetail />} />
-            <Route path="/products" element={<ProductsIndex />} />
-            <Route path="/products/:id" element={<ProductDetail />} />
-            <Route
-              path="/book/:serviceId"
-              element={
-                <ProtectedRoute>
-                  <BookingFlow />
-                </ProtectedRoute>
-              }
-            />
-            {/* "Confirming your booking…" — shown right after payment while the
-                professional accepts/rejects, with countdown + Change Worker. */}
-            <Route
-              path="/booking/:id/confirming"
-              element={
-                <ProtectedRoute>
-                  <BookingConfirming />
-                </ProtectedRoute>
-              }
-            />
+              <Route path="/services" element={<ServicesIndex />} />
+              <Route path="/services/:id" element={<ServiceDetail />} />
+              <Route path="/categories" element={<CategoriesIndex />} />
+              <Route path="/categories/:slug" element={<CategoryDetail />} />
+              <Route path="/products" element={<ProductsIndex />} />
+              <Route path="/products/:id" element={<ProductDetail />} />
+              <Route
+                path="/book/:serviceId"
+                element={
+                  <ProtectedRoute>
+                    <BookingFlow />
+                  </ProtectedRoute>
+                }
+              />
+              {/* "Confirming your booking…" — shown right after payment while the
+                  professional accepts/rejects, with countdown + Change Worker. */}
+              <Route
+                path="/booking/:id/confirming"
+                element={
+                  <ProtectedRoute>
+                    <BookingConfirming />
+                  </ProtectedRoute>
+                }
+              />
 
-            <Route path="/cart" element={<CartPage />} />
-            <Route path="/favorites" element={<Favorites />} />
-            <Route
-              path="/checkout"
-              element={
-                <ProtectedRoute>
-                  <CheckoutPage />
-                </ProtectedRoute>
-              }
-            />
+              <Route path="/cart" element={<CartPage />} />
+              <Route path="/favorites" element={<Favorites />} />
+              <Route
+                path="/checkout"
+                element={
+                  <ProtectedRoute>
+                    <CheckoutPage />
+                  </ProtectedRoute>
+                }
+              />
 
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <RoleRedirect />
-                </ProtectedRoute>
-              }
-            />
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <RoleRedirect />
+                  </ProtectedRoute>
+                }
+              />
 
-            <Route element={<ProtectedRoute roles={['admin']} />}>
-              <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/admin/users" element={<AdminUsers />} />
-              <Route path="/admin/workers" element={<AdminWorkers />} />
-              {/* [CAR-TRIPS DISABLED] <Route path="/admin/car-kyc" element={<AdminCarKycQueue />} /> */}
-              <Route path="/admin/workers/:id" element={<AdminWorkerDetail />} />
-            </Route>
+              <Route element={<ProtectedRoute roles={['admin']} />}>
+                <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/admin/users" element={<AdminUsers />} />
+                <Route path="/admin/workers" element={<AdminWorkers />} />
+                {/* [CAR-TRIPS DISABLED] <Route path="/admin/car-kyc" element={<AdminCarKycQueue />} /> */}
+                <Route path="/admin/workers/:id" element={<AdminWorkerDetail />} />
+              </Route>
 
-            <Route element={<ProtectedRoute roles={['admin']} />}>
-              <Route path="/admin/categories" element={<AdminCategories />} />
-              <Route path="/admin/locations" element={<AdminLocations />} />
-              <Route path="/admin/brand-categories" element={<AdminBrandCategories />} />
-              {/* /admin/product-categories now redirects to brand-categories — same model */}
-              <Route path="/admin/product-categories" element={<AdminBrandCategories />} />
-            </Route>
+              <Route element={<ProtectedRoute roles={['admin']} />}>
+                <Route path="/admin/categories" element={<AdminCategories />} />
+                <Route path="/admin/locations" element={<AdminLocations />} />
+                <Route path="/admin/brand-categories" element={<AdminBrandCategories />} />
+                {/* /admin/product-categories now redirects to brand-categories — same model */}
+                <Route path="/admin/product-categories" element={<AdminBrandCategories />} />
+              </Route>
 
-            <Route path="/brand/pricing" element={<BrandPricing />} />
+              <Route path="/brand/pricing" element={<BrandPricing />} />
 
-            <Route element={<ProtectedRoute roles={['brand', 'admin']} />}>
-              <Route path="/brand" element={<BrandDashboard />} />
-              <Route path="/brand/products" element={<BrandProducts />} />
-              <Route path="/brand/kyc" element={<BrandKyc />} />
-            </Route>
+              <Route element={<ProtectedRoute roles={['brand', 'admin']} />}>
+                <Route path="/brand" element={<BrandDashboard />} />
+                <Route path="/brand/products" element={<BrandProducts />} />
+                <Route path="/brand/kyc" element={<BrandKyc />} />
+              </Route>
 
-            <Route element={<ProtectedRoute roles={['admin']} />}>
-              <Route path="/admin/bookings" element={<AdminBookings />} />
-              <Route path="/admin/orders" element={<AdminOrders />} />
-              <Route path="/admin/products" element={<AdminProducts />} />
-              <Route path="/admin/services" element={<AdminServices />} />
-              <Route path="/admin/coupons" element={<AdminCoupons />} />
-              <Route path="/admin/finance" element={<AdminFinance />} />
-              <Route path="/admin/payouts" element={<AdminPayouts />} />
-              <Route path="/admin/settings" element={<AdminSettings />} />
-              <Route path="/admin/support" element={<AdminSupport />} />
-              <Route path="/admin/support/:id" element={<SupportThread adminMode />} />
-              <Route path="/admin/wallet" element={<AdminWallet />} />
-              <Route path="/admin/audit-logs" element={<AdminAuditLogs />} />
-            </Route>
+              <Route element={<ProtectedRoute roles={['admin']} />}>
+                <Route path="/admin/bookings" element={<AdminBookings />} />
+                <Route path="/admin/orders" element={<AdminOrders />} />
+                <Route path="/admin/products" element={<AdminProducts />} />
+                <Route path="/admin/services" element={<AdminServices />} />
+                <Route path="/admin/coupons" element={<AdminCoupons />} />
+                <Route path="/admin/finance" element={<AdminFinance />} />
+                <Route path="/admin/payouts" element={<AdminPayouts />} />
+                <Route path="/admin/settings" element={<AdminSettings />} />
+                <Route path="/admin/support" element={<AdminSupport />} />
+                <Route path="/admin/support/:id" element={<SupportThread adminMode />} />
+                <Route path="/admin/wallet" element={<AdminWallet />} />
+                <Route path="/admin/audit-logs" element={<AdminAuditLogs />} />
+              </Route>
 
-            <Route element={<ProtectedRoute roles={['worker', 'admin']} />}>
-              <Route path="/worker" element={<WorkerDashboard />} />
-              <Route path="/worker/jobs" element={<WorkerJobs />} />
-              <Route path="/worker/earnings" element={<WorkerEarnings />} />
-              <Route path="/worker/kyc" element={<WorkerKyc />} />
-              {/* [CAR-TRIPS DISABLED] <Route path="/worker/car-service" element={<WorkerCarService />} /> */}
-              <Route path="/worker/services" element={<WorkerServices />} />
-              <Route path="/worker/availability" element={<WorkerAvailability />} />
-              <Route path="/worker/jobs/:bookingId/nav" element={<WorkerNav />} />
-              <Route path="/worker/promote" element={<WorkerPromote />} />
-            </Route>
+              <Route element={<ProtectedRoute roles={['worker', 'admin']} />}>
+                <Route path="/worker" element={<WorkerDashboard />} />
+                <Route path="/worker/jobs" element={<WorkerJobs />} />
+                <Route path="/worker/earnings" element={<WorkerEarnings />} />
+                <Route path="/worker/kyc" element={<WorkerKyc />} />
+                {/* [CAR-TRIPS DISABLED] <Route path="/worker/car-service" element={<WorkerCarService />} /> */}
+                <Route path="/worker/services" element={<WorkerServices />} />
+                <Route path="/worker/availability" element={<WorkerAvailability />} />
+                <Route path="/worker/jobs/:bookingId/nav" element={<WorkerNav />} />
+                <Route path="/worker/promote" element={<WorkerPromote />} />
+              </Route>
 
-            <Route element={<ProtectedRoute />}>
-              <Route path="/me" element={<UserDashboard />} />
-              <Route path="/me/bookings" element={<UserBookings />} />
-              {/* [CAR-TRIPS DISABLED] <Route path="/me/car-bookings" element={<CustomerCarBookings />} /> */}
-              <Route path="/me/reviews" element={<UserReviews />} />
-              <Route path="/me/orders" element={<UserOrders />} />
-              <Route path="/me/orders/:id" element={<UserOrderDetail />} />
-              <Route path="/me/addresses" element={<UserAddresses />} />
-              <Route path="/me/coupons" element={<UserCoupons />} />
-              <Route path="/me/support" element={<UserSupport />} />
-              <Route path="/me/support/:id" element={<SupportThread />} />
-              <Route path="/me/wallet" element={<UserWallet />} />
-              <Route path="/me/kyc" element={<UserKyc />} />
-              <Route path="/me/profile-edit" element={<ProfileEdit />} />
-              <Route path="/track/:bookingId" element={<TrackBooking />} />
-            </Route>
+              <Route element={<ProtectedRoute />}>
+                <Route path="/me" element={<UserDashboard />} />
+                <Route path="/me/bookings" element={<UserBookings />} />
+                {/* [CAR-TRIPS DISABLED] <Route path="/me/car-bookings" element={<CustomerCarBookings />} /> */}
+                <Route path="/me/reviews" element={<UserReviews />} />
+                <Route path="/me/orders" element={<UserOrders />} />
+                <Route path="/me/orders/:id" element={<UserOrderDetail />} />
+                <Route path="/me/addresses" element={<UserAddresses />} />
+                <Route path="/me/coupons" element={<UserCoupons />} />
+                <Route path="/me/support" element={<UserSupport />} />
+                <Route path="/me/support/:id" element={<SupportThread />} />
+                <Route path="/me/wallet" element={<UserWallet />} />
+                <Route path="/me/kyc" element={<UserKyc />} />
+                <Route path="/me/profile-edit" element={<ProfileEdit />} />
+                <Route path="/track/:bookingId" element={<TrackBooking />} />
+              </Route>
 
-            <Route path="/404" element={<NotFound />} />
-            <Route path="*" element={<Navigate to="/404" replace />} />
-          </Routes>
-        </Suspense>
+              <Route path="/404" element={<NotFound />} />
+              <Route path="*" element={<Navigate to="/404" replace />} />
+            </Routes>
+          </Suspense>
+        </ErrorBoundary>
       </main>
       {!isNavView && <Footer />}
     </div>
