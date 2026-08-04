@@ -3,7 +3,7 @@ import toast from 'react-hot-toast';
 import { listBrandOrders, updateOrderStatus } from '../../api/orders.js';
 import FadeUp from '../../components/ui/FadeUp.jsx';
 import DashboardShell from './DashboardShell.jsx';
-import { Package } from 'lucide-react';
+import { Package, Eye } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { formatPrice } from '../../lib/booking.js';
 
@@ -36,7 +36,11 @@ export default function BrandOrders() {
   const handleStatusChange = async (id, newStatus) => {
     try {
       const updated = await updateOrderStatus(id, newStatus);
-      setOrders(current => current.map(order => order._id === id ? { ...order, status: updated.status } : order));
+      setOrders(current => current.map(order => 
+        order._id === id 
+          ? { ...order, ...updated, user: order.user, items: order.items } 
+          : order
+      ));
       toast.success(`Order status updated to ${newStatus}`);
     } catch (err) {
       toast.error(err.response?.data?.error || 'Failed to update order status');
@@ -86,13 +90,18 @@ export default function BrandOrders() {
                         <td className="p-4 align-top">
                           <button 
                             onClick={() => setSelectedOrder({ order, myItems })}
-                            className="font-mono text-xs font-semibold hover:underline text-ink focus:outline-none"
+                            className="group flex flex-col items-start focus:outline-none"
                           >
-                            #{order._id.slice(-8)}
+                            <span className="font-mono text-xs font-semibold group-hover:underline text-ink flex items-center gap-1.5">
+                              #{order._id.slice(-8)}
+                            </span>
+                            <span className="text-[10px] text-ink/60 mt-1 uppercase tracking-widest text-left">
+                              {new Date(order.placedAt || order.createdAt).toLocaleDateString()}
+                            </span>
+                            <span className="text-[10px] text-blue-600 mt-1.5 hover:underline flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity font-medium">
+                              <Eye size={12} /> View Details
+                            </span>
                           </button>
-                          <div className="text-[10px] text-ink/60 mt-1 uppercase tracking-widest">
-                            {new Date(order.placedAt || order.createdAt).toLocaleDateString()}
-                          </div>
                         </td>
                         <td className="p-4 align-top">
                           <div className="font-medium">{order.user?.name || 'Unknown'}</div>

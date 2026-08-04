@@ -248,6 +248,9 @@ export const cancelMyOrder = asyncHandler(async (req, res) => {
 
   notifyOrderStatus({ user: req.user, order, status: 'cancelled' });
 
+  await order.populate('user', 'name email');
+  await order.populate('items.product', 'name slug image price brand');
+
   res.json({ order });
 });
 
@@ -352,6 +355,9 @@ export const updateOrderStatus = asyncHandler(async (req, res) => {
     if (buyer) notifyOrderStatus({ user: buyer, order, status });
   }
 
+  await order.populate('user', 'name email');
+  await order.populate('items.product', 'name slug image price brand');
+
   res.json({ order });
 });
 
@@ -371,6 +377,9 @@ export const updateOrderNote = asyncHandler(async (req, res) => {
     resourceId: order._id,
     changes: { adminNote: { from: null, to: order.adminNote } },
   });
+
+  await order.populate('user', 'name email');
+  await order.populate('items.product', 'name slug image price brand');
 
   res.json({ order });
 });
