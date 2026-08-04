@@ -13,6 +13,7 @@ export default function BrandOrders() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState(null);
+  const [selectedOrder, setSelectedOrder] = useState(null);
 
   const load = (p = 1) => {
     setLoading(true);
@@ -35,7 +36,7 @@ export default function BrandOrders() {
   const handleStatusChange = async (id, newStatus) => {
     try {
       const updated = await updateOrderStatus(id, newStatus);
-      setOrders(current => current.map(order => order._id === id ? updated : order));
+      setOrders(current => current.map(order => order._id === id ? { ...order, status: updated.status } : order));
       toast.success(`Order status updated to ${newStatus}`);
     } catch (err) {
       toast.error(err.response?.data?.error || 'Failed to update order status');
@@ -83,7 +84,12 @@ export default function BrandOrders() {
                     return (
                       <tr key={order._id} className="transition hover:bg-sand/30">
                         <td className="p-4 align-top">
-                          <div className="font-mono text-xs font-semibold">#{order._id.slice(-8)}</div>
+                          <button 
+                            onClick={() => setSelectedOrder({ order, myItems })}
+                            className="font-mono text-xs font-semibold hover:underline text-ink focus:outline-none"
+                          >
+                            #{order._id.slice(-8)}
+                          </button>
                           <div className="text-[10px] text-ink/60 mt-1 uppercase tracking-widest">
                             {new Date(order.placedAt || order.createdAt).toLocaleDateString()}
                           </div>
@@ -171,6 +177,85 @@ export default function BrandOrders() {
             </div>
           )}
         </FadeUp>
+      )}
+
+      {selectedOrder && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-ink/70 px-4 py-12 backdrop-blur-sm" onClick={() => setSelectedOrder(null)}>
+          <div className="card-rounded w-full max-w-2xl border border-paper/10 bg-paper p-8 text-ink shadow-[0_30px_90px_rgba(0,0,0,0.35)]" onClick={e => e.stopPropagation()}>
+            <div className="flex items-start justify-between gap-4 border-b border-ink/10 pb-4 mb-6">
+              <div>
+                <div className="text-xs uppercase tracking-widest text-ink/60">Order Details</div>
+                <h3 className="heading-display mt-2 text-2xl text-ink">#{selectedOrder.order._id}</h3>
+              </div>
+              <button onClick={() => setSelectedOrder(null)} className="pill-btn text-xs">Close</button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div>
+                <h4 className="text-sm font-bold uppercase tracking-widest mb-3 text-ink">Customer</h4>
+                <div className="text-sm">
+                  <div className="font-medium">{selectedOrder.order.user?.name || 'Unknown User'}</div>
+                  <div className="text-ink/70">{selectedOrder.order.user?.email}</div>
+                  {selectedOrder.order.address && (
+                    <div className="mt-3 text-ink/80 text-sm leading-relaxed border-t border-ink/5 pt-3">
+                      <div className="font-medium text-ink mb-1 text-xs uppercase tracking-widest">Shipping Address:</div>
+                      {selectedOrder.order.address.line1}<br />
+                      {selectedOrder.order.address.line2 && <>{selectedOrder.order.address.line2}<br/></>}
+                      {selectedOrder.order.address.city}, {selectedOrder.order.address.state} {selectedOrder.order.address.pincode}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-bold uppercase tracking-widest mb-3 text-ink">Order Info</h4>
+                <div className="text-sm space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-ink/60">Status:</span>
+                    <span className="font-bold uppercase text-[10px] tracking-widest px-2 py-0.5 rounded bg-ink/5">{selectedOrder.order.status}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-ink/60">Date:</span>
+                    <span>{new Date(selectedOrder.order.placedAt || selectedOrder.order.createdAt).toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-ink/60">Payment:</span>
+                    <span className="uppercase text-[10px] tracking-widest font-bold">{selectedOrder.order.paymentMode}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-8 border-t border-ink/10 pt-6">
+              <h4 className="text-sm font-bold uppercase tracking-widest mb-4 text-ink">Your Items in this Order</h4>
+              <div className="space-y-4">
+                {selectedOrder.myItems.map((item, i) => (
+                  <div key={i} className="flex items-center gap-4 border border-ink/10 rounded-xl p-3">
+                    <div className="h-12 w-12 shrink-0 overflow-hidden rounded bg-sand">
+                      {item.product?.image ? (
+                        <img
+                          src={item.product.image.startsWith('http') ? item.product.image : `/${item.product.image}`}
+                          alt={item.product.name}
+                          className="h-full w-full object-cover"
+                          onError={(e) => { e.target.style.display = 'none'; }}
+                        />
+                      ) : (
+                        <Package size={20} className="m-auto h-full text-ink/30" />
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium text-sm">{item.product?.name || 'Unknown Product'}</div>
+                      <div className="text-xs text-ink/60">Qty: {item.quantity}</div>
+                    </div>
+                    <div className="font-medium text-sm">
+                      {formatPrice(item.price * item.quantity)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </DashboardShell>
   );
