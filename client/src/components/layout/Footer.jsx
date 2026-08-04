@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { getCategoryLink } from '../../lib/navigation.js';
 
 export default function Footer() {
   const year = new Date().getFullYear();
@@ -37,11 +38,11 @@ export default function Footer() {
           <div>
             <h4 className="text-[11px] font-bold uppercase tracking-widest text-paper/50 mb-6">SERVICES</h4>
             <ul className="space-y-4 text-sm text-paper/80 font-medium">
-              <li><Link to="/services" className="hover:text-brand transition-colors">All Services</Link></li>
-              <li><Link to="/services" className="hover:text-brand transition-colors">Home Repair & Maintenance</Link></li>
-              <li><Link to="/services" className="hover:text-brand transition-colors">Cleaning & Pest Control</Link></li>
-              <li><Link to="/services" className="hover:text-brand transition-colors">Appliance Repair</Link></li>
-              <li><Link to="/services" className="hover:text-brand transition-colors">Home Improvement</Link></li>
+              <li><Link to={getCategoryLink()} className="hover:text-brand transition-colors">All Services</Link></li>
+              <li><Link to={getCategoryLink('home-repair-maintenance')} className="hover:text-brand transition-colors">Home Repair & Maintenance</Link></li>
+              <li><Link to={getCategoryLink('cleaning-pest-control')} className="hover:text-brand transition-colors">Cleaning & Pest Control</Link></li>
+              <li><Link to={getCategoryLink('appliance-repair')} className="hover:text-brand transition-colors">Appliance Repair</Link></li>
+              <li><Link to={getCategoryLink('home-improvement')} className="hover:text-brand transition-colors">Home Improvement</Link></li>
             </ul>
           </div>
 

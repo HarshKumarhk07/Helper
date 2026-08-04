@@ -12,6 +12,7 @@ import { listProducts } from '../../api/products.js';
 import { listServices } from '../../api/services.js';
 import { listCategories } from '../../api/categories.js';
 import { mediaUrl } from '../../lib/catalogImage.js';
+import { getCategoryLink } from '../../lib/navigation.js';
 
 const NAV = [
   { to: '/services', label: 'Services', hasChevron: true },
@@ -352,7 +353,7 @@ export default function Navbar() {
                               {categories.map((cat) => (
                                 <Link
                                   key={cat._id}
-                                  to={`/categories/${cat.slug}`}
+                                  to={getCategoryLink(cat.slug)}
                                   onClick={() => setIsCategoriesDropdownOpen(false)}
                                   className="block text-xs font-semibold text-[#13294B]/80 hover:text-[#13294B] hover:translate-x-1 transition-all duration-200 py-1"
                                 >
@@ -424,7 +425,7 @@ export default function Navbar() {
                                 {Object.values(groupedServices).map((group) => (
                                   <div key={group.name} className="space-y-1.5 min-w-0">
                                     <Link
-                                      to={`/categories/${group.slug}`}
+                                      to={getCategoryLink(group.slug)}
                                       onClick={() => setIsServicesDropdownOpen(false)}
                                       className="text-[10px] font-bold uppercase tracking-widest text-ink/50 hover:text-brand transition-colors mb-1 block truncate"
                                     >
@@ -931,7 +932,7 @@ export default function Navbar() {
                                     categories.map((cat) => (
                                       <Link
                                         key={cat._id}
-                                        to={`/categories/${cat.slug}`}
+                                        to={getCategoryLink(cat.slug)}
                                         onClick={() => {
                                           setOpen(false);
                                           setMobileCategoriesOpen(false);

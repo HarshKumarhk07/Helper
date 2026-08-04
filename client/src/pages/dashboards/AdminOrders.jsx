@@ -307,18 +307,20 @@ export default function AdminOrders() {
                           Cancel Order
                         </button>
                       )}
-                      <button
-                        onClick={() => {
-                          if (selectedOrder.status !== 'cancelled') {
-                            toast.error('Please cancel the order first before issuing a refund.');
-                            return;
-                          }
-                          setRefundTarget(selectedOrder);
-                        }}
-                        className="w-full flex items-center justify-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50/50 px-4 py-2.5 text-[11px] uppercase tracking-widest font-bold text-blue-600 hover:bg-blue-100 hover:border-blue-300 transition-colors"
-                      >
-                        Issue Refund
-                      </button>
+                      {selectedOrder.status !== 'delivered' && (
+                        <button
+                          onClick={() => {
+                            if (selectedOrder.status !== 'cancelled') {
+                              toast.error('Please cancel the order first before issuing a refund.');
+                              return;
+                            }
+                            setRefundTarget(selectedOrder);
+                          }}
+                          className="w-full flex items-center justify-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50/50 px-4 py-2.5 text-[11px] uppercase tracking-widest font-bold text-blue-600 hover:bg-blue-100 hover:border-blue-300 transition-colors"
+                        >
+                          Issue Refund
+                        </button>
+                      )}
                     </div>
                   </div>
                 )}

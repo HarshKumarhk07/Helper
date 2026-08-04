@@ -15,6 +15,7 @@ import {
   Paintbrush
 } from 'lucide-react';
 import FadeUp from '../components/ui/FadeUp.jsx';
+import { getCategoryLink } from '../lib/navigation.js';
 
 /* ── Card data ── */
 const SERVICES_LIST = [
@@ -69,7 +70,7 @@ export default function SpacesWeSpecialize() {
           {/* CTA button — aligned bottom-right */}
           <FadeUp delay={0.1}>
             <Link
-              to="/services"
+              to={getCategoryLink()}
               className="inline-flex items-center gap-3 rounded-full bg-brand px-7 py-4 text-sm font-bold text-ink transition duration-300 hover:bg-brand-dark shadow-sm self-end"
             >
               <span>Explore all services</span>

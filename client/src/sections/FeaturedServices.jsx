@@ -18,15 +18,6 @@ export default function FeaturedServices() {
       .finally(() => setLoading(false));
   }, []);
 
-  const scroll = (direction) => {
-    if (containerRef.current) {
-      const scrollAmount = 330; // width of card + gap
-      containerRef.current.scrollBy({
-        left: direction === 'left' ? -scrollAmount : scrollAmount,
-        behavior: 'smooth'
-      });
-    }
-  };
 
   if (!loading && services.length === 0) return null;
 
@@ -70,15 +61,6 @@ export default function FeaturedServices() {
           </div>
         ) : (
           <div className="relative">
-            {/* Left Scroll Button */}
-            <button
-              onClick={() => scroll('left')}
-              className="hidden lg:flex absolute -left-5 top-1/2 -translate-y-1/2 z-10 h-10 w-10 items-center justify-center rounded-full bg-paper text-ink shadow-lg border border-ink/5 hover:scale-105 hover:bg-sand transition-all"
-              title="Scroll left"
-            >
-              <ChevronLeft size={20} className="text-[#13294B]" />
-            </button>
-
             {/* Horizontal Scrollable container */}
             <div
               ref={containerRef}
@@ -91,14 +73,6 @@ export default function FeaturedServices() {
               ))}
             </div>
 
-            {/* Right Scroll Button */}
-            <button
-              onClick={() => scroll('right')}
-              className="hidden lg:flex absolute -right-5 top-1/2 -translate-y-1/2 z-10 h-10 w-10 items-center justify-center rounded-full bg-paper text-ink shadow-lg border border-ink/5 hover:scale-105 hover:bg-sand transition-all"
-              title="Scroll right"
-            >
-              <ChevronRight size={20} className="text-[#13294B]" />
-            </button>
           </div>
         )}
       </div>

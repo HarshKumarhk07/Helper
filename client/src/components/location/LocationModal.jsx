@@ -9,10 +9,22 @@ export default function LocationModal() {
   const { modalOpen, closeLocationModal, setLocation } = useLocation();
   const [query, setQuery] = useState('');
   const [locations, setLocations] = useState([]);
+  const [recentLocations, setRecentLocations] = useState([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    try {
+      const stored = localStorage.getItem('recentLocations');
+      if (stored) setRecentLocations(JSON.parse(stored));
+    } catch (e) {}
+  }, [modalOpen]);
+
+  useEffect(() => {
     if (!modalOpen) return;
+    if (!query.trim()) {
+      setLocations([]);
+      return;
+    }
     setLoading(true);
     const delayDebounce = setTimeout(() => {
       api.get(`/locations?q=${encodeURIComponent(query)}`)
@@ -24,6 +36,12 @@ export default function LocationModal() {
   }, [query, modalOpen]);
 
   const handlePickLocation = (loc) => {
+    try {
+      const newRecent = [loc, ...recentLocations.filter(r => r._id !== loc._id)].slice(0, 5);
+      setRecentLocations(newRecent);
+      localStorage.setItem('recentLocations', JSON.stringify(newRecent));
+    } catch (e) {}
+
     setLocation({
       _id: loc._id,
       slug: loc.slug,
@@ -34,7 +52,14 @@ export default function LocationModal() {
     closeLocationModal();
   };
 
-  const filteredLocations = locations;
+  const handleRemoveRecent = (e, locId) => {
+    e.stopPropagation();
+    const newRecent = recentLocations.filter(r => r._id !== locId);
+    setRecentLocations(newRecent);
+    localStorage.setItem('recentLocations', JSON.stringify(newRecent));
+  };
+
+  const displayLocations = query.trim() ? locations : recentLocations;
 
   return (
     <AnimatePresence>
@@ -110,25 +135,43 @@ export default function LocationModal() {
                     <Loader2 size={16} className="animate-spin" /> Loading locations...
                   </div>
                 )}
-                {!loading && filteredLocations.length === 0 && (
+                {!loading && displayLocations.length === 0 && (
                   <div className="px-5 sm:px-8 py-6 text-sm text-ink/50">
-                    {query ? `No locations found matching "${query}".` : 'No active locations available.'}
+                    {query ? `No locations found matching "${query}".` : 'Search for a location above.'}
                   </div>
                 )}
-                {!loading && filteredLocations.map((loc) => (
-                  <button
+                {!loading && !query.trim() && recentLocations.length > 0 && (
+                  <div className="px-5 sm:px-8 pt-4 pb-2 text-xs font-semibold uppercase tracking-wider text-ink/40">
+                    Recent Searches
+                  </div>
+                )}
+                {!loading && displayLocations.map((loc) => (
+                  <div
                     key={loc._id}
-                    type="button"
-                    onClick={() => handlePickLocation(loc)}
-                    className="w-full text-left px-5 sm:px-8 py-3 flex items-start gap-3 hover:bg-sand transition border-b border-ink/5 last:border-b-0"
+                    className="flex items-center justify-between w-full border-b border-ink/5 last:border-b-0 hover:bg-sand transition"
                   >
-                    <MapPin size={18} className="mt-0.5 text-ink/40 shrink-0" />
-                    <div className="min-w-0">
-                      <div className="text-sm font-medium text-ink truncate">
-                        {loc.name}
+                    <button
+                      type="button"
+                      onClick={() => handlePickLocation(loc)}
+                      className="flex-1 text-left px-5 sm:px-8 py-3 flex items-start gap-3"
+                    >
+                      <MapPin size={18} className="mt-0.5 text-ink/40 shrink-0" />
+                      <div className="min-w-0">
+                        <div className="text-sm font-medium text-ink truncate">
+                          {loc.name}
+                        </div>
                       </div>
-                    </div>
-                  </button>
+                    </button>
+                    {!query.trim() && (
+                      <button
+                        onClick={(e) => handleRemoveRecent(e, loc._id)}
+                        className="px-5 sm:px-8 py-3 text-ink/40 hover:text-red-500 transition"
+                        title="Remove"
+                      >
+                        <X size={16} />
+                      </button>
+                    )}
+                  </div>
                 ))}
               </div>
             </motion.div>

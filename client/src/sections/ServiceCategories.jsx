@@ -8,6 +8,7 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import FadeUp from '../components/ui/FadeUp.jsx';
+import { getCategoryLink } from '../lib/navigation.js';
 
 // Static tiles for the "Browse by category" section — 5 new categories
 const CATEGORIES = [
@@ -66,7 +67,7 @@ export default function ServiceCategories() {
               </h2>
             </div>
             <Link
-              to="/services"
+              to={getCategoryLink()}
               className="inline-flex items-center gap-2 text-sm font-semibold text-ink/70 hover:text-ink transition group"
             >
               View all
@@ -84,7 +85,7 @@ export default function ServiceCategories() {
             return (
               <FadeUp key={cat.slug} delay={i * 0.06}>
                 <Link
-                  to={`/categories/${cat.slug}`}
+                  to={getCategoryLink(cat.slug)}
                   className="group block rounded-2xl border border-ink/8 bg-paper p-5 md:p-6 shadow-soft hover:shadow-card hover:border-ink/15 hover:-translate-y-1 transition-all duration-300"
                 >
                   <div

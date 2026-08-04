@@ -4,6 +4,7 @@ import { ArrowUpRight, Star } from 'lucide-react';
 import FadeUp from '../components/ui/FadeUp.jsx';
 import { listCategories } from '../api/categories.js';
 import { mediaUrl } from '../lib/catalogImage.js';
+import { getCategoryLink } from '../lib/navigation.js';
 
 const FALLBACK = [
   { name: 'Home Cleaning', description: 'For homes that deserve better' },
@@ -43,7 +44,7 @@ export default function OtherServices() {
           {rows.map((r, i) => (
             <FadeUp key={r.slug || r.name}>
               <Link
-                to={r.slug ? `/categories/${r.slug}` : '/services'}
+                to={getCategoryLink(r.slug)}
                 className="group flex items-center gap-5 py-6 transition hover:bg-sand/40"
               >
                 <span className="w-8 shrink-0 text-sm font-semibold text-ink/40">

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import FadeUp from '../components/ui/FadeUp.jsx';
 import { listCategories } from '../api/categories.js';
 import { mediaUrl, CATALOG_PLACEHOLDER_IMAGE } from '../lib/catalogImage.js';
+import { getCategoryLink } from '../lib/navigation.js';
 
 // Fallback imagery + copy if a category has no image / while loading.
 const FALLBACK = [
@@ -58,7 +59,7 @@ export default function WhatsIncluded() {
           {cards.map((c, i) => (
             <FadeUp key={c.slug || c.name} delay={Math.min(i * 0.05, 0.2)}>
               <Link
-                to={c.slug ? `/categories/${c.slug}` : '/services'}
+                to={getCategoryLink(c.slug)}
                 className="group block overflow-hidden rounded-[22px] border border-ink/10 bg-paper transition hover:shadow-card"
               >
                 <div className="overflow-hidden">

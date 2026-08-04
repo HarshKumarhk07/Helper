@@ -99,7 +99,7 @@ export const createPayoutBatch = asyncHandler(async (req, res) => {
     }
   }
 
-  const worker = await User.findOne({ _id: workerId, role: ROLES.WORKER });
+  const worker = await User.findOne({ _id: workerId, role: { $in: [ROLES.WORKER, ROLES.BRAND] } });
   if (!worker) throw new ApiError(404, 'Worker not found');
 
   const earnings = await Earning.find({

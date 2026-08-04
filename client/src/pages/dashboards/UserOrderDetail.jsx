@@ -88,6 +88,14 @@ export default function UserOrderDetail() {
           >
             <FileDown size={14} /> {downloading ? 'Preparing…' : 'Download invoice'}
           </button>
+          {cancelled && order.paymentStatus === 'paid' && (
+            <Link
+              to={`/me/support?orderId=${order._id}&category=refund&new=1`}
+              className="inline-flex items-center gap-2 rounded-full border border-red-200 bg-red-50 text-red-600 px-4 py-2 text-xs uppercase tracking-widest hover:bg-red-100 transition"
+            >
+              Ask for refund
+            </Link>
+          )}
           <Link
             to={`/me/support?orderId=${order._id}&category=order&new=1`}
             className="inline-flex items-center gap-2 rounded-full bg-black px-4 py-2 text-xs uppercase tracking-widest text-white transition hover:opacity-90"

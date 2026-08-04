@@ -5,6 +5,7 @@ import FadeUp from '../components/ui/FadeUp.jsx';
 import ServiceModal from '../components/services/ServiceModal.jsx';
 import { listCategories } from '../api/categories.js';
 import { mediaUrl } from '../lib/catalogImage.js';
+import { getCategoryLink } from '../lib/navigation.js';
 
 // 3D-style avatar/emoji icons from Microsoft Fluent Emoji
 const fe = (name) => `https://api.iconify.design/fluent-emoji/${name}.svg`;
@@ -266,7 +267,7 @@ export default function Hero() {
   const handleTileClick = (tile) => {
     const modal = SUBCATEGORY_ENTRIES[tile.label];
     if (modal) setModalData(modal);
-    else navigate(`/categories/${tile.slug}`);
+    else navigate(getCategoryLink(tile.slug));
   };
 
   return (
