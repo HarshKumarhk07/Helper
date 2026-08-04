@@ -18,9 +18,11 @@ export default function AdminOrders() {
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [cancelConfirmId, setCancelConfirmId] = useState(null);
 
-  const handleCancelOrder = async (id) => {
-    if (!window.confirm('Are you sure you want to cancel this order?')) return;
+  const confirmCancelOrder = async () => {
+    if (!cancelConfirmId) return;
+    const id = cancelConfirmId;
     try {
       const updated = await cancelMyOrder(id);
       setOrders((current) => current.map((order) => (order._id === id ? updated : order)));
@@ -30,6 +32,8 @@ export default function AdminOrders() {
       toast.success('Order cancelled successfully');
     } catch {
       toast.error('Failed to cancel order');
+    } finally {
+      setCancelConfirmId(null);
     }
   };
 
@@ -295,8 +299,9 @@ export default function AdminOrders() {
                     <h4 className="text-[11px] font-bold uppercase tracking-widest text-ink/50 mb-3">Admin Actions</h4>
                     <div className="flex flex-col gap-2">
                       {selectedOrder.status !== 'cancelled' && selectedOrder.status !== 'delivered' && (
+
                         <button
-                          onClick={() => handleCancelOrder(selectedOrder._id)}
+                          onClick={() => setCancelConfirmId(selectedOrder._id)}
                           className="w-full flex items-center justify-center gap-1.5 rounded-xl border border-red-200 bg-red-50/50 px-4 py-2.5 text-[11px] uppercase tracking-widest font-bold text-red-600 hover:bg-red-100 hover:border-red-300 transition-colors"
                         >
                           Cancel Order
@@ -356,6 +361,40 @@ export default function AdminOrders() {
           onClose={() => setRefundTarget(null)}
           onRefunded={() => load()}
         />
+      )}
+
+      {cancelConfirmId && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-ink/70 p-4 backdrop-blur-sm"
+          onClick={() => setCancelConfirmId(null)}
+        >
+          <div
+            className="card-rounded w-full max-w-sm border border-paper/10 bg-paper p-6 text-center text-ink shadow-2xl animate-in fade-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-red-600">
+              <Package size={24} />
+            </div>
+            <h3 className="mb-2 text-lg font-bold">Cancel Order</h3>
+            <p className="mb-6 text-sm text-ink/70">
+              Are you sure you want to cancel this order? This action cannot be undone.
+            </p>
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={confirmCancelOrder}
+                className="w-full rounded-xl bg-red-600 px-4 py-2.5 text-[11px] font-bold uppercase tracking-widest text-white hover:bg-red-700 transition-colors"
+              >
+                Yes, Cancel Order
+              </button>
+              <button
+                onClick={() => setCancelConfirmId(null)}
+                className="w-full rounded-xl border border-ink/10 bg-sand/30 px-4 py-2.5 text-[11px] font-bold uppercase tracking-widest text-ink hover:bg-ink hover:text-paper transition-colors"
+              >
+                Nevermind
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </DashboardShell>
   );
