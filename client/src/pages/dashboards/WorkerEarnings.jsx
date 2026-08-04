@@ -4,15 +4,8 @@ import { Wallet, TrendingUp, CheckCircle2, Hourglass } from 'lucide-react';
 import { getMyEarnings, getMyEarningEntries } from '../../api/earnings.js';
 import FadeUp from '../../components/ui/FadeUp.jsx';
 import DashboardShell from './DashboardShell.jsx';
-import { formatPrice } from '../../lib/booking.js';
-
-const STATUS_BADGE = {
-  pending: 'bg-amber-100 text-amber-800',
-  settled: 'bg-green-100 text-green-700',
-  voided: 'bg-red-100 text-red-700',
-};
-
-const fmtDate = (d) => (d ? new Date(d).toLocaleDateString() : '—');
+import { formatPrice, formatDate, formatPercent } from '../../lib/format.js';
+import StatusBadge from '../../components/ui/StatusBadge.jsx';
 
 export default function WorkerEarnings() {
   const [data, setData] = useState(null);
@@ -57,7 +50,7 @@ export default function WorkerEarnings() {
               </div>
               <div className="card-rounded border border-amber-300 bg-amber-50/50 p-4 sm:p-5">
                 <div className="flex items-center gap-2 text-xs uppercase tracking-widest text-ink/60">
-                  <Hourglass size={14} /> Pending
+                  <Hourglass size={14} /> Pending payout
                 </div>
                 <div className="mt-2 text-2xl font-bold sm:text-3xl">
                   {formatPrice(data.totals.pending)}
@@ -68,7 +61,7 @@ export default function WorkerEarnings() {
               </div>
               <div className="card-rounded border border-green-300 bg-green-50/50 p-4 sm:p-5">
                 <div className="flex items-center gap-2 text-xs uppercase tracking-widest text-ink/60">
-                  <CheckCircle2 size={14} /> Settled
+                  <CheckCircle2 size={14} /> Settled amount
                 </div>
                 <div className="mt-2 text-2xl font-bold sm:text-3xl">
                   {formatPrice(data.totals.settled)}
@@ -77,7 +70,7 @@ export default function WorkerEarnings() {
               </div>
               <div className="card-rounded p-4 sm:p-5">
                 <div className="flex items-center gap-2 text-xs uppercase tracking-widest text-ink/60">
-                  <TrendingUp size={14} /> Jobs done
+                  <TrendingUp size={14} /> Paid jobs
                 </div>
                 <div className="mt-2 text-2xl font-bold sm:text-3xl">{data.totals.jobs}</div>
                 <div className="mt-1 text-xs text-ink/60">
@@ -88,7 +81,7 @@ export default function WorkerEarnings() {
           </FadeUp>
 
           <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-            <SmallStat label="Total gross" value={formatPrice(data.totals.gross)} />
+            <SmallStat label="Gross earnings" value={formatPrice(data.totals.gross)} />
             <SmallStat label="Platform commission" value={formatPrice(data.totals.commission)} />
             <SmallStat
               label="Net per job (avg)"
@@ -109,10 +102,10 @@ export default function WorkerEarnings() {
                 <thead className="bg-sand/50 text-xs uppercase tracking-widest text-ink/60">
                   <tr>
                     <th className="p-4 font-normal">Date</th>
-                    <th className="p-4 font-normal text-right">Jobs</th>
-                    <th className="p-4 font-normal text-right">Gross</th>
-                    <th className="p-4 font-normal text-right">Commission</th>
-                    <th className="p-4 font-normal text-right">Net</th>
+                    <th className="p-4 font-normal text-right">Paid Jobs</th>
+                    <th className="p-4 font-normal text-right">Gross earnings</th>
+                    <th className="p-4 font-normal text-right">Platform commission</th>
+                    <th className="p-4 font-normal text-right">Net earnings</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-ink/10">
@@ -171,7 +164,7 @@ export default function WorkerEarnings() {
                     <th className="p-4 font-normal">Booking</th>
                     <th className="p-4 font-normal">Service</th>
                     <th className="p-4 font-normal">Completed</th>
-                    <th className="p-4 font-normal text-right">Net</th>
+                    <th className="p-4 font-normal text-right">Net earnings</th>
                     <th className="p-4 font-normal">Status</th>
                   </tr>
                 </thead>
@@ -193,19 +186,13 @@ export default function WorkerEarnings() {
                         </td>
                         <td className="p-4">{e.booking?.service?.name || '—'}</td>
                         <td className="p-4 text-xs text-ink/70">
-                          {fmtDate(e.completedAt)}
+                          {formatDate(e.completedAt)}
                         </td>
                         <td className="p-4 text-right font-semibold">
                           {formatPrice(e.netAmount)}
                         </td>
                         <td className="p-4">
-                          <span
-                            className={`inline-flex rounded-full px-3 py-1 text-xs font-medium uppercase tracking-widest ${
-                              STATUS_BADGE[e.status] || ''
-                            }`}
-                          >
-                            {e.status}
-                          </span>
+                          <StatusBadge status={e.status} />
                         </td>
                       </tr>
                     ))

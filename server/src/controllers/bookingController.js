@@ -1039,6 +1039,7 @@ export const getWorkerEarnings = asyncHandler(async (req, res) => {
   const workerId = req.user._id;
   const Earning = (await import('../models/Earning.js')).default;
   const { getCommissionRate } = await import('../utils/earnings.js');
+  const { getWorkerFinancialStats } = await import('../utils/aggregation.js');
 
   // Backfill earnings for any completed+paid bookings missing an Earning row.
   // Pay-later: only paid bookings get earnings — unpaid ones wait.
@@ -1062,24 +1063,7 @@ export const getWorkerEarnings = asyncHandler(async (req, res) => {
     );
   }
 
-  const [totals] = await Earning.aggregate([
-    { $match: { worker: workerId } },
-    {
-      $group: {
-        _id: null,
-        gross: { $sum: '$grossAmount' },
-        commission: { $sum: '$commissionAmount' },
-        net: { $sum: '$netAmount' },
-        pending: {
-          $sum: { $cond: [{ $eq: ['$status', 'pending'] }, '$netAmount', 0] },
-        },
-        settled: {
-          $sum: { $cond: [{ $eq: ['$status', 'settled'] }, '$netAmount', 0] },
-        },
-        jobs: { $sum: 1 },
-      },
-    },
-  ]);
+  const stats = await getWorkerFinancialStats(workerId);
 
   const daily = await Earning.aggregate([
     { $match: { worker: workerId } },
@@ -1102,17 +1086,10 @@ export const getWorkerEarnings = asyncHandler(async (req, res) => {
 
   res.json({
     commissionRate: getCommissionRate(),
-    totals: {
-      gross: totals?.gross || 0,
-      commission: totals?.commission || 0,
-      net: totals?.net || 0,
-      pending: totals?.pending || 0,
-      settled: totals?.settled || 0,
-      jobs: totals?.jobs || 0,
-    },
+    totals: stats,
     // legacy keys to avoid breaking the existing UI
-    totalAllTime: totals?.net || 0,
-    totalJobs: totals?.jobs || 0,
+    totalAllTime: stats.net,
+    totalJobs: stats.jobs,
     dailyBreakdown: daily.map((d) => ({
       date: `${d._id.year}-${String(d._id.month).padStart(2, '0')}-${String(d._id.day).padStart(2, '0')}`,
       gross: d.gross,

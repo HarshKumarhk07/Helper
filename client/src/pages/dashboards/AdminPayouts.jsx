@@ -13,11 +13,7 @@ import {
 } from '../../api/payouts.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 
-const inr = (n) =>
-  `₹${Number(n || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
-
-const fmtDate = (d) => (d ? new Date(d).toLocaleDateString() : '—');
-const fmtDateTime = (d) => (d ? new Date(d).toLocaleString() : '—');
+import { formatPrice, formatDate, formatDateTime, formatPercent } from '../../lib/format.js';
 
 const TABS = [
   { key: 'pending', label: 'Pending Payouts', Icon: Users },
@@ -137,7 +133,7 @@ export default function AdminPayouts() {
         reference: reference.trim(),
         notes: notes.trim(),
       });
-      toast.success(`Settled ${inr(batch.totalNet)} to ${batch.worker?.name || 'worker'}`);
+      toast.success(`Settled ${formatPrice(batch.totalNet)} to ${batch.worker?.name || 'worker'}`);
       closeWorkerModal();
       refresh();
     } catch (err) {
@@ -167,25 +163,25 @@ export default function AdminPayouts() {
         <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
           <SummaryCard
             label="Pending payout"
-            value={inr(summary?.summary?.pendingNet || 0)}
+            value={formatPrice(summary?.summary?.pendingNet || 0)}
             sub={`${summary?.summary?.pendingCount || 0} jobs`}
             tone="amber"
           />
           <SummaryCard
-            label="Settled to date"
-            value={inr(summary?.summary?.settledNet || 0)}
+            label="Settled amount"
+            value={formatPrice(summary?.summary?.settledNet || 0)}
             sub={`${summary?.summary?.totalBatches || 0} batches`}
             tone="green"
           />
           <SummaryCard
             label="Platform commission"
-            value={inr(summary?.summary?.totalCommission || 0)}
-            sub={`${Math.round((summary?.commissionRate || 0) * 100)}% rate`}
+            value={formatPrice(summary?.summary?.totalCommission || 0)}
+            sub={`${formatPercent((summary?.commissionRate || 0) * 100)} rate`}
             tone="ink"
           />
           <SummaryCard
             label="Last settlement"
-            value={fmtDate(summary?.summary?.lastSettledAt)}
+            value={formatDate(summary?.summary?.lastSettledAt)}
             sub="latest batch"
             tone="ink"
           />
@@ -304,10 +300,10 @@ function PendingPanel({ loading, rows, onOpen, isAdmin }) {
         <thead className="bg-sand/50 text-xs uppercase tracking-widest text-ink/60 border-b border-ink/5">
           <tr>
             <th className="p-4 font-normal">Worker</th>
-            <th className="p-4 font-normal">Jobs</th>
-            <th className="p-4 font-normal">Gross</th>
-            <th className="p-4 font-normal">Commission</th>
-            <th className="p-4 font-normal text-right">Net Payable</th>
+            <th className="p-4 font-normal">Paid Jobs</th>
+            <th className="p-4 font-normal">Gross earnings</th>
+            <th className="p-4 font-normal">Platform commission</th>
+            <th className="p-4 font-normal text-right">Net earnings</th>
             <th className="p-4 font-normal">Oldest</th>
             <th className="p-4 font-normal text-right">Actions</th>
           </tr>
@@ -330,11 +326,11 @@ function PendingPanel({ loading, rows, onOpen, isAdmin }) {
                 </div>
               </td>
               <td className="p-4 align-top pt-5 font-medium">{r.jobs}</td>
-              <td className="p-4 align-top pt-5 text-ink/80">{inr(r.gross)}</td>
-              <td className="p-4 align-top pt-5 text-ink/70">{inr(r.commission)}</td>
-              <td className="p-4 align-top pt-5 text-right font-bold text-ink">{inr(r.net)}</td>
+              <td className="p-4 align-top pt-5 text-ink/80">{formatPrice(r.gross)}</td>
+              <td className="p-4 align-top pt-5 text-ink/70">{formatPrice(r.commission)}</td>
+              <td className="p-4 align-top pt-5 text-right font-bold text-ink">{formatPrice(r.net)}</td>
               <td className="p-4 align-top pt-5 text-[11px] text-ink/60">
-                {fmtDate(r.oldest)}
+                {formatDate(r.oldest)}
               </td>
               <td className="p-4 align-top pt-5 text-right">
                 <button
@@ -373,8 +369,8 @@ function HistoryPanel({ loading, batches }) {
           <tr>
             <th className="p-4 font-normal">Code</th>
             <th className="p-4 font-normal">Worker</th>
-            <th className="p-4 font-normal">Jobs</th>
-            <th className="p-4 font-normal">Net Paid</th>
+            <th className="p-4 font-normal">Paid Jobs</th>
+            <th className="p-4 font-normal">Net earnings</th>
             <th className="p-4 font-normal">Method</th>
             <th className="p-4 font-normal">Reference</th>
             <th className="p-4 font-normal">Settled</th>
@@ -390,14 +386,14 @@ function HistoryPanel({ loading, batches }) {
                 <div className="text-[11px] text-ink/60 mt-0.5">{b.worker?.email}</div>
               </td>
               <td className="p-4 align-top pt-5 font-medium">{b.earningsCount}</td>
-              <td className="p-4 align-top pt-5 font-bold text-ink">{inr(b.totalNet)}</td>
+              <td className="p-4 align-top pt-5 font-bold text-ink">{formatPrice(b.totalNet)}</td>
               <td className="p-4 align-top pt-5">
                 <span className="inline-flex rounded-full border border-ink/10 bg-ink/5 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-ink/70">
                   {METHOD_LABEL[b.method] || b.method}
                 </span>
               </td>
               <td className="p-4 align-top pt-5 text-[11px] text-ink/60">{b.reference || '—'}</td>
-              <td className="p-4 align-top pt-5 text-[11px] font-medium text-ink/80">{fmtDateTime(b.settledAt)}</td>
+              <td className="p-4 align-top pt-5 text-[11px] font-medium text-ink/80">{formatDateTime(b.settledAt)}</td>
               <td className="p-4 align-top pt-5 text-[11px] text-ink/60">{b.settledBy?.name || '—'}</td>
             </tr>
           ))}
@@ -467,9 +463,9 @@ function SettleModal({
                   <th className="p-3 font-normal">Booking</th>
                   <th className="p-3 font-normal">Service</th>
                   <th className="p-3 font-normal">Completed</th>
-                  <th className="p-3 font-normal text-right">Gross</th>
-                  <th className="p-3 font-normal text-right">Commission</th>
-                  <th className="p-3 font-normal text-right">Net</th>
+                  <th className="p-3 font-normal text-right">Gross earnings</th>
+                  <th className="p-3 font-normal text-right">Platform commission</th>
+                  <th className="p-3 font-normal text-right">Net earnings</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-ink/5">
@@ -486,13 +482,13 @@ function SettleModal({
                     <td className="p-3 font-mono text-[11px] font-semibold text-ink">{e.booking?.code || e.booking}</td>
                     <td className="p-3 text-[13px] font-medium text-ink/80">{e.booking?.service?.name || '—'}</td>
                     <td className="p-3 text-[11px] text-ink/60">
-                      {fmtDateTime(e.completedAt)}
+                      {formatDateTime(e.completedAt)}
                     </td>
-                    <td className="p-3 text-right text-ink/80">{inr(e.grossAmount)}</td>
+                    <td className="p-3 text-right text-ink/80">{formatPrice(e.grossAmount)}</td>
                     <td className="p-3 text-right text-ink/70">
-                      {inr(e.commissionAmount)}
+                      {formatPrice(e.commissionAmount)}
                     </td>
-                    <td className="p-3 text-right font-bold text-ink">{inr(e.netAmount)}</td>
+                    <td className="p-3 text-right font-bold text-ink">{formatPrice(e.netAmount)}</td>
                   </tr>
                 ))}
                 {entries.length === 0 && (
@@ -557,11 +553,11 @@ function SettleModal({
             </div>
             <div className="mt-1 flex flex-wrap items-center gap-x-5 gap-y-1">
               <span>{selectedTotals.count} job{selectedTotals.count === 1 ? '' : 's'}</span>
-              <span className="text-ink/70">Gross {inr(selectedTotals.gross)}</span>
+              <span className="text-ink/70">Gross earnings {formatPrice(selectedTotals.gross)}</span>
               <span className="text-ink/70">
-                Commission {inr(selectedTotals.commission)}
+                Platform commission {formatPrice(selectedTotals.commission)}
               </span>
-              <span className="font-semibold">Net {inr(selectedTotals.net)}</span>
+              <span className="font-semibold">Net earnings {formatPrice(selectedTotals.net)}</span>
             </div>
           </div>
           <div className="flex gap-3">
@@ -574,7 +570,7 @@ function SettleModal({
               className="inline-flex items-center gap-2 rounded-full bg-green-600 px-5 py-2 text-xs uppercase tracking-widest text-white transition hover:bg-green-700 disabled:opacity-50"
             >
               <Wallet size={14} />
-              {working ? 'Settling…' : `Mark settled · ${inr(selectedTotals.net)}`}
+              {working ? 'Settling…' : `Mark settled · ${formatPrice(selectedTotals.net)}`}
             </button>
           </div>
         </div>

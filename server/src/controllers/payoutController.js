@@ -8,6 +8,7 @@ import { BOOKING_STATUS } from '../config/booking.js';
 import { ApiError, asyncHandler } from '../utils/asyncHandler.js';
 import { logAudit } from '../utils/auditLogger.js';
 import { getCommissionRate, createEarningForBooking } from '../utils/earnings.js';
+import { getGlobalFinancialStats } from '../utils/aggregation.js';
 
 const round2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
 
@@ -230,28 +231,7 @@ export const backfillEarnings = asyncHandler(async (req, res) => {
 
 // Tiny helper exposed for the admin Finance page
 export const getPayoutSummary = asyncHandler(async (_req, res) => {
-  const [agg] = await Earning.aggregate([
-    {
-      $group: {
-        _id: null,
-        totalGross: { $sum: '$grossAmount' },
-        totalCommission: { $sum: '$commissionAmount' },
-        totalNet: { $sum: '$netAmount' },
-        pendingNet: {
-          $sum: { $cond: [{ $eq: ['$status', 'pending'] }, '$netAmount', 0] },
-        },
-        settledNet: {
-          $sum: { $cond: [{ $eq: ['$status', 'settled'] }, '$netAmount', 0] },
-        },
-        pendingCount: {
-          $sum: { $cond: [{ $eq: ['$status', 'pending'] }, 1, 0] },
-        },
-        settledCount: {
-          $sum: { $cond: [{ $eq: ['$status', 'settled'] }, 1, 0] },
-        },
-      },
-    },
-  ]);
+  const stats = await getGlobalFinancialStats();
 
   const [batches] = await PayoutBatch.aggregate([
     {
@@ -266,13 +246,7 @@ export const getPayoutSummary = asyncHandler(async (_req, res) => {
   res.json({
     commissionRate: getCommissionRate(),
     summary: {
-      totalGross: round2(agg?.totalGross || 0),
-      totalCommission: round2(agg?.totalCommission || 0),
-      totalNet: round2(agg?.totalNet || 0),
-      pendingNet: round2(agg?.pendingNet || 0),
-      settledNet: round2(agg?.settledNet || 0),
-      pendingCount: agg?.pendingCount || 0,
-      settledCount: agg?.settledCount || 0,
+      ...stats,
       totalBatches: batches?.totalBatches || 0,
       lastSettledAt: batches?.lastSettledAt || null,
     },

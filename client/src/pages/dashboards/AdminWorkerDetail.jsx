@@ -19,7 +19,8 @@ import FadeUp from '../../components/ui/FadeUp.jsx';
 import { getWorkerProfile, approveKyc, rejectKyc } from '../../api/kyc.js';
 import WorkerServicesOverride from '../../components/admin/WorkerServicesOverride.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
-import { formatPrice, formatDateTime } from '../../lib/booking.js';
+import { STATUS_LABEL, STATUS_TONE } from '../../lib/bookingStatus.js';
+import { formatPrice, formatDate, formatDateTime, formatPercent } from '../../lib/format.js';
 import { mediaUrl } from '../../lib/catalogImage.js';
 
 const KYC_BADGE = {
@@ -38,8 +39,6 @@ const STATUS_BADGE = {
 };
 
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-const fmtDate = (d) => (d ? new Date(d).toLocaleDateString() : '—');
 
 export default function AdminWorkerDetail() {
   const { id } = useParams();
@@ -213,8 +212,8 @@ export default function AdminWorkerDetail() {
                 KYC documents
               </div>
               <div className="text-xs text-ink/55">
-                Submitted {fmtDate(worker.kycSubmittedAt)}
-                {worker.kycReviewedAt && ` · Reviewed ${fmtDate(worker.kycReviewedAt)}`}
+                Submitted {formatDate(worker.kycSubmittedAt)}
+                {worker.kycReviewedAt && ` · Reviewed ${formatDate(worker.kycReviewedAt)}`}
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -390,7 +389,7 @@ export default function AdminWorkerDetail() {
                       </p>
                     )}
                     <div className="mt-1 text-xs text-ink/45">
-                      {fmtDate(r.createdAt)}
+                      {formatDate(r.createdAt)}
                     </div>
                   </li>
                 ))}
@@ -406,12 +405,12 @@ export default function AdminWorkerDetail() {
             <div className="mb-3 flex items-center gap-2 text-xs uppercase tracking-widest text-ink/60">
               <Wallet size={14} /> Earnings
             </div>
-            <Row label="Gross" value={formatPrice(earnings.gross)} />
-            <Row label="Commission" value={`− ${formatPrice(earnings.commission)}`} />
+            <Row label="Gross earnings" value={formatPrice(earnings.gross)} />
+            <Row label="Platform commission" value={`− ${formatPrice(earnings.commission)}`} />
             <div className="my-2 border-t border-ink/10" />
-            <Row label="Net total" value={formatPrice(earnings.net)} bold />
-            <Row label="Settled" value={formatPrice(earnings.settled)} positive />
-            <Row label="Pending" value={formatPrice(earnings.pending)} amber />
+            <Row label="Net earnings" value={formatPrice(earnings.net)} bold />
+            <Row label="Settled amount" value={formatPrice(earnings.settled)} positive />
+            <Row label="Pending payout" value={formatPrice(earnings.pending)} amber />
             <div className="mt-3">
               <Link
                 to={`/admin/payouts`}
@@ -428,12 +427,15 @@ export default function AdminWorkerDetail() {
               <FileText size={14} /> Booking funnel
             </div>
             <Row label="Total" value={bookings.stats.total} />
-            {/* `assigned` now counts CONFIRMED bookings (the worker accepted) —
-                see the booking status enum cutover. */}
-            <Row label="Confirmed" value={bookings.stats.assigned} />
+            <Row label="Pending" value={bookings.stats.pendingConfirmation} />
+            <Row label="Confirmed" value={bookings.stats.confirmed} />
             <Row label="In progress" value={bookings.stats.inProgress} />
             <Row label="Completed" value={bookings.stats.completed} positive />
-            <Row label="Cancelled" value={bookings.stats.cancelled} amber />
+            <Row label="Cancelled" value={bookings.stats.cancelledByUser} amber />
+            <Row label="Rejected" value={bookings.stats.rejected} amber />
+            <Row label="Unavailable" value={bookings.stats.workerUnavailable} amber />
+            <div className="my-2 border-t border-ink/10" />
+            <Row label="Completion rate" value={formatPercent(bookings.stats.completionRate)} />
           </div>
 
           {/* Admin override on which services this worker offers. */}

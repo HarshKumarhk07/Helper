@@ -15,23 +15,7 @@ export {
 // filter tab ("Refunded"). Kept separate so it never pollutes the status enum.
 export const REFUNDED_FILTER = 'refunded';
 
-export const formatPrice = (n) =>
-  new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    maximumFractionDigits: 0,
-  }).format(n || 0);
-
-export const formatDateTime = (d) => {
-  if (!d) return '—';
-  return new Date(d).toLocaleString('en-IN', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-};
+export { formatPrice, formatDateTime } from './format.js';
 
 export const getWorkerName = (worker) => {
   if (!worker) return 'Awaiting assignment';
