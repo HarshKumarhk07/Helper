@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { listBrandOrders } from '../../api/orders.js';
+import { listBrandOrders, updateOrderStatus } from '../../api/orders.js';
 import FadeUp from '../../components/ui/FadeUp.jsx';
 import DashboardShell from './DashboardShell.jsx';
 import { Package } from 'lucide-react';
@@ -31,6 +31,16 @@ export default function BrandOrders() {
   useEffect(() => {
     load(page);
   }, [page]);
+
+  const handleStatusChange = async (id, newStatus) => {
+    try {
+      const updated = await updateOrderStatus(id, newStatus);
+      setOrders(current => current.map(order => order._id === id ? updated : order));
+      toast.success(`Order status updated to ${newStatus}`);
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Failed to update order status');
+    }
+  };
 
   return (
     <DashboardShell eyebrow="Seller" title="Order History">
@@ -67,7 +77,7 @@ export default function BrandOrders() {
                   orders.map((order) => {
                     // Filter order items to only include products owned by this brand
                     const myItems = order.items.filter(
-                      (item) => item.product && String(item.product.brand) === String(user._id)
+                      (item) => item.product && String(item.product?.brand) === String(user._id)
                     );
 
                     return (
@@ -111,17 +121,25 @@ export default function BrandOrders() {
                           </div>
                         </td>
                         <td className="p-4 text-right align-top">
-                          <span
-                            className={`inline-flex rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-widest ${
+                          <select
+                            value={order.status}
+                            onChange={(e) => handleStatusChange(order._id, e.target.value)}
+                            disabled={order.status === 'cancelled' || order.status === 'delivered'}
+                            className={`inline-flex rounded-full px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest outline-none border border-transparent cursor-pointer hover:border-ink/20 focus:border-ink/40 transition appearance-none text-center ${
                               order.status === 'delivered'
                                 ? 'bg-emerald-100 text-emerald-800'
                                 : order.status === 'cancelled'
                                 ? 'bg-red-100 text-red-800'
                                 : 'bg-amber-100 text-amber-800'
                             }`}
+                            style={{ WebkitAppearance: 'none', MozAppearance: 'none' }}
                           >
-                            {order.status}
-                          </span>
+                            <option value="placed">Placed</option>
+                            <option value="processing">Processing</option>
+                            <option value="shipped">Shipped</option>
+                            <option value="delivered">Delivered</option>
+                            <option value="cancelled">Cancelled</option>
+                          </select>
                         </td>
                       </tr>
                     );

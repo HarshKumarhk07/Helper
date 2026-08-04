@@ -15,7 +15,7 @@ router.post('/:id/cancel', cancelMyOrder);
 router.delete('/:id', deleteMyOrder);
 
 router.get('/', requireRole(ROLES.ADMIN), listAllOrders);
-router.put('/:id/status', requireRole(ROLES.ADMIN), updateOrderStatus);
+router.put('/:id/status', requireRole(ROLES.ADMIN, ROLES.BRAND), updateOrderStatus);
 router.patch('/:id/note', requireRole(ROLES.ADMIN), updateOrderNote);
 
 export default router;

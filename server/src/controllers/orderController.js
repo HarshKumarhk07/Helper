@@ -291,6 +291,20 @@ export const updateOrderStatus = asyncHandler(async (req, res) => {
   const order = await Order.findById(req.params.id);
   if (!order) throw new ApiError(404, 'Order not found');
 
+  if (req.user.role === 'brand') {
+    let hasBrandProduct = false;
+    for (const item of order.items) {
+      if (item.product) {
+        const product = await Product.findById(item.product);
+        if (product && String(product.brand) === String(req.user._id)) {
+          hasBrandProduct = true;
+          break;
+        }
+      }
+    }
+    if (!hasBrandProduct) throw new ApiError(403, 'You can only update orders containing your products');
+  }
+
   const from = order.status;
   order.status = status;
   applyOrderStatusTimestamps(order, status);
