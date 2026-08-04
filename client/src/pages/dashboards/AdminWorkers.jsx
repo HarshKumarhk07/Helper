@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { ShieldCheck, ShieldX, ShieldAlert, FileText, Eye, Wrench, X } from 'lucide-react';
+import { Eye, FileText, CheckCircle2, XCircle, AlertCircle, Search, ShieldCheck, ShieldX, ShieldAlert, Wrench, X } from 'lucide-react';
 import DashboardShell from './DashboardShell.jsx';
 import FadeUp from '../../components/ui/FadeUp.jsx';
 import {
@@ -196,12 +196,16 @@ export default function AdminWorkers() {
               );
             })}
           </div>
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Search by name, email, phone…"
-            className="rounded-xl border border-ink/15 bg-transparent p-3 text-sm focus:border-ink focus:outline-none md:w-72"
-          />
+          <div className="relative w-full max-w-sm md:w-72">
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink/40" />
+            <input
+              type="text"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search by name, email, phone…"
+              className="w-full rounded-full border border-ink/10 bg-paper py-2 pl-10 pr-4 text-sm outline-none focus:border-ink/30 transition-colors"
+            />
+          </div>
         </div>
       </FadeUp>
 

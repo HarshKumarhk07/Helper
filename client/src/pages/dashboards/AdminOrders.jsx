@@ -6,7 +6,7 @@ import { formatPrice } from '../../lib/booking.js';
 import RefundModal from '../../components/admin/RefundModal.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import useAdminSeen from '../../hooks/useAdminSeen.js';
-import { Package, Eye } from 'lucide-react';
+import { Package, Eye, Search } from 'lucide-react';
 
 export default function AdminOrders() {
   const { user } = useAuth();
@@ -19,6 +19,7 @@ export default function AdminOrders() {
   const [pagination, setPagination] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [cancelConfirmId, setCancelConfirmId] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const confirmCancelOrder = async () => {
     if (!cancelConfirmId) return;
@@ -42,7 +43,7 @@ export default function AdminOrders() {
 
   const load = () => {
     setLoading(true);
-    listAllOrders({ page, limit: 15 }) // increased limit to 15 for table view
+    listAllOrders({ page, limit: 15, q: searchQuery }) // increased limit to 15 for table view
       .then((res) => {
         setOrders(res.orders || []);
         setPagination(res.pagination || null);
@@ -54,7 +55,7 @@ export default function AdminOrders() {
 
   useEffect(() => {
     load();
-  }, [page]);
+  }, [page, searchQuery]);
 
   const saveNote = async (id) => {
     try {
@@ -80,6 +81,21 @@ export default function AdminOrders() {
 
   return (
     <DashboardShell eyebrow="(Commerce control)" title="ORDER NOTES | REVIEW.">
+      <div className="mb-4 flex items-center gap-3">
+        <div className="relative flex-1 max-w-md">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink/40" />
+          <input
+            type="text"
+            placeholder="Search by Order ID, Customer Name or Email..."
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setPage(1);
+            }}
+            className="w-full rounded-full border border-ink/10 bg-paper py-2 pl-10 pr-4 text-sm outline-none focus:border-ink/30 transition-colors"
+          />
+        </div>
+      </div>
       <div className="card-rounded overflow-x-auto shadow-sm border border-ink/5 bg-paper">
         <table className="w-full text-left text-sm">
           <thead className="bg-sand/50 text-xs uppercase tracking-widest text-ink/60 border-b border-ink/5">

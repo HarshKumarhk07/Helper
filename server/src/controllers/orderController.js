@@ -1,4 +1,5 @@
 import Order from '../models/Order.js';
+import User from '../models/User.js';
 import Product from '../models/Product.js';
 import Address from '../models/Address.js';
 import Coupon from '../models/Coupon.js';
@@ -259,12 +260,33 @@ export const listAllOrders = asyncHandler(async (req, res) => {
   const limit = Math.max(1, Math.min(100, parseInt(req.query.limit) || 10));
   const skip = (page - 1) * limit;
 
-  const filter = {
+  const baseFilter = {
     $or: [
       { paymentMode: { $ne: 'online' } },
       { paymentStatus: { $in: ['paid', 'refunded'] } }
     ]
   };
+
+  const filter = { ...baseFilter };
+  
+  if (req.query.q) {
+    const escaped = req.query.q.trim().replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    const rx = { $regex: escaped, $options: 'i' };
+    
+    const matchedUsers = await User.find({ $or: [{ name: rx }, { email: rx }] }).select('_id');
+    const userIds = matchedUsers.map(u => u._id);
+    
+    filter.$and = [
+      baseFilter,
+      {
+        $or: [
+          { orderId: rx },
+          { user: { $in: userIds } }
+        ]
+      }
+    ];
+    delete filter.$or;
+  }
 
   const totalRecords = await Order.countDocuments(filter);
   const totalPages = Math.ceil(totalRecords / limit);

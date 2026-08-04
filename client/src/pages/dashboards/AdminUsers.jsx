@@ -4,7 +4,7 @@ import api from '../../api/axios.js';
 import { listUsers, adminCreateUser, updateUser, setUserActive, deleteUser } from '../../api/users.js';
 import FadeUp from '../../components/ui/FadeUp.jsx';
 import DashboardShell from './DashboardShell.jsx';
-import { ShieldAlert, ShieldCheck } from 'lucide-react';
+import { ShieldAlert, ShieldCheck, Search } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import useAdminSeen from '../../hooks/useAdminSeen.js';
 
@@ -46,6 +46,7 @@ export default function AdminUsers() {
     businessType: '',
   });
 
+  const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState(null);
 
@@ -59,6 +60,7 @@ export default function AdminUsers() {
     setLoading(true);
     const query = {
       ...(roleFilter !== 'all' ? { role: roleFilter } : {}),
+      q: searchQuery,
       page,
       limit: 10,
     };
@@ -73,9 +75,9 @@ export default function AdminUsers() {
 
   useEffect(() => {
     setPage(1);
-  }, [roleFilter]);
+  }, [roleFilter, searchQuery]);
 
-  useEffect(() => { load(); }, [roleFilter, page]);
+  useEffect(() => { load(); }, [roleFilter, searchQuery, page]);
 
   const openEditor = (user) => {
     setEditingUser(user);
@@ -226,7 +228,18 @@ export default function AdminUsers() {
         managers, and keep user records editable from this panel.
       </div>
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 text-ink">
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-col gap-4">
+          <div className="relative w-full max-w-sm">
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink/40" />
+            <input
+              type="text"
+              placeholder="Search by Name or Email..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full rounded-full border border-ink/10 bg-paper py-2 pl-10 pr-4 text-sm outline-none focus:border-ink/30 transition-colors"
+            />
+          </div>
+          <div className="flex flex-wrap gap-2">
           {[
             { label: 'All Users', value: 'all' },
             { label: 'Customer', value: 'user' },
@@ -241,6 +254,7 @@ export default function AdminUsers() {
               {f.label}
             </button>
           ))}
+          </div>
         </div>
         <button onClick={() => setShowForm(!showForm)} className="pill-btn-solid text-sm">
           {showForm ? 'Cancel' : 'Add New User'}
