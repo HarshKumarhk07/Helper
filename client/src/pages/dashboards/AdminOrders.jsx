@@ -86,13 +86,21 @@ export default function AdminOrders() {
                     </span>
                   </div>
                   
-                  <div className="mt-4 flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-ink/5 flex items-center justify-center text-ink/60 font-bold uppercase">
+                  <div className="mt-4 flex items-start gap-3">
+                    <div className="h-10 w-10 rounded-full bg-ink/5 flex items-center justify-center text-ink/60 font-bold uppercase shrink-0">
                       {order.user?.name?.charAt(0) || '?'}
                     </div>
                     <div>
                       <div className="text-lg font-bold">{order.user?.name || 'Customer'}</div>
                       <div className="text-sm text-ink/60">{order.user?.email || 'No email provided'}</div>
+                      {order.address && (
+                        <div className="mt-3 text-xs text-ink/70 bg-sand/30 p-3 rounded-lg border border-ink/5 leading-relaxed">
+                          <div className="font-semibold text-ink/80 mb-1 uppercase tracking-widest text-[10px]">Shipping Address</div>
+                          {order.address.line1}<br />
+                          {order.address.line2 && <>{order.address.line2}<br/></>}
+                          {order.address.city}, {order.address.state} {order.address.pincode}
+                        </div>
+                      )}
                     </div>
                   </div>
 
