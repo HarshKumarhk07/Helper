@@ -1,5 +1,4 @@
 import Order from '../models/Order.js';
-import User from '../models/User.js';
 import Product from '../models/Product.js';
 import Address from '../models/Address.js';
 import Coupon from '../models/Coupon.js';
