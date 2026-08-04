@@ -132,97 +132,99 @@ export default function AdminSupport() {
         </div>
       </div>
 
-      <div className="card-rounded overflow-x-auto">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-sand/50 text-xs uppercase tracking-widest text-ink/60">
+      <div className="card-rounded overflow-x-auto shadow-sm border border-ink/5 bg-paper">
+        <table className="w-full text-left text-sm text-ink">
+          <thead className="bg-sand/50 text-xs uppercase tracking-widest text-ink/60 border-b border-ink/5">
             <tr>
               <th className="p-4 font-normal">Ticket</th>
               <th className="p-4 font-normal">Customer</th>
               <th className="p-4 font-normal">Category</th>
               <th className="p-4 font-normal">Status</th>
-              <th className="p-4 font-normal">Last activity</th>
-              <th className="p-4 font-normal" />
+              <th className="p-4 font-normal">Activity</th>
+              <th className="p-4 font-normal text-right">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-ink/10">
+          <tbody className="divide-y divide-ink/5">
             {loading ? (
-              <tr>
-                <td colSpan={6} className="p-6 text-center text-ink/60">
-                  Loading…
-                </td>
-              </tr>
+              Array.from({ length: 5 }).map((_, i) => (
+                <tr key={i}>
+                  <td colSpan="6" className="p-4">
+                    <div className="skeleton h-12 w-full rounded" />
+                  </td>
+                </tr>
+              ))
             ) : filtered.length === 0 ? (
               <tr>
-                <td colSpan={6} className="p-6 text-center text-ink/60">
-                  No tickets in this view.
+                <td colSpan="6" className="p-12 text-center text-ink/50">
+                  No tickets found in this view.
                 </td>
               </tr>
             ) : (
               filtered.map((t) => (
                 <tr
                   key={t._id}
-                  className="transition hover:bg-sand/30:bg-[#18181A]/50"
+                  className="transition-colors hover:bg-sand/30 group"
                 >
-                  <td className="p-4">
-                    <div className="flex items-start gap-2">
+                  <td className="p-4 align-top">
+                    <div className="flex items-start gap-3">
                       <span
-                        className={`mt-1.5 inline-block h-2 w-2 rounded-full ${
+                        className={`mt-1.5 inline-block h-2 w-2 rounded-full shrink-0 ${
                           PRIORITY_DOT[t.priority] || PRIORITY_DOT.normal
                         }`}
                         title={`Priority: ${t.priority}`}
                       />
                       <div>
-                        <div className="flex items-center gap-2 text-xs">
-                          <span className="font-mono uppercase tracking-widest text-ink/60">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-[11px] font-bold uppercase tracking-widest text-ink/60">
                             {t.code}
                           </span>
                           {t.priority === 'urgent' && (
-                            <span className="inline-flex items-center gap-1 text-red-600">
-                              <AlertOctagon size={11} /> urgent
+                            <span className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-red-50 px-1.5 py-0.5 text-[9px] uppercase tracking-widest font-bold text-red-600">
+                              <AlertOctagon size={10} /> urgent
                             </span>
                           )}
                         </div>
-                        <div className="mt-1 line-clamp-1 font-medium">{t.subject}</div>
+                        <div className="mt-1 font-bold text-ink line-clamp-1">{t.subject}</div>
                         {t.lastMessagePreview && (
-                          <div className="mt-1 line-clamp-1 text-xs text-ink/60">
+                          <div className="mt-1 line-clamp-1 text-[11px] text-ink/60 max-w-[300px]">
                             {t.lastMessagePreview.text}
                           </div>
                         )}
                       </div>
                     </div>
                   </td>
-                  <td className="p-4">
-                    <div className="font-medium">{t.user?.name || '—'}</div>
-                    <div className="text-xs text-ink/60">
+                  <td className="p-4 align-top pt-5">
+                    <div className="font-medium text-ink">{t.user?.name || '—'}</div>
+                    <div className="text-[11px] text-ink/60 mt-0.5 line-clamp-1">
                       {t.user?.email}
                     </div>
                   </td>
-                  <td className="p-4 text-xs uppercase tracking-widest">
+                  <td className="p-4 align-top pt-5 text-[11px] uppercase tracking-widest font-medium text-ink/80">
                     {t.category}
                   </td>
-                  <td className="p-4">
+                  <td className="p-4 align-top pt-5">
                     <span
-                      className={`inline-flex rounded-full px-3 py-1 text-xs font-medium uppercase tracking-widest ${
+                      className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest border border-ink/10 ${
                         STATUS_BADGE[t.status] || ''
                       }`}
                     >
                       {t.status.replace('_', ' ')}
                     </span>
                   </td>
-                  <td className="p-4 text-xs text-ink/60">
-                    <div className="inline-flex items-center gap-1">
-                      <Clock size={11} /> {fmtRelative(t.lastActivityAt)}
+                  <td className="p-4 align-top pt-5 text-[11px] text-ink/60">
+                    <div className="inline-flex items-center gap-1.5 font-medium text-ink/80">
+                      <Clock size={12} /> {fmtRelative(t.lastActivityAt)}
                     </div>
-                    <div className="mt-1 inline-flex items-center gap-1">
-                      <MessageSquare size={11} /> {t.messageCount}
+                    <div className="mt-1 inline-flex items-center gap-1.5">
+                      <MessageSquare size={12} /> {t.messageCount} msg{t.messageCount !== 1 && 's'}
                     </div>
                   </td>
-                  <td className="p-4">
+                  <td className="p-4 align-top pt-5 text-right">
                     <Link
                       to={`/admin/support/${t._id}`}
-                      className="text-xs uppercase tracking-widest hover:underline"
+                      className="inline-flex items-center justify-center rounded-full border border-ink/20 bg-sand/30 px-3 py-1.5 text-[10px] uppercase tracking-widest font-bold text-ink hover:bg-ink hover:text-paper transition-colors focus:outline-none"
                     >
-                      Open →
+                      Open
                     </Link>
                   </td>
                 </tr>

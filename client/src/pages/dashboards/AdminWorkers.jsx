@@ -205,119 +205,121 @@ export default function AdminWorkers() {
         </div>
       </FadeUp>
 
-      <div className="card-rounded overflow-x-auto">
+      <div className="card-rounded overflow-x-auto shadow-sm border border-ink/5 bg-paper">
         <table className="w-full text-left text-sm text-ink">
-          <thead className="bg-sand/50 text-xs uppercase tracking-widest text-ink/60">
+          <thead className="bg-sand/50 text-xs uppercase tracking-widest text-ink/60 border-b border-ink/5">
             <tr>
-              <th className="p-4 font-normal">Applicant</th>
-              <th className="p-4 font-normal">KYC</th>
+              <th className="p-4 font-normal">Worker</th>
+              <th className="p-4 font-normal">KYC Status</th>
               <th className="p-4 font-normal">Services</th>
-              <th className="p-4 font-normal">Submitted</th>
-              <th className="p-4 font-normal">Reviewed</th>
-              <th className="p-4 font-normal">Actions</th>
+              <th className="p-4 font-normal">Submitted / Reviewed</th>
+              <th className="p-4 font-normal text-right">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-ink/10">
+          <tbody className="divide-y divide-ink/5">
             {loading ? (
-              <tr>
-                <td colSpan="6" className="p-6 text-center text-ink/60">
-                  Loading…
-                </td>
-              </tr>
+              Array.from({ length: 5 }).map((_, i) => (
+                <tr key={i}>
+                  <td colSpan="5" className="p-4">
+                    <div className="skeleton h-10 w-full rounded" />
+                  </td>
+                </tr>
+              ))
             ) : filtered.length === 0 ? (
               <tr>
-                <td colSpan="6" className="p-6 text-center text-ink/60">
-                  No submissions in this state.
+                <td colSpan="5" className="p-12 text-center text-ink/50">
+                  No submissions found.
                 </td>
               </tr>
             ) : (
               filtered.map((w) => (
                 <tr
                   key={w._id}
-                  className={`transition hover:bg-sand/30:bg-[#18181A]/50 ${
-                    isNew(w) ? 'bg-amber-50/70' : ''
+                  className={`transition-colors hover:bg-sand/30 group ${
+                    isNew(w) ? 'bg-amber-50/50' : ''
                   }`}
                 >
-                  <td className="p-4 text-ink">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-ink">{w.name}</span>
-                      {isNew(w) && (
-                        <span className="rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-white">
-                          New
-                        </span>
-                      )}
-                      {w.role && (
-                        <span className="rounded-full bg-ink/8 px-2 py-0.5 text-[10px] uppercase tracking-widest text-ink/60">
-                          {w.role}
-                        </span>
-                      )}
+                  <td className="p-4 align-top">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-full bg-ink/5 flex items-center justify-center text-ink/60 font-bold uppercase shrink-0">
+                        {w.name?.charAt(0) || '?'}
+                      </div>
+                      <div>
+                        <div className="font-bold text-ink flex items-center gap-2">
+                          {w.name}
+                          {isNew(w) && (
+                            <span className="rounded-full bg-red-500 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-white">
+                              New
+                            </span>
+                          )}
+                          {w.role && (
+                            <span className="rounded-full bg-ink/8 px-2 py-0.5 text-[9px] uppercase tracking-widest text-ink/60">
+                              {w.role}
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-[11px] text-ink/60 mt-0.5">{w.email}</div>
+                        <div className="text-[11px] text-ink/60">{w.phone || '—'}</div>
+                      </div>
                     </div>
-                    <div className="text-xs text-ink">{w.email}</div>
-                    <div className="text-xs text-ink">{w.phone || '—'}</div>
                   </td>
-                  <td className="p-4">
+                  <td className="p-4 align-top pt-5">
                     <span
-                      className={`inline-flex rounded-full px-3 py-1 text-xs font-medium uppercase tracking-widest ${
-                        KYC_BADGE[w.kycStatus] || KYC_BADGE.pending
+                      className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest border ${
+                        w.kycStatus === 'verified' ? 'bg-green-100 text-green-700 border-green-200' : 
+                        w.kycStatus === 'rejected' ? 'bg-red-100 text-red-700 border-red-200' : 
+                        w.kycStatus === 'pending' ? 'bg-ink/5 text-ink/60 border-ink/10' : 
+                        'bg-amber-100 text-amber-800 border-amber-200'
                       }`}
                     >
                       {w.kycStatus || 'pending'}
                     </span>
                     {w.kycStatus === 'rejected' && w.kycRejectionReason && (
-                      <div className="mt-2 text-xs text-red-600">
+                      <div className="mt-1.5 text-[10px] font-medium text-red-600 line-clamp-1 max-w-[200px]" title={w.kycRejectionReason}>
                         {w.kycRejectionReason}
                       </div>
                     )}
                   </td>
-                  {/* Enrolled services — opens the manage modal inline so admins
-                      don't have to dig into the full profile to assign work. */}
-                  <td className="p-4">
+                  <td className="p-4 align-top pt-5">
                     {w.role === 'worker' ? (
                       <button
                         onClick={() => setServicesFor(w)}
-                        className="inline-flex items-center gap-1.5 rounded-full border border-ink/20 px-3 py-1.5 text-xs font-medium text-ink transition hover:bg-ink hover:text-paper"
+                        className="inline-flex items-center gap-1.5 rounded-full border border-ink/20 px-2.5 py-1 text-[10px] uppercase font-bold tracking-widest text-ink transition hover:bg-ink hover:text-paper"
                         title="Assign or remove services for this worker"
                       >
                         <Wrench size={12} />
                         {w.serviceCount || 0}
-                        <span className="text-[10px] uppercase tracking-widest opacity-70">
-                          {w.serviceCount === 1 ? 'service' : 'services'}
-                        </span>
                       </button>
                     ) : (
                       <span className="text-xs text-ink/35">—</span>
                     )}
                   </td>
-                  <td className="p-4 text-xs text-ink">
-                    {fmtDate(w.kycSubmittedAt)}
-                  </td>
-                  <td className="p-4 text-xs text-ink">
-                    {fmtDate(w.kycReviewedAt)}
-                    {w.kycReviewedBy?.name && (
-                      <div className="text-ink">
-                        by {w.kycReviewedBy.name}
+                  <td className="p-4 align-top pt-5 text-xs text-ink/60">
+                    <div className="font-medium text-ink/80">{fmtDate(w.kycSubmittedAt)}</div>
+                    {w.kycReviewedAt && (
+                      <div className="mt-1 text-[10px] uppercase tracking-widest">
+                        Rev: {fmtDate(w.kycReviewedAt)} {w.kycReviewedBy?.name ? `by ${w.kycReviewedBy.name}` : ''}
                       </div>
                     )}
                   </td>
-                  <td className="p-4">
-                    <div className="flex flex-col items-start gap-1">
+                  <td className="p-4 align-top pt-5 text-right">
+                    <div className="flex flex-col items-end gap-1.5">
                       <button
                         onClick={() => {
                           setSelected(w);
                           setRejectMode(false);
                           setRejectReason('');
                         }}
-                        className="text-xs uppercase tracking-widest text-ink hover:underline"
+                        className="inline-flex items-center justify-center rounded-full border border-ink/20 bg-sand/30 px-3 py-1.5 text-[10px] uppercase tracking-widest font-bold text-ink hover:bg-ink hover:text-paper transition-colors focus:outline-none"
                       >
-                        Quick review
+                        Review
                       </button>
-                      {/* Full profile aggregates jobs/earnings — workers only. */}
                       {w.role === 'worker' && (
                         <Link
                           to={`/admin/workers/${w._id}`}
-                          className="text-xs uppercase tracking-widest text-ink hover:underline"
+                          className="text-[10px] uppercase tracking-widest font-bold text-blue-600 hover:underline hover:text-blue-700"
                         >
-                          Full profile →
+                          Profile →
                         </Link>
                       )}
                     </div>

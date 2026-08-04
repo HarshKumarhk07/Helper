@@ -280,69 +280,79 @@ export default function AdminServices() {
         </FadeUp>
       )}
 
-      <div className="card-rounded overflow-x-auto">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-sand/50 text-xs uppercase tracking-widest text-ink/60">
+      <div className="card-rounded overflow-x-auto shadow-sm border border-ink/5 bg-paper">
+        <table className="w-full text-left text-sm text-ink">
+          <thead className="bg-sand/50 text-xs uppercase tracking-widest text-ink/60 border-b border-ink/5">
             <tr>
-              <th className="p-4">Image</th>
-              <th className="p-4">Category</th>
-              <th className="p-4">Name</th>
-              <th className="p-4">Price</th>
-              <th className="p-4">Duration</th>
-              <th className="p-4">Featured</th>
-              <th className="p-4">Actions</th>
+              <th className="p-4 font-normal">Service</th>
+              <th className="p-4 font-normal">Pricing</th>
+              <th className="p-4 font-normal">Duration</th>
+              <th className="p-4 font-normal">Visibility</th>
+              <th className="p-4 font-normal text-right">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-ink/10">
+          <tbody className="divide-y divide-ink/5">
             {loading ? (
-              <tr><td colSpan="6" className="p-4 text-center">Loading...</td></tr>
+              Array.from({ length: 5 }).map((_, i) => (
+                <tr key={i}>
+                  <td colSpan="5" className="p-4">
+                    <div className="skeleton h-12 w-full rounded" />
+                  </td>
+                </tr>
+              ))
             ) : services.length === 0 ? (
-              <tr><td colSpan="6" className="p-4 text-center">No services found.</td></tr>
+              <tr><td colSpan="5" className="p-12 text-center text-ink/50">No services found.</td></tr>
             ) : (
               services.map(s => (
-                <tr key={s._id}>
-                  <td className="p-4">
-                    <img
-                      src={resolveCatalogImage(s)}
-                      className="w-12 h-12 rounded object-cover bg-sand"
-                      alt=""
-                      onError={(e) => {
-                        e.currentTarget.src = CATALOG_PLACEHOLDER_IMAGE;
-                      }}
-                    />
+                <tr key={s._id} className="transition-colors hover:bg-sand/30 group">
+                  <td className="p-4 align-top">
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={resolveCatalogImage(s)}
+                        className="w-12 h-12 rounded object-cover border border-ink/10 bg-sand/50 shrink-0"
+                        alt={s.name}
+                        onError={(e) => {
+                          e.currentTarget.src = CATALOG_PLACEHOLDER_IMAGE;
+                        }}
+                      />
+                      <div>
+                        <div className="font-bold text-ink flex items-center gap-2">{s.name}</div>
+                        <div className="text-[11px] text-ink/60 mt-0.5 line-clamp-1">{s.category?.name || s.category?.slug || 'Uncategorized'}</div>
+                      </div>
+                    </div>
                   </td>
-                  <td className="p-4 text-sm text-ink/70">
-                    {s.category?.name || s.category?.slug || 'Uncategorized'}
+                  <td className="p-4 align-top pt-6">
+                    <div className="font-medium text-ink">
+                      {s.pricingType === 'hourly'
+                        ? <>₹{s.hourlyRate ?? s.price}<span className="text-ink/50 text-xs"> / hr</span></>
+                        : <>₹{s.fixedPrice ?? s.price}</>}
+                    </div>
                   </td>
-                  <td className="p-4 font-medium">{s.name}</td>
-                  <td className="p-4">
-                    {s.pricingType === 'hourly'
-                      ? <>₹{s.hourlyRate ?? s.price}<span className="text-ink/50">/hr</span></>
-                      : <>₹{s.fixedPrice ?? s.price}</>}
+                  <td className="p-4 align-top pt-6">
+                    <span className="inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest border border-ink/10 bg-ink/5 text-ink/70">
+                      {s.durationMinutes} min
+                    </span>
                   </td>
-                  <td className="p-4">{s.durationMinutes} min</td>
-                  <td className="p-4">
+                  <td className="p-4 align-top pt-6">
                     <button
                       onClick={() => handleToggleFeatured(s)}
                       title={s.isFeatured ? 'Remove from featured' : 'Mark as featured'}
-                      className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-widest transition ${
+                      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest transition-colors ${
                         s.isFeatured
                           ? 'bg-amber-400 text-white hover:bg-amber-500'
-                          : 'border border-ink/20 text-ink/50 hover:border-ink/60'
+                          : 'border border-ink/20 text-ink/50 hover:bg-ink/5 hover:text-ink/80'
                       }`}
                     >
-                      {s.isFeatured ? '★ Featured' : 'Feature'}
+                      {s.isFeatured ? <><Star size={10} fill="currentColor" /> Featured</> : 'Feature'}
                     </button>
                   </td>
-                  <td className="p-4">
-                    <div className="flex gap-2">
-                      <button onClick={() => openEditor(s)} className="text-blue-500 hover:text-blue-700 transition" title="Edit">
-                        <Edit2 size={16} />
-                      </button>
-                      <button onClick={() => handleDelete(s._id, s.name)} className="text-red-500 hover:text-red-700 transition" title="Delete">
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
+                  <td className="p-4 align-top pt-5 text-right">
+                    <button
+                      onClick={() => openEditor(s)}
+                      className="inline-flex items-center justify-center rounded-full border border-ink/20 bg-sand/30 px-3 py-1.5 text-[10px] uppercase tracking-widest font-bold text-ink hover:bg-ink hover:text-paper transition-colors focus:outline-none"
+                    >
+                      Manage
+                    </button>
                   </td>
                 </tr>
               ))
@@ -454,9 +464,22 @@ export default function AdminServices() {
                 {editForm.image && <img src={mediaUrl(editForm.image)} alt="Preview" className="h-12 w-12 object-cover rounded-lg mt-2" />}
               </div>
 
-              <div className="md:col-span-2 flex gap-2 pt-2">
-                <button type="button" onClick={closeEditor} className="flex-1 px-3 py-2 rounded-lg border border-ink/20 hover:bg-ink/5:bg-paper/5 transition font-medium text-xs uppercase tracking-widest">Cancel</button>
-                <button type="submit" className="flex-1 px-3 py-2 bg-ink text-paper rounded-lg font-medium text-xs uppercase tracking-widest hover:opacity-90 transition">Save</button>
+              <div className="md:col-span-2 flex flex-wrap justify-between items-center gap-4 mt-2 border-t border-ink/10 pt-6">
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleDelete(editingService._id, editingService.name);
+                    }}
+                    className="text-xs uppercase tracking-widest font-bold text-red-600 hover:text-red-700 hover:underline px-2"
+                  >
+                    Delete Service
+                  </button>
+                </div>
+                <div className="flex gap-3">
+                  <button type="button" onClick={closeEditor} className="pill-btn">Cancel</button>
+                  <button type="submit" className="pill-btn-solid">Save changes</button>
+                </div>
               </div>
             </form>
           </div>

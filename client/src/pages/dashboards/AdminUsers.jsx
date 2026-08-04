@@ -312,102 +312,73 @@ export default function AdminUsers() {
         </FadeUp>
       )}
 
-      <div className="card-rounded overflow-x-auto">
+      <div className="card-rounded overflow-x-auto shadow-sm border border-ink/5 bg-paper">
         <table className="w-full text-left text-sm text-ink">
-          <thead className="bg-sand/50 text-xs uppercase tracking-widest text-ink">
+          <thead className="bg-sand/50 text-xs uppercase tracking-widest text-ink/60 border-b border-ink/5">
             <tr>
-              <th className="p-4 font-normal">Name</th>
-              <th className="p-4 font-normal">Email</th>
+              <th className="p-4 font-normal">User</th>
               <th className="p-4 font-normal">Role</th>
-              <th className="p-4 font-normal">KYC</th>
-              <th className="p-4 font-normal">Details</th>
-              <th className="p-4 font-normal">Status</th>
-              <th className="p-4 font-normal">Actions</th>
+              <th className="p-4 font-normal">KYC Status</th>
+              <th className="p-4 font-normal">Account Status</th>
+              <th className="p-4 font-normal text-right">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-ink/10">
+          <tbody className="divide-y divide-ink/5">
             {loading ? (
-              <tr><td colSpan="7" className="p-4 text-center text-ink">Loading...</td></tr>
+              Array.from({ length: 5 }).map((_, i) => (
+                <tr key={i}>
+                  <td colSpan="5" className="p-4">
+                    <div className="skeleton h-10 w-full rounded" />
+                  </td>
+                </tr>
+              ))
             ) : users.length === 0 ? (
-              <tr><td colSpan="7" className="p-4 text-center text-ink">No users found.</td></tr>
+              <tr><td colSpan="5" className="p-12 text-center text-ink/50">No users found.</td></tr>
             ) : (
               users.map(u => (
-                <tr key={u._id} className={`transition hover:bg-sand/30:bg-[#18181A]/50 ${isNew(u) ? 'bg-amber-50/70' : ''}`}>
-                  <td className="p-4 font-medium text-ink">
-                    <span className="inline-flex items-center gap-2">
-                      {u.name}
-                      {isNew(u) && (
-                        <span className="rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-white">
-                          New
-                        </span>
-                      )}
-                    </span>
+                <tr key={u._id} className={`transition-colors hover:bg-sand/30 group ${isNew(u) ? 'bg-amber-50/50' : ''}`}>
+                  <td className="p-4 align-top">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-full bg-ink/5 flex items-center justify-center text-ink/60 font-bold uppercase shrink-0">
+                        {u.name?.charAt(0) || '?'}
+                      </div>
+                      <div>
+                        <div className="font-bold text-ink flex items-center gap-2">
+                          {u.name}
+                          {isNew(u) && (
+                            <span className="rounded-full bg-red-500 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-white">
+                              New
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-[11px] text-ink/60 line-clamp-1 mt-0.5">{u.email}</div>
+                      </div>
+                    </div>
                   </td>
-                  <td className="p-4 text-ink">{u.email}</td>
-                  <td className="p-4">
-                    <span className="px-2 py-1 bg-ink/5 rounded text-xs tracking-widest uppercase text-ink">
+                  <td className="p-4 align-top pt-5">
+                    <span className="px-2 py-1 bg-ink/5 rounded text-[10px] font-bold tracking-widest uppercase text-ink/80 border border-ink/5">
                       {u.role === 'user' ? 'Customer' : u.role === 'brand' ? 'Brand/Company' : u.role}
                     </span>
                   </td>
-                  <td className="p-4">
-                    <span className={`inline-flex rounded-full px-3 py-1 text-xs font-medium uppercase tracking-widest ${u.kycStatus === 'verified' ? 'bg-green-100 text-green-700' : u.kycStatus === 'rejected' ? 'bg-red-100 text-red-700' : u.kycStatus === 'not required' ? 'bg-ink/10 text-ink/70' : 'bg-amber-100 text-amber-800'}`}>
+                  <td className="p-4 align-top pt-5">
+                    <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest border ${u.kycStatus === 'verified' ? 'bg-green-100 text-green-700 border-green-200' : u.kycStatus === 'rejected' ? 'bg-red-100 text-red-700 border-red-200' : u.kycStatus === 'not required' ? 'bg-ink/5 text-ink/60 border-ink/10' : 'bg-amber-100 text-amber-800 border-amber-200'}`}>
                       {u.kycStatus || 'pending'}
                     </span>
                   </td>
-                  <td className="p-4 text-xs leading-6 text-ink">
-                    {u.role === 'brand' ? (
-                      <>
-                        <div>Company: {u.companyName || 'Not provided'}</div>
-                        <div>Business Type: {u.businessType || 'Not provided'}</div>
-                      </>
-                    ) : (
-                      <>
-                        <div>Aadhaar: {u.aadhaarNumber || 'Not provided'}</div>
-                        <div>PAN: {u.panNumber || 'Not provided'}</div>
-                      </>
-                    )}
-                    <div className="uppercase tracking-widest">
-                      {u.role === 'worker' || u.role === 'brand' ? 'KYC review enabled' : 'No KYC required'}
-                    </div>
-                  </td>
-                  <td className="p-4">
+                  <td className="p-4 align-top pt-5">
                     {u.isActive ? (
-                      <span className="inline-flex items-center gap-1 text-green-600"><ShieldCheck size={14}/> Active</span>
+                      <span className="inline-flex items-center gap-1.5 text-green-600 text-xs font-medium"><ShieldCheck size={14}/> Active</span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 text-red-600"><ShieldAlert size={14}/> Suspended</span>
+                      <span className="inline-flex items-center gap-1.5 text-red-600 text-xs font-medium"><ShieldAlert size={14}/> Suspended</span>
                     )}
                   </td>
-                  <td className="p-4">
-                    <div className="flex flex-col gap-2">
-                      <button
-                        onClick={() => openEditor(u)}
-                        className="text-xs tracking-widest uppercase text-ink hover:underline"
-                      >
-                        Edit
-                      </button>
-                      {(() => {
-                        const isSelf = currentUser?._id === u._id;
-                        const shouldDisable = isSelf && u.isActive;
-                        return (
-                          <button 
-                            onClick={() => handleToggleActive(u._id, u.isActive)}
-                            disabled={shouldDisable}
-                            title={shouldDisable ? "You can't suspend your own account" : undefined}
-                            className="text-xs tracking-widest uppercase text-ink hover:underline disabled:cursor-not-allowed disabled:opacity-40 disabled:no-underline"
-                          >
-                            {u.isActive ? 'Suspend' : 'Activate'}
-                          </button>
-                        );
-                      })()}
-                      {currentUser?._id !== u._id && (
-                        <button
-                          onClick={() => handleDeleteUser(u)}
-                          className="text-xs tracking-widest uppercase text-red-600 hover:underline text-left"
-                        >
-                          Delete
-                        </button>
-                      )}
-                    </div>
+                  <td className="p-4 align-top pt-5 text-right">
+                    <button
+                      onClick={() => openEditor(u)}
+                      className="inline-flex items-center justify-center rounded-full border border-ink/20 bg-sand/30 px-3 py-1.5 text-[10px] uppercase tracking-widest font-bold text-ink hover:bg-ink hover:text-paper transition-colors focus:outline-none"
+                    >
+                      Manage
+                    </button>
                   </td>
                 </tr>
               ))
@@ -510,9 +481,25 @@ export default function AdminUsers() {
                 <input type="checkbox" checked={editForm.isActive} onChange={(e) => setEditForm({ ...editForm, isActive: e.target.checked })} />
                 Active account
               </label>
-              <div className="md:col-span-2 flex flex-wrap justify-end gap-3">
-                <button type="button" onClick={closeEditor} className="pill-btn">Cancel</button>
-                <button type="submit" className="pill-btn-solid">Save changes</button>
+              <div className="md:col-span-2 flex flex-wrap justify-between items-center gap-4 mt-6 border-t border-ink/10 pt-6">
+                <div>
+                  {currentUser?._id !== editingUser._id && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleDeleteUser(editingUser);
+                        closeEditor();
+                      }}
+                      className="text-xs uppercase tracking-widest font-bold text-red-600 hover:text-red-700 hover:underline px-2"
+                    >
+                      Delete Account
+                    </button>
+                  )}
+                </div>
+                <div className="flex gap-3">
+                  <button type="button" onClick={closeEditor} className="pill-btn">Cancel</button>
+                  <button type="submit" className="pill-btn-solid">Save changes</button>
+                </div>
               </div>
             </form>
           </div>

@@ -299,9 +299,9 @@ function PendingPanel({ loading, rows, onOpen, isAdmin }) {
     );
   }
   return (
-    <div className="card-rounded overflow-x-auto">
-      <table className="w-full text-left text-sm">
-        <thead className="bg-sand/50 text-xs uppercase tracking-widest text-ink/60">
+    <div className="card-rounded overflow-x-auto shadow-sm border border-ink/5 bg-paper">
+      <table className="w-full text-left text-sm text-ink">
+        <thead className="bg-sand/50 text-xs uppercase tracking-widest text-ink/60 border-b border-ink/5">
           <tr>
             <th className="p-4 font-normal">Worker</th>
             <th className="p-4 font-normal">Jobs</th>
@@ -309,41 +309,41 @@ function PendingPanel({ loading, rows, onOpen, isAdmin }) {
             <th className="p-4 font-normal">Commission</th>
             <th className="p-4 font-normal text-right">Net Payable</th>
             <th className="p-4 font-normal">Oldest</th>
-            <th className="p-4 font-normal" />
+            <th className="p-4 font-normal text-right">Actions</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-ink/10">
+        <tbody className="divide-y divide-ink/5">
           {rows.map((r) => (
             <tr
               key={r.workerId}
-              className="transition hover:bg-sand/30:bg-[#18181A]/50"
+              className="transition-colors hover:bg-sand/30 group"
             >
-              <td className="p-4">
-                <div className="font-medium">{r.worker?.name || '—'}</div>
-                <div className="text-xs text-ink/60">
+              <td className="p-4 align-top pt-5">
+                <div className="font-medium text-ink">{r.worker?.name || '—'}</div>
+                <div className="text-[11px] text-ink/60 mt-0.5">
                   {r.worker?.email}
                   {r.worker?.kycStatus && r.worker.kycStatus !== 'verified' && (
-                    <span className="ml-2 inline-flex items-center gap-1 text-amber-600">
-                      <AlertCircle size={11} /> KYC {r.worker.kycStatus}
+                    <span className="ml-2 inline-flex items-center gap-1 text-amber-600 border border-amber-200 bg-amber-50 px-1.5 rounded-full py-0.5">
+                      <AlertCircle size={10} /> KYC {r.worker.kycStatus}
                     </span>
                   )}
                 </div>
               </td>
-              <td className="p-4">{r.jobs}</td>
-              <td className="p-4">{inr(r.gross)}</td>
-              <td className="p-4 text-ink/70">{inr(r.commission)}</td>
-              <td className="p-4 text-right font-semibold">{inr(r.net)}</td>
-              <td className="p-4 text-xs text-ink/60">
+              <td className="p-4 align-top pt-5 font-medium">{r.jobs}</td>
+              <td className="p-4 align-top pt-5 text-ink/80">{inr(r.gross)}</td>
+              <td className="p-4 align-top pt-5 text-ink/70">{inr(r.commission)}</td>
+              <td className="p-4 align-top pt-5 text-right font-bold text-ink">{inr(r.net)}</td>
+              <td className="p-4 align-top pt-5 text-[11px] text-ink/60">
                 {fmtDate(r.oldest)}
               </td>
-              <td className="p-4 text-right">
+              <td className="p-4 align-top pt-5 text-right">
                 <button
                   onClick={() => onOpen(r)}
                   disabled={!isAdmin}
                   title={!isAdmin ? 'Only admins can settle' : undefined}
-                  className="inline-flex items-center gap-2 rounded-full bg-ink px-4 py-2 text-xs uppercase tracking-widest text-paper transition hover:opacity-90 disabled:opacity-40"
+                  className="inline-flex items-center justify-center gap-1.5 rounded-full border border-ink/20 bg-sand/30 px-3 py-1.5 text-[10px] uppercase tracking-widest font-bold text-ink hover:bg-ink hover:text-paper transition-colors focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  <Banknote size={14} />
+                  <Banknote size={12} />
                   {isAdmin ? 'Settle' : 'View'}
                 </button>
               </td>
@@ -367,9 +367,9 @@ function HistoryPanel({ loading, batches }) {
     );
   }
   return (
-    <div className="card-rounded overflow-x-auto">
-      <table className="w-full text-left text-sm">
-        <thead className="bg-sand/50 text-xs uppercase tracking-widest text-ink/60">
+    <div className="card-rounded overflow-x-auto shadow-sm border border-ink/5 bg-paper">
+      <table className="w-full text-left text-sm text-ink">
+        <thead className="bg-sand/50 text-xs uppercase tracking-widest text-ink/60 border-b border-ink/5">
           <tr>
             <th className="p-4 font-normal">Code</th>
             <th className="p-4 font-normal">Worker</th>
@@ -381,22 +381,24 @@ function HistoryPanel({ loading, batches }) {
             <th className="p-4 font-normal">By</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-ink/10">
+        <tbody className="divide-y divide-ink/5">
           {batches.map((b) => (
-            <tr key={b._id} className="transition hover:bg-sand/30:bg-[#18181A]/50">
-              <td className="p-4 font-mono text-xs">{b.code}</td>
-              <td className="p-4">
-                <div className="font-medium">{b.worker?.name || '—'}</div>
-                <div className="text-xs text-ink/60">{b.worker?.email}</div>
+            <tr key={b._id} className="transition-colors hover:bg-sand/30 group">
+              <td className="p-4 align-top pt-5 font-mono text-[11px] font-semibold">{b.code}</td>
+              <td className="p-4 align-top pt-5">
+                <div className="font-medium text-ink">{b.worker?.name || '—'}</div>
+                <div className="text-[11px] text-ink/60 mt-0.5">{b.worker?.email}</div>
               </td>
-              <td className="p-4">{b.earningsCount}</td>
-              <td className="p-4 font-semibold">{inr(b.totalNet)}</td>
-              <td className="p-4 text-xs uppercase tracking-widest">
-                {METHOD_LABEL[b.method] || b.method}
+              <td className="p-4 align-top pt-5 font-medium">{b.earningsCount}</td>
+              <td className="p-4 align-top pt-5 font-bold text-ink">{inr(b.totalNet)}</td>
+              <td className="p-4 align-top pt-5">
+                <span className="inline-flex rounded-full border border-ink/10 bg-ink/5 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-ink/70">
+                  {METHOD_LABEL[b.method] || b.method}
+                </span>
               </td>
-              <td className="p-4 text-xs">{b.reference || '—'}</td>
-              <td className="p-4 text-xs">{fmtDateTime(b.settledAt)}</td>
-              <td className="p-4 text-xs">{b.settledBy?.name || '—'}</td>
+              <td className="p-4 align-top pt-5 text-[11px] text-ink/60">{b.reference || '—'}</td>
+              <td className="p-4 align-top pt-5 text-[11px] font-medium text-ink/80">{fmtDateTime(b.settledAt)}</td>
+              <td className="p-4 align-top pt-5 text-[11px] text-ink/60">{b.settledBy?.name || '—'}</td>
             </tr>
           ))}
         </tbody>
@@ -442,11 +444,11 @@ function SettleModal({
         </div>
 
         <div className="flex-1 overflow-y-auto p-6">
-          <div className="overflow-x-auto rounded-2xl border border-ink/10">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-sand/50 text-xs uppercase tracking-widest text-ink/60">
+          <div className="overflow-x-auto rounded-xl border border-ink/5 bg-sand/10">
+            <table className="w-full text-left text-sm text-ink">
+              <thead className="bg-sand/50 text-[10px] uppercase tracking-widest text-ink/60 border-b border-ink/5">
                 <tr>
-                  <th className="p-3 font-normal">
+                  <th className="p-3 font-normal w-10">
                     <input
                       type="checkbox"
                       checked={selectedIds.size === entries.length && entries.length > 0}
@@ -459,6 +461,7 @@ function SettleModal({
                           });
                         }
                       }}
+                      className="rounded border-ink/20"
                     />
                   </th>
                   <th className="p-3 font-normal">Booking</th>
@@ -469,31 +472,32 @@ function SettleModal({
                   <th className="p-3 font-normal text-right">Net</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-ink/10">
+              <tbody className="divide-y divide-ink/5">
                 {entries.map((e) => (
-                  <tr key={e._id} className="text-sm">
+                  <tr key={e._id} className="text-sm transition-colors hover:bg-sand/30">
                     <td className="p-3">
                       <input
                         type="checkbox"
                         checked={selectedIds.has(e._id)}
                         onChange={() => onToggle(e._id)}
+                        className="rounded border-ink/20"
                       />
                     </td>
-                    <td className="p-3 font-mono text-xs">{e.booking?.code || e.booking}</td>
-                    <td className="p-3">{e.booking?.service?.name || '—'}</td>
-                    <td className="p-3 text-xs text-ink/70">
+                    <td className="p-3 font-mono text-[11px] font-semibold text-ink">{e.booking?.code || e.booking}</td>
+                    <td className="p-3 text-[13px] font-medium text-ink/80">{e.booking?.service?.name || '—'}</td>
+                    <td className="p-3 text-[11px] text-ink/60">
                       {fmtDateTime(e.completedAt)}
                     </td>
-                    <td className="p-3 text-right">{inr(e.grossAmount)}</td>
+                    <td className="p-3 text-right text-ink/80">{inr(e.grossAmount)}</td>
                     <td className="p-3 text-right text-ink/70">
                       {inr(e.commissionAmount)}
                     </td>
-                    <td className="p-3 text-right font-semibold">{inr(e.netAmount)}</td>
+                    <td className="p-3 text-right font-bold text-ink">{inr(e.netAmount)}</td>
                   </tr>
                 ))}
                 {entries.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="p-6 text-center text-ink/60">
+                    <td colSpan={7} className="p-12 text-center text-ink/50 text-xs uppercase tracking-widest">
                       No pending earnings
                     </td>
                   </tr>

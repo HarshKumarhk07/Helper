@@ -275,69 +275,79 @@ export default function AdminProducts() {
         </FadeUp>
       )}
 
-      <div className="card-rounded overflow-x-auto">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-sand/50 text-xs uppercase tracking-widest text-ink/60">
+      <div className="card-rounded overflow-x-auto shadow-sm border border-ink/5 bg-paper">
+        <table className="w-full text-left text-sm text-ink">
+          <thead className="bg-sand/50 text-xs uppercase tracking-widest text-ink/60 border-b border-ink/5">
             <tr>
-              <th className="p-4">Image</th>
-              <th className="p-4">Name</th>
-              <th className="p-4">Price</th>
-              <th className="p-4">Stock</th>
-              <th className="p-4">Featured</th>
-              <th className="p-4">Actions</th>
+              <th className="p-4 font-normal">Product</th>
+              <th className="p-4 font-normal">Price</th>
+              <th className="p-4 font-normal">Stock Status</th>
+              <th className="p-4 font-normal">Visibility</th>
+              <th className="p-4 font-normal text-right">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-ink/10">
+          <tbody className="divide-y divide-ink/5">
             {loading ? (
-              <tr><td colSpan="6" className="p-4 text-center">Loading...</td></tr>
+              Array.from({ length: 5 }).map((_, i) => (
+                <tr key={i}>
+                  <td colSpan="5" className="p-4">
+                    <div className="skeleton h-12 w-full rounded" />
+                  </td>
+                </tr>
+              ))
             ) : filteredProducts.length === 0 ? (
-              <tr><td colSpan="6" className="p-4 text-center">No products found.</td></tr>
+              <tr><td colSpan="5" className="p-12 text-center text-ink/50">No products found.</td></tr>
             ) : (
               filteredProducts.map(p => (
-                <tr key={p._id}>
-                  <td className="p-4">
-                    <img
-                      src={resolveCatalogImage(p)}
-                      className="w-12 h-12 rounded object-cover bg-sand"
-                      alt={p.name}
-                      onError={(e) => {
-                        e.currentTarget.src = CATALOG_PLACEHOLDER_IMAGE;
-                      }}
-                    />
+                <tr key={p._id} className="transition-colors hover:bg-sand/30 group">
+                  <td className="p-4 align-top">
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={resolveCatalogImage(p)}
+                        className="w-12 h-12 rounded object-cover border border-ink/10 bg-sand/50 shrink-0"
+                        alt={p.name}
+                        onError={(e) => {
+                          e.currentTarget.src = CATALOG_PLACEHOLDER_IMAGE;
+                        }}
+                      />
+                      <div>
+                        <div className="font-bold text-ink">{p.name}</div>
+                        <div className="text-[11px] text-ink/60 mt-0.5 line-clamp-1">{p.category || 'Uncategorized'}</div>
+                      </div>
+                    </div>
                   </td>
-                  <td className="p-4 font-medium">{p.name}</td>
-                  <td className="p-4">₹{p.price}</td>
-                  <td className="p-4">
+                  <td className="p-4 align-top pt-6">
+                    <div className="font-medium text-ink">₹{p.price}</div>
+                  </td>
+                  <td className="p-4 align-top pt-6">
                     {p.stock <= 0 ? (
-                      <span className="rounded-pill bg-red-900 px-3 py-1 text-xs font-bold text-white">Out of stock</span>
+                      <span className="inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest border bg-red-100 text-red-700 border-red-200">Out of stock</span>
                     ) : p.stock <= lowStockThreshold ? (
-                      <span className="rounded-pill bg-amber-100 px-3 py-1 text-xs font-bold text-amber-900">{p.stock}</span>
+                      <span className="inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest border bg-amber-100 text-amber-800 border-amber-200">{p.stock} left</span>
                     ) : (
-                      <span>{p.stock}</span>
+                      <span className="inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest border bg-green-100 text-green-700 border-green-200">{p.stock} in stock</span>
                     )}
                   </td>
-                  <td className="p-4">
+                  <td className="p-4 align-top pt-6">
                     <button
                       onClick={() => handleToggleFeatured(p)}
                       title={p.isFeatured ? 'Remove from featured' : 'Mark as featured'}
-                      className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-widest transition ${
+                      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest transition-colors ${
                         p.isFeatured
                           ? 'bg-amber-400 text-white hover:bg-amber-500'
-                          : 'border border-ink/20 text-ink/50 hover:border-ink/60'
+                          : 'border border-ink/20 text-ink/50 hover:bg-ink/5 hover:text-ink/80'
                       }`}
                     >
-                      {p.isFeatured ? '★ Featured' : 'Feature'}
+                      {p.isFeatured ? <><Star size={10} fill="currentColor" /> Featured</> : 'Feature'}
                     </button>
                   </td>
-                  <td className="p-4">
-                    <div className="flex gap-2">
-                      <button onClick={() => openEditor(p)} className="text-blue-500 hover:text-blue-700 transition" title="Edit">
-                        <Edit2 size={16} />
-                      </button>
-                      <button onClick={() => handleDelete(p._id, p.name)} className="text-red-500 hover:text-red-700 transition" title="Delete">
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
+                  <td className="p-4 align-top pt-5 text-right">
+                    <button
+                      onClick={() => openEditor(p)}
+                      className="inline-flex items-center justify-center rounded-full border border-ink/20 bg-sand/30 px-3 py-1.5 text-[10px] uppercase tracking-widest font-bold text-ink hover:bg-ink hover:text-paper transition-colors focus:outline-none"
+                    >
+                      Manage
+                    </button>
                   </td>
                 </tr>
               ))
@@ -445,9 +455,22 @@ export default function AdminProducts() {
                 Featured product
               </label>
 
-              <div className="md:col-span-2 flex gap-3 pt-4">
-                <button type="button" onClick={closeEditor} className="flex-1 px-4 py-3 rounded-xl border border-ink/20 hover:bg-ink/5:bg-paper/5 transition font-medium uppercase tracking-widest text-sm">Cancel</button>
-                <button type="submit" className="flex-1 px-4 py-3 bg-ink text-paper rounded-xl font-medium uppercase tracking-widest text-sm hover:opacity-90 transition">Save Changes</button>
+              <div className="md:col-span-2 flex flex-wrap justify-between items-center gap-4 mt-2 border-t border-ink/10 pt-6">
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleDelete(editingProduct._id, editingProduct.name);
+                    }}
+                    className="text-xs uppercase tracking-widest font-bold text-red-600 hover:text-red-700 hover:underline px-2"
+                  >
+                    Delete Product
+                  </button>
+                </div>
+                <div className="flex gap-3">
+                  <button type="button" onClick={closeEditor} className="pill-btn">Cancel</button>
+                  <button type="submit" className="pill-btn-solid">Save changes</button>
+                </div>
               </div>
             </form>
           </div>
