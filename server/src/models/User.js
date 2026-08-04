@@ -19,7 +19,7 @@ const userSchema = new mongoose.Schema(
     passportPhoto: { type: String, trim: true, default: '' },
     kycStatus: {
       type: String,
-      enum: ['pending', 'submitted', 'verified', 'rejected'],
+      enum: ['pending', 'submitted', 'verified', 'rejected', 'not required'],
       default: 'pending',
       index: true,
     },
@@ -107,6 +107,10 @@ const userSchema = new mongoose.Schema(
 );
 
 userSchema.pre('save', async function hashPassword(next) {
+  if (this.isNew && this.role === ROLES.USER) {
+    this.kycStatus = 'not required';
+  }
+  
   if (!this.isModified('password')) return next();
   const rounds = Number(process.env.BCRYPT_SALT_ROUNDS || 10);
   this.password = await bcrypt.hash(this.password, rounds);

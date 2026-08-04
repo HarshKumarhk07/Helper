@@ -298,6 +298,7 @@ export default function AdminUsers() {
                 <option value="pending">KYC Pending</option>
                 <option value="verified">KYC Verified</option>
                 <option value="rejected">KYC Rejected</option>
+                <option value="not required">KYC Not Required</option>
               </select>
               <select className="p-3 border rounded-xl bg-white text-ink border-ink/20 focus:outline-none focus:border-ink:border-paper/60" value={newUser.role} onChange={(e) => setNewUser({...newUser, role: e.target.value})}>
                 <option value="worker">Worker</option>
@@ -349,7 +350,7 @@ export default function AdminUsers() {
                     </span>
                   </td>
                   <td className="p-4">
-                    <span className={`inline-flex rounded-full px-3 py-1 text-xs font-medium uppercase tracking-widest ${u.kycStatus === 'verified' ? 'bg-green-100 text-green-700' : u.kycStatus === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-800'}`}>
+                    <span className={`inline-flex rounded-full px-3 py-1 text-xs font-medium uppercase tracking-widest ${u.kycStatus === 'verified' ? 'bg-green-100 text-green-700' : u.kycStatus === 'rejected' ? 'bg-red-100 text-red-700' : u.kycStatus === 'not required' ? 'bg-ink/10 text-ink/70' : 'bg-amber-100 text-amber-800'}`}>
                       {u.kycStatus || 'pending'}
                     </span>
                   </td>
@@ -496,6 +497,7 @@ export default function AdminUsers() {
                 <option value="pending">KYC Pending</option>
                 <option value="verified">KYC Verified</option>
                 <option value="rejected">KYC Rejected</option>
+                <option value="not required">KYC Not Required</option>
               </select>
               <select className="p-3 border rounded-xl bg-transparent border-ink/20 text-ink" value={editForm.role} onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}>
                 <option value="worker">Worker</option>
