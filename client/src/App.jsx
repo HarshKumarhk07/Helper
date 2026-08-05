@@ -106,6 +106,7 @@ const WorkerKyc = lazy(() => import('./pages/dashboards/WorkerKyc.jsx'));
 const WorkerAvailability = lazy(() => import('./pages/dashboards/WorkerAvailability.jsx'));
 const WorkerServices = lazy(() => import('./pages/dashboards/WorkerServices.jsx'));
 const WorkerPromote = lazy(() => import('./pages/dashboards/WorkerPromote.jsx'));
+const UserBankDetails = lazy(() => import('./pages/dashboards/UserBankDetails.jsx'));
 
 // User surface
 const UserDashboard = lazy(() => import('./pages/dashboards/UserDashboard.jsx'));
@@ -230,6 +231,7 @@ export default function App() {
                 <Route path="/brand/products" element={<BrandProducts />} />
                 <Route path="/brand/orders" element={<BrandOrders />} />
                 <Route path="/brand/kyc" element={<BrandKyc />} />
+                <Route path="/brand/bank-details" element={<UserBankDetails />} />
               </Route>
 
               <Route element={<ProtectedRoute roles={['admin']} />}>
@@ -257,6 +259,7 @@ export default function App() {
                 <Route path="/worker/availability" element={<WorkerAvailability />} />
                 <Route path="/worker/jobs/:bookingId/nav" element={<WorkerNav />} />
                 <Route path="/worker/promote" element={<WorkerPromote />} />
+                <Route path="/worker/bank-details" element={<UserBankDetails />} />
               </Route>
 
               <Route element={<ProtectedRoute />}>

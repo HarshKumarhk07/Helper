@@ -228,6 +228,12 @@ export default function BrandDashboard() {
                 >
                   Manage Product Catalogue <Package size={14} />
                 </Link>
+                <Link
+                  to="/brand/bank-details"
+                  className="w-full inline-flex items-center justify-center gap-2 border border-ink/10 text-ink rounded-full py-3.5 text-xs font-bold uppercase tracking-widest hover:bg-ink/5 transition-all"
+                >
+                  Bank & UPI Details <CheckCircle2 size={14} />
+                </Link>
               </div>
             </div>
           </div>

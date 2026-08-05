@@ -14,6 +14,7 @@ const auditLogSchema = new mongoose.Schema(
     changes: { type: Object, default: {} }, // stores { field: { from, to } }
     ipAddress: { type: String, default: null },
     userAgent: { type: String, default: null },
+    requestId: { type: String, default: null },
     status: { type: String, enum: ['success', 'failure'], default: 'success' },
     errorMessage: { type: String, default: null },
   },

@@ -34,6 +34,7 @@ import locationRoutes from './routes/location.routes.js';
 import faqRoutes from './routes/faq.routes.js';
 import carServiceRoutes from './routes/carService.routes.js';
 import workerRoutes from './routes/worker.routes.js';
+import bankAccountRoutes from './routes/bankAccount.routes.js';
 import { notFound, errorHandler } from './middleware/error.js';
 
 const app = express();
@@ -189,6 +190,7 @@ app.use('/api/locations', locationRoutes);
 app.use('/api/faqs', faqRoutes);
 app.use('/api/car-service', carServiceRoutes);
 app.use('/api/worker', workerRoutes);
+app.use('/api/bank-account', bankAccountRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
