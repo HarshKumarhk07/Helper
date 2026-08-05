@@ -82,6 +82,7 @@ const AdminOrders = lazy(() => import('./pages/dashboards/AdminOrders.jsx'));
 const AdminFinance = lazy(() => import('./pages/dashboards/AdminFinance.jsx'));
 const AdminPayouts = lazy(() => import('./pages/dashboards/AdminPayouts.jsx'));
 const AdminSettings = lazy(() => import('./pages/dashboards/AdminSettings.jsx'));
+const AdminBankAccounts = lazy(() => import('./pages/dashboards/AdminBankAccounts.jsx'));
 // [CAR-TRIPS DISABLED] Car Trips / Car Service feature hidden from UI. See CAR_TRIPS_DISABLED.md
 // const WorkerCarService = lazy(() => import('./pages/dashboards/WorkerCarService.jsx'));
 // const AdminCarKycQueue = lazy(() => import('./pages/dashboards/AdminCarKycQueue.jsx'));
@@ -212,6 +213,7 @@ export default function App() {
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/admin/users" element={<AdminUsers />} />
                 <Route path="/admin/workers" element={<AdminWorkers />} />
+                <Route path="/admin/bank-accounts" element={<AdminBankAccounts />} />
                 {/* [CAR-TRIPS DISABLED] <Route path="/admin/car-kyc" element={<AdminCarKycQueue />} /> */}
                 <Route path="/admin/workers/:id" element={<AdminWorkerDetail />} />
               </Route>

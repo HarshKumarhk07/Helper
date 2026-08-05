@@ -7,6 +7,7 @@ import {
   updateBankAccount,
   deleteBankAccount,
   adminVerifyAccount,
+  listAllBankAccounts,
 } from '../controllers/bankAccount.controller.js';
 
 const router = Router();
@@ -31,6 +32,7 @@ router.delete('/:id', requireAuth, requireWorkerOrBrand, deleteBankAccount);
 // ---------------------------------------------------------
 // Admin routes (Accessible by ADMIN only)
 // ---------------------------------------------------------
+router.get('/admin', requireAuth, requireRole(ROLES.ADMIN), listAllBankAccounts);
 router.patch('/admin/:id/verify', requireAuth, requireRole(ROLES.ADMIN), adminVerifyAccount);
 
 export default router;

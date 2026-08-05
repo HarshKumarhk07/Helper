@@ -32,3 +32,8 @@ export async function adminVerifyBankAccount(id, payload) {
   const { data } = await api.patch(`/bank-account/admin/${id}/verify`, payload);
   return data;
 }
+
+export async function listAdminBankAccounts(query = {}) {
+  const { data } = await api.get('/bank-account/admin', { params: query });
+  return data;
+}

@@ -234,6 +234,70 @@ export const deleteBankAccount = asyncHandler(async (req, res) => {
 });
 
 /**
+ * GET /api/bank-account/admin
+ * Admin only: list all bank accounts with pagination and filtering
+ */
+export const listAllBankAccounts = asyncHandler(async (req, res) => {
+  const { page = 1, limit = 10, status, q } = req.query;
+  const query = { isActive: true };
+
+  if (status && status !== 'all') {
+    query.verifiedStatus = status;
+  }
+
+  // Populate user first if we need to search by user fields, or just do a general search
+  let userIds = [];
+  if (q) {
+    const User = (await import('../models/User.js')).default;
+    const regex = new RegExp(q, 'i');
+    const matchedUsers = await User.find({
+      $or: [{ name: regex }, { email: regex }]
+    }).select('_id');
+    
+    userIds = matchedUsers.map(u => u._id);
+    
+    query.$or = [
+      { accountHolderName: regex },
+      { bankName: regex },
+      { user: { $in: userIds } }
+    ];
+  }
+
+  const skip = (Number(page) - 1) * Number(limit);
+  const totalRecords = await BankAccount.countDocuments(query);
+  const accounts = await BankAccount.find(query)
+    .populate('user', 'name email phone role kycStatus')
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(Number(limit));
+
+  // Note: For admin listing, we might return full details or masked depending on security preference.
+  // We'll return full details since it's the admin panel and they need to verify it.
+  // (In a highly secure environment, you might only unmask on explicit request per account)
+  const safeAccounts = accounts.map(acc => {
+    const json = acc.toJSON();
+    // Expose plain account number and UPI for admin verification
+    json.accountNumber = acc.getPlainAccountNumber();
+    if (acc.upiId) {
+      json.upiId = acc.getPlainUpiId();
+    }
+    return json;
+  });
+
+  res.status(200).json({
+    accounts: safeAccounts,
+    pagination: {
+      totalRecords,
+      totalPages: Math.ceil(totalRecords / Number(limit)),
+      page: Number(page),
+      limit: Number(limit),
+      hasNextPage: skip + accounts.length < totalRecords,
+      hasPreviousPage: Number(page) > 1,
+    }
+  });
+});
+
+/**
  * PATCH /api/bank-account/admin/:id/verify
  * Admin only: verify or reject bank details
  */

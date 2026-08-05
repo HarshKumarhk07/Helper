@@ -42,7 +42,9 @@ export default function DashboardShell({ eyebrow, title, children, slices }) {
       { to: '/worker/availability', label: 'Availability' },
       { to: '/worker/services', label: 'My Services' },
       // [CAR-TRIPS DISABLED] { to: '/worker/car-service', label: 'Car Service' },
-      { to: '/worker/kyc', label: 'KYC Verification' }
+      { to: '/worker/kyc', label: 'KYC Verification' },
+      { to: '/worker/bank-details', label: 'Bank & UPI Details' },
+      { to: '/worker/promote', label: 'Promote Profile' }
     ];
   } else if (role === 'admin') {
     navItems = [
@@ -56,6 +58,7 @@ export default function DashboardShell({ eyebrow, title, children, slices }) {
       { to: '/admin/workers', label: 'Workers' },
       // [CAR-TRIPS DISABLED] { to: '/admin/car-kyc', label: 'Car Service KYC' },
       { to: '/admin/users', label: 'Users' },
+      { to: '/admin/bank-accounts', label: 'Bank Accounts' },
       { to: '/admin/coupons', label: 'Coupons' },
       { to: '/admin/payouts', label: 'Payouts' },
       { to: '/admin/wallet', label: 'Wallet Trans' },
@@ -67,6 +70,7 @@ export default function DashboardShell({ eyebrow, title, children, slices }) {
       { to: '/brand', label: 'Brand Dashboard' },
       { to: '/brand/products', label: 'Products' },
       { to: '/brand/kyc', label: 'KYC Verification' },
+      { to: '/brand/bank-details', label: 'Bank & UPI Details' },
       { to: '/brand/pricing', label: 'Pricing (Optional)' }
     ];
   }
