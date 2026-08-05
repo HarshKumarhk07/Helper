@@ -80,23 +80,28 @@ export function AuthProvider({ children }) {
     setUser(null);
   }, []);
 
+  const refetchUser = useCallback(async () => {
+    try {
+      const { data } = await api.get('/auth/me');
+      setUser(data.user);
+      return data.user;
+    } catch (err) {
+      const status = err?.response?.status;
+      if (status === 401 || status === 403) {
+        clearTokens();
+      }
+      throw err;
+    }
+  }, []);
+
   useEffect(() => {
     const token = localStorage.getItem(ACCESS_KEY);
     if (!token) {
       setBootstrapping(false);
       return;
     }
-    api
-      .get('/auth/me')
-      .then(({ data }) => setUser(data.user))
-      .catch((err) => {
-        const status = err?.response?.status;
-        if (status === 401 || status === 403) {
-          clearTokens();
-        }
-      })
-      .finally(() => setBootstrapping(false));
-  }, []);
+    refetchUser().finally(() => setBootstrapping(false));
+  }, [refetchUser]);
 
   // React to auth events emitted by the axios interceptor (refresh / forced logout)
   useEffect(() => {
@@ -122,6 +127,7 @@ export function AuthProvider({ children }) {
         logout,
         applySession,
         loginWithGoogle,
+        refetchUser,
       }}
     >
       {children}

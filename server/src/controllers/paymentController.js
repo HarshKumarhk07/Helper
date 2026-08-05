@@ -152,10 +152,22 @@ export const verifyRazorpayPayment = asyncHandler(async (req, res) => {
         });
       }
     } else if (type === 'featured_worker') {
-      await User.findByIdAndUpdate(referenceId, {
+      const updatedUser = await User.findByIdAndUpdate(referenceId, {
         isFeatured: true,
         isRecommended: true,
       });
+      if (updatedUser) {
+        logAudit({
+          req,
+          action: 'payment_verified',
+          resource: 'featured_worker',
+          resourceId: updatedUser._id,
+          changes: {
+            isFeatured: { from: false, to: true },
+            isRecommended: { from: false, to: true },
+          },
+        });
+      }
     }
 
     res.json({ message: 'Payment verified successfully' });

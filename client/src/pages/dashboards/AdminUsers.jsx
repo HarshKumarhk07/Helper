@@ -4,7 +4,7 @@ import api from '../../api/axios.js';
 import { listUsers, adminCreateUser, updateUser, setUserActive, deleteUser } from '../../api/users.js';
 import FadeUp from '../../components/ui/FadeUp.jsx';
 import DashboardShell from './DashboardShell.jsx';
-import { ShieldAlert, ShieldCheck, Search } from 'lucide-react';
+import { ShieldAlert, ShieldCheck, Search, Star } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import useAdminSeen from '../../hooks/useAdminSeen.js';
 
@@ -362,6 +362,11 @@ export default function AdminUsers() {
                           {isNew(u) && (
                             <span className="rounded-full bg-red-500 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-white">
                               New
+                            </span>
+                          )}
+                          {u.isFeatured && (
+                            <span className="rounded-full bg-brand px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-ink flex items-center gap-1">
+                              <Star size={10} className="fill-ink text-ink" /> Featured
                             </span>
                           )}
                         </div>
