@@ -101,25 +101,13 @@ export default function BestWorkers({ category }) {
           </FadeUp>
         </div>
 
-        {/* Masonry Collage */}
-        <div className="columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4">
+        {/* Uniform Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
           {workers.map((worker, index) => {
-            // Give some random-looking heights for the collage effect
-            // Modulo to make it deterministic based on index
-            const heightClasses = [
-              'h-64',
-              'h-80',
-              'h-56',
-              'h-72',
-              'h-96',
-              'h-60'
-            ];
-            const heightClass = heightClasses[index % heightClasses.length];
-
             return (
-              <FadeUp key={worker._id} delay={index * 0.1} className="break-inside-avoid">
+              <FadeUp key={worker._id} delay={index * 0.1}>
                 <div 
-                  className={`relative w-full rounded-[2rem] overflow-hidden group bg-paper/5 border border-paper/10 ${heightClass}`}
+                  className="relative w-full aspect-[3/4] rounded-[2rem] overflow-hidden group bg-paper/5 border border-paper/10"
                 >
                   {worker.avatar ? (
                     <img 
