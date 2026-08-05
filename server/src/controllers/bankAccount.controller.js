@@ -277,9 +277,9 @@ export const listAllBankAccounts = asyncHandler(async (req, res) => {
   const safeAccounts = accounts.map(acc => {
     const json = acc.toJSON();
     // Expose plain account number and UPI for admin verification
-    json.accountNumber = acc.getPlainAccountNumber();
+    json.accountNumber = acc.decryptedAccountNumber;
     if (acc.upiId) {
-      json.upiId = acc.getPlainUpiId();
+      json.upiId = acc.decryptedUpiId;
     }
     return json;
   });
