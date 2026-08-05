@@ -1,5 +1,4 @@
-import api from './index.js';
-import { v4 as uuidv4 } from 'uuid';
+import api from './axios.js';
 
 export async function getBankAccount() {
   const { data } = await api.get('/bank-account');
@@ -9,7 +8,7 @@ export async function getBankAccount() {
 export async function createBankAccount(accountData) {
   const { data } = await api.post('/bank-account', accountData, {
     headers: {
-      'Idempotency-Key': uuidv4()
+      'Idempotency-Key': crypto.randomUUID()
     }
   });
   return data;
@@ -18,7 +17,7 @@ export async function createBankAccount(accountData) {
 export async function updateBankAccount(id, accountData) {
   const { data } = await api.patch(`/bank-account/${id}`, accountData, {
     headers: {
-      'Idempotency-Key': uuidv4()
+      'Idempotency-Key': crypto.randomUUID()
     }
   });
   return data;

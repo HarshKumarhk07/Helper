@@ -1,7 +1,7 @@
 import BankAccount from '../models/BankAccount.js';
 import AuditLog from '../models/AuditLog.js';
 import { sanitizeInput } from '../utils/sanitizer.js';
-import asyncHandler from '../utils/asyncHandler.js';
+import { asyncHandler } from '../utils/asyncHandler.js';
 import { encrypt } from '../utils/encryption.js';
 
 // Simple in-memory set to track idempotency keys. 
