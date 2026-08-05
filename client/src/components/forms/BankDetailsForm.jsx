@@ -4,13 +4,14 @@ import { getBankAccount, createBankAccount, updateBankAccount } from '../../api/
 import PillButton from '../ui/PillButton.jsx';
 import StatusBadge from '../ui/StatusBadge.jsx';
 import { formatDateTime } from '../../lib/format.js';
-import { Shield, Lock } from 'lucide-react';
+import { Shield, Lock, AlertCircle, X } from 'lucide-react';
 
 export default function BankDetailsForm() {
   const [account, setAccount] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   const [formData, setFormData] = useState({
     accountHolderName: '',
@@ -78,10 +79,11 @@ export default function BankDetailsForm() {
       toast.error(errorMsg);
       return;
     }
+    setShowConfirmModal(true);
+  };
 
-    const confirmSave = window.confirm('Are you sure you want to save these bank details? This may require re-verification.');
-    if (!confirmSave) return;
-
+  const confirmAndSave = async () => {
+    setShowConfirmModal(false);
     setSaving(true);
     try {
       // Create payload. If masked values are unchanged, don't send them to prevent validation errors on backend
@@ -281,6 +283,45 @@ export default function BankDetailsForm() {
           </div>
         )}
       </form>
+
+      {showConfirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/70 p-4 backdrop-blur-sm transition-all duration-300">
+          <div className="card-rounded w-full max-w-md bg-paper p-6 shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
+            <button 
+              onClick={() => setShowConfirmModal(false)}
+              className="absolute right-4 top-4 text-ink/40 hover:text-ink transition-colors"
+            >
+              <X size={20} />
+            </button>
+            
+            <div className="flex flex-col items-center text-center mt-2">
+              <div className="h-12 w-12 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center mb-4 text-amber-500">
+                <AlertCircle size={24} />
+              </div>
+              <h3 className="text-xl font-bold text-ink mb-2">Save Bank Details?</h3>
+              <p className="text-sm text-ink/70 mb-8 leading-relaxed">
+                Please double check your account number and IFSC code. 
+                {account ? ' Updating these details may temporarily require re-verification before your next payout.' : ' Accurate details ensure your payouts process without delays.'}
+              </p>
+              
+              <div className="flex w-full gap-3">
+                <button 
+                  onClick={() => setShowConfirmModal(false)}
+                  className="w-full rounded-full border border-ink/20 py-3 text-sm font-bold tracking-widest uppercase text-ink hover:bg-ink/5 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={confirmAndSave}
+                  className="w-full rounded-full bg-ink py-3 text-sm font-bold tracking-widest uppercase text-paper hover:bg-ink/90 transition-colors shadow-lg"
+                >
+                  Confirm & Save
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
